@@ -10,6 +10,7 @@ import {
   Image as ImageIcon,
   Calendar,
   Home,
+  Mail,
   Sun,
   Moon,
   LogOut,
@@ -24,7 +25,8 @@ export type AdminTab =
   | "sections"
   | "media"
   | "bookings"
-  | "objects";
+  | "objects"
+  | "mail-templates";
 
 export interface AdminLayoutProps {
   currentTab: AdminTab;
@@ -55,6 +57,7 @@ export function AdminLayout({
   const bookingNavItems: Array<{ id: AdminTab; label: string; icon: React.ReactNode }> = [
     { id: "bookings", label: "Bokningar & Kalender", icon: <Calendar className="w-4 h-4" /> },
     { id: "objects", label: "Boendeobjekt", icon: <Home className="w-4 h-4" /> },
+    { id: "mail-templates", label: "E-postmallar", icon: <Mail className="w-4 h-4" /> },
   ];
 
   return (

@@ -10,6 +10,10 @@ import {
   saveSectionAction,
   deleteSectionAction,
   deleteMediaAction,
+  saveMailTemplateAction,
+  syncICalBackgroundJob,
+  generateICalFeed,
+  prisma,
 } from "@next-booking/cms-core";
 
 export async function POST(
@@ -30,6 +34,15 @@ export async function POST(
   if (path === "translate") {
     return handleTranslate(req);
   }
+  if (path === "mail-templates") {
+    const body = await req.json();
+    const result = await saveMailTemplateAction(
+      body.templateType,
+      body.subject,
+      body.body
+    );
+    return NextResponse.json(result);
+  }
   if (path === "pages" || path.startsWith("pages/")) {
     const body = await req.json();
     const result = await savePageAction(body);
@@ -49,6 +62,41 @@ export async function GET(
   { params }: { params: { slug: string[] } }
 ) {
   const path = params.slug.join("/");
+
+  if (path === "ical/sync") {
+    try {
+      const results = await syncICalBackgroundJob();
+      return NextResponse.json({ success: true, results });
+    } catch (err: any) {
+      return NextResponse.json({ success: false, error: err?.message }, { status: 500 });
+    }
+  }
+
+  if (path === "ical/export") {
+    try {
+      const objectId = req.nextUrl.searchParams.get("objectId");
+      const bookings = await prisma.booking.findMany({
+        where: objectId ? { object_id: objectId } : {},
+      });
+      const ics = generateICalFeed(
+        bookings.map((b) => ({
+          id: b.id,
+          startDate: b.start_date,
+          endDate: b.end_date,
+          status: b.status,
+          customerName: b.customer_name,
+        }))
+      );
+      return new NextResponse(ics, {
+        headers: {
+          "Content-Type": "text/calendar; charset=utf-8",
+          "Content-Disposition": 'attachment; filename="calendar.ics"',
+        },
+      });
+    } catch (err: any) {
+      return NextResponse.json({ success: false, error: err?.message }, { status: 500 });
+    }
+  }
 
   if (path.startsWith("pages/")) {
     const pageId = path.replace("pages/", "");

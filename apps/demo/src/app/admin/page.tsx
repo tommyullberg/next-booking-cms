@@ -5,6 +5,7 @@ import {
   getPagesAction,
   getSectionsAction,
   getMediaFilesAction,
+  getMailTemplatesAction,
   AdminApp,
 } from "@next-booking/cms-core";
 
@@ -20,18 +21,20 @@ export default async function AdminPage() {
   let pages: any[] = [];
   let sections: any[] = [];
   let media: any[] = [];
+  let mailTemplates: any[] = [];
 
   try {
-    [pages, sections, media] = await Promise.all([
+    [pages, sections, media, mailTemplates] = await Promise.all([
       getPagesAction(),
       getSectionsAction(),
       getMediaFilesAction(),
+      getMailTemplatesAction(),
     ]);
   } catch (err) {
-    // If database connection is not yet initialized, handle gracefully
     pages = [];
     sections = [];
     media = [];
+    mailTemplates = [];
   }
 
   return (
@@ -39,6 +42,7 @@ export default async function AdminPage() {
       initialPages={pages}
       initialSections={sections}
       initialMedia={media}
+      initialMailTemplates={mailTemplates as any}
       adminName={session.user.name || session.user.email || "Admin"}
       frontendUrl="/"
     />

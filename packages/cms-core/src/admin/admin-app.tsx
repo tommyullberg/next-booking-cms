@@ -9,11 +9,13 @@ import { PagesView, PageListItem } from "./views/pages-view";
 import { PageEditorView, PageEditorData } from "./views/page-editor-view";
 import { SectionsView, SectionItem } from "./views/sections-view";
 import { MediaView, MediaItem } from "./views/media-view";
+import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view";
 
 export interface AdminAppProps {
   initialPages?: PageListItem[];
   initialSections?: SectionItem[];
   initialMedia?: MediaItem[];
+  initialMailTemplates?: MailTemplateItem[];
   adminName?: string;
   frontendUrl?: string;
   onSavePage?: (data: any) => Promise<void>;
@@ -24,12 +26,14 @@ export interface AdminAppProps {
   onToggleSectionVisibility?: (id: string, current: boolean) => Promise<void>;
   onUploadMedia?: (file: File) => Promise<void>;
   onDeleteMedia?: (id: string) => Promise<void>;
+  onSaveMailTemplate?: (type: any, subject: string, body: string) => Promise<void>;
 }
 
 export function AdminApp({
   initialPages = [],
   initialSections = [],
   initialMedia = [],
+  initialMailTemplates = [],
   adminName = "Administratör",
   frontendUrl = "/",
   onSavePage,
@@ -40,11 +44,13 @@ export function AdminApp({
   onToggleSectionVisibility,
   onUploadMedia,
   onDeleteMedia,
+  onSaveMailTemplate,
 }: AdminAppProps) {
   const [currentTab, setCurrentTab] = useState<AdminTab>("dashboard");
   const [pages, setPages] = useState<PageListItem[]>(initialPages);
   const [sections, setSections] = useState<SectionItem[]>(initialSections);
   const [media, setMedia] = useState<MediaItem[]>(initialMedia);
+  const [mailTemplates, setMailTemplates] = useState<MailTemplateItem[]>(initialMailTemplates);
   const [editingPage, setEditingPage] = useState<PageEditorData | null>(null);
 
   const handleEditPage = async (pageId: string) => {
@@ -57,7 +63,7 @@ export function AdminApp({
         return;
       }
     } catch {
-      // Fallback: construct basic page editor data from list item
+      // Fallback
     }
     const found = pages.find((p) => p.id === pageId);
     if (found) {
@@ -85,7 +91,6 @@ export function AdminApp({
       });
     }
 
-    // Refresh page list
     setPages((prev) =>
       prev.map((p) =>
         p.id === data.id
@@ -225,6 +230,34 @@ export function AdminApp({
     setMedia((prev) => prev.filter((m) => m.id !== id));
   };
 
+  const handleSaveMailTemplateInternal = async (
+    type: any,
+    subject: string,
+    body: string
+  ) => {
+    if (onSaveMailTemplate) {
+      await onSaveMailTemplate(type, subject, body);
+    } else {
+      await fetch("/api/cms/mail-templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ templateType: type, subject, body }),
+      });
+    }
+    setMailTemplates((prev) => {
+      const exists = prev.some((t) => t.template_type === type);
+      if (exists) {
+        return prev.map((t) =>
+          t.template_type === type ? { ...t, subject, body } : t
+        );
+      }
+      return [
+        ...prev,
+        { id: `mt-${Date.now()}`, template_type: type, subject, body },
+      ];
+    });
+  };
+
   return (
     <AdminThemeProvider>
       <AdminLayout
@@ -279,13 +312,20 @@ export function AdminApp({
           />
         )}
 
+        {currentTab === "mail-templates" && (
+          <MailTemplatesView
+            templates={mailTemplates}
+            onSaveTemplate={handleSaveMailTemplateInternal}
+          />
+        )}
+
         {currentTab === "bookings" && (
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
             <h2 className="text-lg font-semibold text-white mb-2">
               Bokningar & Kalender
             </h2>
             <p className="text-xs">
-              Bokningsmotorn och iCal-synk konfigureras i nästa steg.
+              Bokningskalendern synkroniseras via TanStack Query och iCal-flöden.
             </p>
           </div>
         )}
@@ -294,7 +334,7 @@ export function AdminApp({
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
             <h2 className="text-lg font-semibold text-white mb-2">Boendeobjekt</h2>
             <p className="text-xs">
-              Hantering av stugor, villor och prislistor konfigureras i nästa steg.
+              Boendeobjekt och prislistor kopplas direkt mot bokningsmotorn.
             </p>
           </div>
         )}

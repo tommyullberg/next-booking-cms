@@ -6,4 +6,5 @@ export * from "./views/pages-view";
 export * from "./views/page-editor-view";
 export * from "./views/sections-view";
 export * from "./views/media-view";
+export * from "./views/mail-templates-view";
 export * from "./views/login-view";
