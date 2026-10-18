@@ -18,6 +18,7 @@ pnpm-debug.log*
 
 .DS_Store
 *.pem
+*.tsbuildinfo
 
 postgres_data/
 minio_data/
