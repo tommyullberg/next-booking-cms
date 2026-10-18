@@ -1,0 +1,54 @@
+{
+  "section": {
+    "name": "Lullyhill Meny",
+    "sort_order": 0,
+    "is_visible": true
+  },
+  "page": {
+    "page_title": "Villa Lullyhill – Gotlandic Luxury",
+    "slug": "/",
+    "template_name": "booking",
+    "status": "PUBLISHED",
+    "meta_title": "Villa Lullyhill – Gotlandic Luxury vid Toftas kust",
+    "meta_description": "Minimalistisk arkitektur i harmoni med gotländsk kalksten, vindpinad tallskog och öppet hav.",
+    "fields": [
+      {
+        "nbr": 1,
+        "field_type": "TEXT",
+        "type": "plain",
+        "content": "Villa Lullyhill"
+      },
+      {
+        "nbr": 2,
+        "field_type": "TEXT",
+        "type": "plain",
+        "content": "Gotlandic Luxury vid Toftas kust. Minimalistisk arkitektur i harmoni med gotländsk kalksten, vindpinad tallskog och öppet hav."
+      },
+      {
+        "nbr": 3,
+        "field_type": "TEXT",
+        "type": "plain",
+        "content": "Välj din vistelse i kalendern nedan"
+      },
+      {
+        "nbr": 1,
+        "field_type": "IMAGE",
+        "file_name": "villa-lullyhill-exterior.jpg",
+        "file_url": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1400&q=80",
+        "ratio": "16/9",
+        "max_width": 1200
+      },
+      {
+        "nbr": 1,
+        "field_type": "NAVIGATION",
+        "name": "Lullyhill Meny",
+        "type": "HEADER",
+        "links": [
+          { "link_url": "/", "link_text": "Vistelsen", "sort_order": 1 },
+          { "link_url": "/#calendar", "link_text": "Boka", "sort_order": 2 },
+          { "link_url": "/#search", "link_text": "Flexibel sökning", "sort_order": 3 }
+        ]
+      }
+    ]
+  }
+}

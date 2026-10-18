@@ -15,9 +15,13 @@ export const SLUG_BLACKLIST = [
 ];
 
 export function sanitizeSlug(rawSlug: string, fallbackId?: string): string {
-  const cleaned = rawSlug
+  const trimmed = (rawSlug || "").trim();
+  if (trimmed === "/" || trimmed === "") {
+    return "/";
+  }
+
+  const cleaned = trimmed
     .toLowerCase()
-    .trim()
     .replace(/[^a-z0-9-/]/g, "-")
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "");

@@ -12,3 +12,4 @@ export * from "./server/api-handlers";
 export * from "./ical";
 export * from "./mail";
 export * from "./ai";
+export * from "./seed";
