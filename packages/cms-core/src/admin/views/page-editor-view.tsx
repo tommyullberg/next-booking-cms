@@ -330,7 +330,7 @@ export function PageEditorView({ page, onBack, onSave }: PageEditorViewProps) {
         </div>
       </div>
 
-      {/* Innehållsfält (Page Fields) */}
+      {/* Page Fields */}
       <div className="space-y-4 pt-4">
         <h2 className="text-sm font-semibold text-white">
           Innehållsfält (Mall: {page.template_name})
