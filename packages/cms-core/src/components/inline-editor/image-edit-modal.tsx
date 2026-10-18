@@ -85,8 +85,28 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
           ratio: ratio || null,
           maxWidth: typeof maxWidth === "number" ? maxWidth : null,
         });
+      } else {
+        const res = await fetch("/api/cms/fields/image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pageId: selectedField.pageId,
+            nbr: selectedField.nbr,
+            imageUrl,
+            ratio: ratio || null,
+            maxWidth: typeof maxWidth === "number" ? maxWidth : null,
+            classNames: selectedField.classNames,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to save image field");
+        }
       }
       closeModal();
+      if (typeof window !== "undefined") {
+        window.location.reload();
+      }
     } catch (err: any) {
       setErrorMessage("Kunde inte spara bilden");
     } finally {

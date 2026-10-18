@@ -75,8 +75,29 @@ export function TextEditModal({ onSave }: TextEditModalProps) {
           content,
           locale: selectedField.locale || "sv",
         });
+      } else {
+        const res = await fetch("/api/cms/fields/text", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pageId: selectedField.pageId,
+            nbr: selectedField.nbr,
+            content,
+            locale: selectedField.locale || "sv",
+            classNames: selectedField.classNames,
+            textType: selectedField.textType,
+            rows: selectedField.rows,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to save field");
+        }
       }
       closeModal();
+      if (typeof window !== "undefined") {
+        window.location.reload();
+      }
     } catch (err: any) {
       setStatusMessage("Kunde inte spara texten");
     } finally {
