@@ -1,0 +1,281 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum PageStatus {
+  NEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IMPORTED
+}
+
+enum MailTemplateType {
+  ADMIN_NEW_BOOKING_REQUEST
+  USER_NEW_BOOKING_REQUEST_COPY
+  USER_BOOKING_CONFIRMED
+}
+
+enum FieldType {
+  TEXT
+  IMAGE
+  NAVIGATION
+}
+
+model Administrator {
+  id            String   @id @default(cuid()) @map("id")
+  first_name    String   @map("first_name")
+  last_name     String   @map("last_name")
+  email         String   @unique @map("email")
+  mobile        String?  @map("mobile")
+  password_hash String   @map("password_hash")
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
+
+  @@map("administrators")
+}
+
+model Setting {
+  id            String   @id @default(cuid()) @map("id")
+  setting_key   String   @unique @map("setting_key")
+  setting_value String   @map("setting_value")
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
+
+  @@map("settings")
+}
+
+model Section {
+  id            String   @id @default(cuid()) @map("id")
+  name          String   @map("name")
+  start_page_id String?  @map("start_page_id")
+  sort_order    Int      @default(0) @map("sort_order")
+  is_visible    Boolean  @default(true) @map("is_visible")
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
+
+  pages Page[]
+
+  @@map("sections")
+}
+
+model Page {
+  id                String     @id @default(cuid()) @map("id")
+  template_name     String     @map("template_name")
+  section_id        String?    @map("section_id")
+  page_title        String     @map("page_title")
+  link_description  String?    @map("link_description")
+  meta_title        String?    @map("meta_title")
+  meta_description  String?    @map("meta_description")
+  slug              String     @unique @map("slug")
+  status            PageStatus @default(NEW) @map("status")
+  publication_start DateTime?  @map("publication_start")
+  publication_end   DateTime?  @map("publication_end")
+  created_date      DateTime   @default(now()) @map("created_date")
+  created_by        String?    @map("created_by")
+
+  section      Section?          @relation(fields: [section_id], references: [id], onDelete: SetNull)
+  page_fields  PageField[]
+  translations PageTranslation[]
+  objects      BookingObject[]
+
+  @@map("pages")
+}
+
+model PageTranslation {
+  id               String  @id @default(cuid()) @map("id")
+  page_id          String  @map("page_id")
+  locale           String  @map("locale")
+  page_title       String  @map("page_title")
+  link_description String? @map("link_description")
+  meta_title       String? @map("meta_title")
+  meta_description String? @map("meta_description")
+
+  page Page @relation(fields: [page_id], references: [id], onDelete: Cascade)
+
+  @@unique([page_id, locale])
+  @@map("page_translations")
+}
+
+model CategoryType {
+  id          String  @id @default(cuid()) @map("id")
+  name        String  @map("name")
+  is_multiple Boolean @default(false) @map("is_multiple")
+
+  categories Category[]
+
+  @@map("category_types")
+}
+
+model Category {
+  id               String @id @default(cuid()) @map("id")
+  category_type_id String @map("category_type_id")
+  name             String @map("name")
+
+  category_type CategoryType @relation(fields: [category_type_id], references: [id], onDelete: Cascade)
+
+  @@map("categories")
+}
+
+model FileAndImage {
+  id           String   @id @default(cuid()) @map("id")
+  file_name    String   @map("file_name")
+  file_url     String   @map("file_url")
+  created_date DateTime @default(now()) @map("created_date")
+
+  galleries   Gallery[]
+  page_fields PageField[]
+
+  @@map("files_and_images")
+}
+
+model NavigationAndLink {
+  id   String @id @default(cuid()) @map("id")
+  name String @map("name")
+  type String @map("type")
+
+  navigation_links NavigationLink[]
+  page_fields      PageField[]
+
+  @@map("navigations_and_links")
+}
+
+model NavigationLink {
+  id            String @id @default(cuid()) @map("id")
+  navigation_id String @map("navigation_id")
+  link_url      String @map("link_url")
+  link_text     String @map("link_text")
+  sort_order    Int    @default(0) @map("sort_order")
+
+  navigation NavigationAndLink @relation(fields: [navigation_id], references: [id], onDelete: Cascade)
+
+  @@map("navigation_links")
+}
+
+model BookingObject {
+  id              String   @id @default(cuid()) @map("id")
+  name            String   @map("name")
+  description     String?  @map("description")
+  page_id         String?  @map("page_id")
+  size_sqm        Float?   @map("size_sqm")
+  bed_count       Int      @default(1) @map("bed_count")
+  extra_bed_count Int      @default(0) @map("extra_bed_count")
+  pets_allowed    Boolean  @default(false) @map("pets_allowed")
+  price_matrix    Json?    @map("price_matrix")
+  created_at      DateTime @default(now()) @map("created_at")
+  updated_at      DateTime @updatedAt @map("updated_at")
+
+  page      Page?     @relation(fields: [page_id], references: [id], onDelete: SetNull)
+  amenities Amenity[]
+  galleries Gallery[]
+  bookings  Booking[]
+
+  @@map("objects")
+}
+
+model Amenity {
+  id      String          @id @default(cuid()) @map("id")
+  name    String          @unique @map("name")
+  objects BookingObject[]
+
+  @@map("amenities")
+}
+
+model Gallery {
+  id         String  @id @default(cuid()) @map("id")
+  object_id  String  @map("object_id")
+  image_id   String  @map("image_id")
+  sort_order Int     @default(0) @map("sort_order")
+  caption    String? @map("caption")
+
+  object BookingObject @relation(fields: [object_id], references: [id], onDelete: Cascade)
+  image  FileAndImage  @relation(fields: [image_id], references: [id], onDelete: Cascade)
+
+  @@map("galleries")
+}
+
+model PageField {
+  id          String    @id @default(cuid()) @map("id")
+  page_id     String    @map("page_id")
+  nbr         Int       @map("nbr")
+  field_type  FieldType @map("field_type")
+  class_names String?   @map("class_names")
+  content     String?   @map("content")
+
+  // Text fields specific
+  type String? @map("type")
+  rows Int?    @map("rows")
+
+  // Image fields specific
+  image_id   String? @map("image_id")
+  width      Int?    @map("width")
+  height     Int?    @map("height")
+  max_width  Int?    @map("max_width")
+  max_height Int?    @map("max_height")
+  ratio      String? @map("ratio")
+
+  // Navigation fields specific
+  navigation_id String? @map("navigation_id")
+
+  page         Page                   @relation(fields: [page_id], references: [id], onDelete: Cascade)
+  image        FileAndImage?          @relation(fields: [image_id], references: [id], onDelete: SetNull)
+  navigation   NavigationAndLink?     @relation(fields: [navigation_id], references: [id], onDelete: SetNull)
+  translations PageFieldTranslation[]
+
+  @@unique([page_id, nbr, field_type])
+  @@map("page_fields")
+}
+
+model PageFieldTranslation {
+  id            String @id @default(cuid()) @map("id")
+  page_field_id String @map("page_field_id")
+  locale        String @map("locale")
+  content       String @map("content")
+
+  page_field PageField @relation(fields: [page_field_id], references: [id], onDelete: Cascade)
+
+  @@unique([page_field_id, locale])
+  @@map("page_field_translations")
+}
+
+model Booking {
+  id             String        @id @default(cuid()) @map("id")
+  object_id      String        @map("object_id")
+  start_date     DateTime      @map("start_date")
+  end_date       DateTime      @map("end_date")
+  customer_name  String        @map("customer_name")
+  customer_email String        @map("customer_email")
+  customer_phone String?       @map("customer_phone")
+  guests_count   Int           @default(1) @map("guests_count")
+  pets_count     Int           @default(0) @map("pets_count")
+  price          Float?        @map("price")
+  status         BookingStatus @default(PENDING) @map("status")
+  ical_source_id String?       @map("ical_source_id")
+  created_at     DateTime      @default(now()) @map("created_at")
+  updated_at     DateTime      @updatedAt @map("updated_at")
+
+  object BookingObject @relation(fields: [object_id], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
+}
+
+model MailTemplate {
+  id            String           @id @default(cuid()) @map("id")
+  template_type MailTemplateType @unique @map("template_type")
+  subject       String           @map("subject")
+  body          String           @map("body")
+  created_at    DateTime         @default(now()) @map("created_at")
+  updated_at    DateTime         @updatedAt @map("updated_at")
+
+  @@map("mail_templates")
+}
