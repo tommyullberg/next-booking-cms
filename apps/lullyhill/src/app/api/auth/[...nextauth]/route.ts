@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { authOptions } from "@next-booking/cms-core";
+import { authOptions } from "@next-booking/cms-core/server";
 
 const handler = NextAuth(authOptions);
 

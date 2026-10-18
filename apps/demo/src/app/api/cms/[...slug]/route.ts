@@ -13,8 +13,11 @@ import {
   saveMailTemplateAction,
   syncICalBackgroundJob,
   generateICalFeed,
+  getBookingsAction,
+  searchAvailabilityAction,
+  createBookingRequestAction,
   prisma,
-} from "@next-booking/cms-core";
+} from "@next-booking/cms-core/server";
 
 export async function POST(
   req: NextRequest,
@@ -43,6 +46,15 @@ export async function POST(
     );
     return NextResponse.json(result);
   }
+  if (path === "bookings/request") {
+    try {
+      const body = await req.json();
+      const result = await createBookingRequestAction(body);
+      return NextResponse.json(result);
+    } catch (err: any) {
+      return NextResponse.json({ error: err?.message }, { status: 400 });
+    }
+  }
   if (path === "pages" || path.startsWith("pages/")) {
     const body = await req.json();
     const result = await savePageAction(body);
@@ -62,6 +74,37 @@ export async function GET(
   { params }: { params: { slug: string[] } }
 ) {
   const path = params.slug.join("/");
+
+  if (path === "bookings") {
+    try {
+      const objectId = req.nextUrl.searchParams.get("objectId") || undefined;
+      const bookings = await getBookingsAction({ objectId });
+      return NextResponse.json(bookings);
+    } catch (err: any) {
+      return NextResponse.json({ error: err?.message }, { status: 500 });
+    }
+  }
+
+  if (path === "bookings/search") {
+    try {
+      const startDate = req.nextUrl.searchParams.get("startDate") || "";
+      const endDate = req.nextUrl.searchParams.get("endDate") || "";
+      const guests = Number(req.nextUrl.searchParams.get("guests") || "1");
+      const pets = Number(req.nextUrl.searchParams.get("pets") || "0");
+      const flexDays = Number(req.nextUrl.searchParams.get("flexDays") || "0");
+
+      const result = await searchAvailabilityAction({
+        startDate,
+        endDate,
+        guests,
+        pets,
+        flexDays,
+      });
+      return NextResponse.json(result);
+    } catch (err: any) {
+      return NextResponse.json({ error: err?.message }, { status: 500 });
+    }
+  }
 
   if (path === "ical/sync") {
     try {

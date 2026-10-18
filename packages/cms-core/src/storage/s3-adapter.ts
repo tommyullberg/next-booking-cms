@@ -3,7 +3,7 @@ import {
   PutObjectCommand,
   DeleteObjectCommand,
 } from "@aws-sdk/client-s3";
-import path from "node:path";
+import path from "path";
 import { StorageAdapter, StorageResult } from "./types";
 
 export interface S3AdapterConfig {

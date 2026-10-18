@@ -6,8 +6,8 @@ import {
   getSectionsAction,
   getMediaFilesAction,
   getMailTemplatesAction,
-  AdminApp,
-} from "@next-booking/cms-core";
+} from "@next-booking/cms-core/server";
+import { AdminApp } from "@next-booking/cms-core";
 
 export const dynamic = "force-dynamic";
 
