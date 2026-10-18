@@ -39,10 +39,11 @@ Provides shared Tailwind CSS presets:
 
 ### 3. `@next-booking/cms-core`
 
-The central package encapsulating all CMS capabilities. To guarantee clean separation between client-side bundles and server-only runtime logic, the package provides two distinct subpath entry points:
+The central package encapsulating all CMS capabilities. To guarantee clean separation between client-side bundles and server-only runtime logic, the package provides three distinct entry points:
 
 - `@next-booking/cms-core`: Universal client and template components (`CMSField`, `CMSPageProvider`, `useEditorStore`, `FloatingPanel`, editing modals, administrative views, TanStack Query calendar). Contains no Node.js built-ins (`fs`, `path`, native database drivers).
 - `@next-booking/cms-core/server`: Server-only infrastructure and actions (Prisma ORM singleton, Storage Adapters, NextAuth configuration, Server Actions, iCal synchronization, and email dispatchers).
+- `@next-booking/cms-core/middleware`: Centralized NextAuth route protection middleware imported by customer applications.
 
 ### 4. `apps/demo` and `apps/lullyhill`
 
@@ -69,3 +70,11 @@ Defined in `turbo.json`:
 - `check-types`: Runs `tsc --noEmit` concurrently across all workspaces for instant type checking.
 - `lint`: Runs static code analysis.
 - `dev`: Starts development servers in persistent, non-cached mode (`cache: false`, `persistent: true`).
+
+## Multi-Tenant Isolation & Role-Based Access Control
+
+The platform enforces database-level and application-level isolation:
+
+- **Database-Per-Customer Isolation**: Each customer deployment targets its own dedicated PostgreSQL schema or database instance (configured via `DATABASE_URL`), ensuring zero cross-tenant data contamination or shared state.
+- **Role-Based Access Control (RBAC)**: Accounts are assigned roles (`SUPERADMIN`, `ADMIN`, `EDITOR`). System privileges enforce that regular `ADMIN` accounts cannot modify or delete `SUPERADMIN` credentials.
+- **Initial Account Seeding**: SuperAdmin accounts are provisioned via environment variables (`SUPERADMIN_EMAIL`, `SUPERADMIN_PASSWORD`, `SUPERADMIN_FIRSTNAME`, `SUPERADMIN_LASTNAME`) using idempotent Prisma upserts.

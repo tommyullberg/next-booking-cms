@@ -1,12 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
-import {
-  authOptions,
-  getPagesAction,
-  getSectionsAction,
-  getMediaFilesAction,
-  getMailTemplatesAction,
-} from "@next-booking/cms-core/server";
+import { authOptions, loadAdminInitialData } from "@next-booking/cms-core/server";
 import { AdminApp } from "@next-booking/cms-core";
 
 export const dynamic = "force-dynamic";
@@ -18,24 +12,7 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  let pages: any[] = [];
-  let sections: any[] = [];
-  let media: any[] = [];
-  let mailTemplates: any[] = [];
-
-  try {
-    [pages, sections, media, mailTemplates] = await Promise.all([
-      getPagesAction(),
-      getSectionsAction(),
-      getMediaFilesAction(),
-      getMailTemplatesAction(),
-    ]);
-  } catch (err) {
-    pages = [];
-    sections = [];
-    media = [];
-    mailTemplates = [];
-  }
+  const { pages, sections, media, mailTemplates } = await loadAdminInitialData();
 
   return (
     <AdminApp

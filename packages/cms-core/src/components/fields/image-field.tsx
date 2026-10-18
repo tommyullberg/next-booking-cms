@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useSession } from "next-auth/react";
 import { useCMSPage } from "./provider";
 import { useEditorStore } from "../../state/editor-store";
 import { CMSPageField } from "./types";
@@ -22,12 +23,14 @@ export function CMSImageField({
   className = "",
   children,
 }: CMSImageFieldProps) {
+  const { data: session } = useSession();
+  const isAdmin = Boolean(session?.user);
   const { page, locale, getField } = useCMSPage();
   const { mode, setSelectedField, openModal } = useEditorStore();
 
   const field = getField(nbr, "IMAGE");
   const imageUrl = field?.image?.file_url;
-  const isEditing = mode === "image";
+  const isEditing = isAdmin && mode === "image";
 
   // If data is empty and not editing, return null per specification
   if (!imageUrl && !isEditing) {

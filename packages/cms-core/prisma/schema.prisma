@@ -31,15 +31,22 @@ enum FieldType {
   NAVIGATION
 }
 
+enum AdminRole {
+  SUPERADMIN
+  ADMIN
+  EDITOR
+}
+
 model Administrator {
-  id            String   @id @default(cuid()) @map("id")
-  first_name    String   @map("first_name")
-  last_name     String   @map("last_name")
-  email         String   @unique @map("email")
-  mobile        String?  @map("mobile")
-  password_hash String   @map("password_hash")
-  created_at    DateTime @default(now()) @map("created_at")
-  updated_at    DateTime @updatedAt @map("updated_at")
+  id            String    @id @default(cuid()) @map("id")
+  first_name    String    @map("first_name")
+  last_name     String    @map("last_name")
+  email         String    @unique @map("email")
+  mobile        String?   @map("mobile")
+  password_hash String    @map("password_hash")
+  role          AdminRole @default(ADMIN) @map("role")
+  created_at    DateTime  @default(now()) @map("created_at")
+  updated_at    DateTime  @updatedAt @map("updated_at")
 
   @@map("administrators")
 }

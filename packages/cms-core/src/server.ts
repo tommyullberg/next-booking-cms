@@ -7,6 +7,7 @@ export * from "./actions/pages";
 export * from "./actions/sections";
 export * from "./actions/media";
 export * from "./actions/bookings";
+export * from "./actions/administrators";
 export * from "./server/api-handlers";
 export * from "./ical";
 export * from "./mail";

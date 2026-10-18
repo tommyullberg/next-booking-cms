@@ -70,6 +70,39 @@ Ensure the following variables are configured in production:
 | `MINIO_BUCKET` | Production bucket name | `lullyhill-production-media` |
 | `GEMINI_API_KEY` | Google Gemini API key for translation | `AIzaSy...` |
 | `RESEND_API_KEY` | Transactional email provider key | `re_123456789` |
+| `SUPERADMIN_EMAIL` | Initial root SuperAdmin account email | `admin@customerdomain.com` |
+| `SUPERADMIN_PASSWORD` | Initial root SuperAdmin secure password | `StrongSecretPassword123!` |
+| `SUPERADMIN_FIRSTNAME` | Initial root SuperAdmin first name | `Admin` |
+| `SUPERADMIN_LASTNAME` | Initial root SuperAdmin last name | `User` |
+
+## Initial SuperAdmin Provisioning & Customer Setup
+
+When provisioning a new production tenant or customer instance, configure the customer-specific `SUPERADMIN_*` environment variables in your deployment environment (e.g. Vercel Environment Variables, AWS ECS task definition, or Docker environment files):
+
+```bash
+# Apply pending schema migrations to production PostgreSQL
+npx prisma migrate deploy --schema=packages/cms-core/prisma/schema.prisma
+
+# Seed initial SuperAdmin account with bcrypt password hashing
+npm run db:seed --workspace=@next-booking/cms-core
+```
+
+### Accessing the Administrative Interface
+
+Once seeded, administrators access the portal at:
+
+- Production Admin Portal: `https://<customer-domain>/admin`
+- Production Login Endpoint: `https://<customer-domain>/admin/login`
+
+Unauthenticated requests to `/admin` or its subroutes are automatically intercepted by Next.js middleware and redirected to `/admin/login`.
+
+### Role-Based Access Control (RBAC) Protections
+
+The system distinguishes between three administrative tiers (`SUPERADMIN`, `ADMIN`, `EDITOR`):
+
+- `SUPERADMIN`: Full root privileges across all content, settings, and administrator accounts.
+- `ADMIN`: Operational management of pages, bookings, media, and standard user accounts.
+- Server-side immutability: Standard `ADMIN` users are strictly prevented from editing, deleting, or altering credentials of any `SUPERADMIN` account.
 
 ## Security Best Practices
 

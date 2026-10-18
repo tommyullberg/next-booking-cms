@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useSession } from "next-auth/react";
 import { useCMSPage } from "./provider";
 import { useEditorStore } from "../../state/editor-store";
 import { CMSPageField } from "./types";
@@ -18,13 +19,15 @@ export function CMSTextField({
   className = "",
   children,
 }: CMSTextFieldProps) {
+  const { data: session } = useSession();
+  const isAdmin = Boolean(session?.user);
   const { page, locale, getField, getLocalizedContent } = useCMSPage();
   const { mode, setSelectedField, openModal } = useEditorStore();
 
   const field = getField(nbr, "TEXT");
   const content = getLocalizedContent(field);
 
-  const isEditing = mode === "text";
+  const isEditing = isAdmin && mode === "text";
 
   // If data is empty and not editing, return null per specification
   if (!content && !isEditing) {

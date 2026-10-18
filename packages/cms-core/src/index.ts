@@ -6,5 +6,6 @@ export * from "./admin";
 export * from "./ai/types";
 export * from "./storage/types";
 export * from "./mail/types";
+export * from "./auth/provider";
 export * from "./ical/parser";
 export * from "./ical/generator";

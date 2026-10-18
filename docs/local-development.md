@@ -57,14 +57,24 @@ MINIO_BUCKET="cms-media"
 GEMINI_API_KEY=""
 RESEND_API_KEY=""
 SENDGRID_API_KEY=""
+
+# SuperAdmin Initial Seed Configuration
+SUPERADMIN_EMAIL="superadmin@nextbooking.internal"
+SUPERADMIN_PASSWORD="Admin123!"
+SUPERADMIN_FIRSTNAME="Super"
+SUPERADMIN_LASTNAME="Admin"
 ```
 
-### 4. Apply Database Migrations
+### 4. Apply Database Migrations and Seed SuperAdmin
 
-Initialize database tables with Prisma 7:
+Initialize database tables with Prisma 7 and seed the root SuperAdmin account:
 
 ```bash
+# Run database schema migrations
 npx prisma migrate dev --schema=packages/cms-core/prisma/schema.prisma
+
+# Seed initial SuperAdmin account into the database
+npm run db:seed --workspace=@next-booking/cms-core
 ```
 
 ### 5. Start Development Servers
@@ -85,13 +95,37 @@ The web services will be accessible at:
 
 The admin dashboard is mounted directly inside each application:
 
-- Demo Admin: [http://localhost:3000/admin](http://localhost:3000/admin)
-- Lullyhill Admin: [http://localhost:3001/admin](http://localhost:3001/admin)
+- Demo Admin Portal: [http://localhost:3000/admin](http://localhost:3000/admin)
+- Demo Dedicated Login: [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
+- Lullyhill Admin Portal: [http://localhost:3001/admin](http://localhost:3001/admin)
+- Lullyhill Dedicated Login: [http://localhost:3001/admin/login](http://localhost:3001/admin/login)
 
-Default development credentials:
+### Default Local Credentials
+
+When initializing development databases without overrides, the seed script provisions:
 
 - Email: `superadmin@nextbooking.internal`
 - Password: `Admin123!`
+- Role: `SUPERADMIN`
+
+### Customer-Specific SuperAdmin Configuration
+
+To configure unique SuperAdmin credentials for a specific tenant or customer environment, define the following variables in the `.env` file before running the seed script:
+
+```env
+SUPERADMIN_EMAIL="admin@customerdomain.com"
+SUPERADMIN_PASSWORD="YourSecurePasswordHere123!"
+SUPERADMIN_FIRSTNAME="Admin"
+SUPERADMIN_LASTNAME="User"
+```
+
+Then execute the seed command:
+
+```bash
+npm run db:seed --workspace=@next-booking/cms-core
+```
+
+The seed script utilizes an idempotent `upsert` on the unique email address. If an account with the specified email already exists, its password hash and `SUPERADMIN` role are refreshed without disrupting foreign key relationships or content.
 
 ## Code Quality and Verification Commands
 

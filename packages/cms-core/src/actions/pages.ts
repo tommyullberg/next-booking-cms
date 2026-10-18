@@ -204,3 +204,31 @@ export async function deletePageAction(id: string) {
     where: { id },
   });
 }
+
+export async function loadAdminInitialData() {
+  const { getSectionsAction } = await import("./sections");
+  const { getMediaFilesAction } = await import("./media");
+  const { getMailTemplatesAction } = await import("../mail");
+
+  let pages: any[] = [];
+  let sections: any[] = [];
+  let media: any[] = [];
+  let mailTemplates: any[] = [];
+
+  try {
+    [pages, sections, media, mailTemplates] = await Promise.all([
+      getPagesAction(),
+      getSectionsAction(),
+      getMediaFilesAction(),
+      getMailTemplatesAction(),
+    ]);
+  } catch {
+    pages = [];
+    sections = [];
+    media = [];
+    mailTemplates = [];
+  }
+
+  return { pages, sections, media, mailTemplates };
+}
+

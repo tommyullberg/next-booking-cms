@@ -71,7 +71,6 @@ const initialLullyhillPage: CMSPageData = {
           { id: "lh1", link_url: "/", link_text: "Vistelsen", sort_order: 1 },
           { id: "lh2", link_url: "/#calendar", link_text: "Boka", sort_order: 2 },
           { id: "lh3", link_url: "/#search", link_text: "Flexibel sökning", sort_order: 3 },
-          { id: "lh4", link_url: "/admin", link_text: "Administration", sort_order: 4 },
         ],
       },
     },

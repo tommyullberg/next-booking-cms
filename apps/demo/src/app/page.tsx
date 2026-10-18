@@ -69,7 +69,6 @@ const initialDemoPage: CMSPageData = {
         navigation_links: [
           { id: "l1", link_url: "/", link_text: "Hem", sort_order: 1 },
           { id: "l2", link_url: "/#booking", link_text: "Boka", sort_order: 2 },
-          { id: "l3", link_url: "/admin", link_text: "Adminpanel", sort_order: 3 },
         ],
       },
     },

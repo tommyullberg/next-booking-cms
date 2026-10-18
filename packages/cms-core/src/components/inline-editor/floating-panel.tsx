@@ -2,7 +2,8 @@
 
 import React from "react";
 import { useEditorStore, EditorMode } from "../../state/editor-store";
-import { MousePointer, Type, Image as ImageIcon, ShieldCheck } from "lucide-react";
+import { MousePointer, Type, Image as ImageIcon, ShieldCheck, LogOut } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 export interface FloatingPanelProps {
   adminUrl?: string;
@@ -20,6 +21,11 @@ export function FloatingPanel({
     if (typeof window !== "undefined") {
       window.location.href = adminUrl;
     }
+  };
+
+  const handleSignOut = () => {
+    setMode("normal");
+    signOut({ callbackUrl: "/" });
   };
 
   const buttons: Array<{
@@ -78,6 +84,16 @@ export function FloatingPanel({
             </button>
           );
         })}
+
+        <button
+          type="button"
+          onClick={handleSignOut}
+          title="Logga ut administratör"
+          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all duration-150 ml-1 border-l border-slate-700/60 pl-2.5"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>Logga ut</span>
+        </button>
       </div>
     </aside>
   );
