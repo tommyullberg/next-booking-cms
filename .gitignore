@@ -23,3 +23,4 @@ pnpm-debug.log*
 postgres_data/
 minio_data/
 uploads/
+project-spec.md
