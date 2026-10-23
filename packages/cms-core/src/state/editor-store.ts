@@ -4,7 +4,7 @@ export type EditorMode = "normal" | "text" | "image" | "administration";
 
 export interface SelectedFieldData {
   fieldId?: string;
-  pageId: string;
+  pageId: number | string;
   nbr: number;
   fieldType: "TEXT" | "IMAGE" | "NAVIGATION";
   content?: string | null;

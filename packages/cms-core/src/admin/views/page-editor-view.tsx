@@ -20,7 +20,7 @@ import { CMSPageField } from "../../components/fields/types";
 import { FlagIcon } from "../../components/ui/flag-icon";
 
 export interface PageEditorData {
-  id: string;
+  id: number | string;
   template_name: string;
   section_id?: string | null;
   page_title: string;
@@ -62,6 +62,11 @@ const LANGUAGE_META: Record<string, { code: string; flag: string; label: string 
 
 const TEMPLATE_OPTIONS = [
   {
+    value: "startpage",
+    label: "Startpage",
+    icon: LayoutTemplate,
+  },
+  {
     value: "Booking unit",
     label: "Booking unit",
     icon: LayoutTemplate,
@@ -83,7 +88,8 @@ const TEMPLATE_OPTIONS = [
   },
 ];
 
-function normalizeTemplateValue(raw: string): string {
+function normalizeTemplateValue(raw: string, isHomepage?: boolean): string {
+  if (isHomepage || raw === "startpage" || raw === "Startpage") return "startpage";
   if (raw === "booking" || raw === "Booking unit") return "Booking unit";
   if (raw === "article" || raw === "Article") return "Article";
   if (raw === "landing" || raw === "Entire page") return "Entire page";
@@ -108,11 +114,16 @@ export function PageEditorView({
   const effectiveLocales = activeLanguages || activeLocales;
   const secondaryLocales = effectiveLocales.filter((loc) => loc !== "sv");
 
+  const isHomepage = Number(page.id) === 1001;
   const [status, setStatus] = useState<"NEW" | "PUBLISHED" | "ARCHIVED">(page.status);
-  const [templateName, setTemplateName] = useState<string>(normalizeTemplateValue(page.template_name));
+  const [templateName, setTemplateName] = useState<string>(
+    normalizeTemplateValue(page.template_name, isHomepage)
+  );
   const [isTemplateOpen, setIsTemplateOpen] = useState(false);
   const [sectionId, setSectionId] = useState<string>(page.section_id || "");
-  const [slug, setSlug] = useState<string>(page.slug === "/" ? "/" : page.slug.replace(/^\/+/, ""));
+  const [slug, setSlug] = useState<string>(
+    isHomepage || page.slug === "/" ? "" : page.slug.replace(/^\/+/, "")
+  );
 
   // Primary Swedish values
   const [svTitle, setSvTitle] = useState(page.page_title || "");
@@ -209,13 +220,15 @@ export function PageEditorView({
 
       await onSave({
         id: page.id,
-        templateName,
+        templateName: isHomepage ? "startpage" : templateName,
         sectionId: sectionId || null,
         pageTitle: svTitle,
         linkDescription: svLinkTitle,
         metaTitle: svMetaTitle,
         metaDescription: svMetaDesc,
-        slug: slug.trim() === "/" || slug.trim() === "" ? "/" : slug.trim(),
+        slug: isHomepage
+          ? "/"
+          : slug.replace(/^\/+/, "").trim() || String(page.id),
         status,
         publicationStart: publicationStart ? new Date(publicationStart).toISOString() : null,
         publicationEnd: publicationEnd ? new Date(publicationEnd).toISOString() : null,
@@ -429,14 +442,21 @@ export function PageEditorView({
                 </span>
                 <input
                   type='text'
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder='my-readable/link'
+                  value={isHomepage ? "" : slug}
+                  readOnly={isHomepage}
+                  onChange={(e) => {
+                    if (!isHomepage) {
+                      setSlug(e.target.value.replace(/^\/+/, ""));
+                    }
+                  }}
+                  placeholder={isHomepage ? "" : `${page.id}`}
                   className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none'
                 />
               </div>
               <p className='text-[11px] text-slate-500'>
-                The URL path for this page, eg: my-readable-link or my-readable/link
+                {isHomepage
+                  ? "Startpage (#1001) is always served at the root path (/)."
+                  : `The URL path for this page, eg: my-readable-link or my-readable/link (defaults to /${page.id}).`}
               </p>
             </div>
 

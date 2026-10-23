@@ -8,7 +8,7 @@ import { FlagIcon } from "../ui/flag-icon";
 export interface TextEditModalProps {
   activeLanguages?: string[];
   onSave?: (data: {
-    pageId: string;
+    pageId: number | string;
     nbr: number;
     content: string;
     locale: string;

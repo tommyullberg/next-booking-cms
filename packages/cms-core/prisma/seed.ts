@@ -19,8 +19,12 @@ const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+const HOMEPAGE_ID = 1001;
+
 async function seedSuperAdmin() {
-  const email = (process.env.SUPERADMIN_EMAIL || "superadmin@nextbooking.internal").toLowerCase().trim();
+  const email = (process.env.SUPERADMIN_EMAIL || "superadmin@nextbooking.internal")
+    .toLowerCase()
+    .trim();
   const password = process.env.SUPERADMIN_PASSWORD || "Admin123!";
   const firstName = process.env.SUPERADMIN_FIRSTNAME || "Super";
   const lastName = process.env.SUPERADMIN_LASTNAME || "Admin";
@@ -50,57 +54,82 @@ async function seedCmsContent(adminId: string) {
   const { config: seedConfig, source } = resolveSeedConfig();
   console.log(`[seed] Resolving CMS structure from: ${source}`);
 
-  // 1. Ensure primary Section exists
+  // 1. Ensure Root Section (linked to Page 1001) exists
   let section = await prisma.section.findFirst({
-    where: { name: seedConfig.section.name },
+    where: {
+      OR: [{ start_page_id: HOMEPAGE_ID }, { name: seedConfig.section.name }],
+    },
+    orderBy: { sort_order: "asc" },
   });
 
   if (!section) {
     section = await prisma.section.create({
       data: {
         name: seedConfig.section.name,
-        sort_order: seedConfig.section.sort_order ?? 0,
+        translations: seedConfig.section.translations ?? {
+          en: "Home",
+          de: "Zuhause",
+        },
+        start_page_id: HOMEPAGE_ID,
+        sort_order: 0,
         is_visible: seedConfig.section.is_visible ?? true,
       },
     });
-    console.log(`[seed] Created primary section: "${section.name}" (ID: ${section.id})`);
+    console.log(`[seed] Created root section: "${section.name}" (ID: ${section.id})`);
   } else {
-    console.log(`[seed] Using existing section: "${section.name}" (ID: ${section.id})`);
-  }
-
-  // 2. Ensure initial Page exists
-  let page = await prisma.page.findUnique({
-    where: { slug: seedConfig.page.slug },
-  });
-
-  if (!page) {
-    page = await prisma.page.create({
+    section = await prisma.section.update({
+      where: { id: section.id },
       data: {
-        page_title: seedConfig.page.page_title,
-        slug: seedConfig.page.slug,
-        template_name: seedConfig.page.template_name,
-        section_id: section.id,
-        status: seedConfig.page.status || "PUBLISHED",
-        meta_title: seedConfig.page.meta_title || `${seedConfig.page.page_title} | NextBooking CMS`,
-        meta_description: seedConfig.page.meta_description,
-        created_by: adminId,
+        start_page_id: HOMEPAGE_ID,
+        sort_order: 0,
+        translations:
+          (section.translations as any) ??
+          seedConfig.section.translations ?? { en: "Home", de: "Zuhause" },
       },
     });
-    console.log(`[seed] Created initial page: "${page.page_title}" (Slug: "${page.slug}", ID: ${page.id})`);
-  } else {
-    console.log(`[seed] Using existing page: "${page.page_title}" (Slug: "${page.slug}", ID: ${page.id})`);
+    console.log(`[seed] Using root section: "${section.name}" (ID: ${section.id})`);
   }
 
-  // 3. Link section's start_page_id if unset
-  if (!section.start_page_id) {
-    await prisma.section.update({
-      where: { id: section.id },
-      data: { start_page_id: page.id },
-    });
-    console.log(`[seed] Linked start_page_id on section "${section.name}" to page "${page.page_title}"`);
-  }
+  // 2. Ensure Homepage (ID: 1001, Slug: "/", Template: "startpage") exists
+  const templateName =
+    seedConfig.page.template_name === "standard"
+      ? "startpage"
+      : seedConfig.page.template_name || "startpage";
 
-  // 4. Seed Page Fields
+  const page = await prisma.page.upsert({
+    where: { id: HOMEPAGE_ID },
+    update: {
+      slug: "/",
+      template_name: templateName,
+      section_id: section.id,
+    },
+    create: {
+      id: HOMEPAGE_ID,
+      page_title: seedConfig.page.page_title,
+      slug: "/",
+      template_name: templateName,
+      section_id: section.id,
+      sort_order: 0,
+      status: seedConfig.page.status || "PUBLISHED",
+      meta_title:
+        seedConfig.page.meta_title ||
+        `${seedConfig.page.page_title} | NextBooking CMS`,
+      meta_description: seedConfig.page.meta_description,
+      created_by: adminId,
+    },
+  });
+
+  console.log(
+    `[seed] Configured homepage: "${page.page_title}" (ID: ${page.id}, Slug: "${page.slug}", Template: "${page.template_name}")`
+  );
+
+  // 3. Synchronize PostgreSQL sequence so next autoincrement page ID starts at 1002+
+  await pool.query(
+    `SELECT setval(pg_get_serial_sequence('pages', 'id'), GREATEST((SELECT COALESCE(MAX(id), 1001) FROM pages), 1001), true);`
+  );
+  console.log(`[seed] Synchronized PostgreSQL pages_id_seq (starts at >= 1001)`);
+
+  // 4. Seed Page Fields for Homepage (ID: 1001)
   for (const field of seedConfig.page.fields) {
     if (field.field_type === "TEXT") {
       await prisma.pageField.upsert({
@@ -120,7 +149,9 @@ async function seedCmsContent(adminId: string) {
           content: field.content,
         },
       });
-      console.log(`[seed] Seeded text field #${field.nbr} ("${field.content.slice(0, 30)}...")`);
+      console.log(
+        `[seed] Seeded text field #${field.nbr} ("${field.content.slice(0, 30)}...")`
+      );
     } else if (field.field_type === "IMAGE") {
       let imageRecord = await prisma.fileAndImage.findFirst({
         where: { file_url: field.file_url },
@@ -198,7 +229,35 @@ async function seedCmsContent(adminId: string) {
   console.log(`[seed] CMS structure successfully provisioned.`);
 }
 
+async function ensureIntegerPageIdSchema() {
+  const colCheck = await pool.query(`
+    SELECT data_type FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'pages' AND column_name = 'id';
+  `);
+  if (colCheck.rows[0]?.data_type && colCheck.rows[0].data_type !== "integer") {
+    console.log("[seed] Migrating pages.id and foreign keys from text to integer (starting at 1001)...");
+    await pool.query(`
+      TRUNCATE TABLE page_field_translations, page_fields, page_translations, pages, sections CASCADE;
+      ALTER TABLE page_fields DROP CONSTRAINT IF EXISTS page_fields_page_id_fkey;
+      ALTER TABLE page_translations DROP CONSTRAINT IF EXISTS page_translations_page_id_fkey;
+      ALTER TABLE objects DROP CONSTRAINT IF EXISTS objects_page_id_fkey;
+      CREATE SEQUENCE IF NOT EXISTS pages_id_seq START WITH 1001;
+      ALTER TABLE pages ALTER COLUMN id TYPE integer USING id::integer;
+      ALTER TABLE pages ALTER COLUMN id SET DEFAULT nextval('pages_id_seq');
+      ALTER SEQUENCE pages_id_seq OWNED BY pages.id;
+      ALTER TABLE sections ALTER COLUMN start_page_id TYPE integer USING start_page_id::integer;
+      ALTER TABLE page_translations ALTER COLUMN page_id TYPE integer USING page_id::integer;
+      ALTER TABLE objects ALTER COLUMN page_id TYPE integer USING page_id::integer;
+      ALTER TABLE page_fields ALTER COLUMN page_id TYPE integer USING page_id::integer;
+      ALTER TABLE page_fields ADD CONSTRAINT page_fields_page_id_fkey FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE ON UPDATE CASCADE;
+      ALTER TABLE page_translations ADD CONSTRAINT page_translations_page_id_fkey FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE CASCADE ON UPDATE CASCADE;
+      ALTER TABLE objects ADD CONSTRAINT objects_page_id_fkey FOREIGN KEY (page_id) REFERENCES pages(id) ON DELETE SET NULL ON UPDATE CASCADE;
+    `);
+  }
+}
+
 async function main() {
+  await ensureIntegerPageIdSchema();
   const admin = await seedSuperAdmin();
   await seedCmsContent(admin.id);
 }

@@ -1,7 +1,8 @@
 import { prisma } from "../db";
+import { HOMEPAGE_ID } from "./pages";
 
 export async function getSectionsAction() {
-  return prisma.section.findMany({
+  const sections = await prisma.section.findMany({
     orderBy: { sort_order: "asc" },
     include: {
       pages: {
@@ -18,27 +19,50 @@ export async function getSectionsAction() {
       },
     },
   });
+
+  // Always guarantee the root section (start_page_id === 1001) is first
+  return sections.sort((a, b) => {
+    const aIsRoot = a.start_page_id === HOMEPAGE_ID ? 0 : 1;
+    const bIsRoot = b.start_page_id === HOMEPAGE_ID ? 0 : 1;
+    if (aIsRoot !== bIsRoot) return aIsRoot - bIsRoot;
+    return a.sort_order - b.sort_order;
+  });
 }
 
 export interface SaveSectionParams {
   id?: string;
   name: string;
   translations?: Record<string, string> | null;
-  startPageId?: string | null;
+  startPageId?: number | string | null;
   sortOrder?: number;
   isVisible?: boolean;
 }
 
 export async function saveSectionAction(data: SaveSectionParams) {
+  const parsedStartPageId =
+    data.startPageId !== undefined &&
+    data.startPageId !== null &&
+    data.startPageId !== "" &&
+    !isNaN(Number(data.startPageId))
+      ? Number(data.startPageId)
+      : null;
+
   if (data.id && !data.id.startsWith("temp-")) {
+    const existing = await prisma.section.findUnique({
+      where: { id: data.id },
+    });
+
+    const isRootSection = existing?.start_page_id === HOMEPAGE_ID;
+
     return prisma.section.update({
       where: { id: data.id },
       data: {
         name: data.name,
         translations: data.translations ?? undefined,
-        start_page_id: data.startPageId ?? null,
-        sort_order: data.sortOrder ?? 0,
-        is_visible: data.isVisible ?? true,
+        // Root section (page 1001) cannot change its start_page_id or sort_order
+        start_page_id: isRootSection ? HOMEPAGE_ID : parsedStartPageId,
+        sort_order: isRootSection ? 0 : (data.sortOrder ?? existing?.sort_order ?? 1),
+        is_visible: isRootSection ? true : (data.isVisible ?? true),
       },
       include: {
         pages: {
@@ -61,8 +85,9 @@ export async function saveSectionAction(data: SaveSectionParams) {
     data: {
       name: data.name,
       translations: data.translations ?? {},
-      start_page_id: data.startPageId ?? null,
-      sort_order: data.sortOrder ?? 0,
+      start_page_id:
+        parsedStartPageId === HOMEPAGE_ID ? null : parsedStartPageId,
+      sort_order: Math.max(1, data.sortOrder ?? 1),
       is_visible: data.isVisible ?? true,
     },
     include: {
@@ -83,38 +108,60 @@ export async function saveSectionAction(data: SaveSectionParams) {
 }
 
 export async function reorderSectionsAction(orderedIds: string[]) {
-  await prisma.$transaction(
-    orderedIds.map((id, index) =>
+  const allSections = await prisma.section.findMany();
+  const rootSection = allSections.find((s) => s.start_page_id === HOMEPAGE_ID);
+  const nonRootOrdered = orderedIds.filter((id) => id !== rootSection?.id);
+
+  const updates = [
+    ...(rootSection
+      ? [
+          prisma.section.update({
+            where: { id: rootSection.id },
+            data: { sort_order: 0 },
+          }),
+        ]
+      : []),
+    ...nonRootOrdered.map((id, index) =>
       prisma.section.update({
         where: { id },
         data: { sort_order: index + 1 },
       })
-    )
-  );
+    ),
+  ];
+
+  if (updates.length > 0) {
+    await prisma.$transaction(updates);
+  }
   return getSectionsAction();
 }
 
 export async function updateNavigationMenuItemAction(params: {
-  previousPageId?: string | null;
-  targetPageId: string;
+  previousPageId?: number | string | null;
+  targetPageId: number | string;
   sectionId: string | null;
   menuTitle?: string;
   sortOrder?: number;
 }) {
-  if (
-    params.previousPageId &&
-    params.previousPageId !== params.targetPageId &&
-    !params.previousPageId.startsWith("temp-")
-  ) {
+  const prevId =
+    params.previousPageId !== undefined &&
+    params.previousPageId !== null &&
+    params.previousPageId !== "" &&
+    !isNaN(Number(params.previousPageId))
+      ? Number(params.previousPageId)
+      : null;
+
+  const targetId = Number(params.targetPageId);
+
+  if (prevId && prevId !== targetId && prevId !== HOMEPAGE_ID) {
     await prisma.page.update({
-      where: { id: params.previousPageId },
+      where: { id: prevId },
       data: { section_id: null },
     });
   }
 
-  if (params.targetPageId && !params.targetPageId.startsWith("temp-")) {
+  if (!isNaN(targetId)) {
     await prisma.page.update({
-      where: { id: params.targetPageId },
+      where: { id: targetId },
       data: {
         section_id: params.sectionId,
         ...(params.menuTitle !== undefined
@@ -131,12 +178,17 @@ export async function updateNavigationMenuItemAction(params: {
 }
 
 export async function reorderNavigationMenuItemsAction(
-  items: Array<{ pageId: string; sectionId: string | null; sortOrder: number }>
+  items: Array<{
+    pageId: number | string;
+    sectionId: string | null;
+    sortOrder: number;
+  }>
 ) {
+  const validItems = items.filter((item) => !isNaN(Number(item.pageId)));
   await prisma.$transaction(
-    items.map((item) =>
+    validItems.map((item) =>
       prisma.page.update({
-        where: { id: item.pageId },
+        where: { id: Number(item.pageId) },
         data: {
           section_id: item.sectionId,
           sort_order: item.sortOrder,
@@ -148,6 +200,14 @@ export async function reorderNavigationMenuItemsAction(
 }
 
 export async function deleteSectionAction(id: string) {
+  const existing = await prisma.section.findUnique({
+    where: { id },
+  });
+  if (existing?.start_page_id === HOMEPAGE_ID) {
+    throw new Error(
+      "The root section (linked to page 1001) is protected and cannot be deleted."
+    );
+  }
   return prisma.section.delete({
     where: { id },
   });

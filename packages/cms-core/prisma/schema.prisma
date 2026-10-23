@@ -65,7 +65,7 @@ model Section {
   id            String   @id @default(cuid()) @map("id")
   name          String   @map("name")
   translations  Json?    @map("translations")
-  start_page_id String?  @map("start_page_id")
+  start_page_id Int?     @map("start_page_id")
   sort_order    Int      @default(0) @map("sort_order")
   is_visible    Boolean  @default(true) @map("is_visible")
   created_at    DateTime @default(now()) @map("created_at")
@@ -77,7 +77,7 @@ model Section {
 }
 
 model Page {
-  id                String     @id @default(cuid()) @map("id")
+  id                Int        @id @default(autoincrement()) @map("id")
   template_name     String     @map("template_name")
   section_id        String?    @map("section_id")
   sort_order        Int        @default(0) @map("sort_order")
@@ -102,7 +102,7 @@ model Page {
 
 model PageTranslation {
   id               String  @id @default(cuid()) @map("id")
-  page_id          String  @map("page_id")
+  page_id          Int     @map("page_id")
   locale           String  @map("locale")
   page_title       String  @map("page_title")
   link_description String? @map("link_description")
@@ -174,7 +174,7 @@ model BookingObject {
   id              String   @id @default(cuid()) @map("id")
   name            String   @map("name")
   description     String?  @map("description")
-  page_id         String?  @map("page_id")
+  page_id         Int?     @map("page_id")
   size_sqm        Float?   @map("size_sqm")
   bed_count       Int      @default(1) @map("bed_count")
   extra_bed_count Int      @default(0) @map("extra_bed_count")
@@ -214,7 +214,7 @@ model Gallery {
 
 model PageField {
   id          String    @id @default(cuid()) @map("id")
-  page_id     String    @map("page_id")
+  page_id     Int       @map("page_id")
   nbr         Int       @map("nbr")
   field_type  FieldType @map("field_type")
   class_names String?   @map("class_names")

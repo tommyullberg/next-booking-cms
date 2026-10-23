@@ -6,7 +6,7 @@ import { X, Check, Loader2, Upload, Image as ImageIcon } from "lucide-react";
 
 export interface ImageEditModalProps {
   onSave?: (data: {
-    pageId: string;
+    pageId: number | string;
     nbr: number;
     imageUrl: string;
     width?: number | null;

@@ -28,7 +28,7 @@ export interface AdminAppProps {
   onHideAdmin?: () => void;
   onSavePage?: (data: any) => Promise<void>;
   onCreatePage?: (data: any) => Promise<void>;
-  onDeletePage?: (id: string) => Promise<void>;
+  onDeletePage?: (id: number | string) => Promise<void>;
   onCreateSection?: (data: any) => Promise<void>;
   onDeleteSection?: (id: string) => Promise<void>;
   onToggleSectionVisibility?: (id: string, current: boolean) => Promise<void>;
@@ -110,7 +110,7 @@ export function AdminApp({
     }
   }, [isOverlay, initialPages.length, initialSettings]);
 
-  const handleEditPage = async (pageId: string) => {
+  const handleEditPage = async (pageId: number | string) => {
     try {
       const res = await fetch(`/api/cms/pages/${pageId}`);
       if (res.ok) {
@@ -122,7 +122,7 @@ export function AdminApp({
     } catch {
       // Fallback
     }
-    const found = pages.find((p) => p.id === pageId);
+    const found = pages.find((p) => String(p.id) === String(pageId));
     if (found) {
       setEditingPage({
         id: found.id,
@@ -150,7 +150,7 @@ export function AdminApp({
 
     setPages((prev) =>
       prev.map((p) =>
-        p.id === data.id
+        String(p.id) === String(data.id)
           ? {
               ...p,
               page_title: data.pageTitle,
@@ -163,7 +163,7 @@ export function AdminApp({
       )
     );
     setEditingPage((prev) =>
-      prev && prev.id === data.id
+      prev && String(prev.id) === String(data.id)
         ? {
             ...prev,
             page_title: data.pageTitle,
@@ -191,31 +191,34 @@ export function AdminApp({
       });
       if (res.ok) {
         const created = await res.json();
-        setPages((prev) => [created, ...prev]);
+        setPages((prev) => [...prev, created]);
         return;
       }
     }
+    const nextId =
+      pages.reduce((max, p) => Math.max(max, Number(p.id) || 1001), 1001) + 1;
     setPages((prev) => [
+      ...prev,
       {
-        id: `p-${Date.now()}`,
+        id: nextId,
         page_title: data.pageTitle,
-        slug: data.slug,
+        slug: data.slug || String(nextId),
         template_name: data.templateName,
         status: "NEW",
         created_date: new Date(),
         section: sections.find((s) => s.id === data.sectionId) || null,
       },
-      ...prev,
     ]);
   };
 
-  const handleDeletePageInternal = async (pageId: string) => {
+  const handleDeletePageInternal = async (pageId: number | string) => {
+    if (Number(pageId) === 1001) return;
     if (onDeletePage) {
       await onDeletePage(pageId);
     } else {
       await fetch(`/api/cms/pages/${pageId}`, { method: "DELETE" });
     }
-    setPages((prev) => prev.filter((p) => p.id !== pageId));
+    setPages((prev) => prev.filter((p) => String(p.id) !== String(pageId)));
   };
 
   const handleSaveSectionInternal = async (data: any) => {
@@ -311,8 +314,8 @@ export function AdminApp({
   };
 
   const handleUpdateMenuItemInternal = async (params: {
-    previousPageId?: string | null;
-    targetPageId: string;
+    previousPageId?: number | string | null;
+    targetPageId: number | string;
     sectionId: string | null;
     menuTitle?: string;
     sortOrder?: number;
@@ -324,13 +327,13 @@ export function AdminApp({
     setPages((prev) =>
       prev.map((p) => {
         if (
-          params.previousPageId &&
-          p.id === params.previousPageId &&
-          params.previousPageId !== params.targetPageId
+          params.previousPageId != null &&
+          String(p.id) === String(params.previousPageId) &&
+          String(params.previousPageId) !== String(params.targetPageId)
         ) {
           return { ...p, section: null, section_id: null } as any;
         }
-        if (p.id === params.targetPageId) {
+        if (String(p.id) === String(params.targetPageId)) {
           return {
             ...p,
             section: targetSec,
@@ -365,13 +368,17 @@ export function AdminApp({
   };
 
   const handleReorderMenuItemsInternal = async (
-    items: Array<{ pageId: string; sectionId: string | null; sortOrder: number }>
+    items: Array<{
+      pageId: number | string;
+      sectionId: string | null;
+      sortOrder: number;
+    }>
   ) => {
-    const updateMap = new Map(items.map((i) => [i.pageId, i]));
+    const updateMap = new Map(items.map((i) => [String(i.pageId), i]));
 
     setPages((prev) =>
       prev.map((p) => {
-        const upd = updateMap.get(p.id);
+        const upd = updateMap.get(String(p.id));
         if (!upd) return p;
         const targetSec = upd.sectionId
           ? sections.find((s) => s.id === upd.sectionId) || null

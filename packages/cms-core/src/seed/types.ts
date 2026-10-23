@@ -37,11 +37,13 @@ export type SeedFieldConfig =
 
 export interface SeedSectionConfig {
   name: string;
+  translations?: Record<string, string>;
   sort_order?: number;
   is_visible?: boolean;
 }
 
 export interface SeedPageConfig {
+  id?: number;
   page_title: string;
   slug: string;
   template_name: string;

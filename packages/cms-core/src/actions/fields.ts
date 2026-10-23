@@ -1,7 +1,7 @@
 import { prisma } from "../db";
 
 export interface SaveTextFieldParams {
-  pageId: string;
+  pageId: number | string;
   nbr: number;
   content: string;
   locale?: string;
@@ -21,11 +21,12 @@ export async function saveTextFieldAction({
   textType = "plain",
   rows,
 }: SaveTextFieldParams) {
+  const numericPageId = Number(pageId) || 1001;
   // Upsert the main PageField record
   const field = await prisma.pageField.upsert({
     where: {
       page_id_nbr_field_type: {
-        page_id: pageId,
+        page_id: numericPageId,
         nbr,
         field_type: "TEXT",
       },
@@ -37,7 +38,7 @@ export async function saveTextFieldAction({
       ...(locale === "sv" ? { content } : {}),
     },
     create: {
-      page_id: pageId,
+      page_id: numericPageId,
       nbr,
       field_type: "TEXT",
       type: textType,
@@ -95,7 +96,7 @@ export async function saveTextFieldAction({
 }
 
 export interface SaveImageFieldParams {
-  pageId: string;
+  pageId: number | string;
   nbr: number;
   imageUrl: string;
   width?: number | null;
@@ -117,6 +118,7 @@ export async function saveImageFieldAction({
   ratio,
   classNames,
 }: SaveImageFieldParams) {
+  const numericPageId = Number(pageId) || 1001;
   // Find or create FileAndImage entry
   let fileRecord = await prisma.fileAndImage.findFirst({
     where: { file_url: imageUrl },
@@ -135,7 +137,7 @@ export async function saveImageFieldAction({
   const field = await prisma.pageField.upsert({
     where: {
       page_id_nbr_field_type: {
-        page_id: pageId,
+        page_id: numericPageId,
         nbr,
         field_type: "IMAGE",
       },
@@ -150,7 +152,7 @@ export async function saveImageFieldAction({
       class_names: classNames,
     },
     create: {
-      page_id: pageId,
+      page_id: numericPageId,
       nbr,
       field_type: "IMAGE",
       image_id: fileRecord?.id ?? null,

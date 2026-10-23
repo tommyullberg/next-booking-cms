@@ -25,7 +25,7 @@ export interface CMSFieldTranslation {
 
 export interface CMSPageField {
   id: string;
-  page_id: string;
+  page_id: number | string;
   nbr: number;
   field_type: "TEXT" | "IMAGE" | "NAVIGATION";
   class_names?: string | null;
@@ -53,7 +53,7 @@ export interface CMSPageTranslation {
 }
 
 export interface CMSPageData {
-  id: string;
+  id: number | string;
   template_name: string;
   section_id?: string | null;
   page_title: string;

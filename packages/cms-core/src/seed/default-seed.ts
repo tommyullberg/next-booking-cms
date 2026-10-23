@@ -2,14 +2,19 @@ import { SeedConfig } from "./types";
 
 export const defaultSeedConfig: SeedConfig = {
   section: {
-    name: "Huvudmeny",
+    name: "Hem",
+    translations: {
+      en: "Home",
+      de: "Zuhause",
+    },
     sort_order: 0,
     is_visible: true,
   },
   page: {
+    id: 1001,
     page_title: "Startsida",
     slug: "/",
-    template_name: "standard",
+    template_name: "startpage",
     status: "PUBLISHED",
     meta_title: "Startsida | NextBooking CMS",
     meta_description:
