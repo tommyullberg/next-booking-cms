@@ -29,27 +29,27 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
   const templateConfigs = [
     {
       type: "ADMIN_NEW_BOOKING_REQUEST" as const,
-      title: "Ny bokningsförfrågan (till administratör)",
-      description: "Skickas automatiskt till admin när en kund skickar en ny bokningsförfrågan via webbplatsen.",
-      defaultSubject: "Ny bokningsförfrågan mottagen - {{object_name}}",
+      title: "New Booking Request (Admin Notification)",
+      description: "Automatically dispatched to administrators when a guest submits a new booking request.",
+      defaultSubject: "New booking request received - {{object_name}}",
       defaultBody:
-        "<h1>Ny bokningsförfrågan mottagen</h1>\n<p><strong>Gäst:</strong> {{customer_name}} ({{customer_email}}, {{customer_phone}})</p>\n<p><strong>Period:</strong> {{start_date}} till {{end_date}}</p>\n<p><strong>Gäster:</strong> {{guests_count}} vuxna, {{pets_count}} husdjur</p>\n<p><a href='{{deeplink}}'>Klicka här för att hantera bokningen i admin</a></p>",
+        "<h1>New booking request received</h1>\n<p><strong>Guest:</strong> {{customer_name}} ({{customer_email}}, {{customer_phone}})</p>\n<p><strong>Dates:</strong> {{start_date}} to {{end_date}}</p>\n<p><strong>Guests:</strong> {{guests_count}} adults, {{pets_count}} pets</p>\n<p><a href='{{deeplink}}'>Click here to review and manage this booking in Admin</a></p>",
     },
     {
       type: "USER_NEW_BOOKING_REQUEST_COPY" as const,
-      title: "Bekräftelse på mottagen förfrågan (till gäst)",
-      description: "Skickas som kopia till gästen med information om att förfrågan behandlas.",
-      defaultSubject: "Tack för din bokningsförfrågan för {{object_name}}",
+      title: "Booking Request Received Copy (Guest)",
+      description: "Sent as a confirmation receipt to the guest while their request is pending review.",
+      defaultSubject: "Thank you for your booking request for {{object_name}}",
       defaultBody:
-        "<h1>Tack för din bokningsförfrågan, {{customer_name}}!</h1>\n<p>Vi har tagit emot din förfrågan för <strong>{{object_name}}</strong> mellan <strong>{{start_date}}</strong> och <strong>{{end_date}}</strong>.</p>\n<p>Vi återkommer så snart vi har granskat tillgängligheten.</p>",
+        "<h1>Thank you for your booking request, {{customer_name}}!</h1>\n<p>We have received your request for <strong>{{object_name}}</strong> from <strong>{{start_date}}</strong> to <strong>{{end_date}}</strong>.</p>\n<p>We will get back to you shortly once we have reviewed availability.</p>",
     },
     {
       type: "USER_BOOKING_CONFIRMED" as const,
-      title: "Bokningsbekräftelse (till gäst)",
-      description: "Skickas till gästen när administratören godkänner bokningsförfrågan.",
-      defaultSubject: "Bokningsbekräftelse för {{object_name}}",
+      title: "Booking Confirmed (Guest)",
+      description: "Dispatched to the guest when an administrator approves the booking request.",
+      defaultSubject: "Booking Confirmation for {{object_name}}",
       defaultBody:
-        "<h1>Din bokning är bekräftad!</h1>\n<p>Hej {{customer_name}},</p>\n<p>Din bokning av <strong>{{object_name}}</strong> är nu godkänd för perioden <strong>{{start_date}}</strong> till <strong>{{end_date}}</strong>.</p>\n<p><strong>Totalpris:</strong> {{price}}</p>\n<p>Varmt välkommen till oss!</p>",
+        "<h1>Your booking is confirmed!</h1>\n<p>Hello {{customer_name}},</p>\n<p>Your reservation for <strong>{{object_name}}</strong> is now confirmed for <strong>{{start_date}}</strong> to <strong>{{end_date}}</strong>.</p>\n<p><strong>Total Price:</strong> {{price}}</p>\n<p>We look forward to welcoming you!</p>",
     },
   ];
 
@@ -73,7 +73,9 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
     setTimeout(() => setCopiedTag(null), 2000);
   };
 
-  const handleSave = async (type: "ADMIN_NEW_BOOKING_REQUEST" | "USER_NEW_BOOKING_REQUEST_COPY" | "USER_BOOKING_CONFIRMED") => {
+  const handleSave = async (
+    type: "ADMIN_NEW_BOOKING_REQUEST" | "USER_NEW_BOOKING_REQUEST_COPY" | "USER_BOOKING_CONFIRMED"
+  ) => {
     setSavingType(type);
     setSaveSuccess(null);
     try {
@@ -90,9 +92,9 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
     <div className="space-y-8 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">E-postmallar</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Konfigurera automatiska e-postmeddelanden för bokningsförfrågningar och bekräftelser.
+          <h1 className="text-2xl font-bold tracking-tight text-white">Mail Templates</h1>
+          <p className="mt-1 text-xs text-slate-400">
+            Configure automated transactional email templates for booking requests and confirmations.
           </p>
         </div>
 
@@ -104,15 +106,14 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
               ? "bg-sky-500/10 border-sky-500/30 text-sky-400 shadow-sm"
               : "border-slate-800 bg-slate-900 text-slate-400 hover:text-white"
           }`}
-          title="Visa dynamiska platshållartaggar"
+          title="Toggle dynamic placeholder tags"
         >
           <HelpCircle className="w-4 h-4 text-sky-400" />
-          <span>Platshållare</span>
+          <span>Placeholders</span>
           {showHelp ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
       </div>
 
-      {/* Persistent expandable help section */}
       {showHelp && (
         <div className="rounded-2xl border border-sky-500/20 bg-sky-950/20 p-5 text-white backdrop-blur">
           <div className="flex items-center justify-between mb-3">
@@ -121,11 +122,11 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
                 <HelpCircle className="w-4 h-4" />
               </span>
               <h2 className="text-xs font-bold uppercase tracking-wider text-sky-300">
-                Dynamiska platshållare (klicka för att kopiera)
+                Dynamic Placeholders (Click to copy)
               </h2>
             </div>
             <span className="text-[11px] text-slate-400">
-              Dessa taggar ersätts automatiskt med data vid utskick.
+              Replaced automatically with live booking values on dispatch.
             </span>
           </div>
 
@@ -142,7 +143,7 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
                       ? "border-emerald-500 bg-emerald-950/40 text-emerald-300"
                       : "border-slate-700 bg-slate-900/80 text-sky-300 hover:border-sky-500 hover:bg-slate-800"
                   }`}
-                  title={`${p.label} (exempel: ${p.example})`}
+                  title={`${p.label} (e.g. ${p.example})`}
                 >
                   <span>{p.tag}</span>
                   {isCopied ? (
@@ -157,7 +158,6 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
         </div>
       )}
 
-      {/* Templates List */}
       <div className="space-y-6">
         {templateConfigs.map((cfg) => {
           const state = formState[cfg.type];
@@ -193,13 +193,13 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
                   ) : (
                     <Save className="w-3.5 h-3.5" />
                   )}
-                  <span>{isSuccess ? "Sparat!" : "Spara mall"}</span>
+                  <span>{isSuccess ? "Saved!" : "Save Template"}</span>
                 </button>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Ämnesrad (Subject)
+                  Subject Line
                 </label>
                 <input
                   type="text"
@@ -216,7 +216,7 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
 
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Meddelandetext (HTML & Text)
+                  Message Body (HTML & Text)
                 </label>
                 <textarea
                   rows={6}

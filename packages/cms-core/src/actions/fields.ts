@@ -5,6 +5,7 @@ export interface SaveTextFieldParams {
   nbr: number;
   content: string;
   locale?: string;
+  translations?: Record<string, string>;
   classNames?: string | null;
   textType?: string | null;
   rows?: number | null;
@@ -15,6 +16,7 @@ export async function saveTextFieldAction({
   nbr,
   content,
   locale = "sv",
+  translations,
   classNames,
   textType = "plain",
   rows,
@@ -45,8 +47,29 @@ export async function saveTextFieldAction({
     },
   });
 
-  // If locale is non-Swedish (e.g. en or de), upsert page_field_translations
-  if (locale && locale !== "sv") {
+  // If translations map is provided, upsert all secondary language translations
+  if (translations && typeof translations === "object") {
+    for (const [loc, transContent] of Object.entries(translations)) {
+      if (loc && loc !== "sv") {
+        await prisma.pageFieldTranslation.upsert({
+          where: {
+            page_field_id_locale: {
+              page_field_id: field.id,
+              locale: loc,
+            },
+          },
+          update: {
+            content: transContent ?? "",
+          },
+          create: {
+            page_field_id: field.id,
+            locale: loc,
+            content: transContent ?? "",
+          },
+        });
+      }
+    }
+  } else if (locale && locale !== "sv") {
     await prisma.pageFieldTranslation.upsert({
       where: {
         page_field_id_locale: {

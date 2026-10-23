@@ -1,44 +1,48 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 
-type Theme = "dark" | "light";
+export type AdminTheme = "dark" | "light";
 
-interface ThemeContextType {
-  theme: Theme;
+export interface ThemeContextType {
+  theme: AdminTheme;
   toggleTheme: () => void;
+  isThemeLocked: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: "dark",
   toggleTheme: () => {},
+  isThemeLocked: true,
 });
+
+export interface AdminThemeProviderProps {
+  children: React.ReactNode;
+  enableThemeSwitch?: boolean;
+}
 
 export function AdminThemeProvider({
   children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [theme, setTheme] = useState<Theme>("dark");
-
-  useEffect(() => {
-    const saved = localStorage.getItem("nextbooking_admin_theme") as Theme | null;
-    if (saved === "light" || saved === "dark") {
-      setTheme(saved);
-    }
-  }, []);
+  enableThemeSwitch = false,
+}: AdminThemeProviderProps) {
+  const [theme, setTheme] = useState<AdminTheme>("dark");
 
   const toggleTheme = () => {
-    setTheme((prev) => {
-      const next = prev === "dark" ? "light" : "dark";
-      localStorage.setItem("nextbooking_admin_theme", next);
-      return next;
-    });
+    if (!enableThemeSwitch) {
+      return;
+    }
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <div className={theme === "dark" ? "dark bg-slate-950 text-slate-100" : "bg-slate-50 text-slate-900"}>
+    <ThemeContext.Provider
+      value={{
+        theme: enableThemeSwitch ? theme : "dark",
+        toggleTheme,
+        isThemeLocked: !enableThemeSwitch,
+      }}
+    >
+      <div className="dark bg-slate-950 text-slate-100 antialiased selection:bg-sky-500/20 selection:text-sky-200">
         {children}
       </div>
     </ThemeContext.Provider>

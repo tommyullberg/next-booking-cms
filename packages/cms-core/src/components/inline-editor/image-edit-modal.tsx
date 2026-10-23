@@ -62,8 +62,8 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
       if (data.fileUrl) {
         setImageUrl(data.fileUrl);
       }
-    } catch (err: any) {
-      setErrorMessage("Kunde inte ladda upp bilden");
+    } catch {
+      setErrorMessage("Could not upload image");
     } finally {
       setIsUploading(false);
     }
@@ -71,7 +71,7 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
 
   const handleSave = async () => {
     if (!imageUrl.trim()) {
-      setErrorMessage("Ange en bild-URL eller ladda upp en bild");
+      setErrorMessage("Please enter an image URL or upload an image file");
       return;
     }
 
@@ -107,20 +107,20 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
       if (typeof window !== "undefined") {
         window.location.reload();
       }
-    } catch (err: any) {
-      setErrorMessage("Kunde inte spara bilden");
+    } catch {
+      setErrorMessage("Could not save image field");
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 text-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold">
-              Redigera bildfält #{selectedField.nbr}
+              Edit Image Field #{selectedField.nbr}
             </h2>
           </div>
           <button
@@ -137,7 +137,7 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
             <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center p-2">
               <img
                 src={imageUrl}
-                alt="Förhandsgranskning"
+                alt="Preview"
                 className="max-h-48 w-auto rounded object-cover"
                 style={{ aspectRatio: ratio }}
               />
@@ -145,26 +145,26 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
           ) : (
             <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-800 bg-slate-950 p-6 text-slate-500">
               <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
-              <span className="text-xs">Ingen bild vald</span>
+              <span className="text-xs">No image selected</span>
             </div>
           )}
 
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Bild-URL
+              Image URL
             </label>
             <input
               type="text"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
               className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-              placeholder="https://... eller /uploads/..."
+              placeholder="https://... or /uploads/..."
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Eller ladda upp lokal fil
+              Or upload local file
             </label>
             <label className="flex items-center justify-center gap-2 cursor-pointer rounded-xl border border-slate-700 bg-slate-800 p-2.5 text-xs font-medium text-slate-200 hover:bg-slate-700">
               {isUploading ? (
@@ -172,7 +172,9 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
               ) : (
                 <Upload className="w-4 h-4 text-amber-400" />
               )}
-              <span>{isUploading ? "Laddar upp..." : "Välj bildfil från datorn"}</span>
+              <span>
+                {isUploading ? "Uploading..." : "Choose image file from computer"}
+              </span>
               <input
                 type="file"
                 accept="image/*"
@@ -186,7 +188,7 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Proportioner (Ratio)
+                Aspect Ratio
               </label>
               <select
                 value={ratio}
@@ -194,16 +196,16 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100 focus:border-amber-500 focus:outline-none"
               >
                 <option value="16/9">16:9 (Widescreen)</option>
-                <option value="4/3">4:3 (Klassisk)</option>
-                <option value="1/1">1:1 (Kvadrat)</option>
-                <option value="3/2">3:2 (Foto)</option>
+                <option value="4/3">4:3 (Classic)</option>
+                <option value="1/1">1:1 (Square)</option>
+                <option value="3/2">3:2 (Photo)</option>
                 <option value="auto">Auto</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Max bredd (px)
+                Max Width (px)
               </label>
               <input
                 type="number"
@@ -211,7 +213,7 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
                 onChange={(e) =>
                   setMaxWidth(e.target.value ? Number(e.target.value) : "")
                 }
-                placeholder="Valfritt t.ex. 800"
+                placeholder="Optional e.g. 800"
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100 focus:border-amber-500 focus:outline-none"
               />
             </div>
@@ -228,7 +230,7 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
             onClick={closeModal}
             className="rounded-lg px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800"
           >
-            Avbryt
+            Cancel
           </button>
           <button
             type="button"
@@ -241,7 +243,7 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
             ) : (
               <Check className="w-3.5 h-3.5" />
             )}
-            <span>Spara</span>
+            <span>Save Changes</span>
           </button>
         </div>
       </div>

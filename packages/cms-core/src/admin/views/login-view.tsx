@@ -28,12 +28,12 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
       });
 
       if (result?.error) {
-        setError("Felaktig e-postadress eller lösenord.");
+        setError("Invalid email address or password.");
       } else if (result?.ok) {
         window.location.href = callbackUrl;
       }
     } catch {
-      setError("Ett oväntat fel uppstod vid inloggning.");
+      setError("An unexpected error occurred during sign in.");
     } finally {
       setIsLoading(false);
     }
@@ -50,7 +50,7 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
             NextBooking <span className="text-sky-400 font-normal">CMS</span>
           </h1>
           <p className="mt-1 text-xs text-slate-400">
-            Logga in på administratörspanelen
+            Sign in to the administration panel
           </p>
         </div>
 
@@ -63,7 +63,7 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              E-postadress
+              Email Address
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
@@ -72,7 +72,7 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@nextbooking.se"
+                placeholder="admin@example.com"
                 className="w-full rounded-xl border border-slate-800 bg-slate-950 pl-10 pr-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
               />
             </div>
@@ -80,7 +80,7 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
 
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Lösenord
+              Password
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
@@ -103,7 +103,7 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <span>Logga in</span>
+              <span>Sign In</span>
             )}
           </button>
         </form>

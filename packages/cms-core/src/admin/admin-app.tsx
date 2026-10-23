@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import { AdminThemeProvider } from "./theme-context";
 import { AdminLayout, AdminTab } from "./admin-layout";
@@ -8,16 +8,24 @@ import { DashboardView } from "./views/dashboard-view";
 import { PagesView, PageListItem } from "./views/pages-view";
 import { PageEditorView, PageEditorData } from "./views/page-editor-view";
 import { SectionsView, SectionItem } from "./views/sections-view";
+import { NavigationMenusView } from "./views/navigation-menus-view";
 import { MediaView, MediaItem } from "./views/media-view";
 import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view";
+import { SettingsView } from "./views/settings-view";
 
 export interface AdminAppProps {
   initialPages?: PageListItem[];
   initialSections?: SectionItem[];
   initialMedia?: MediaItem[];
   initialMailTemplates?: MailTemplateItem[];
+  initialSettings?: {
+    activeLanguages: string[];
+    bookingIcalUrl: string;
+  };
   adminName?: string;
   frontendUrl?: string;
+  isOverlay?: boolean;
+  onHideAdmin?: () => void;
   onSavePage?: (data: any) => Promise<void>;
   onCreatePage?: (data: any) => Promise<void>;
   onDeletePage?: (id: string) => Promise<void>;
@@ -34,8 +42,11 @@ export function AdminApp({
   initialSections = [],
   initialMedia = [],
   initialMailTemplates = [],
-  adminName = "Administratör",
+  initialSettings,
+  adminName = "Super Admin",
   frontendUrl = "/",
+  isOverlay = false,
+  onHideAdmin,
   onSavePage,
   onCreatePage,
   onDeletePage,
@@ -51,7 +62,53 @@ export function AdminApp({
   const [sections, setSections] = useState<SectionItem[]>(initialSections);
   const [media, setMedia] = useState<MediaItem[]>(initialMedia);
   const [mailTemplates, setMailTemplates] = useState<MailTemplateItem[]>(initialMailTemplates);
+  const [activeLanguages, setActiveLanguages] = useState<string[]>(
+    initialSettings?.activeLanguages || ["sv", "en", "de"]
+  );
+  const [bookingIcalUrl, setBookingIcalUrl] = useState<string>(
+    initialSettings?.bookingIcalUrl || ""
+  );
   const [editingPage, setEditingPage] = useState<PageEditorData | null>(null);
+
+  useEffect(() => {
+    if (isOverlay && initialPages.length === 0) {
+      fetch("/api/cms/admin-init")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) {
+            if (Array.isArray(data.pages)) setPages(data.pages);
+            if (Array.isArray(data.sections)) setSections(data.sections);
+            if (Array.isArray(data.media)) setMedia(data.media);
+            if (Array.isArray(data.mailTemplates)) setMailTemplates(data.mailTemplates);
+            if (data.settings) {
+              if (Array.isArray(data.settings.activeLanguages)) {
+                setActiveLanguages(data.settings.activeLanguages);
+              }
+              if (typeof data.settings.bookingIcalUrl === "string") {
+                setBookingIcalUrl(data.settings.bookingIcalUrl);
+              }
+            }
+          }
+        })
+        .catch(() => {
+          // Graceful fallback if offline
+        });
+    } else if (!initialSettings) {
+      fetch("/api/cms/settings")
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data) {
+            if (Array.isArray(data.activeLanguages)) {
+              setActiveLanguages(data.activeLanguages);
+            }
+            if (typeof data.bookingIcalUrl === "string") {
+              setBookingIcalUrl(data.bookingIcalUrl);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOverlay, initialPages.length, initialSettings]);
 
   const handleEditPage = async (pageId: string) => {
     try {
@@ -98,10 +155,28 @@ export function AdminApp({
               ...p,
               page_title: data.pageTitle,
               slug: data.slug,
+              template_name: data.templateName || p.template_name,
               status: data.status,
+              section: sections.find((s) => s.id === data.sectionId) || null,
             }
           : p
       )
+    );
+    setEditingPage((prev) =>
+      prev && prev.id === data.id
+        ? {
+            ...prev,
+            page_title: data.pageTitle,
+            menu_title: data.menuTitle,
+            slug: data.slug,
+            template_name: data.templateName || prev.template_name,
+            section_id: data.sectionId || null,
+            status: data.status,
+            publication_start: data.publicationStart,
+            publication_end: data.publicationEnd,
+            modified_date: new Date(),
+          }
+        : prev
     );
   };
 
@@ -143,30 +218,87 @@ export function AdminApp({
     setPages((prev) => prev.filter((p) => p.id !== pageId));
   };
 
+  const handleSaveSectionInternal = async (data: any) => {
+    const res = await fetch("/api/cms/sections", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
+    if (res.ok) {
+      const saved = await res.json();
+      setSections((prev) => {
+        const exists = prev.some((s) => s.id === saved.id);
+        if (exists) {
+          return prev.map((s) => (s.id === saved.id ? saved : s));
+        }
+        return [...prev, saved];
+      });
+      return saved;
+    }
+    if (data.id) {
+      setSections((prev) =>
+        prev.map((s) =>
+          s.id === data.id
+            ? {
+                ...s,
+                name: data.name,
+                translations: data.translations,
+                start_page_id: data.startPageId,
+                sort_order: data.sortOrder,
+                is_visible: data.isVisible,
+              }
+            : s
+        )
+      );
+    } else {
+      setSections((prev) => [
+        ...prev,
+        {
+          id: `sec-${Date.now()}`,
+          name: data.name,
+          translations: data.translations,
+          start_page_id: data.startPageId,
+          sort_order: data.sortOrder,
+          is_visible: data.isVisible,
+        },
+      ]);
+    }
+  };
+
+  const handleReorderSectionsInternal = async (orderedIds: string[]) => {
+    setSections((prev) => {
+      const map = new Map(prev.map((s) => [s.id, s]));
+      return orderedIds
+        .map((id, idx) => {
+          const item = map.get(id);
+          return item ? { ...item, sort_order: idx + 1 } : null;
+        })
+        .filter(Boolean) as SectionItem[];
+    });
+
+    try {
+      const res = await fetch("/api/cms/sections/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderedIds }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        if (Array.isArray(updated)) {
+          setSections(updated);
+        }
+      }
+    } catch {
+      // Optimistic state kept on failure
+    }
+  };
+
   const handleCreateSectionInternal = async (data: any) => {
     if (onCreateSection) {
       await onCreateSection(data);
     } else {
-      const res = await fetch("/api/cms/sections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (res.ok) {
-        const created = await res.json();
-        setSections((prev) => [...prev, created]);
-        return;
-      }
+      await handleSaveSectionInternal(data);
     }
-    setSections((prev) => [
-      ...prev,
-      {
-        id: `sec-${Date.now()}`,
-        name: data.name,
-        sort_order: data.sortOrder,
-        is_visible: data.isVisible,
-      },
-    ]);
   };
 
   const handleDeleteSectionInternal = async (id: string) => {
@@ -178,6 +310,98 @@ export function AdminApp({
     setSections((prev) => prev.filter((s) => s.id !== id));
   };
 
+  const handleUpdateMenuItemInternal = async (params: {
+    previousPageId?: string | null;
+    targetPageId: string;
+    sectionId: string | null;
+    menuTitle?: string;
+    sortOrder?: number;
+  }) => {
+    const targetSec = params.sectionId
+      ? sections.find((s) => s.id === params.sectionId) || null
+      : null;
+
+    setPages((prev) =>
+      prev.map((p) => {
+        if (
+          params.previousPageId &&
+          p.id === params.previousPageId &&
+          params.previousPageId !== params.targetPageId
+        ) {
+          return { ...p, section: null, section_id: null } as any;
+        }
+        if (p.id === params.targetPageId) {
+          return {
+            ...p,
+            section: targetSec,
+            section_id: params.sectionId,
+            ...(params.menuTitle !== undefined
+              ? { link_description: params.menuTitle }
+              : {}),
+            ...(params.sortOrder !== undefined
+              ? { sort_order: params.sortOrder }
+              : {}),
+          } as any;
+        }
+        return p;
+      })
+    );
+
+    try {
+      const res = await fetch("/api/cms/navigation-menus/item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      });
+      if (res.ok) {
+        const updatedSections = await res.json();
+        if (Array.isArray(updatedSections)) {
+          setSections(updatedSections);
+        }
+      }
+    } catch {
+      // Keep optimistic state
+    }
+  };
+
+  const handleReorderMenuItemsInternal = async (
+    items: Array<{ pageId: string; sectionId: string | null; sortOrder: number }>
+  ) => {
+    const updateMap = new Map(items.map((i) => [i.pageId, i]));
+
+    setPages((prev) =>
+      prev.map((p) => {
+        const upd = updateMap.get(p.id);
+        if (!upd) return p;
+        const targetSec = upd.sectionId
+          ? sections.find((s) => s.id === upd.sectionId) || null
+          : null;
+        return {
+          ...p,
+          section: targetSec,
+          section_id: upd.sectionId,
+          sort_order: upd.sortOrder,
+        } as any;
+      })
+    );
+
+    try {
+      const res = await fetch("/api/cms/navigation-menus/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+      });
+      if (res.ok) {
+        const updatedSections = await res.json();
+        if (Array.isArray(updatedSections)) {
+          setSections(updatedSections);
+        }
+      }
+    } catch {
+      // Keep optimistic state
+    }
+  };
+
   const handleToggleSectionVisibilityInternal = async (
     id: string,
     current: boolean
@@ -185,11 +409,20 @@ export function AdminApp({
     if (onToggleSectionVisibility) {
       await onToggleSectionVisibility(id, current);
     } else {
-      await fetch(`/api/cms/sections/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isVisible: !current }),
-      });
+      const target = sections.find((s) => s.id === id);
+      if (target) {
+        await fetch("/api/cms/sections", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: target.id,
+            name: target.name,
+            startPageId: target.start_page_id,
+            sortOrder: target.sort_order,
+            isVisible: !current,
+          }),
+        });
+      }
     }
     setSections((prev) =>
       prev.map((s) => (s.id === id ? { ...s, is_visible: !current } : s))
@@ -265,6 +498,8 @@ export function AdminApp({
         onTabChange={setCurrentTab}
         adminName={adminName}
         frontendUrl={frontendUrl}
+        isOverlay={isOverlay}
+        onHideAdmin={onHideAdmin}
         onLogout={() => signOut({ callbackUrl: "/admin/login" })}
       >
         {currentTab === "dashboard" && (
@@ -290,6 +525,8 @@ export function AdminApp({
         {currentTab === "page-editor" && editingPage && (
           <PageEditorView
             page={editingPage}
+            sections={sections}
+            activeLanguages={activeLanguages}
             onBack={() => setCurrentTab("pages")}
             onSave={handleSavePageInternal}
           />
@@ -298,8 +535,12 @@ export function AdminApp({
         {currentTab === "sections" && (
           <SectionsView
             sections={sections}
+            pages={pages}
+            activeLanguages={activeLanguages}
+            onSaveSection={handleSaveSectionInternal}
             onCreateSection={handleCreateSectionInternal}
             onDeleteSection={handleDeleteSectionInternal}
+            onReorderSections={handleReorderSectionsInternal}
             onToggleVisibility={handleToggleSectionVisibilityInternal}
           />
         )}
@@ -319,22 +560,118 @@ export function AdminApp({
           />
         )}
 
+        {currentTab === "navigation-menus" && (
+          <NavigationMenusView
+            sections={sections}
+            pages={pages}
+            onNavigateToSections={() => setCurrentTab("sections")}
+            onUpdateMenuItem={handleUpdateMenuItemInternal}
+            onReorderMenuItems={handleReorderMenuItemsInternal}
+          />
+        )}
+
+        {currentTab === "categories" && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
+            <h2 className="text-lg font-semibold text-white mb-2">
+              Categories & Types
+            </h2>
+            <p className="text-xs">
+              Define taxonomy groups and category classifications for pages and content.
+            </p>
+          </div>
+        )}
+
+        {currentTab === "administrators" && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
+            <h2 className="text-lg font-semibold text-white mb-2">
+              Administrators
+            </h2>
+            <p className="text-xs">
+              Manage administrator accounts and Role-Based Access Control (SUPERADMIN, ADMIN, EDITOR).
+            </p>
+          </div>
+        )}
+
+        {currentTab === "settings" && (
+          <SettingsView
+            activeLanguages={activeLanguages}
+            bookingIcalUrl={bookingIcalUrl}
+            onSaveSettings={async (newSettings) => {
+              setActiveLanguages(newSettings.activeLanguages);
+              setBookingIcalUrl(newSettings.bookingIcalUrl);
+              try {
+                const res = await fetch("/api/cms/settings", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(newSettings),
+                });
+                if (res.ok) {
+                  const saved = await res.json();
+                  if (Array.isArray(saved.activeLanguages)) {
+                    setActiveLanguages(saved.activeLanguages);
+                  }
+                  if (typeof saved.bookingIcalUrl === "string") {
+                    setBookingIcalUrl(saved.bookingIcalUrl);
+                  }
+                }
+              } catch {
+                // Optimistic state kept
+              }
+            }}
+          />
+        )}
+
+        {currentTab === "bookings-dashboard" && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
+            <h2 className="text-lg font-semibold text-white mb-2">
+              Bookings Overview
+            </h2>
+            <p className="text-xs">
+              Overview of incoming booking requests, confirmed reservations, and occupancy metrics.
+            </p>
+          </div>
+        )}
+
         {currentTab === "bookings" && (
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
             <h2 className="text-lg font-semibold text-white mb-2">
-              Bokningar & Kalender
+              Bookings Calendar
             </h2>
             <p className="text-xs">
-              Bokningskalendern synkroniseras via TanStack Query och iCal-flöden.
+              Interactive booking calendar synchronized via TanStack Query and iCal feeds.
             </p>
           </div>
         )}
 
         {currentTab === "objects" && (
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
-            <h2 className="text-lg font-semibold text-white mb-2">Boendeobjekt</h2>
+            <h2 className="text-lg font-semibold text-white mb-2">
+              Booking Objects
+            </h2>
             <p className="text-xs">
-              Boendeobjekt och prislistor kopplas direkt mot bokningsmotorn.
+              Manage rentable units, bed capacity, pet policies, and seasonal price matrices.
+            </p>
+          </div>
+        )}
+
+        {currentTab === "booking-categories" && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
+            <h2 className="text-lg font-semibold text-white mb-2">
+              Booking Categories & Types
+            </h2>
+            <p className="text-xs">
+              Categorize rentable booking units and accommodation types.
+            </p>
+          </div>
+        )}
+
+        {currentTab === "amenities" && (
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
+            <h2 className="text-lg font-semibold text-white mb-2">
+              Amenities
+            </h2>
+            <p className="text-xs">
+              Manage property features and amenities associated with booking objects.
             </p>
           </div>
         )}

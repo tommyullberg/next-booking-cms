@@ -132,8 +132,8 @@ export async function savePageAction(data: SavePageParams) {
         meta_description: data.metaDescription,
         slug: validSlug,
         status: data.status,
-        publication_start: data.publicationStart,
-        publication_end: data.publicationEnd,
+        publication_start: data.publicationStart ? new Date(data.publicationStart) : null,
+        publication_end: data.publicationEnd ? new Date(data.publicationEnd) : null,
       },
     });
 
@@ -213,18 +213,21 @@ export async function loadAdminInitialData() {
   const { getSectionsAction } = await import("./sections");
   const { getMediaFilesAction } = await import("./media");
   const { getMailTemplatesAction } = await import("../mail");
+  const { getCmsSettingsAction } = await import("./settings");
 
   let pages: any[] = [];
   let sections: any[] = [];
   let media: any[] = [];
   let mailTemplates: any[] = [];
+  let settings = { activeLanguages: ["sv", "en", "de"], bookingIcalUrl: "" };
 
   try {
-    [pages, sections, media, mailTemplates] = await Promise.all([
+    [pages, sections, media, mailTemplates, settings] = await Promise.all([
       getPagesAction(),
       getSectionsAction(),
       getMediaFilesAction(),
       getMailTemplatesAction(),
+      getCmsSettingsAction(),
     ]);
   } catch {
     pages = [];
@@ -233,6 +236,6 @@ export async function loadAdminInitialData() {
     mailTemplates = [];
   }
 
-  return { pages, sections, media, mailTemplates };
+  return { pages, sections, media, mailTemplates, settings };
 }
 

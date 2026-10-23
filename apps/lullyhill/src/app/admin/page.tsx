@@ -12,7 +12,7 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  const { pages, sections, media, mailTemplates } = await loadAdminInitialData();
+  const { pages, sections, media, mailTemplates, settings } = await loadAdminInitialData();
 
   return (
     <AdminApp
@@ -20,6 +20,7 @@ export default async function AdminPage() {
       initialSections={sections}
       initialMedia={media}
       initialMailTemplates={mailTemplates as any}
+      initialSettings={settings}
       adminName={session.user.name || session.user.email || "Admin"}
       frontendUrl="/"
     />

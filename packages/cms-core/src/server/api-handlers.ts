@@ -2,8 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { saveTextFieldAction, saveImageFieldAction } from "../actions/fields";
 import { uploadMediaAction, deleteMediaAction } from "../actions/media";
 import { translateText } from "../ai";
-import { getPageByIdAction, savePageAction, deletePageAction } from "../actions/pages";
-import { saveSectionAction, deleteSectionAction } from "../actions/sections";
+import { getPageByIdAction, savePageAction, deletePageAction, loadAdminInitialData } from "../actions/pages";
+import {
+  saveSectionAction,
+  deleteSectionAction,
+  reorderSectionsAction,
+  updateNavigationMenuItemAction,
+  reorderNavigationMenuItemsAction,
+} from "../actions/sections";
+import { getCmsSettingsAction, saveCmsSettingsAction } from "../actions/settings";
 import { saveMailTemplateAction } from "../mail";
 import { syncICalBackgroundJob } from "../ical";
 import { generateICalFeed } from "../ical/generator";
@@ -134,9 +141,42 @@ export async function handleCmsApiRoute(
       const result = await saveSectionAction(body);
       return NextResponse.json(result);
     }
+    if (path === "sections/reorder") {
+      const body = await req.json();
+      const result = await reorderSectionsAction(body.orderedIds || []);
+      return NextResponse.json(result);
+    }
+    if (path === "navigation-menus/item") {
+      const body = await req.json();
+      const result = await updateNavigationMenuItemAction(body);
+      return NextResponse.json(result);
+    }
+    if (path === "navigation-menus/reorder") {
+      const body = await req.json();
+      const result = await reorderNavigationMenuItemsAction(body.items || []);
+      return NextResponse.json(result);
+    }
+    if (path === "settings") {
+      const body = await req.json();
+      const result = await saveCmsSettingsAction(body);
+      return NextResponse.json(result);
+    }
   }
 
   if (method === "GET") {
+    if (path === "settings") {
+      const settings = await getCmsSettingsAction();
+      return NextResponse.json(settings);
+    }
+    if (path === "admin-init") {
+      try {
+        const data = await loadAdminInitialData();
+        return NextResponse.json(data);
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
+    }
+
     if (path === "bookings") {
       try {
         const objectId = req.nextUrl.searchParams.get("objectId") || undefined;

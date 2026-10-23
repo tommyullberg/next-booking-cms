@@ -11,16 +11,12 @@ export interface FloatingPanelProps {
 }
 
 export function FloatingPanel({
-  adminUrl = "/admin",
   className = "",
 }: FloatingPanelProps) {
   const { mode, setMode } = useEditorStore();
 
   const handleAdminClick = () => {
     setMode("administration");
-    if (typeof window !== "undefined") {
-      window.location.href = adminUrl;
-    }
   };
 
   const handleSignOut = () => {
@@ -60,6 +56,10 @@ export function FloatingPanel({
     },
   ];
 
+  if (mode === "administration") {
+    return null;
+  }
+
   return (
     <aside
       aria-label="CMS Inline Editor Toolbar"
@@ -88,11 +88,11 @@ export function FloatingPanel({
         <button
           type="button"
           onClick={handleSignOut}
-          title="Logga ut administratör"
+          title="Sign out administrator"
           className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all duration-150 ml-1 border-l border-slate-700/60 pl-2.5"
         >
           <LogOut className="w-3.5 h-3.5" />
-          <span>Logga ut</span>
+          <span>Sign out</span>
         </button>
       </div>
     </aside>

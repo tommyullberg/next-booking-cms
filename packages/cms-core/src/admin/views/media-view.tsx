@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Upload, Trash2, Copy, Check, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Upload, Trash2, Copy, Check, Loader2 } from "lucide-react";
 
 export interface MediaItem {
   id: string;
@@ -42,22 +42,22 @@ export function MediaView({ media, onUpload, onDelete }: MediaViewProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Mediebibliotek</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Ladda upp och hantera bilder och dokument sparade via Storage Adapter.
+          <h1 className="text-2xl font-bold tracking-tight text-white">Media & Files</h1>
+          <p className="mt-1 text-xs text-slate-400">
+            Upload and manage images and documents stored via the active Storage Adapter.
           </p>
         </div>
 
-        <label className="flex items-center gap-2 cursor-pointer rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition">
+        <label className="flex items-center gap-2 cursor-pointer rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition">
           {isUploading ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Upload className="w-4 h-4" />
           )}
-          <span>{isUploading ? "Laddar upp..." : "Ladda upp bild"}</span>
+          <span>{isUploading ? "Uploading..." : "Upload File"}</span>
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,application/pdf"
             onChange={handleFileChange}
             disabled={isUploading}
             className="hidden"
@@ -68,7 +68,7 @@ export function MediaView({ media, onUpload, onDelete }: MediaViewProps) {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {media.length === 0 ? (
           <div className="col-span-full py-12 text-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 text-slate-500 text-xs">
-            Inga mediefiler uppladdade ännu.
+            No media files uploaded yet.
           </div>
         ) : (
           media.map((item) => (
@@ -94,7 +94,7 @@ export function MediaView({ media, onUpload, onDelete }: MediaViewProps) {
                     type="button"
                     onClick={() => copyUrl(item.id, item.file_url)}
                     className="p-1 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition"
-                    title="Kopiera bild-URL"
+                    title="Copy file URL"
                   >
                     {copiedId === item.id ? (
                       <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -105,12 +105,12 @@ export function MediaView({ media, onUpload, onDelete }: MediaViewProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      if (confirm(`Radera "${item.file_name}"?`)) {
+                      if (confirm(`Delete "${item.file_name}"?`)) {
                         onDelete(item.id);
                       }
                     }}
                     className="p-1 rounded text-slate-400 hover:text-red-400 hover:bg-slate-800 transition"
-                    title="Radera fil"
+                    title="Delete file"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

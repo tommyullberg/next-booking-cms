@@ -21,29 +21,29 @@ export function DashboardView({
 }: DashboardViewProps) {
   const cards = [
     {
-      label: "Totalt antal sidor",
+      label: "Total Pages",
       value: totalPages,
-      subtext: `${publishedPages} publicerade`,
+      subtext: `${publishedPages} published`,
       icon: <FileText className="w-5 h-5 text-sky-400" />,
       tab: "pages" as AdminTab,
     },
     {
-      label: "Sektioner",
+      label: "Sections",
       value: totalSections,
-      subtext: "Strukturerade menygrupper",
+      subtext: "Top-level categories & branches",
       icon: <FolderTree className="w-5 h-5 text-indigo-400" />,
       tab: "sections" as AdminTab,
     },
     {
-      label: "Mediefiler",
+      label: "Media Files",
       value: totalMedia,
-      subtext: "Bilder och filer",
+      subtext: "Uploaded images & documents",
       icon: <ImageIcon className="w-5 h-5 text-emerald-400" />,
       tab: "media" as AdminTab,
     },
     {
-      label: "Systemstatus",
-      value: "Aktiv",
+      label: "System Status",
+      value: "Active",
       subtext: "PostgreSQL & Storage Adapter OK",
       icon: <CheckCircle2 className="w-5 h-5 text-green-400" />,
       tab: "dashboard" as AdminTab,
@@ -54,10 +54,10 @@ export function DashboardView({
     <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-white">
-          Välkommen till NextBooking CMS
+          Dashboard
         </h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Hantera sidor, mallfält, sektioner, media och flerspråkigt innehåll.
+        <p className="mt-1 text-xs text-slate-400">
+          Manage your pages, sections, navigation menus, media assets, and multi-language settings.
         </p>
       </div>
 
@@ -66,7 +66,7 @@ export function DashboardView({
           <div
             key={c.label}
             onClick={() => onNavigate(c.tab)}
-            className="group cursor-pointer rounded-2xl border border-slate-800 bg-slate-900/60 p-5 hover:border-slate-700 hover:bg-slate-900 transition shadow-sm"
+            className="group cursor-pointer rounded-2xl border border-slate-800/90 bg-slate-900/50 p-5 hover:border-slate-700 hover:bg-slate-900 transition shadow-sm"
           >
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-medium text-slate-400">{c.label}</span>
@@ -83,10 +83,10 @@ export function DashboardView({
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
-        <h2 className="text-base font-semibold text-white mb-2">Snabbstart</h2>
+      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/40 p-6">
+        <h2 className="text-sm font-semibold text-white mb-1.5">Quick Actions</h2>
         <p className="text-xs text-slate-400 mb-4">
-          Skapa nya sidor eller redigera befintligt innehåll direkt på webbplatsen via den flytande inline-redigeraren.
+          Organize your site structure here or return to the public page to edit content inline.
         </p>
         <div className="flex flex-wrap gap-3">
           <button
@@ -94,14 +94,28 @@ export function DashboardView({
             onClick={() => onNavigate("pages")}
             className="px-4 py-2 text-xs font-semibold rounded-xl bg-sky-600 text-white hover:bg-sky-500 shadow-md shadow-sky-600/20 transition"
           >
-            Hantera sidor
+            Manage Pages
           </button>
           <button
             type="button"
-            onClick={() => onNavigate("media")}
-            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 transition"
+            onClick={() => onNavigate("sections")}
+            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800 transition"
           >
-            Ladda upp media
+            Manage Sections
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigate("navigation-menus")}
+            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800 transition"
+          >
+            Navigation Menus
+          </button>
+          <button
+            type="button"
+            onClick={() => onNavigate("settings")}
+            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800 transition"
+          >
+            Language & iCal Settings
           </button>
         </div>
       </div>

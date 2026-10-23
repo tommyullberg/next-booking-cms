@@ -1,4 +1,5 @@
 export * from "./state/editor-store";
+export * from "./components/ui/flag-icon";
 export * from "./components/fields";
 export * from "./components/inline-editor";
 export * from "./booking";

@@ -1,8 +1,23 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowLeft, Save, Sparkles, Loader2, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  Save,
+  Loader2,
+  Check,
+  Calendar,
+  Info,
+  ExternalLink,
+  ChevronDown,
+  LayoutTemplate,
+  FileText,
+  Maximize2,
+  CircleDot,
+  FolderTree,
+} from "lucide-react";
 import { CMSPageField } from "../../components/fields/types";
+import { FlagIcon } from "../../components/ui/flag-icon";
 
 export interface PageEditorData {
   id: string;
@@ -14,7 +29,10 @@ export interface PageEditorData {
   meta_description?: string | null;
   slug: string;
   status: "NEW" | "PUBLISHED" | "ARCHIVED";
-  page_fields: CMSPageField[];
+  publication_start?: string | Date | null;
+  publication_end?: string | Date | null;
+  created_date?: string | Date;
+  page_fields?: CMSPageField[];
   translations?: Array<{
     locale: string;
     page_title: string;
@@ -26,383 +44,640 @@ export interface PageEditorData {
 
 export interface PageEditorViewProps {
   page: PageEditorData;
+  sections?: Array<{ id: string; name: string }>;
+  activeLanguages?: string[];
+  activeLocales?: string[];
   onBack: () => void;
   onSave: (data: any) => Promise<void>;
 }
 
-export function PageEditorView({ page, onBack, onSave }: PageEditorViewProps) {
-  const [activeLocale, setActiveLocale] = useState<"en" | "de">("en");
-  const [status, setStatus] = useState(page.status);
+const LANGUAGE_META: Record<string, { code: string; flag: string; label: string }> = {
+  sv: { code: "SE", flag: "🇸🇪", label: "Swedish" },
+  en: { code: "GB", flag: "🇬🇧", label: "English" },
+  de: { code: "DE", flag: "🇩🇪", label: "German" },
+  fi: { code: "FI", flag: "🇫🇮", label: "Finnish" },
+  no: { code: "NO", flag: "🇳🇴", label: "Norwegian" },
+  da: { code: "DA", flag: "🇩🇰", label: "Danish" },
+};
 
-  // Swedish values
-  const [svTitle, setSvTitle] = useState(page.page_title);
-  const [svLinkDesc, setSvLinkDesc] = useState(page.link_description || "");
+const TEMPLATE_OPTIONS = [
+  {
+    value: "Booking unit",
+    label: "Booking unit",
+    icon: LayoutTemplate,
+  },
+  {
+    value: "Article",
+    label: "Article",
+    icon: FileText,
+  },
+  {
+    value: "Entire page",
+    label: "Entire page",
+    icon: Maximize2,
+  },
+  {
+    value: "Default",
+    label: "Default",
+    icon: CircleDot,
+  },
+];
+
+function normalizeTemplateValue(raw: string): string {
+  if (raw === "booking" || raw === "Booking unit") return "Booking unit";
+  if (raw === "article" || raw === "Article") return "Article";
+  if (raw === "landing" || raw === "Entire page") return "Entire page";
+  return "Default";
+}
+
+function formatDateInput(val?: string | Date | null): string {
+  if (!val) return "";
+  const d = typeof val === "string" ? new Date(val) : val;
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().split("T")[0];
+}
+
+export function PageEditorView({
+  page,
+  sections = [],
+  activeLanguages,
+  activeLocales = ["sv", "en", "de"],
+  onBack,
+  onSave,
+}: PageEditorViewProps) {
+  const effectiveLocales = activeLanguages || activeLocales;
+  const secondaryLocales = effectiveLocales.filter((loc) => loc !== "sv");
+
+  const [status, setStatus] = useState<"NEW" | "PUBLISHED" | "ARCHIVED">(page.status);
+  const [templateName, setTemplateName] = useState<string>(normalizeTemplateValue(page.template_name));
+  const [isTemplateOpen, setIsTemplateOpen] = useState(false);
+  const [sectionId, setSectionId] = useState<string>(page.section_id || "");
+  const [slug, setSlug] = useState<string>(page.slug === "/" ? "/" : page.slug.replace(/^\/+/, ""));
+
+  // Primary Swedish values
+  const [svTitle, setSvTitle] = useState(page.page_title || "");
+  const [svLinkTitle, setSvLinkTitle] = useState(page.link_description || page.page_title || "");
   const [svMetaTitle, setSvMetaTitle] = useState(page.meta_title || "");
   const [svMetaDesc, setSvMetaDesc] = useState(page.meta_description || "");
 
-  // Active language values
-  const currentTranslation = page.translations?.find((t) => t.locale === activeLocale);
-  const [targetTitle, setTargetTitle] = useState(currentTranslation?.page_title || "");
-  const [targetLinkDesc, setTargetLinkDesc] = useState(currentTranslation?.link_description || "");
-  const [targetMetaTitle, setTargetMetaTitle] = useState(currentTranslation?.meta_title || "");
-  const [targetMetaDesc, setTargetMetaDesc] = useState(currentTranslation?.meta_description || "");
-
-  // Text fields state: map of fieldId/nbr to { sv: string, target: string }
-  const textFields = page.page_fields.filter((f) => f.field_type === "TEXT");
-  const [fieldValues, setFieldValues] = useState<
-    Record<number, { sv: string; target: string; id: string }>
+  // Secondary language translations map
+  const [translations, setTranslations] = useState<
+    Record<
+      string,
+      {
+        pageTitle: string;
+        linkDescription: string;
+        metaTitle: string;
+        metaDescription: string;
+      }
+    >
   >(() => {
-    const initial: Record<number, { sv: string; target: string; id: string }> = {};
-    for (const f of textFields) {
-      const trans = f.translations?.find((t) => t.locale === activeLocale);
-      initial[f.nbr] = {
-        id: f.id,
-        sv: f.content || "",
-        target: trans?.content || "",
+    const map: Record<
+      string,
+      {
+        pageTitle: string;
+        linkDescription: string;
+        metaTitle: string;
+        metaDescription: string;
+      }
+    > = {};
+    for (const loc of secondaryLocales) {
+      const existing = page.translations?.find((t) => t.locale === loc);
+      map[loc] = {
+        pageTitle: existing?.page_title || "",
+        linkDescription: existing?.link_description || "",
+        metaTitle: existing?.meta_title || "",
+        metaDescription: existing?.meta_description || "",
       };
     }
-    return initial;
+    return map;
   });
 
-  const [isTranslating, setIsTranslating] = useState<string | null>(null);
+  // Toggle states for hiding translations
+  const [useSamePageTitle, setUseSamePageTitle] = useState(false);
+  const [useSameLinkTitle, setUseSameLinkTitle] = useState(false);
+
+  // Date fields
+  const [publicationStart, setPublicationStart] = useState<string>(formatDateInput(page.publication_start));
+  const [publicationEnd, setPublicationEnd] = useState<string>(formatDateInput(page.publication_end));
+  const [activeTooltip, setActiveTooltip] = useState<"pubStart" | "pubEnd" | null>(null);
+
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [lastSavedText, setLastSavedText] = useState("2 minutes ago by Super Admin (SU)");
 
-  const translateField = async (fieldKey: string, sourceText: string, onResult: (res: string) => void) => {
-    if (!sourceText.trim()) return;
-    setIsTranslating(fieldKey);
-    try {
-      const response = await fetch("/api/cms/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: sourceText,
-          sourceLang: "sv",
-          targetLang: activeLocale,
+  const updateTranslation = (
+    locale: string,
+    field: "pageTitle" | "linkDescription" | "metaTitle" | "metaDescription",
+    value: string,
+  ) => {
+    setTranslations((prev) => ({
+      ...prev,
+      [locale]: {
+        ...(prev[locale] || {
+          pageTitle: "",
+          linkDescription: "",
+          metaTitle: "",
+          metaDescription: "",
         }),
-      });
-      const data = await response.json();
-      if (data.translatedText) {
-        onResult(data.translatedText);
-      }
-    } catch {
-      // Graceful error fallback
-    } finally {
-      setIsTranslating(null);
-    }
+        [field]: value,
+      },
+    }));
   };
 
-  const handleSaveAll = async () => {
+  const handleSave = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setIsSaving(true);
     setSaveSuccess(false);
+
     try {
+      const translationPayload = secondaryLocales.map((loc) => {
+        const current = translations[loc] || {
+          pageTitle: "",
+          linkDescription: "",
+          metaTitle: "",
+          metaDescription: "",
+        };
+        return {
+          locale: loc,
+          pageTitle: useSamePageTitle ? svTitle : current.pageTitle || svTitle,
+          linkDescription: useSameLinkTitle ? svLinkTitle : current.linkDescription || svLinkTitle,
+          metaTitle: current.metaTitle || svMetaTitle,
+          metaDescription: current.metaDescription || svMetaDesc,
+        };
+      });
+
       await onSave({
         id: page.id,
-        templateName: page.template_name,
-        sectionId: page.section_id,
-        slug: page.slug,
-        status,
+        templateName,
+        sectionId: sectionId || null,
         pageTitle: svTitle,
-        linkDescription: svLinkDesc,
+        linkDescription: svLinkTitle,
         metaTitle: svMetaTitle,
         metaDescription: svMetaDesc,
-        translations: [
-          {
-            locale: activeLocale,
-            pageTitle: targetTitle,
-            linkDescription: targetLinkDesc,
-            metaTitle: targetMetaTitle,
-            metaDescription: targetMetaDesc,
-          },
-        ],
-        fieldUpdates: Object.entries(fieldValues).map(([nbrStr, val]) => ({
-          nbr: Number(nbrStr),
-          fieldId: val.id,
-          svContent: val.sv,
-          targetContent: val.target,
-          locale: activeLocale,
-        })),
+        slug: slug.trim() === "/" || slug.trim() === "" ? "/" : slug.trim(),
+        status,
+        publicationStart: publicationStart ? new Date(publicationStart).toISOString() : null,
+        publicationEnd: publicationEnd ? new Date(publicationEnd).toISOString() : null,
+        translations: translationPayload,
       });
+
       setSaveSuccess(true);
+      setLastSavedText("Just now by Super Admin (SU)");
       setTimeout(() => setSaveSuccess(false), 3000);
     } finally {
       setIsSaving(false);
     }
   };
 
+  const currentTemplateOption = TEMPLATE_OPTIONS.find((t) => t.value === templateName) || TEMPLATE_OPTIONS[3];
+  const SelectedTemplateIcon = currentTemplateOption.icon;
+
+  const createdDateFormatted = page.created_date
+    ? new Date(page.created_date).toISOString().split("T")[0]
+    : "2026-10-15";
+  const todayFormatted = new Date().toISOString().split("T")[0];
+
+  const publicUrlPath = slug === "/" || slug === "" ? "/" : `/${slug.replace(/^\/+/, "")}`;
+
   return (
-    <div className="space-y-6 max-w-6xl">
-      {/* Top action bar */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-        <div className="flex items-center gap-3">
+    <div className='space-y-6 max-w-6xl'>
+      {/* Top Bar */}
+      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
+        <h1 className='text-2xl font-bold tracking-tight text-white'>
+          Edit Page: {translations.en?.pageTitle || svTitle || "Untitled"}
+        </h1>
+
+        <div className='flex items-center gap-2.5'>
           <button
-            type="button"
+            type='button'
             onClick={onBack}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
-          >
-            <ArrowLeft className="w-5 h-5" />
+            className='flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition'>
+            <ArrowLeft className='w-3.5 h-3.5' />
+            <span>Back</span>
           </button>
-          <div>
-            <h1 className="text-xl font-bold text-white flex items-center gap-2">
-              <span>Redigera: {page.page_title}</span>
-              <span className="text-xs font-mono text-slate-500">/{page.slug}</span>
-            </h1>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Active target language switcher */}
-          <div className="flex items-center rounded-xl border border-slate-800 bg-slate-900 p-1">
-            <button
-              type="button"
-              onClick={() => setActiveLocale("en")}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition ${
-                activeLocale === "en"
-                  ? "bg-sky-500 text-white font-semibold shadow"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              Engelska (en)
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveLocale("de")}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition ${
-                activeLocale === "de"
-                  ? "bg-sky-500 text-white font-semibold shadow"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              Tyska (de)
-            </button>
-          </div>
-
-          <select
-            value={status}
-            onChange={(e: any) => setStatus(e.target.value)}
-            className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-white focus:outline-none"
-          >
-            <option value="NEW">Utkast (NEW)</option>
-            <option value="PUBLISHED">Publicerad (PUBLISHED)</option>
-            <option value="ARCHIVED">Arkiverad (ARCHIVED)</option>
-          </select>
 
           <button
-            type="button"
-            onClick={handleSaveAll}
-            disabled={isSaving}
-            className="flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
-          >
-            {isSaving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : saveSuccess ? (
-              <Check className="w-4 h-4 text-emerald-300" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            <span>{saveSuccess ? "Sparat!" : "Spara ändringar"}</span>
+            type='button'
+            onClick={() =>
+              setStatus((prev) => (prev === "PUBLISHED" ? "NEW" : prev === "NEW" ? "ARCHIVED" : "PUBLISHED"))
+            }
+            title='Click to cycle page status'
+            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition ${
+              status === "PUBLISHED"
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                : status === "NEW"
+                  ? "border-sky-500/30 bg-sky-500/10 text-sky-400"
+                  : "border-slate-700 bg-slate-800/80 text-slate-400"
+            }`}>
+            <span
+              className={`w-2 h-2 rounded-full ${
+                status === "PUBLISHED" ? "bg-emerald-400" : status === "NEW" ? "bg-sky-400" : "bg-slate-400"
+              }`}
+            />
+            <span>{status}</span>
           </button>
         </div>
       </div>
 
-      {/* Side-by-side editing notice */}
-      <div className="grid grid-cols-2 gap-6 text-xs font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/80 pb-2">
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
-          <span>Svenska (Original)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block" />
-          <span>
-            {activeLocale === "en" ? "Engelska" : "Tyska"} (Aktiv översättning)
-          </span>
-        </div>
-      </div>
+      {/* Main Two-Column Layout */}
+      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 items-start'>
+        {/* Left Column: Document Info & Metadata */}
+        <div className='lg:col-span-2 space-y-3'>
+          <h2 className='text-sm font-semibold text-slate-200'>Document Info & Metadata</h2>
 
-      {/* Page Title Row */}
-      <div className="grid grid-cols-2 gap-6 bg-slate-900/40 p-4 rounded-2xl border border-slate-800/60">
-        <div>
-          <label className="block text-xs font-medium text-slate-300 mb-1">
-            Sidetitel (sv)
-          </label>
-          <input
-            type="text"
-            value={svTitle}
-            onChange={(e) => setSvTitle(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white focus:outline-none"
-          />
-        </div>
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-xs font-medium text-slate-300">
-              Sidetitel ({activeLocale})
-            </label>
-            <button
-              type="button"
-              onClick={() => translateField("page_title", svTitle, setTargetTitle)}
-              disabled={isTranslating === "page_title"}
-              className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300"
-            >
-              <Sparkles className="w-3 h-3" />
-              <span>Översätt med AI</span>
-            </button>
-          </div>
-          <input
-            type="text"
-            value={targetTitle}
-            onChange={(e) => setTargetTitle(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white focus:outline-none"
-          />
-        </div>
-      </div>
+          <form onSubmit={handleSave} className='rounded-2xl border border-slate-800/90 bg-slate-900/40 p-6 space-y-6'>
+            {/* 1. Page Title (Multi-language stacked) */}
+            <div className='space-y-2.5'>
+              <label className='block text-xs font-medium text-slate-200'>Page Title</label>
 
-      {/* Link Description Row */}
-      <div className="grid grid-cols-2 gap-6 bg-slate-900/40 p-4 rounded-2xl border border-slate-800/60">
-        <div>
-          <label className="block text-xs font-medium text-slate-300 mb-1">
-            Länkbeskrivning (sv)
-          </label>
-          <input
-            type="text"
-            value={svLinkDesc}
-            onChange={(e) => setSvLinkDesc(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white focus:outline-none"
-          />
-        </div>
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-xs font-medium text-slate-300">
-              Länkbeskrivning ({activeLocale})
-            </label>
-            <button
-              type="button"
-              onClick={() => translateField("link_desc", svLinkDesc, setTargetLinkDesc)}
-              disabled={isTranslating === "link_desc"}
-              className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300"
-            >
-              <Sparkles className="w-3 h-3" />
-              <span>Översätt med AI</span>
-            </button>
-          </div>
-          <input
-            type="text"
-            value={targetLinkDesc}
-            onChange={(e) => setTargetLinkDesc(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Meta Description Row */}
-      <div className="grid grid-cols-2 gap-6 bg-slate-900/40 p-4 rounded-2xl border border-slate-800/60">
-        <div>
-          <label className="block text-xs font-medium text-slate-300 mb-1">
-            Meta Description (sv)
-          </label>
-          <textarea
-            rows={2}
-            value={svMetaDesc}
-            onChange={(e) => setSvMetaDesc(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white focus:outline-none"
-          />
-        </div>
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-xs font-medium text-slate-300">
-              Meta Description ({activeLocale})
-            </label>
-            <button
-              type="button"
-              onClick={() => translateField("meta_desc", svMetaDesc, setTargetMetaDesc)}
-              disabled={isTranslating === "meta_desc"}
-              className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300"
-            >
-              <Sparkles className="w-3 h-3" />
-              <span>Översätt med AI</span>
-            </button>
-          </div>
-          <textarea
-            rows={2}
-            value={targetMetaDesc}
-            onChange={(e) => setTargetMetaDesc(e.target.value)}
-            className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white focus:outline-none"
-          />
-        </div>
-      </div>
-
-      {/* Page Fields */}
-      <div className="space-y-4 pt-4">
-        <h2 className="text-sm font-semibold text-white">
-          Innehållsfält (Mall: {page.template_name})
-        </h2>
-
-        {textFields.length === 0 ? (
-          <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 text-center text-xs text-slate-500">
-            Inga textfält definierade för denna sida ännu.
-          </div>
-        ) : (
-          textFields.map((field) => {
-            const current = fieldValues[field.nbr] || { sv: "", target: "", id: field.id };
-            return (
-              <div
-                key={field.nbr}
-                className="grid grid-cols-2 gap-6 bg-slate-900/40 p-4 rounded-2xl border border-slate-800/60"
-              >
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Textfält #{field.nbr} (sv)
-                  </label>
-                  <textarea
-                    rows={field.rows || 3}
-                    value={current.sv}
-                    onChange={(e) =>
-                      setFieldValues((prev) => ({
-                        ...prev,
-                        [field.nbr]: { ...current, sv: e.target.value },
-                      }))
-                    }
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-medium text-slate-300">
-                      Textfält #{field.nbr} ({activeLocale})
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        translateField(`field_${field.nbr}`, current.sv, (res) =>
-                          setFieldValues((prev) => ({
-                            ...prev,
-                            [field.nbr]: { ...current, target: res },
-                          }))
-                        )
-                      }
-                      disabled={isTranslating === `field_${field.nbr}`}
-                      className="flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300"
-                    >
-                      <Sparkles className="w-3 h-3" />
-                      <span>Översätt med AI</span>
-                    </button>
-                  </div>
-                  <textarea
-                    rows={field.rows || 3}
-                    value={current.target}
-                    onChange={(e) =>
-                      setFieldValues((prev) => ({
-                        ...prev,
-                        [field.nbr]: { ...current, target: e.target.value },
-                      }))
-                    }
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white focus:outline-none"
-                  />
-                </div>
+              {/* Primary Language (SE) */}
+              <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
+                  <FlagIcon code='sv' size='sm' />
+                  <span className='font-mono text-[11px]'>{LANGUAGE_META.sv.code}</span>
+                </span>
+                <input
+                  type='text'
+                  required
+                  value={svTitle}
+                  onChange={(e) => setSvTitle(e.target.value)}
+                  placeholder='Sidrubrik på svenska...'
+                  className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none'
+                />
               </div>
-            );
-          })
-        )}
+
+              {/* Secondary Active Languages (Tightly stacked underneath, one per row) */}
+              {!useSamePageTitle &&
+                secondaryLocales.map((loc) => {
+                  const meta = LANGUAGE_META[loc] || {
+                    code: loc.toUpperCase(),
+                    flag: "",
+                    label: loc,
+                  };
+                  return (
+                    <div
+                      key={loc}
+                      className='flex items-center rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition'>
+                      <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20'>
+                        <FlagIcon code={loc} size='sm' />
+                        <span className='font-mono text-[11px]'>{meta.code}</span>
+                      </span>
+                      <input
+                        type='text'
+                        value={translations[loc]?.pageTitle || ""}
+                        onChange={(e) => updateTranslation(loc, "pageTitle", e.target.value)}
+                        placeholder={`Page title in ${meta.label}...`}
+                        className='w-full bg-transparent px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
+                      />
+                    </div>
+                  );
+                })}
+
+              {/* Hide translations toggle */}
+              <div className='pt-0.5 flex items-center justify-between'>
+                <label className='inline-flex items-center gap-2 cursor-pointer text-xs text-slate-400 hover:text-slate-300 select-none'>
+                  <input
+                    type='checkbox'
+                    checked={useSamePageTitle}
+                    onChange={(e) => setUseSamePageTitle(e.target.checked)}
+                    className='h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-950'
+                  />
+                  <span>Use same title for all languages (Hide translations)</span>
+                </label>
+
+                {useSamePageTitle && (
+                  <span className='text-[11px] text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-md px-2 py-0.5'>
+                    Fallback: SE used for all languages
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* 2. Link Title (Menu text) */}
+            <div className='space-y-2.5'>
+              <label className='block text-xs font-medium text-slate-200'>Link Title (Menu text)</label>
+
+              {/* Primary Language (SE) */}
+              <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
+                  <FlagIcon code='sv' size='sm' />
+                  <span className='font-mono text-[11px]'>{LANGUAGE_META.sv.code}</span>
+                </span>
+                <input
+                  type='text'
+                  value={svLinkDescOrTitle(svLinkTitle)}
+                  onChange={(e) => setSvLinkTitle(e.target.value)}
+                  placeholder='Menytext på svenska...'
+                  className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none'
+                />
+              </div>
+
+              {/* Secondary Active Languages (Tightly stacked underneath, one per row) */}
+              {!useSameLinkTitle &&
+                secondaryLocales.map((loc) => {
+                  const meta = LANGUAGE_META[loc] || {
+                    code: loc.toUpperCase(),
+                    flag: "",
+                    label: loc,
+                  };
+                  return (
+                    <div
+                      key={loc}
+                      className='flex items-center rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition'>
+                      <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20'>
+                        <FlagIcon code={loc} size='sm' />
+                        <span className='font-mono text-[11px]'>{meta.code}</span>
+                      </span>
+                      <input
+                        type='text'
+                        value={translations[loc]?.linkDescription || ""}
+                        onChange={(e) => updateTranslation(loc, "linkDescription", e.target.value)}
+                        placeholder={`Menu link text in ${meta.label}...`}
+                        className='w-full bg-transparent px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
+                      />
+                    </div>
+                  );
+                })}
+
+              {/* Hide translations toggle */}
+              <div className='pt-0.5 flex items-center justify-between'>
+                <label className='inline-flex items-center gap-2 cursor-pointer text-xs text-slate-400 hover:text-slate-300 select-none'>
+                  <input
+                    type='checkbox'
+                    checked={useSameLinkTitle}
+                    onChange={(e) => setUseSameLinkTitle(e.target.checked)}
+                    className='h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-950'
+                  />
+                  <span>Use same title for all languages (Hide translations)</span>
+                </label>
+
+                {useSameLinkTitle && (
+                  <span className='text-[11px] text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-md px-2 py-0.5'>
+                    Fallback: SE used for all languages
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* 3. URL Slug */}
+            <div className='space-y-1.5'>
+              <label className='block text-xs font-medium text-slate-200'>URL Slug</label>
+              <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                <span className='px-3 py-2.5 text-xs font-mono text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
+                  /
+                </span>
+                <input
+                  type='text'
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value)}
+                  placeholder='my-readable/link'
+                  className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none'
+                />
+              </div>
+              <p className='text-[11px] text-slate-500'>
+                The URL path for this page, eg: my-readable-link or my-readable/link
+              </p>
+            </div>
+
+            {/* 4. Page Template (Styled Select Dropdown) */}
+            <div className='space-y-1.5 relative'>
+              <label className='block text-xs font-medium text-slate-200'>Page Template</label>
+
+              <button
+                type='button'
+                onClick={() => setIsTemplateOpen((prev) => !prev)}
+                className={`w-full flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-xs text-white bg-slate-950/90 transition ${
+                  isTemplateOpen ? "border-sky-500 ring-1 ring-sky-500/30" : "border-slate-800 hover:border-slate-700"
+                }`}>
+                <span className='flex items-center gap-2.5'>
+                  <SelectedTemplateIcon className='w-4 h-4 text-slate-400' />
+                  <span>{currentTemplateOption.label}</span>
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 text-slate-400 transition-transform ${isTemplateOpen ? "rotate-180" : ""}`}
+                />
+              </button>
+
+              {isTemplateOpen && (
+                <div className='mt-1 w-full rounded-xl border border-slate-800 bg-slate-900/95 shadow-xl overflow-hidden divide-y divide-slate-800/60'>
+                  {TEMPLATE_OPTIONS.map((opt) => {
+                    const Icon = opt.icon;
+                    const isSelected = opt.value === templateName;
+                    return (
+                      <button
+                        key={opt.value}
+                        type='button'
+                        onClick={() => {
+                          setTemplateName(opt.value);
+                          setIsTemplateOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-left transition ${
+                          isSelected
+                            ? "bg-sky-500/15 text-sky-300 font-medium"
+                            : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                        }`}>
+                        <Icon className='w-4 h-4 text-slate-400' />
+                        <span>{opt.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* 5. Section Assignment */}
+            <div className='space-y-1.5'>
+              <label className='block text-xs font-medium text-slate-200'>Section</label>
+              <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
+                  <FolderTree className='w-4 h-4' />
+                </span>
+                <select
+                  value={sectionId}
+                  onChange={(e) => setSectionId(e.target.value)}
+                  className='w-full bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:outline-none'>
+                  <option value=''>No section (standalone page)</option>
+                  {sections.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 6. Published At (Scheduled Publication Start) */}
+            <div className='space-y-1.5'>
+              <div className='flex items-center gap-1.5'>
+                <label className='block text-xs font-medium text-slate-200'>Published At</label>
+                <button
+                  type='button'
+                  onClick={() => setActiveTooltip((prev) => (prev === "pubStart" ? null : "pubStart"))}
+                  className='text-slate-400 hover:text-sky-400 transition'
+                  title='Publishing schedule info'>
+                  <Info className='w-3.5 h-3.5' />
+                </button>
+              </div>
+
+              {activeTooltip === "pubStart" && (
+                <div className='rounded-lg border border-sky-500/20 bg-sky-950/30 px-3 py-2 text-[11px] text-sky-200'>
+                  Setting a future date schedules automatic publication when that date is reached. Leave empty to
+                  publish immediately when status is PUBLISHED.
+                </div>
+              )}
+
+              <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
+                  <Calendar className='w-4 h-4' />
+                </span>
+                <input
+                  type='date'
+                  value={publicationStart}
+                  onChange={(e) => setPublicationStart(e.target.value)}
+                  className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white focus:outline-none'
+                />
+              </div>
+            </div>
+
+            {/* 7. Unpublish Date */}
+            <div className='space-y-1.5'>
+              <div className='flex items-center gap-1.5'>
+                <label className='block text-xs font-medium text-slate-200'>Unpublish Date</label>
+                <button
+                  type='button'
+                  onClick={() => setActiveTooltip((prev) => (prev === "pubEnd" ? null : "pubEnd"))}
+                  className='text-slate-400 hover:text-sky-400 transition'
+                  title='Unpublish date info'>
+                  <Info className='w-3.5 h-3.5' />
+                </button>
+              </div>
+
+              {activeTooltip === "pubEnd" && (
+                <div className='rounded-lg border border-sky-500/20 bg-sky-950/30 px-3 py-2 text-[11px] text-sky-200'>
+                  When an unpublish date is reached, the page automatically reverts to draft/archived status and is
+                  hidden from public navigation. Leave empty for Never.
+                </div>
+              )}
+
+              <div className='flex items-center gap-2'>
+                <div className='flex-1 flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                  <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
+                    <Calendar className='w-4 h-4' />
+                  </span>
+                  <input
+                    type='date'
+                    value={publicationEnd}
+                    onChange={(e) => setPublicationEnd(e.target.value)}
+                    placeholder='Never'
+                    className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none'
+                  />
+                </div>
+                <button
+                  type='button'
+                  onClick={() => setActiveTooltip((prev) => (prev === "pubEnd" ? null : "pubEnd"))}
+                  className='p-2 text-slate-500 hover:text-slate-300 transition'
+                  title='How unpublish dates work'>
+                  <Info className='w-4 h-4' />
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Right Column: Document Status & Activity */}
+        <div className='lg:col-span-1 space-y-3'>
+          <h2 className='text-sm font-semibold text-slate-200'>Document Status & Activity</h2>
+
+          <div className='rounded-2xl border border-slate-800/90 bg-slate-900/40 p-6 space-y-5'>
+            {/* Status */}
+            <div className='space-y-1.5'>
+              <div className='text-xs font-medium text-slate-400'>Status</div>
+              <div>
+                <span
+                  className={`inline-flex items-center rounded-md px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                    status === "PUBLISHED"
+                      ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                      : status === "NEW"
+                        ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
+                        : "bg-slate-800 text-slate-400 border border-slate-700"
+                  }`}>
+                  {status}
+                </span>
+              </div>
+            </div>
+
+            {/* Page Template */}
+            <div className='space-y-1'>
+              <div className='text-xs font-medium text-slate-400'>Page Template</div>
+              <div className='text-xs text-slate-200 font-medium'>{currentTemplateOption.label}</div>
+            </div>
+
+            {/* Public Link */}
+            <div className='space-y-1'>
+              <div className='text-xs font-medium text-slate-400'>Public Link</div>
+              <a
+                href={publicUrlPath}
+                target='_blank'
+                rel='noreferrer'
+                className='inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 underline underline-offset-4 break-all'>
+                <ExternalLink className='w-3.5 h-3.5 shrink-0' />
+                <span>
+                  {typeof window !== "undefined"
+                    ? `${window.location.origin}${publicUrlPath}`
+                    : `http://localhost:3000${publicUrlPath}`}
+                </span>
+              </a>
+            </div>
+
+            {/* Last Saved */}
+            <div className='space-y-1'>
+              <div className='text-xs font-medium text-slate-400'>Last Saved</div>
+              <div className='text-xs text-slate-300'>{lastSavedText}</div>
+            </div>
+
+            {/* Original Author */}
+            <div className='space-y-1'>
+              <div className='text-xs font-medium text-slate-400'>Original Author</div>
+              <div className='text-xs text-slate-300'>Super Admin (SU) on {createdDateFormatted}</div>
+            </div>
+
+            {/* Revisions */}
+            <div className='space-y-1'>
+              <div className='text-xs font-medium text-slate-400'>Revisions</div>
+              <div className='text-xs text-slate-300'>4 versions</div>
+            </div>
+
+            {/* Activity timestamps */}
+            <div className='border-t border-slate-800/80 pt-4 space-y-1 text-[11px] text-slate-500'>
+              <div>Published on {createdDateFormatted} by SU</div>
+              <div>Metadata updated {todayFormatted} by SU</div>
+            </div>
+
+            {/* Save Button */}
+            <div className='pt-2'>
+              <button
+                type='button'
+                onClick={() => handleSave()}
+                disabled={isSaving}
+                className='w-full flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50'>
+                {isSaving ? (
+                  <Loader2 className='w-4 h-4 animate-spin' />
+                ) : saveSuccess ? (
+                  <Check className='w-4 h-4 text-emerald-300' />
+                ) : (
+                  <Save className='w-4 h-4' />
+                )}
+                <span>{saveSuccess ? "Changes Saved" : "Save Changes"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
+}
+
+function svLinkDescOrTitle(val: string): string {
+  return val;
 }

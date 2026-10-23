@@ -64,6 +64,7 @@ model Setting {
 model Section {
   id            String   @id @default(cuid()) @map("id")
   name          String   @map("name")
+  translations  Json?    @map("translations")
   start_page_id String?  @map("start_page_id")
   sort_order    Int      @default(0) @map("sort_order")
   is_visible    Boolean  @default(true) @map("is_visible")
@@ -79,6 +80,7 @@ model Page {
   id                String     @id @default(cuid()) @map("id")
   template_name     String     @map("template_name")
   section_id        String?    @map("section_id")
+  sort_order        Int        @default(0) @map("sort_order")
   page_title        String     @map("page_title")
   link_description  String?    @map("link_description")
   meta_title        String?    @map("meta_title")

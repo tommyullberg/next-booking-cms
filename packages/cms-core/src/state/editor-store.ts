@@ -8,6 +8,7 @@ export interface SelectedFieldData {
   nbr: number;
   fieldType: "TEXT" | "IMAGE" | "NAVIGATION";
   content?: string | null;
+  translations?: Record<string, string>;
   textType?: string | null;
   rows?: number | null;
   imageUrl?: string | null;

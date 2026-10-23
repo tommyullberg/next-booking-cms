@@ -38,12 +38,21 @@ export function CMSTextField({
     if (isEditing) {
       e.preventDefault();
       e.stopPropagation();
+      const transMap: Record<string, string> = {};
+      if (field?.translations && Array.isArray(field.translations)) {
+        field.translations.forEach((t) => {
+          if (t.locale) {
+            transMap[t.locale] = t.content || "";
+          }
+        });
+      }
       setSelectedField({
         fieldId: field?.id,
         pageId: page.id,
         nbr,
         fieldType: "TEXT",
-        content: content ?? "",
+        content: field?.content ?? content ?? "",
+        translations: transMap,
         textType: field?.type ?? "plain",
         rows: field?.rows ?? 3,
         classNames: field?.class_names ?? "",
@@ -53,7 +62,7 @@ export function CMSTextField({
     }
   };
 
-  const displayContent = content || (isEditing ? `[Tomt textfält #${nbr}]` : "");
+  const displayContent = content || (isEditing ? `[Empty text field #${nbr}]` : "");
 
   if (typeof children === "function" && field) {
     return (
