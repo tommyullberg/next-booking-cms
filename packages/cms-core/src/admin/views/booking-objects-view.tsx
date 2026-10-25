@@ -176,6 +176,7 @@ export function BookingObjectsView({
     }
 
     setObjects((prev) => prev.filter((o) => o.id !== item.id));
+    setIsModalOpen(false);
     if (onDeleteObject) {
       const res = await onDeleteObject(item.id);
       if (Array.isArray(res)) {
@@ -354,24 +355,15 @@ export function BookingObjectsView({
 
                     {/* Actions */}
                     <td className="py-3.5 px-5 text-right">
-                      <div className="inline-flex items-center gap-1 opacity-90 group-hover:opacity-100 transition">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(obj)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-                          title="Edit booking object"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(obj)}
-                          className="p-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition"
-                          title="Delete booking object"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(obj)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition shadow-sm"
+                        title="Edit booking object"
+                      >
+                        <Edit3 className="w-3 h-3 text-sky-400" />
+                        <span>Edit</span>
+                      </button>
                     </td>
                   </tr>
                 );
