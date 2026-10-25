@@ -7,6 +7,11 @@ import {
   cleanSlugInput,
   validateSlugInput,
 } from "../../utils/slug";
+import {
+  CMSTemplateOption,
+  DEFAULT_CMS_TEMPLATES,
+  formatTemplateLabel,
+} from "../../templates/types";
 
 export interface PageListItem {
   id: number | string;
@@ -23,6 +28,7 @@ export interface PageListItem {
 export interface PagesViewProps {
   pages: PageListItem[];
   sections: Array<{ id: string; name: string; start_page_id?: number | string | null }>;
+  availableTemplates?: CMSTemplateOption[];
   onEditPage: (pageId: number | string) => void;
   onCreatePage: (data: {
     pageTitle: string;
@@ -33,27 +39,10 @@ export interface PagesViewProps {
   onDeletePage: (pageId: number | string) => Promise<void>;
 }
 
-const TEMPLATE_LABELS: Record<string, string> = {
-  startpage: "Startpage",
-  Startpage: "Startpage",
-  "booking-unit": "Booking unit",
-  "Booking unit": "Booking unit",
-  booking: "Booking unit",
-  "booking-overview": "Booking overview",
-  "Booking overview": "Booking overview",
-  article: "Article",
-  Article: "Article",
-  contact: "Contact",
-  Contact: "Contact",
-  "Entire page": "Article",
-  landing: "Article",
-  Default: "Article",
-  standard: "Article",
-};
-
 export function PagesView({
   pages,
   sections,
+  availableTemplates = DEFAULT_CMS_TEMPLATES,
   onEditPage,
   onCreatePage,
   onDeletePage,
@@ -200,9 +189,8 @@ export function PagesView({
                     </td>
                     <td className="py-3 px-4 text-slate-400">
                       {isHomepage
-                        ? "startpage"
-                        : TEMPLATE_LABELS[page.template_name] ||
-                          page.template_name}
+                        ? "Startpage"
+                        : formatTemplateLabel(page.template_name, availableTemplates)}
                     </td>
                     <td className="py-3 px-4">
                       <span
@@ -355,11 +343,13 @@ export function PagesView({
                   onChange={(e) => setNewTemplate(e.target.value)}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
                 >
-                  <option value="article">Article</option>
-                  <option value="booking-unit">Booking unit</option>
-                  <option value="booking-overview">Booking overview</option>
-                  <option value="contact">Contact</option>
-                  <option value="startpage">Startpage</option>
+                  {availableTemplates
+                    .filter((t) => !t.isProtected)
+                    .map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.label}
+                      </option>
+                    ))}
                 </select>
               </div>
 

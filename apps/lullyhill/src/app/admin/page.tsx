@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions, loadAdminInitialData } from "@next-booking/cms-core/server";
 import { AdminApp } from "@next-booking/cms-core";
+import { CMS_PAGE_TEMPLATE_OPTIONS } from "../../templates";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ export default async function AdminPage() {
       initialMedia={media}
       initialMailTemplates={mailTemplates as any}
       initialSettings={settings}
+      availableTemplates={CMS_PAGE_TEMPLATE_OPTIONS}
       adminName={session.user.name || session.user.email || "Admin"}
       frontendUrl="/"
     />

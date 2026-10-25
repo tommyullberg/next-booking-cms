@@ -72,6 +72,18 @@ Example:
 </CMSField.Navigation>
 ```
 
+### 4. Page Template Registry (`CMS_PAGE_TEMPLATES`)
+
+Each frontend application (`apps/lullyhill`, `apps/demo`, or future client projects) defines its available page templates in `src/templates/index.tsx` exporting:
+- `CMS_PAGE_TEMPLATES`: An array of `ProjectTemplateDefinition` mapping each template ID to its React component, display label, and optional description.
+- `CMS_PAGE_TEMPLATE_OPTIONS`: Plain serializable metadata passed to `<AdminApp availableTemplates={CMS_PAGE_TEMPLATE_OPTIONS} />` in `src/app/admin/page.tsx`.
+
+Adding a new custom template (e.g. `todo-on-gotland` or `cottage-guide`) requires only two steps:
+1. Create the React template component in `src/templates/`.
+2. Register it in `CMS_PAGE_TEMPLATES` in `src/templates/index.tsx`.
+
+The template is then immediately selectable in `/admin` when creating or editing pages, and resolves seamlessly on the frontend without changing any core CMS packages or database schemas.
+
 ## State Management and Inline Editor
 
 Inline editing state is centrally managed via a Zustand store (`useEditorStore`):

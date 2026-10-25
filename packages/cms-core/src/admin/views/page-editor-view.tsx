@@ -33,6 +33,11 @@ import {
   validateSlugInput,
   isDefaultIdOrRootSlug,
 } from "../../utils/slug";
+import {
+  CMSTemplateOption,
+  DEFAULT_CMS_TEMPLATES,
+  resolveTemplateOption,
+} from "../../templates/types";
 
 export interface PageEditorData {
   id: number | string;
@@ -60,6 +65,7 @@ export interface PageEditorData {
 
 export interface PageEditorViewProps {
   page: PageEditorData;
+  availableTemplates?: CMSTemplateOption[];
   existingPages?: Array<{
     id: number | string;
     slug: string;
@@ -83,46 +89,21 @@ const LANGUAGE_META: Record<string, { code: string; flag: string; label: string 
   da: { code: "DA", flag: "🇩🇰", label: "Danish" },
 };
 
-const TEMPLATE_OPTIONS = [
-  {
-    value: "startpage",
-    label: "Startpage",
-    icon: LayoutTemplate,
-  },
-  {
-    value: "booking-unit",
-    label: "Booking unit",
-    icon: LayoutTemplate,
-  },
-  {
-    value: "booking-overview",
-    label: "Booking overview",
-    icon: Maximize2,
-  },
-  {
-    value: "article",
-    label: "Article",
-    icon: FileText,
-  },
-  {
-    value: "contact",
-    label: "Contact",
-    icon: CircleDot,
-  },
-];
-
-function normalizeTemplateValue(raw: string, isHomepage?: boolean): string {
-  if (isHomepage || raw === "startpage" || raw === "Startpage") return "startpage";
-  if (raw === "booking-unit" || raw === "booking" || raw === "Booking unit") {
-    return "booking-unit";
+function getTemplateIcon(templateId: string) {
+  switch (templateId.toLowerCase()) {
+    case "startpage":
+      return LayoutTemplate;
+    case "booking-unit":
+    case "booking":
+      return Box;
+    case "booking-overview":
+      return Maximize2;
+    case "contact":
+      return CircleDot;
+    case "article":
+    default:
+      return FileText;
   }
-  if (raw === "booking-overview" || raw === "Booking overview") {
-    return "booking-overview";
-  }
-  if (raw === "contact" || raw === "Contact") {
-    return "contact";
-  }
-  return "article";
 }
 
 function formatDateInput(val?: string | Date | null): string {
@@ -134,6 +115,7 @@ function formatDateInput(val?: string | Date | null): string {
 
 export function PageEditorView({
   page,
+  availableTemplates = DEFAULT_CMS_TEMPLATES,
   existingPages = [],
   sections = [],
   categoryTypes = [],
@@ -147,6 +129,7 @@ export function PageEditorView({
   const secondaryLocales = effectiveLocales.filter((loc) => loc !== "sv");
 
   const isHomepage = Number(page.id) === 1001;
+  const initialResolved = resolveTemplateOption(page.template_name, availableTemplates);
 
   const linkedBookingObject = React.useMemo(() => {
     if (!bookingObjects || !page.id) return null;
@@ -157,7 +140,7 @@ export function PageEditorView({
   const [savedStatus, setSavedStatus] = useState<"NEW" | "PUBLISHED" | "ARCHIVED">(page.status || "NEW");
   const [status, setStatus] = useState<"NEW" | "PUBLISHED" | "ARCHIVED">(page.status || "NEW");
   const [templateName, setTemplateName] = useState<string>(
-    normalizeTemplateValue(page.template_name, isHomepage)
+    isHomepage ? "startpage" : initialResolved.id
   );
   const [isTemplateOpen, setIsTemplateOpen] = useState(false);
   const [sectionId, setSectionId] = useState<string>(page.section_id || "");
@@ -310,8 +293,8 @@ export function PageEditorView({
     }
   };
 
-  const currentTemplateOption = TEMPLATE_OPTIONS.find((t) => t.value === templateName) || TEMPLATE_OPTIONS[3];
-  const SelectedTemplateIcon = currentTemplateOption.icon;
+  const currentTemplateOption = resolveTemplateOption(templateName, availableTemplates);
+  const SelectedTemplateIcon = getTemplateIcon(currentTemplateOption.id);
 
   const createdDateFormatted = page.created_date
     ? new Date(page.created_date).toISOString().split("T")[0]
@@ -548,42 +531,56 @@ export function PageEditorView({
 
               <button
                 type='button'
-                onClick={() => setIsTemplateOpen((prev) => !prev)}
+                disabled={isHomepage}
+                onClick={() => !isHomepage && setIsTemplateOpen((prev) => !prev)}
                 className={`w-full flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-xs text-white bg-slate-950/90 transition ${
-                  isTemplateOpen ? "border-sky-500 ring-1 ring-sky-500/30" : "border-slate-800 hover:border-slate-700"
+                  isHomepage
+                    ? "opacity-60 cursor-not-allowed border-slate-800"
+                    : isTemplateOpen
+                    ? "border-sky-500 ring-1 ring-sky-500/30"
+                    : "border-slate-800 hover:border-slate-700"
                 }`}>
                 <span className='flex items-center gap-2.5'>
                   <SelectedTemplateIcon className='w-4 h-4 text-slate-400' />
                   <span>{currentTemplateOption.label}</span>
                 </span>
-                <ChevronDown
-                  className={`w-4 h-4 text-slate-400 transition-transform ${isTemplateOpen ? "rotate-180" : ""}`}
-                />
+                {!isHomepage && (
+                  <ChevronDown
+                    className={`w-4 h-4 text-slate-400 transition-transform ${isTemplateOpen ? "rotate-180" : ""}`}
+                  />
+                )}
               </button>
 
-              {isTemplateOpen && (
+              {isTemplateOpen && !isHomepage && (
                 <div className='mt-1 w-full rounded-xl border border-slate-800 bg-slate-900/95 shadow-xl overflow-hidden divide-y divide-slate-800/60'>
-                  {TEMPLATE_OPTIONS.map((opt) => {
-                    const Icon = opt.icon;
-                    const isSelected = opt.value === templateName;
-                    return (
-                      <button
-                        key={opt.value}
-                        type='button'
-                        onClick={() => {
-                          setTemplateName(opt.value);
-                          setIsTemplateOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-left transition ${
-                          isSelected
-                            ? "bg-sky-500/15 text-sky-300 font-medium"
-                            : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
-                        }`}>
-                        <Icon className='w-4 h-4 text-slate-400' />
-                        <span>{opt.label}</span>
-                      </button>
-                    );
-                  })}
+                  {availableTemplates
+                    .filter((opt) => !opt.isProtected)
+                    .map((opt) => {
+                      const Icon = getTemplateIcon(opt.id);
+                      const isSelected = opt.id.toLowerCase() === templateName.toLowerCase();
+                      return (
+                        <button
+                          key={opt.id}
+                          type='button'
+                          onClick={() => {
+                            setTemplateName(opt.id);
+                            setIsTemplateOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-left transition ${
+                            isSelected
+                              ? "bg-sky-500/15 text-sky-300 font-medium"
+                              : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                          }`}>
+                          <Icon className='w-4 h-4 text-slate-400 shrink-0' />
+                          <div className='flex flex-col'>
+                            <span className='font-medium'>{opt.label}</span>
+                            {opt.description && (
+                              <span className='text-[10px] text-slate-400'>{opt.description}</span>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
                 </div>
               )}
 

@@ -17,6 +17,7 @@ import { NavigationMenusView } from "./views/navigation-menus-view";
 import { MediaView, MediaItem } from "./views/media-view";
 import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view";
 import { SettingsView } from "./views/settings-view";
+import { CMSTemplateOption } from "../templates/types";
 
 export interface AdminAppProps {
   initialPages?: PageListItem[];
@@ -32,6 +33,7 @@ export interface AdminAppProps {
     activeLanguages: string[];
     bookingIcalUrl: string;
   };
+  availableTemplates?: CMSTemplateOption[];
   adminName?: string;
   frontendUrl?: string;
   isOverlay?: boolean;
@@ -58,6 +60,7 @@ export function AdminApp({
   initialMedia = [],
   initialMailTemplates = [],
   initialSettings,
+  availableTemplates,
   adminName = "Super Admin",
   frontendUrl = "/",
   isOverlay = false,
@@ -581,6 +584,7 @@ export function AdminApp({
           <PagesView
             pages={pages}
             sections={sections}
+            availableTemplates={availableTemplates}
             onEditPage={handleEditPage}
             onCreatePage={handleCreatePageInternal}
             onDeletePage={handleDeletePageInternal}
@@ -595,6 +599,7 @@ export function AdminApp({
             categoryTypes={categoryTypes}
             bookingObjects={bookingObjects}
             activeLanguages={activeLanguages}
+            availableTemplates={availableTemplates}
             onBack={() => setCurrentTab("pages")}
             onSave={handleSavePageInternal}
           />
