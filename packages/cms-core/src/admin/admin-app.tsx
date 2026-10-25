@@ -12,6 +12,7 @@ import { CategoriesView, CategoryTypeItem } from "./views/categories-view";
 import { AdministratorsView, AdministratorItem } from "./views/administrators-view";
 import { LandlordsView, LandlordItem } from "./views/landlords-view";
 import { BookingObjectsView, BookingObjectItem } from "./views/booking-objects-view";
+import { OptionalsView, OptionalItem } from "./views/optionals-view";
 import { NavigationMenusView } from "./views/navigation-menus-view";
 import { MediaView, MediaItem } from "./views/media-view";
 import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view";
@@ -24,6 +25,7 @@ export interface AdminAppProps {
   initialAdministrators?: AdministratorItem[];
   initialLandlords?: LandlordItem[];
   initialBookingObjects?: BookingObjectItem[];
+  initialOptionals?: OptionalItem[];
   initialMedia?: MediaItem[];
   initialMailTemplates?: MailTemplateItem[];
   initialSettings?: {
@@ -52,6 +54,7 @@ export function AdminApp({
   initialAdministrators = [],
   initialLandlords = [],
   initialBookingObjects = [],
+  initialOptionals = [],
   initialMedia = [],
   initialMailTemplates = [],
   initialSettings,
@@ -82,6 +85,7 @@ export function AdminApp({
   const [bookingObjects, setBookingObjects] = useState<BookingObjectItem[]>(
     initialBookingObjects
   );
+  const [optionals, setOptionals] = useState<OptionalItem[]>(initialOptionals);
   const [media, setMedia] = useState<MediaItem[]>(initialMedia);
   const [mailTemplates, setMailTemplates] = useState<MailTemplateItem[]>(initialMailTemplates);
   const [activeLanguages, setActiveLanguages] = useState<string[]>(
@@ -111,6 +115,9 @@ export function AdminApp({
             }
             if (Array.isArray(data.bookingObjects)) {
               setBookingObjects(data.bookingObjects);
+            }
+            if (Array.isArray(data.optionals)) {
+              setOptionals(data.optionals);
             }
             if (Array.isArray(data.media)) setMedia(data.media);
             if (Array.isArray(data.mailTemplates)) setMailTemplates(data.mailTemplates);
@@ -143,6 +150,18 @@ export function AdminApp({
         .catch(() => {});
     }
   }, [isOverlay, initialPages.length, initialSettings]);
+
+  useEffect(() => {
+    setLandlords(initialLandlords);
+  }, [initialLandlords]);
+
+  useEffect(() => {
+    setBookingObjects(initialBookingObjects);
+  }, [initialBookingObjects]);
+
+  useEffect(() => {
+    setOptionals(initialOptionals);
+  }, [initialOptionals]);
 
   const handleEditPage = async (pageId: number | string) => {
     try {
@@ -845,6 +864,38 @@ export function AdminApp({
               const payload = await res.json();
               if (res.ok && Array.isArray(payload)) {
                 setLandlords(payload);
+                return payload;
+              }
+            }}
+          />
+        )}
+
+        {currentTab === "optionals" && (
+          <OptionalsView
+            optionals={optionals}
+            objects={bookingObjects}
+            onSaveOptional={async (data) => {
+              const res = await fetch("/api/cms/optionals", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              });
+              const payload = await res.json();
+              if (!res.ok) {
+                throw new Error(payload?.error || "Failed to save optional");
+              }
+              if (Array.isArray(payload)) {
+                setOptionals(payload);
+                return payload;
+              }
+            }}
+            onDeleteOptional={async (id) => {
+              const res = await fetch(`/api/cms/optionals/${id}`, {
+                method: "DELETE",
+              });
+              const payload = await res.json();
+              if (res.ok && Array.isArray(payload)) {
+                setOptionals(payload);
                 return payload;
               }
             }}

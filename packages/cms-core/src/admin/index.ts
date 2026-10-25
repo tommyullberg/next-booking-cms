@@ -9,6 +9,7 @@ export * from "./views/categories-view";
 export * from "./views/administrators-view";
 export * from "./views/landlords-view";
 export * from "./views/booking-objects-view";
+export * from "./views/optionals-view";
 export * from "./views/navigation-menus-view";
 export * from "./views/settings-view";
 export * from "./views/media-view";

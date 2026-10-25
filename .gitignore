@@ -26,3 +26,11 @@ uploads/
 .temp/
 project-spec.md
 *.pdf
+
+# Local / Private seed data
+scripts/local-seeds/
+apps/lullyhill/seeds/
+apps/*/seeds/
+seed_booking.ts
+seed-booking.ts
+*.local-seed.*

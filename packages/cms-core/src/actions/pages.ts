@@ -484,6 +484,7 @@ export async function loadAdminInitialData() {
   const { getCmsSettingsAction } = await import("./settings");
   const { getLandlordsAction } = await import("./landlords");
   const { getBookingObjectsAction } = await import("./booking-objects");
+  const { getBookingOptionalsAction } = await import("./optionals");
 
   const [
     pages,
@@ -495,6 +496,7 @@ export async function loadAdminInitialData() {
     settings,
     landlords,
     bookingObjects,
+    optionals,
   ] = await Promise.all([
     getPagesAction().catch((err) => {
       console.error("[cms-core] getPagesAction failed:", err);
@@ -532,6 +534,10 @@ export async function loadAdminInitialData() {
       console.error("[cms-core] getBookingObjectsAction failed:", err);
       return [];
     }),
+    getBookingOptionalsAction().catch((err) => {
+      console.error("[cms-core] getBookingOptionalsAction failed:", err);
+      return [];
+    }),
   ]);
 
   return {
@@ -544,5 +550,6 @@ export async function loadAdminInitialData() {
     settings,
     landlords,
     bookingObjects,
+    optionals,
   };
 }

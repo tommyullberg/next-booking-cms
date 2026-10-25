@@ -73,8 +73,11 @@ Initialize database tables with Prisma 7 and seed the root SuperAdmin account:
 # Run database schema migrations
 npx prisma migrate dev --schema=packages/cms-core/prisma/schema.prisma
 
-# Seed initial SuperAdmin account into the database
+# Seed initial SuperAdmin account and root startsida (1001) into the database
 npm run db:seed --workspace=@next-booking/cms-core
+
+# (Optional) Seed tenant-specific booking data (e.g. for Lullyhill)
+npx tsx apps/lullyhill/seeds/seed-booking.ts
 ```
 
 ### 5. Start Development Servers

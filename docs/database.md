@@ -32,206 +32,258 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import pg from 'pg';
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const connectionString =
+  process.env.DATABASE_URL ||
+  'postgresql://nextbooking:nextbooking_secret@localhost:5432/nextbooking_cms?schema=public';
+
+const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 export const prisma = new PrismaClient({ adapter });
 ```
 
 This configuration eliminates IDE schema deprecation warnings, supports native server connection pooling, and ensures zero deprecation warnings across local and CI/CD environments.
 
-## Database Models
+## Database Models (19 Models)
 
 ### 1. `administrators`
 
 System accounts for editors and administrators:
 
-- `id` (UUID, PK)
+- `id` (CUID, PK)
+- `first_name` (VarChar 255)
+- `last_name` (VarChar 255)
 - `email` (VarChar 255, Unique)
+- `mobile` (VarChar 50, Nullable)
 - `password_hash` (VarChar 255)
-- `name` (VarChar 255)
-- `role` (AdminRole enum: SUPERADMIN, ADMIN, EDITOR)
-- `is_active` (Boolean, default true)
-- `last_login_at` (DateTime, Nullable)
+- `role` (AdminRole enum: `SUPERADMIN`, `ADMIN`, `EDITOR`)
 - `created_at`, `updated_at` (DateTime)
 
 ### 2. `settings`
 
 Global system configuration key/value pairs:
 
-- `id` (UUID, PK)
-- `key` (VarChar 100, Unique)
-- `value` (Text)
-- `type` (VarChar 50, default 'string')
+- `id` (CUID, PK)
+- `setting_key` (VarChar 100, Unique)
+- `setting_value` (Text)
 - `created_at`, `updated_at` (DateTime)
 
 ### 3. `sections`
 
-Logical structural sections on a page (e.g. Hero, Features, Gallery, Booking):
+Structural section grouping for CMS pages:
 
-- `id` (UUID, PK)
+- `id` (CUID, PK)
 - `name` (VarChar 100)
-- `identifier` (VarChar 100, Unique)
-- `description` (Text, Nullable)
+- `translations` (Json, Nullable)
+- `start_page_id` (Integer, Nullable)
 - `sort_order` (Integer, default 0)
+- `is_visible` (Boolean, default true)
 - `created_at`, `updated_at` (DateTime)
 
 ### 4. `pages`
 
-Site page hierarchy and publication status:
+Site page hierarchy, publication state, and template assignments:
 
-- `id` (UUID, PK)
-- `parent_id` (UUID, FK to pages.id, Nullable for root pages)
-- `slug` (VarChar 255, Unique)
-- `template` (VarChar 100, default 'default')
-- `is_published` (Boolean, default false)
+- `id` (Integer autoincrement, PK, starting at 1001 for root startsida)
+- `template_name` (VarChar 100)
+- `section_id` (CUID, FK to `sections.id`, Nullable)
 - `sort_order` (Integer, default 0)
-- `created_at`, `updated_at` (DateTime)
+- `page_title` (VarChar 255)
+- `link_description` (Text, Nullable)
+- `meta_title` (VarChar 255, Nullable)
+- `meta_description` (Text, Nullable)
+- `slug` (VarChar 255, Unique)
+- `status` (PageStatus enum: `NEW`, `PUBLISHED`, `ARCHIVED`)
+- `publication_start`, `publication_end` (DateTime, Nullable)
+- `created_date` (DateTime, default now)
+- `created_by` (VarChar 255, Nullable)
 
 ### 5. `page_translations`
 
 Localized page metadata and SEO fields:
 
-- `id` (UUID, PK)
-- `page_id` (UUID, FK to pages.id)
-- `language_code` (VarChar 10)
-- `title` (VarChar 255)
+- `id` (CUID, PK)
+- `page_id` (Integer, FK to `pages.id`)
+- `locale` (VarChar 10)
+- `page_title` (VarChar 255)
+- `link_description` (Text, Nullable)
+- `meta_title` (VarChar 255, Nullable)
 - `meta_description` (Text, Nullable)
-- Unique composite index on `[page_id, language_code]`.
+- Unique composite index on `[page_id, locale]`.
 
 ### 6. `category_types`
 
-Classification groups for categorization (e.g. "Property Type", "Region", "Season"):
+Classification groups for taxonomy:
 
-- `id` (UUID, PK)
+- `id` (CUID, PK)
 - `name` (VarChar 100)
-- `identifier` (VarChar 100, Unique)
-- `created_at`, `updated_at` (DateTime)
+- `is_multiple` (Boolean, default false)
+- `sort_order` (Integer, default 0)
 
 ### 7. `categories`
 
 Specific taxonomy categories assigned to a category type:
 
-- `id` (UUID, PK)
-- `type_id` (UUID, FK to category_types.id)
+- `id` (CUID, PK)
+- `category_type_id` (CUID, FK to `category_types.id`)
 - `name` (VarChar 100)
-- `slug` (VarChar 100)
-- `description` (Text, Nullable)
-- Unique composite index on `[type_id, slug]`.
+- `sort_order` (Integer, default 0)
 
 ### 8. `files_and_images`
 
 Media library for uploaded photos, assets, and documents:
 
-- `id` (UUID, PK)
+- `id` (CUID, PK)
 - `file_name` (VarChar 255)
-- `original_name` (VarChar 255)
-- `mime_type` (VarChar 100)
-- `file_size` (Integer)
-- `storage_path` (Text)
-- `alt_text` (VarChar 255, Nullable)
-- `created_at`, `updated_at` (DateTime)
+- `file_url` (VarChar 1024)
+- `created_date` (DateTime, default now)
 
 ### 9. `navigations_and_links`
 
-Navigation menu containers (e.g. "Main Menu", "Footer Links"):
+Navigation menu containers (e.g. "Main Menu", "Footer"):
 
-- `id` (UUID, PK)
-- `identifier` (VarChar 100, Unique)
+- `id` (CUID, PK)
 - `name` (VarChar 100)
-- `created_at`, `updated_at` (DateTime)
+- `type` (VarChar 50)
 
 ### 10. `navigation_links`
 
-Menu link entries with recursive hierarchy support:
+Menu link entries:
 
-- `id` (UUID, PK)
-- `navigation_id` (UUID, FK to navigations_and_links.id)
-- `parent_id` (UUID, FK to navigation_links.id, Nullable)
-- `label` (VarChar 100)
-- `url` (VarChar 255)
-- `target` (VarChar 20, default '_self')
+- `id` (CUID, PK)
+- `navigation_id` (CUID, FK to `navigations_and_links.id`)
+- `link_url` (VarChar 255)
+- `link_text` (VarChar 100)
 - `sort_order` (Integer, default 0)
 
-### 11. `objects`
+### 11. `landlords`
 
-Rental units or room entities (e.g. Villa Lullyhill, Guest Wing):
+Property owners and rental hosts:
 
-- `id` (UUID, PK)
-- `identifier` (VarChar 100, Unique)
+- `id` (CUID, PK)
+- `first_name` (VarChar 100)
+- `last_name` (VarChar 100)
+- `address` (VarChar 255, Nullable)
+- `postal_code` (VarChar 20, Nullable)
+- `city` (VarChar 100, Nullable)
+- `email` (VarChar 255, Nullable)
+- `phone` (VarChar 50, Nullable)
+- `mobile` (VarChar 50, Nullable)
+- `has_swish` (Boolean, default false)
+- `account_type` (VarChar 50, Nullable)
+- `account_number` (VarChar 100, Nullable)
+- `created_at`, `updated_at` (DateTime)
+
+### 12. `objects` (`BookingObject`)
+
+Rentable cabins, houses, apartments, and mobile homes:
+
+- `id` (CUID, PK)
+- `name` (VarChar 255)
+- `type` (VarChar 100, Nullable)
+- `description` (Text, Nullable)
+- `page_id` (Integer, FK to `pages.id`, Nullable)
+- `landlord_id` (CUID, FK to `landlords.id`, Nullable)
+- `sort_order` (Integer, default 0)
+- `is_visible` (Boolean, default true)
+- `size_sqm` (Float, Nullable)
+- `room_count` (Integer, default 1)
+- `room_type` (VarChar 100, Nullable: ROK, ROP, WC/Shower, Room)
+- `bed_count` (Integer, default 1)
+- `extra_bed_count` (Integer, default 0)
+- `pets_allowed` (Boolean, default false)
+- `price_matrix` (Json, Nullable)
+- `created_at`, `updated_at` (DateTime)
+
+### 13. `optionals` (`BookingOptional`)
+
+Rentable add-on services and accessories (e.g. cleaning, baby cot, high chair):
+
+- `id` (CUID, PK)
 - `name` (VarChar 255)
 - `description` (Text, Nullable)
-- `base_price` (Decimal 10,2, Nullable)
-- `max_guests` (Integer, Nullable)
+- `image_url` (VarChar 1024, Nullable)
+- `object_id` (CUID, FK to `objects.id`, Nullable - `null` means applicable to all objects)
 - `is_active` (Boolean, default true)
-- `created_at`, `updated_at` (DateTime)
-
-### 12. `amenities`
-
-Property features and amenities linked to rental objects:
-
-- `id` (UUID, PK)
-- `name` (VarChar 100)
-- `icon` (VarChar 100, Nullable)
-- `created_at`, `updated_at` (DateTime)
-
-### 13. `galleries`
-
-Image gallery collections with ordered media associations:
-
-- `id` (UUID, PK)
-- `name` (VarChar 100)
-- `identifier` (VarChar 100, Unique)
-- `created_at`, `updated_at` (DateTime)
-
-### 14. `page_fields`
-
-Dynamic content field definitions tied to pages and sections:
-
-- `id` (UUID, PK)
-- `page_id` (UUID, FK to pages.id)
-- `section_id` (UUID, FK to sections.id, Nullable)
-- `field_key` (VarChar 100)
-- `field_type` (FieldType enum: TEXT, RICH_TEXT, IMAGE, GALLERY, NUMBER, BOOLEAN, DATE, JSON)
+- `price_hour` (Float, default 0)
+- `price_day` (Float, default 0)
+- `price_sun_thu` (Float, default 0)
+- `price_thu_sun` (Float, default 0)
+- `price_week` (Float, default 0)
 - `sort_order` (Integer, default 0)
-- Unique composite index on `[page_id, section_id, field_key]`.
+- `created_at`, `updated_at` (DateTime)
 
-### 15. `page_field_translations`
+### 14. `amenities`
 
-Localized field content supporting multi-language and AI translations:
+Amenities and amenities tags for booking units:
 
-- `id` (UUID, PK)
-- `field_id` (UUID, FK to page_fields.id)
-- `language_code` (VarChar 10)
+- `id` (CUID, PK)
+- `name` (VarChar 100, Unique)
+- Implicit Many-to-Many relation with `objects`.
+
+### 15. `galleries`
+
+Unit photo gallery collections linked to booking objects:
+
+- `id` (CUID, PK)
+- `object_id` (CUID, FK to `objects.id`)
+- `image_id` (CUID, FK to `files_and_images.id`)
+- `sort_order` (Integer, default 0)
+- `caption` (VarChar 255, Nullable)
+
+### 16. `page_fields`
+
+Dynamic content field definitions tied to pages:
+
+- `id` (CUID, PK)
+- `page_id` (Integer, FK to `pages.id`)
+- `nbr` (Integer)
+- `field_type` (FieldType enum: `TEXT`, `IMAGE`, `NAVIGATION`)
+- `class_names` (Text, Nullable)
 - `content` (Text, Nullable)
-- `media_id` (UUID, FK to files_and_images.id, Nullable)
-- Unique composite index on `[field_id, language_code]`.
+- `type` (VarChar 50, Nullable)
+- `rows` (Integer, Nullable)
+- `image_id` (CUID, FK to `files_and_images.id`, Nullable)
+- `width`, `height`, `max_width`, `max_height` (Integer, Nullable)
+- `ratio` (VarChar 20, Nullable)
+- `navigation_id` (CUID, FK to `navigations_and_links.id`, Nullable)
+- Unique composite index on `[page_id, nbr, field_type]`.
 
-### 16. `bookings`
+### 17. `page_field_translations`
 
-Guest reservations with date ranges, status, and iCal external references:
+Localized field content supporting multi-language:
 
-- `id` (UUID, PK)
-- `object_id` (UUID, FK to objects.id)
+- `id` (CUID, PK)
+- `page_field_id` (CUID, FK to `page_fields.id`)
+- `locale` (VarChar 10)
+- `content` (Text)
+- Unique composite index on `[page_field_id, locale]`.
+
+### 18. `bookings`
+
+Guest reservations and calendar blocks:
+
+- `id` (CUID, PK)
+- `object_id` (CUID, FK to `objects.id`)
 - `start_date` (DateTime)
 - `end_date` (DateTime)
-- `guest_name` (VarChar 255)
-- `guest_email` (VarChar 255)
-- `guest_phone` (VarChar 50, Nullable)
-- `total_price` (Decimal 10,2, Nullable)
-- `status` (BookingStatus enum: PENDING, CONFIRMED, CANCELLED)
-- `ical_uid` (VarChar 255, Nullable, Unique)
-- `source` (VarChar 50, default 'direct')
+- `customer_name` (VarChar 255)
+- `customer_email` (VarChar 255)
+- `customer_phone` (VarChar 50, Nullable)
+- `guests_count` (Integer, default 1)
+- `pets_count` (Integer, default 0)
+- `price` (Float, Nullable)
+- `status` (BookingStatus enum: `PENDING`, `APPROVED`, `REJECTED`, `IMPORTED`)
+- `ical_source_id` (VarChar 255, Nullable)
 - `created_at`, `updated_at` (DateTime)
 
-### 17. `mail_templates`
+### 19. `mail_templates`
 
-Customizable notification and booking confirmation email templates:
+Email notification templates:
 
-- `id` (UUID, PK)
-- `identifier` (VarChar 100, Unique)
+- `id` (CUID, PK)
+- `template_type` (MailTemplateType enum, Unique: `ADMIN_NEW_BOOKING_REQUEST`, `USER_NEW_BOOKING_REQUEST_COPY`, `USER_BOOKING_CONFIRMED`)
 - `subject` (VarChar 255)
-- `body_html` (Text)
-- `body_text` (Text, Nullable)
+- `body` (Text)
 - `created_at`, `updated_at` (DateTime)
 
 ## Prisma CLI Workflows
@@ -254,8 +306,21 @@ Generate Prisma Client:
 npx prisma generate --schema=packages/cms-core/prisma/schema.prisma
 ```
 
-Apply migrations:
+Push schema directly (for development):
 
 ```bash
-npx prisma migrate dev --schema=packages/cms-core/prisma/schema.prisma
+npx prisma db push --schema=packages/cms-core/prisma/schema.prisma
 ```
+
+Seed base SuperAdmin and startsida:
+
+```bash
+npm run db:seed --workspace=@next-booking/cms-core
+```
+
+Seed base SuperAdmin and startsida:
+
+```bash
+npm run db:seed --workspace=@next-booking/cms-core
+```
+

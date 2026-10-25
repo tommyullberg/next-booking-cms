@@ -198,8 +198,30 @@ model BookingObject {
   amenities Amenity[]
   galleries Gallery[]
   bookings  Booking[]
+  optionals BookingOptional[]
 
   @@map("objects")
+}
+
+model BookingOptional {
+  id            String   @id @default(cuid()) @map("id")
+  name          String   @map("name")
+  description   String?  @map("description")
+  image_url     String?  @map("image_url")
+  object_id     String?  @map("object_id")
+  is_active     Boolean  @default(true) @map("is_active")
+  price_hour    Float?   @default(0) @map("price_hour")
+  price_day     Float?   @default(0) @map("price_day")
+  price_sun_thu Float?   @default(0) @map("price_sun_thu")
+  price_thu_sun Float?   @default(0) @map("price_thu_sun")
+  price_week    Float?   @default(0) @map("price_week")
+  sort_order    Int      @default(0) @map("sort_order")
+  created_at    DateTime @default(now()) @map("created_at")
+  updated_at    DateTime @updatedAt @map("updated_at")
+
+  object BookingObject? @relation(fields: [object_id], references: [id], onDelete: SetNull)
+
+  @@map("optionals")
 }
 
 model Landlord {

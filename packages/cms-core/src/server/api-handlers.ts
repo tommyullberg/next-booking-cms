@@ -47,6 +47,12 @@ import {
   deleteBookingObjectAction,
 } from "../actions/booking-objects";
 import {
+  getBookingOptionalsAction,
+  createBookingOptionalAction,
+  updateBookingOptionalAction,
+  deleteBookingOptionalAction,
+} from "../actions/optionals";
+import {
   getCmsSettingsAction,
   saveCmsSettingsAction,
 } from "../actions/settings";
@@ -267,6 +273,23 @@ export async function handleCmsApiRoute(
         );
       }
     }
+    if (path === "optionals") {
+      try {
+        const body = await req.json();
+        if (body.id) {
+          await updateBookingOptionalAction(body);
+        } else {
+          await createBookingOptionalAction(body);
+        }
+        const optionals = await getBookingOptionalsAction();
+        return NextResponse.json(optionals);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to save optional" },
+          { status: 400 }
+        );
+      }
+    }
     if (path === "settings") {
       const body = await req.json();
       const result = await saveCmsSettingsAction(body);
@@ -275,6 +298,11 @@ export async function handleCmsApiRoute(
   }
 
   if (method === "GET") {
+    if (path === "optionals") {
+      const objectId = req.nextUrl.searchParams.get("objectId") || undefined;
+      const optionals = await getBookingOptionalsAction(objectId);
+      return NextResponse.json(optionals);
+    }
     if (path === "booking-objects") {
       const objects = await getBookingObjectsAction();
       return NextResponse.json(objects);
@@ -452,6 +480,20 @@ export async function handleCmsApiRoute(
       } catch (err: any) {
         return NextResponse.json(
           { error: err?.message || "Failed to delete booking object" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (path.startsWith("optionals/")) {
+      try {
+        const optId = path.replace("optionals/", "");
+        await deleteBookingOptionalAction(optId);
+        const optionals = await getBookingOptionalsAction();
+        return NextResponse.json(optionals);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to delete optional" },
           { status: 400 }
         );
       }

@@ -17,34 +17,11 @@ export interface LandlordDto {
   updated_at: string;
 }
 
-export const SAMPLE_LANDLORD: LandlordDto = {
-  id: "sample-landlord-1",
-  first_name: "Jan",
-  last_name: "Ullberg",
-  address: "Lullyhill",
-  postal_code: "621 41",
-  city: "VISBY",
-  email: "jan.ullberg@lullyhill.se",
-  phone: "0498-21 10 87",
-  mobile: "070-620 96 11",
-  has_swish: true,
-  account_type: "Bankgiro",
-  account_number: "5402-6018",
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-};
-
-let inMemoryLandlords: LandlordDto[] = [SAMPLE_LANDLORD];
-
 export async function getLandlordsAction(): Promise<LandlordDto[]> {
   try {
     const raw = await prisma.landlord.findMany({
       orderBy: { created_at: "asc" },
     });
-
-    if (raw.length === 0) {
-      return inMemoryLandlords;
-    }
 
     return raw.map((l) => ({
       id: l.id,
@@ -62,8 +39,9 @@ export async function getLandlordsAction(): Promise<LandlordDto[]> {
       created_at: l.created_at.toISOString(),
       updated_at: l.updated_at.toISOString(),
     }));
-  } catch {
-    return inMemoryLandlords;
+  } catch (err) {
+    console.error("[cms-core] Failed to fetch landlords:", err);
+    return [];
   }
 }
 
@@ -94,37 +72,26 @@ export async function createLandlordAction(data: {
     account_number: data.account_number?.trim() || null,
   };
 
-  try {
-    const created = await prisma.landlord.create({
-      data: normalizedData,
-    });
+  const created = await prisma.landlord.create({
+    data: normalizedData,
+  });
 
-    return {
-      id: created.id,
-      first_name: created.first_name,
-      last_name: created.last_name,
-      address: created.address,
-      postal_code: created.postal_code,
-      city: created.city,
-      email: created.email,
-      phone: created.phone,
-      mobile: created.mobile,
-      has_swish: created.has_swish,
-      account_type: created.account_type,
-      account_number: created.account_number,
-      created_at: created.created_at.toISOString(),
-      updated_at: created.updated_at.toISOString(),
-    };
-  } catch {
-    const newEntry: LandlordDto = {
-      id: `landlord-${Date.now()}`,
-      ...normalizedData,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    inMemoryLandlords = [...inMemoryLandlords, newEntry];
-    return newEntry;
-  }
+  return {
+    id: created.id,
+    first_name: created.first_name,
+    last_name: created.last_name,
+    address: created.address,
+    postal_code: created.postal_code,
+    city: created.city,
+    email: created.email,
+    phone: created.phone,
+    mobile: created.mobile,
+    has_swish: created.has_swish,
+    account_type: created.account_type,
+    account_number: created.account_number,
+    created_at: created.created_at.toISOString(),
+    updated_at: created.updated_at.toISOString(),
+  };
 }
 
 export async function updateLandlordAction(data: {
@@ -155,52 +122,31 @@ export async function updateLandlordAction(data: {
     account_number: data.account_number?.trim() || null,
   };
 
-  try {
-    const updated = await prisma.landlord.update({
-      where: { id: data.id },
-      data: normalizedData,
-    });
+  const updated = await prisma.landlord.update({
+    where: { id: data.id },
+    data: normalizedData,
+  });
 
-    return {
-      id: updated.id,
-      first_name: updated.first_name,
-      last_name: updated.last_name,
-      address: updated.address,
-      postal_code: updated.postal_code,
-      city: updated.city,
-      email: updated.email,
-      phone: updated.phone,
-      mobile: updated.mobile,
-      has_swish: updated.has_swish,
-      account_type: updated.account_type,
-      account_number: updated.account_number,
-      created_at: updated.created_at.toISOString(),
-      updated_at: updated.updated_at.toISOString(),
-    };
-  } catch {
-    const idx = inMemoryLandlords.findIndex((l) => l.id === data.id);
-    const existing = inMemoryLandlords[idx] || SAMPLE_LANDLORD;
-    const updatedEntry: LandlordDto = {
-      ...existing,
-      ...normalizedData,
-      updated_at: new Date().toISOString(),
-    };
-    if (idx !== -1) {
-      inMemoryLandlords[idx] = updatedEntry;
-    } else {
-      inMemoryLandlords.push(updatedEntry);
-    }
-    return updatedEntry;
-  }
+  return {
+    id: updated.id,
+    first_name: updated.first_name,
+    last_name: updated.last_name,
+    address: updated.address,
+    postal_code: updated.postal_code,
+    city: updated.city,
+    email: updated.email,
+    phone: updated.phone,
+    mobile: updated.mobile,
+    has_swish: updated.has_swish,
+    account_type: updated.account_type,
+    account_number: updated.account_number,
+    created_at: updated.created_at.toISOString(),
+    updated_at: updated.updated_at.toISOString(),
+  };
 }
 
 export async function deleteLandlordAction(id: string): Promise<void> {
-  try {
-    await prisma.landlord.delete({
-      where: { id },
-    });
-  } catch {
-    inMemoryLandlords = inMemoryLandlords.filter((l) => l.id !== id);
-  }
+  await prisma.landlord.delete({
+    where: { id },
+  });
 }
-

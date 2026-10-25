@@ -83,8 +83,11 @@ When provisioning a new production tenant or customer instance, configure the cu
 # Apply pending schema migrations to production PostgreSQL
 npx prisma migrate deploy --schema=packages/cms-core/prisma/schema.prisma
 
-# Seed initial SuperAdmin account with bcrypt password hashing
+# Seed initial SuperAdmin account with bcrypt password hashing and root startsida
 npm run db:seed --workspace=@next-booking/cms-core
+
+# Optional: Seed customer/tenant-specific booking units and landlords (e.g. for Lullyhill)
+DATABASE_URL="postgresql://user:pass@db.provider.com:5432/cms?sslmode=require" npx tsx apps/lullyhill/seeds/seed-booking.ts
 ```
 
 ### Accessing the Administrative Interface

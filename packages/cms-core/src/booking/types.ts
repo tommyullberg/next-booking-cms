@@ -95,3 +95,99 @@ export function formatBookingObjectType(val?: string | null): string {
   );
   return match ? match.label : val;
 }
+
+export interface BookingRoomTypeOption {
+  id: string;
+  label: string;
+  en: string;
+  sv: string;
+  shortCode: string;
+}
+
+export const BOOKING_ROOM_TYPES: BookingRoomTypeOption[] = [
+  {
+    id: "rok",
+    label: "Room(s) and kitchen / ROK",
+    en: "Room(s) and kitchen",
+    sv: "Rum och kök",
+    shortCode: "ROK",
+  },
+  {
+    id: "rop",
+    label: "Room(s) and pentry / ROP",
+    en: "Room(s) and pentry",
+    sv: "Rum och pentry",
+    shortCode: "ROP",
+  },
+  {
+    id: "wc_shower",
+    label: "Room(s) and WC/Shower",
+    en: "Room(s) and WC/Shower",
+    sv: "Rum och WC/dusch",
+    shortCode: "WC/Shower",
+  },
+  {
+    id: "rooms",
+    label: "Room(s)",
+    en: "Room(s)",
+    sv: "Rum",
+    shortCode: "Rum",
+  },
+];
+
+export function formatBookingRoomType(val?: string | null): string {
+  if (!val) return BOOKING_ROOM_TYPES[0].label;
+  const lower = val.toLowerCase().trim();
+  const match = BOOKING_ROOM_TYPES.find(
+    (t) =>
+      t.id === lower ||
+      t.label.toLowerCase() === lower ||
+      t.en.toLowerCase() === lower ||
+      t.sv.toLowerCase() === lower ||
+      t.shortCode.toLowerCase() === lower ||
+      (t.id === "rok" && (lower === "rum och kök" || lower === "rum och kok" || lower === "rok")) ||
+      (t.id === "rop" && (lower === "rum och pentry" || lower === "rop")) ||
+      (t.id === "wc_shower" && (lower.includes("wc") || lower.includes("dusch") || lower.includes("shower"))) ||
+      (t.id === "rooms" && (lower === "rum" || lower === "room" || lower === "rooms"))
+  );
+  return match ? match.label : val;
+}
+
+export function formatBookingRoomTypeShort(val?: string | null): string {
+  if (!val) return "ROK";
+  const lower = val.toLowerCase().trim();
+  const match = BOOKING_ROOM_TYPES.find(
+    (t) =>
+      t.id === lower ||
+      t.label.toLowerCase() === lower ||
+      t.en.toLowerCase() === lower ||
+      t.sv.toLowerCase() === lower ||
+      t.shortCode.toLowerCase() === lower ||
+      (t.id === "rok" && (lower === "rum och kök" || lower === "rum och kok" || lower === "rok")) ||
+      (t.id === "rop" && (lower === "rum och pentry" || lower === "rop")) ||
+      (t.id === "wc_shower" && (lower.includes("wc") || lower.includes("dusch") || lower.includes("shower"))) ||
+      (t.id === "rooms" && (lower === "rum" || lower === "room" || lower === "rooms"))
+  );
+  return match ? match.shortCode : val;
+}
+
+export interface BookingOptionalItem {
+  id: string;
+  name: string;
+  description?: string | null;
+  image_url?: string | null;
+  object_id?: string | null;
+  is_active: boolean;
+  price_hour?: number | null;
+  price_day?: number | null;
+  price_sun_thu?: number | null;
+  price_thu_sun?: number | null;
+  price_week?: number | null;
+  sort_order?: number;
+  object?: {
+    id: string;
+    name: string;
+  } | null;
+  created_at?: string;
+  updated_at?: string;
+}

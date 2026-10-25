@@ -23,6 +23,9 @@ import {
   BookingObjectDetails,
   BOOKING_OBJECT_TYPES,
   formatBookingObjectType,
+  BOOKING_ROOM_TYPES,
+  formatBookingRoomType,
+  formatBookingRoomTypeShort,
 } from "../../booking/types";
 import { LandlordItem } from "./landlords-view";
 import { PageListItem } from "./pages-view";
@@ -52,14 +55,6 @@ export interface BookingObjectsViewProps {
   onDeleteObject?: (id: string) => Promise<BookingObjectItem[] | void>;
 }
 
-const ROOM_TYPES = [
-  "rum och kök",
-  "ROK",
-  "ROP",
-  "rum",
-  "sovrum och vardagsrum",
-  "open layout",
-];
 
 export function BookingObjectsView({
   objects: initialObjects = [],
@@ -107,7 +102,7 @@ export function BookingObjectsView({
     setDescription("");
     setSizeSqm("");
     setRoomCount(1);
-    setRoomType("rum och kök");
+    setRoomType(BOOKING_ROOM_TYPES[0].label);
     setBedCount(2);
     setExtraBedCount(0);
     setPetsAllowed(false);
@@ -126,7 +121,7 @@ export function BookingObjectsView({
     setDescription(item.description || "");
     setSizeSqm(item.size_sqm !== undefined && item.size_sqm !== null ? String(item.size_sqm) : "");
     setRoomCount(item.room_count ?? 1);
-    setRoomType(item.room_type || "rum och kök");
+    setRoomType(formatBookingRoomType(item.room_type));
     setBedCount(item.bed_count ?? 2);
     setExtraBedCount(item.extra_bed_count ?? 0);
     setPetsAllowed(Boolean(item.pets_allowed));
@@ -338,7 +333,7 @@ export function BookingObjectsView({
                           ) : null}
                         </div>
                         <div className="text-slate-400 text-[10px]">
-                          {obj.room_count ? `${obj.room_count} ${obj.room_type || "ROK"}, ` : ""}
+                          {obj.room_count ? `${obj.room_count} ${formatBookingRoomTypeShort(obj.room_type)}, ` : ""}
                           {obj.bed_count} {obj.extra_bed_count ? `+ ${obj.extra_bed_count}` : ""} beds
                           {obj.pets_allowed ? " · Pets allowed" : ""}
                         </div>
@@ -600,13 +595,13 @@ export function BookingObjectsView({
                       className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition font-mono text-center"
                     />
                     <select
-                      value={roomType}
+                      value={formatBookingRoomType(roomType)}
                       onChange={(e) => setRoomType(e.target.value)}
                       className="col-span-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
                     >
-                      {ROOM_TYPES.map((rt) => (
-                        <option key={rt} value={rt}>
-                          {rt}
+                      {BOOKING_ROOM_TYPES.map((rt) => (
+                        <option key={rt.id} value={rt.label}>
+                          {rt.label}
                         </option>
                       ))}
                     </select>

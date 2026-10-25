@@ -47,12 +47,12 @@ The central package encapsulating all CMS capabilities. To guarantee clean separ
 
 ### 4. `apps/demo` and `apps/lullyhill`
 
-Both applications utilize Next.js 14 App Router and mount the core CMS:
+Both applications utilize Next.js 16 App Router with React 19 and mount the core CMS:
 
 - Root page (`/`): Renders public website content using `CMSPageProvider` and dynamic fields (`CMSField.Text`, `CMSField.Image`, `CMSField.Navigation`).
-- Admin panel (`/admin`): Mounts the administrative dashboard via `<AdminPanel appName="..." />`.
+- Admin panel (`/admin`): Mounts the administrative dashboard via `<AdminApp />`, populated server-side with `loadAdminInitialData()`.
 - Authentication (`/admin/login` and `/api/auth/[...nextauth]`): NextAuth Credentials-based authentication.
-- CMS API (`/api/cms/[...slug]`): REST endpoints for media streaming, iCal calendar export, and page data.
+- CMS API (`/api/cms/[...slug]`): REST endpoints for media streaming, iCal calendar export, booking workflows, and page data.
 
 ## Client and Server Boundary Isolation (Webpack and Turbopack)
 

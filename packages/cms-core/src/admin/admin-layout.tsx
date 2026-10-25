@@ -22,6 +22,7 @@ import {
   ExternalLink,
   Gauge,
   UserCheck,
+  Sparkles,
 } from "lucide-react";
 
 export type AdminTab =
@@ -38,6 +39,7 @@ export type AdminTab =
   | "bookings"
   | "objects"
   | "landlords"
+  | "optionals"
   | "amenities"
   | "mail-templates";
 
@@ -80,6 +82,7 @@ export function AdminLayout({
     { id: "bookings", label: "Bookings Calendar", icon: <Calendar className="w-4 h-4" /> },
     { id: "objects", label: "Booking Objects", icon: <Box className="w-4 h-4" /> },
     { id: "landlords", label: "Landlords", icon: <UserCheck className="w-4 h-4" /> },
+    { id: "optionals", label: "Optionals", icon: <Sparkles className="w-4 h-4" /> },
     { id: "amenities", label: "Amenities", icon: <Tag className="w-4 h-4" /> },
     { id: "mail-templates", label: "Mail Templates", icon: <Mail className="w-4 h-4" /> },
   ];

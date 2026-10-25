@@ -35,19 +35,9 @@ export async function getBookingsAction(params?: {
       customerName: b.customer_name,
       price: b.price,
     }));
-  } catch {
-    // Graceful offline preview fallback when database is not connected
-    return [
-      {
-        id: "sample-booking-1",
-        objectId: params?.objectId || "lullyhill-villa",
-        startDate: "2026-10-22",
-        endDate: "2026-10-25",
-        status: "APPROVED" as any,
-        customerName: "Reserverad period",
-        price: 7500,
-      },
-    ];
+  } catch (error) {
+    console.error("[cms-core] Failed to fetch bookings:", error);
+    return [];
   }
 }
 
