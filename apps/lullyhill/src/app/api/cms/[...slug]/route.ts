@@ -3,21 +3,21 @@ import { NextRequest } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { slug: string[] } }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
-  return handleCmsApiRoute(req, params);
+  return handleCmsApiRoute(req, await params);
 }
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { slug: string[] } }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
-  return handleCmsApiRoute(req, params);
+  return handleCmsApiRoute(req, await params);
 }
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { slug: string[] } }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
-  return handleCmsApiRoute(req, params);
+  return handleCmsApiRoute(req, await params);
 }

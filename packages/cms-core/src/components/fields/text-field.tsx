@@ -10,6 +10,7 @@ export interface CMSTextFieldProps {
   nbr: number;
   as?: React.ElementType;
   className?: string;
+  fallbackToPageTitle?: boolean;
   children?: (content: string, field: CMSPageField) => React.ReactNode;
 }
 
@@ -17,15 +18,19 @@ export function CMSTextField({
   nbr,
   as: Component = "div",
   className = "",
+  fallbackToPageTitle = false,
   children,
 }: CMSTextFieldProps) {
   const { data: session } = useSession();
   const isAdmin = Boolean(session?.user);
-  const { page, locale, getField, getLocalizedContent } = useCMSPage();
+  const { page, locale, getField, getLocalizedContent, getLocalizedPageTitle } =
+    useCMSPage();
   const { mode, setSelectedField, openModal } = useEditorStore();
 
   const field = getField(nbr, "TEXT");
-  const content = getLocalizedContent(field);
+  const rawContent = getLocalizedContent(field);
+  const content =
+    rawContent || (fallbackToPageTitle ? getLocalizedPageTitle() : null);
 
   const isEditing = isAdmin && mode === "text";
 

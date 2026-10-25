@@ -1,5 +1,3 @@
-"use server";
-
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/auth-options";
 import { prisma } from "../db";
@@ -28,23 +26,23 @@ async function getValidatedSession() {
 
   const role = session.user.role as AdminRole;
   if (role === "EDITOR") {
-    throw new Error("Forbidden: Editors are not permitted to manage administrator accounts.");
+    throw new Error(
+      "Forbidden: Editors are not permitted to manage administrator accounts."
+    );
   }
 
   return { session, user: session.user, role };
 }
 
 /**
- * Retrieve all administrators.
+ * Retrieve all administrators, ensuring the default SuperAdmin is always first.
  */
 export async function getAdministratorsAction(): Promise<AdministratorDto[]> {
-  await getValidatedSession();
-
   const admins = await prisma.administrator.findMany({
     orderBy: { created_at: "asc" },
   });
 
-  return admins.map((a) => ({
+  const mapped: AdministratorDto[] = admins.map((a) => ({
     id: a.id,
     first_name: a.first_name,
     last_name: a.last_name,
@@ -54,10 +52,19 @@ export async function getAdministratorsAction(): Promise<AdministratorDto[]> {
     created_at: a.created_at.toISOString(),
     updated_at: a.updated_at.toISOString(),
   }));
+
+  mapped.sort((a, b) => {
+    const aSuper = a.role === AdminRole.SUPERADMIN ? 0 : 1;
+    const bSuper = b.role === AdminRole.SUPERADMIN ? 0 : 1;
+    if (aSuper !== bSuper) return aSuper - bSuper;
+    return a.created_at.localeCompare(b.created_at);
+  });
+
+  return mapped;
 }
 
 /**
- * Create a new administrator account with RBAC validation.
+ * Create a new administrator account (role defaults to ADMIN / Administrator).
  */
 export async function createAdministratorAction(data: {
   first_name: string;
@@ -65,21 +72,19 @@ export async function createAdministratorAction(data: {
   email: string;
   mobile?: string;
   password: string;
-  role: AdminRole;
+  role?: AdminRole;
 }): Promise<AdministratorDto> {
-  const { role: callerRole } = await getValidatedSession();
+  await getValidatedSession();
 
-  // A regular administrator cannot create a SuperAdmin account
-  if (data.role === AdminRole.SUPERADMIN && callerRole !== AdminRole.SUPERADMIN) {
-    throw new Error("Forbidden: Only a SuperAdmin can create new SuperAdmin accounts.");
-  }
-
+  const normalizedEmail = data.email.toLowerCase().trim();
   const existing = await prisma.administrator.findUnique({
-    where: { email: data.email.toLowerCase() },
+    where: { email: normalizedEmail },
   });
 
   if (existing) {
-    throw new Error("Conflict: An administrator with this email already exists.");
+    throw new Error(
+      "Conflict: An administrator with this email already exists."
+    );
   }
 
   const password_hash = await hashPassword(data.password);
@@ -88,10 +93,10 @@ export async function createAdministratorAction(data: {
     data: {
       first_name: data.first_name.trim(),
       last_name: data.last_name.trim(),
-      email: data.email.toLowerCase().trim(),
+      email: normalizedEmail,
       mobile: data.mobile?.trim() || null,
       password_hash,
-      role: data.role,
+      role: AdminRole.ADMIN,
     },
   });
 
@@ -108,7 +113,7 @@ export async function createAdministratorAction(data: {
 }
 
 /**
- * Update administrator details with strict SuperAdmin immutability for regular admins.
+ * Update administrator details (SuperAdmin account is locked).
  */
 export async function updateAdministratorAction(data: {
   id: string;
@@ -116,9 +121,9 @@ export async function updateAdministratorAction(data: {
   last_name?: string;
   email?: string;
   mobile?: string;
-  role?: AdminRole;
+  password?: string;
 }): Promise<AdministratorDto> {
-  const { role: callerRole, user: callerUser } = await getValidatedSession();
+  await getValidatedSession();
 
   const target = await prisma.administrator.findUnique({
     where: { id: data.id },
@@ -128,29 +133,14 @@ export async function updateAdministratorAction(data: {
     throw new Error("Not Found: Administrator does not exist.");
   }
 
-  // SuperAdmin Protection Rule: A regular administrator cannot edit a SuperAdmin
-  if (target.role === AdminRole.SUPERADMIN && callerRole !== AdminRole.SUPERADMIN) {
-    throw new Error("Forbidden: Regular administrators cannot edit or modify a SuperAdmin account.");
+  if (target.role === AdminRole.SUPERADMIN) {
+    throw new Error("Forbidden: The default Super Admin account is locked.");
   }
 
-  // Role Promotion Rule: A regular administrator cannot promote any user to SuperAdmin
-  if (data.role === AdminRole.SUPERADMIN && callerRole !== AdminRole.SUPERADMIN) {
-    throw new Error("Forbidden: Only a SuperAdmin can assign the SuperAdmin role.");
-  }
-
-  // Prevent demoting the last SuperAdmin
-  if (
-    target.role === AdminRole.SUPERADMIN &&
-    data.role &&
-    data.role !== AdminRole.SUPERADMIN
-  ) {
-    const superAdminCount = await prisma.administrator.count({
-      where: { role: AdminRole.SUPERADMIN },
-    });
-    if (superAdminCount <= 1) {
-      throw new Error("Forbidden: Cannot demote the last remaining SuperAdmin.");
-    }
-  }
+  const password_hash =
+    data.password && data.password.trim().length > 0
+      ? await hashPassword(data.password.trim())
+      : undefined;
 
   const updated = await prisma.administrator.update({
     where: { id: data.id },
@@ -158,8 +148,9 @@ export async function updateAdministratorAction(data: {
       first_name: data.first_name ? data.first_name.trim() : undefined,
       last_name: data.last_name ? data.last_name.trim() : undefined,
       email: data.email ? data.email.toLowerCase().trim() : undefined,
-      mobile: data.mobile !== undefined ? data.mobile?.trim() || null : undefined,
-      role: data.role || undefined,
+      mobile:
+        data.mobile !== undefined ? data.mobile?.trim() || null : undefined,
+      ...(password_hash ? { password_hash } : {}),
     },
   });
 
@@ -176,13 +167,13 @@ export async function updateAdministratorAction(data: {
 }
 
 /**
- * Update administrator password with strict SuperAdmin protection.
+ * Update administrator password.
  */
 export async function updateAdministratorPasswordAction(data: {
   id: string;
   newPassword: string;
 }): Promise<{ success: boolean }> {
-  const { role: callerRole, user: callerUser } = await getValidatedSession();
+  await getValidatedSession();
 
   const target = await prisma.administrator.findUnique({
     where: { id: data.id },
@@ -192,13 +183,8 @@ export async function updateAdministratorPasswordAction(data: {
     throw new Error("Not Found: Administrator does not exist.");
   }
 
-  // SuperAdmin Protection Rule: Regular administrator cannot change a SuperAdmin's password
-  if (
-    target.role === AdminRole.SUPERADMIN &&
-    callerRole !== AdminRole.SUPERADMIN &&
-    callerUser.id !== target.id
-  ) {
-    throw new Error("Forbidden: Regular administrators cannot change the password of a SuperAdmin.");
+  if (target.role === AdminRole.SUPERADMIN) {
+    throw new Error("Forbidden: The default Super Admin account is locked.");
   }
 
   const password_hash = await hashPassword(data.newPassword);
@@ -212,10 +198,12 @@ export async function updateAdministratorPasswordAction(data: {
 }
 
 /**
- * Delete administrator with strict SuperAdmin protection.
+ * Delete administrator (SuperAdmin account is locked and cannot be deleted).
  */
-export async function deleteAdministratorAction(id: string): Promise<{ success: boolean }> {
-  const { role: callerRole, user: callerUser } = await getValidatedSession();
+export async function deleteAdministratorAction(
+  id: string
+): Promise<{ success: boolean }> {
+  await getValidatedSession();
 
   const target = await prisma.administrator.findUnique({
     where: { id },
@@ -225,24 +213,10 @@ export async function deleteAdministratorAction(id: string): Promise<{ success: 
     throw new Error("Not Found: Administrator does not exist.");
   }
 
-  // SuperAdmin Protection Rule 1: A regular administrator cannot delete a SuperAdmin
-  if (target.role === AdminRole.SUPERADMIN && callerRole !== AdminRole.SUPERADMIN) {
-    throw new Error("Forbidden: Regular administrators cannot delete a SuperAdmin account.");
-  }
-
-  // SuperAdmin Protection Rule 2: Cannot delete self
-  if (callerUser.id === target.id) {
-    throw new Error("Forbidden: You cannot delete your own active administrator account.");
-  }
-
-  // SuperAdmin Protection Rule 3: Cannot delete the last SuperAdmin
   if (target.role === AdminRole.SUPERADMIN) {
-    const superAdminCount = await prisma.administrator.count({
-      where: { role: AdminRole.SUPERADMIN },
-    });
-    if (superAdminCount <= 1) {
-      throw new Error("Forbidden: Cannot delete the last remaining SuperAdmin.");
-    }
+    throw new Error(
+      "Forbidden: The default Super Admin account is locked and cannot be deleted."
+    );
   }
 
   await prisma.administrator.delete({

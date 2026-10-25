@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { resolvePageBySlugOrIdAction } from "@next-booking/cms-core/server";
-import { LullyhillPageRenderer } from "../../components/lullyhill-page-renderer";
+import { LullyhillTemplateRenderer } from "../../templates";
 
 export const dynamic = "force-dynamic";
 
@@ -20,5 +20,5 @@ export default async function LullyhillDynamicPage({
     notFound();
   }
 
-  return <LullyhillPageRenderer page={page as any} />;
+  return <LullyhillTemplateRenderer page={page as any} />;
 }

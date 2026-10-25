@@ -2,7 +2,20 @@
 
 import React, { useState, useEffect } from "react";
 import { useEditorStore } from "../../state/editor-store";
-import { X, Check, Loader2, Upload, Image as ImageIcon } from "lucide-react";
+import {
+  X,
+  Check,
+  Loader2,
+  Upload,
+  Image as ImageIcon,
+  FolderOpen,
+} from "lucide-react";
+
+interface MediaFileOption {
+  id: string;
+  file_name: string;
+  file_url: string;
+}
 
 export interface ImageEditModalProps {
   onSave?: (data: {
@@ -24,15 +37,37 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [mediaFiles, setMediaFiles] = useState<MediaFileOption[]>([]);
+  const [isLoadingMedia, setIsLoadingMedia] = useState(false);
 
   useEffect(() => {
-    if (selectedField?.fieldType === "IMAGE") {
+    if (isModalOpen && selectedField?.fieldType === "IMAGE") {
       setImageUrl(selectedField.imageUrl || "");
       setRatio(selectedField.ratio || "16/9");
       setMaxWidth(selectedField.maxWidth ?? "");
       setErrorMessage(null);
+
+      setIsLoadingMedia(true);
+      fetch("/api/cms/media")
+        .then((res) => (res.ok ? res.json() : []))
+        .then((data) => {
+          if (Array.isArray(data)) {
+            const imagesOnly = data.filter(
+              (item: MediaFileOption) =>
+                item.file_url &&
+                !item.file_url.toLowerCase().endsWith(".pdf")
+            );
+            setMediaFiles(imagesOnly);
+          }
+        })
+        .catch(() => {
+          // Ignore fetch error and fall back to empty list
+        })
+        .finally(() => {
+          setIsLoadingMedia(false);
+        });
     }
-  }, [selectedField]);
+  }, [isModalOpen, selectedField]);
 
   if (!isModalOpen || selectedField?.fieldType !== "IMAGE") {
     return null;
@@ -61,6 +96,19 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
       const data = await response.json();
       if (data.fileUrl) {
         setImageUrl(data.fileUrl);
+        setMediaFiles((prev) => {
+          if (prev.some((m) => m.file_url === data.fileUrl)) {
+            return prev;
+          }
+          return [
+            {
+              id: data.id || String(Date.now()),
+              file_name: data.fileName || file.name,
+              file_url: data.fileUrl,
+            },
+            ...prev,
+          ];
+        });
       }
     } catch {
       setErrorMessage("Could not upload image");
@@ -116,7 +164,7 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg rounded-2xl border border-slate-700 bg-slate-900 p-6 text-white shadow-2xl">
+      <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-6 text-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold">
@@ -148,6 +196,64 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
               <span className="text-xs">No image selected</span>
             </div>
           )}
+
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
+                <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
+                <span>Select from Media & Files</span>
+              </label>
+              <span className="text-[11px] text-slate-400">
+                {mediaFiles.length} {mediaFiles.length === 1 ? "image" : "images"}
+              </span>
+            </div>
+
+            {isLoadingMedia ? (
+              <div className="flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-950 py-6 text-xs text-slate-400">
+                <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
+                <span>Loading Media & Files...</span>
+              </div>
+            ) : mediaFiles.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-800 bg-slate-950/60 py-4 text-center text-xs text-slate-500">
+                No uploaded images found in Media & Files yet.
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-44 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-2">
+                {mediaFiles.map((item) => {
+                  const isSelected = imageUrl === item.file_url;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setImageUrl(item.file_url)}
+                      className={`group relative flex flex-col overflow-hidden rounded-lg border text-left transition ${
+                        isSelected
+                          ? "border-amber-500 ring-2 ring-amber-500/40 bg-slate-900"
+                          : "border-slate-800 bg-slate-900/60 hover:border-slate-600"
+                      }`}
+                      title={item.file_name}
+                    >
+                      <div className="aspect-video w-full bg-slate-950 overflow-hidden">
+                        <img
+                          src={item.file_url}
+                          alt={item.file_name}
+                          className="h-full w-full object-cover group-hover:scale-105 transition duration-200"
+                        />
+                      </div>
+                      <div className="truncate px-1.5 py-1 text-[10px] text-slate-300">
+                        {item.file_name}
+                      </div>
+                      {isSelected && (
+                        <div className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow">
+                          <Check className="h-3 w-3 stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">

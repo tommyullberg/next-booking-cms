@@ -1,9 +1,13 @@
+import { notFound } from "next/navigation";
 import { resolvePageBySlugOrIdAction } from "@next-booking/cms-core/server";
-import { LullyhillPageRenderer } from "../components/lullyhill-page-renderer";
+import { LullyhillTemplateRenderer } from "../templates";
 
 export const dynamic = "force-dynamic";
 
 export default async function LullyhillHomePage() {
-  const { page } = await resolvePageBySlugOrIdAction("/");
-  return <LullyhillPageRenderer page={page as any} />;
+  const { page, isHiddenFromVisitor } = await resolvePageBySlugOrIdAction("/");
+  if (isHiddenFromVisitor) {
+    notFound();
+  }
+  return <LullyhillTemplateRenderer page={page as any} />;
 }

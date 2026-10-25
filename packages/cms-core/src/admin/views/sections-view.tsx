@@ -3,12 +3,12 @@
 import React, { useState } from "react";
 import { Plus, Trash2, Pencil, Check, GripVertical, ChevronDown, Lock } from "lucide-react";
 import { FlagIcon } from "../../components/ui/flag-icon";
-import { HOMEPAGE_ID } from "./pages-view";
+import { HOMEPAGE_ID } from "../../utils/slug";
 
 export interface SectionItem {
   id: string;
   name: string;
-  translations?: Record<string, string> | null;
+  translations?: Record<string, string> | any;
   start_page_id?: number | string | null;
   sort_order: number;
   is_visible: boolean;

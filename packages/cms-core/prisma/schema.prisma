@@ -96,6 +96,7 @@ model Page {
   page_fields  PageField[]
   translations PageTranslation[]
   objects      BookingObject[]
+  categories   Category[]
 
   @@map("pages")
 }
@@ -119,6 +120,7 @@ model CategoryType {
   id          String  @id @default(cuid()) @map("id")
   name        String  @map("name")
   is_multiple Boolean @default(false) @map("is_multiple")
+  sort_order  Int     @default(0) @map("sort_order")
 
   categories Category[]
 
@@ -129,8 +131,10 @@ model Category {
   id               String @id @default(cuid()) @map("id")
   category_type_id String @map("category_type_id")
   name             String @map("name")
+  sort_order       Int    @default(0) @map("sort_order")
 
   category_type CategoryType @relation(fields: [category_type_id], references: [id], onDelete: Cascade)
+  pages         Page[]
 
   @@map("categories")
 }
@@ -173,9 +177,15 @@ model NavigationLink {
 model BookingObject {
   id              String   @id @default(cuid()) @map("id")
   name            String   @map("name")
+  type            String?  @map("type")
   description     String?  @map("description")
   page_id         Int?     @map("page_id")
+  landlord_id     String?  @map("landlord_id")
+  sort_order      Int      @default(0) @map("sort_order")
+  is_visible      Boolean  @default(true) @map("is_visible")
   size_sqm        Float?   @map("size_sqm")
+  room_count      Int?     @default(1) @map("room_count")
+  room_type       String?  @map("room_type")
   bed_count       Int      @default(1) @map("bed_count")
   extra_bed_count Int      @default(0) @map("extra_bed_count")
   pets_allowed    Boolean  @default(false) @map("pets_allowed")
@@ -184,11 +194,33 @@ model BookingObject {
   updated_at      DateTime @updatedAt @map("updated_at")
 
   page      Page?     @relation(fields: [page_id], references: [id], onDelete: SetNull)
+  landlord  Landlord? @relation(fields: [landlord_id], references: [id], onDelete: SetNull)
   amenities Amenity[]
   galleries Gallery[]
   bookings  Booking[]
 
   @@map("objects")
+}
+
+model Landlord {
+  id             String          @id @default(cuid()) @map("id")
+  first_name     String          @map("first_name")
+  last_name      String          @map("last_name")
+  address        String?         @map("address")
+  postal_code    String?         @map("postal_code")
+  city           String?         @map("city")
+  email          String?         @map("email")
+  phone          String?         @map("phone")
+  mobile         String?         @map("mobile")
+  has_swish      Boolean         @default(false) @map("has_swish")
+  account_type   String?         @map("account_type")
+  account_number String?         @map("account_number")
+  created_at     DateTime        @default(now()) @map("created_at")
+  updated_at     DateTime        @updatedAt @map("updated_at")
+
+  objects        BookingObject[]
+
+  @@map("landlords")
 }
 
 model Amenity {

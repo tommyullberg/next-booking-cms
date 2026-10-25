@@ -1,7 +1,33 @@
 import { prisma } from "../db";
 import { PageStatus } from "@prisma/client";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth";
+import {
+  HOMEPAGE_ID,
+  cleanSlugInput,
+  validateSlugInput,
+  isDefaultIdOrRootSlug,
+} from "../utils/slug";
 
-export const HOMEPAGE_ID = 1001;
+export { HOMEPAGE_ID };
+
+export function isPageVisibleToVisitor(page: {
+  status: PageStatus | string;
+  publication_start?: Date | string | null;
+  publication_end?: Date | string | null;
+}): boolean {
+  if (page.status !== "PUBLISHED") {
+    return false;
+  }
+  const now = new Date();
+  if (page.publication_start && new Date(page.publication_start) > now) {
+    return false;
+  }
+  if (page.publication_end && new Date(page.publication_end) < now) {
+    return false;
+  }
+  return true;
+}
 
 export const SLUG_BLACKLIST = [
   "admin",
@@ -26,18 +52,18 @@ export function sanitizeSlug(
   }
 
   const trimmed = (rawSlug || "").trim();
-  if (trimmed === "/" || trimmed === "") {
+  if (
+    trimmed === "/" ||
+    trimmed === "" ||
+    (numId !== undefined && trimmed === String(numId))
+  ) {
     return numId && !isNaN(numId) ? String(numId) : "";
   }
 
-  const cleaned = trimmed
-    .toLowerCase()
-    .replace(/^\/+/, "")
-    .replace(/[^a-z0-9-/]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+  const cleaned = cleanSlugInput(trimmed, false);
+  const validation = validateSlugInput(cleaned, { currentPageId: numId });
 
-  if (!cleaned || SLUG_BLACKLIST.includes(cleaned)) {
+  if (!cleaned || !validation.isValid) {
     return numId && !isNaN(numId) ? String(numId) : "";
   }
 
@@ -49,6 +75,7 @@ export async function getPagesAction() {
     orderBy: [{ id: "asc" }],
     include: {
       section: true,
+      categories: true,
       translations: true,
       _count: {
         select: { page_fields: true },
@@ -65,6 +92,7 @@ export async function getPageByIdAction(id: number | string) {
     where: { id: numericId },
     include: {
       section: true,
+      categories: true,
       translations: true,
       page_fields: {
         include: {
@@ -88,6 +116,7 @@ export async function getPageBySlugAction(slug: string) {
     where: { slug },
     include: {
       section: true,
+      categories: true,
       translations: true,
       page_fields: {
         include: {
@@ -106,12 +135,116 @@ export async function getPageBySlugAction(slug: string) {
   });
 }
 
+export async function getPublicNavigationSectionsAction(isAdmin = false) {
+  const { getSectionsAction } = await import("./sections");
+  const [sections, allPages] = await Promise.all([
+    getSectionsAction().catch(() => []),
+    prisma.page
+      .findMany({
+        select: {
+          id: true,
+          page_title: true,
+          link_description: true,
+          slug: true,
+          status: true,
+          sort_order: true,
+          section_id: true,
+          publication_start: true,
+          publication_end: true,
+        },
+        orderBy: [{ sort_order: "asc" }, { id: "asc" }],
+      })
+      .catch(() => []),
+  ]);
+
+  const pageMap = new Map(allPages.map((p) => [p.id, p]));
+  const toUrl = (p: { id: number; slug: string }) => {
+    if (p.id === HOMEPAGE_ID || p.slug === "/") return "/";
+    const clean = (p.slug || String(p.id)).replace(/^\/+/, "");
+    return `/${clean || p.id}`;
+  };
+
+  return sections
+    .filter((s) => s.is_visible !== false || s.start_page_id === HOMEPAGE_ID)
+    .map((s) => {
+      const isRoot = s.start_page_id === HOMEPAGE_ID;
+      const startPage = s.start_page_id ? pageMap.get(s.start_page_id) : null;
+      const startPageAllowed =
+        startPage && (isAdmin || isPageVisibleToVisitor(startPage));
+
+      const sectionPages = allPages.filter(
+        (p) =>
+          p.section_id === s.id &&
+          p.id !== HOMEPAGE_ID &&
+          (isAdmin || isPageVisibleToVisitor(p))
+      );
+
+      return {
+        id: s.id,
+        name: s.name,
+        translations: s.translations,
+        is_root: isRoot,
+        start_page_id: s.start_page_id ?? null,
+        start_page_url: isRoot
+          ? "/"
+          : startPageAllowed && startPage
+            ? toUrl(startPage)
+            : null,
+        items: sectionPages.map((p) => ({
+          id: p.id,
+          label: p.link_description || p.page_title,
+          url: toUrl(p),
+          status: p.status,
+        })),
+      };
+    });
+}
+
 export async function resolvePageBySlugOrIdAction(
   rawPath?: string | string[]
 ): Promise<{
-  page: Awaited<ReturnType<typeof getPageByIdAction>>;
+  page:
+    | (NonNullable<Awaited<ReturnType<typeof getPageByIdAction>>> & {
+        navigation_sections?: Awaited<
+          ReturnType<typeof getPublicNavigationSectionsAction>
+        >;
+      })
+    | null;
   shouldRedirectToRoot: boolean;
+  isHiddenFromVisitor?: boolean;
 }> {
+  const session = await getServerSession(authOptions).catch(() => null);
+  const isAdmin = Boolean(session?.user);
+  const navigationSections = await getPublicNavigationSectionsAction(isAdmin);
+
+  const checkAccess = (
+    p: Awaited<ReturnType<typeof getPageByIdAction>>,
+    shouldRedirect: boolean
+  ) => {
+    if (!p) {
+      return {
+        page: null,
+        shouldRedirectToRoot: false,
+        isHiddenFromVisitor: false,
+      };
+    }
+    if (isAdmin || isPageVisibleToVisitor(p)) {
+      return {
+        page: {
+          ...p,
+          navigation_sections: navigationSections,
+        },
+        shouldRedirectToRoot: shouldRedirect,
+        isHiddenFromVisitor: false,
+      };
+    }
+    return {
+      page: null,
+      shouldRedirectToRoot: false,
+      isHiddenFromVisitor: true,
+    };
+  };
+
   const joined = Array.isArray(rawPath)
     ? rawPath.join("/").trim()
     : (rawPath || "").trim();
@@ -122,7 +255,7 @@ export async function resolvePageBySlugOrIdAction(
     const home =
       (await getPageByIdAction(HOMEPAGE_ID)) ||
       (await getPageBySlugAction("/"));
-    return { page: home, shouldRedirectToRoot: false };
+    return checkAccess(home, false);
   }
 
   // 2. Visiting "/1001" -> redirect to "/" so homepage is always served at "/"
@@ -130,36 +263,31 @@ export async function resolvePageBySlugOrIdAction(
     const home =
       (await getPageByIdAction(HOMEPAGE_ID)) ||
       (await getPageBySlugAction("/"));
-    return { page: home, shouldRedirectToRoot: true };
+    return checkAccess(home, true);
   }
 
   // 3. Match by slug first
   const bySlug = await getPageBySlugAction(normalized);
   if (bySlug) {
-    if (bySlug.id === HOMEPAGE_ID) {
-      return { page: bySlug, shouldRedirectToRoot: true };
-    }
-    return { page: bySlug, shouldRedirectToRoot: false };
+    return checkAccess(bySlug, bySlug.id === HOMEPAGE_ID);
   }
 
   // 4. Match by numeric page ID (e.g. "/1002")
   if (/^\d+$/.test(normalized)) {
     const byId = await getPageByIdAction(Number(normalized));
     if (byId) {
-      if (byId.id === HOMEPAGE_ID) {
-        return { page: byId, shouldRedirectToRoot: true };
-      }
-      return { page: byId, shouldRedirectToRoot: false };
+      return checkAccess(byId, byId.id === HOMEPAGE_ID);
     }
   }
 
-  return { page: null, shouldRedirectToRoot: false };
+  return { page: null, shouldRedirectToRoot: false, isHiddenFromVisitor: false };
 }
 
 export interface SavePageParams {
   id?: number | string;
   templateName: string;
   sectionId?: string | null;
+  categoryIds?: string[];
   pageTitle: string;
   linkDescription?: string | null;
   metaTitle?: string | null;
@@ -184,14 +312,34 @@ export async function savePageAction(data: SavePageParams) {
       ? Number(data.id)
       : undefined;
 
+  const existingPages = await prisma.page.findMany({
+    select: { id: true, slug: true, page_title: true },
+  });
+
   if (numericId) {
     const isHomepage = numericId === HOMEPAGE_ID;
+    const rawTrimmed = (data.slug || "").trim();
+    const isDefaultId = isDefaultIdOrRootSlug(rawTrimmed, numericId);
+
+    if (!isHomepage && !isDefaultId) {
+      const cleaned = cleanSlugInput(rawTrimmed, false);
+      const check = validateSlugInput(cleaned, {
+        currentPageId: numericId,
+        existingPages,
+      });
+      if (!check.isValid) {
+        throw new Error(check.error || "Invalid URL slug.");
+      }
+    }
+
     const validSlug = isHomepage
       ? "/"
-      : sanitizeSlug(data.slug, numericId) || String(numericId);
+      : isDefaultId
+        ? String(numericId)
+        : sanitizeSlug(data.slug, numericId) || String(numericId);
     const effectiveTemplate = isHomepage
       ? data.templateName || "startpage"
-      : data.templateName || "Default";
+      : data.templateName || "article";
 
     // Update existing page
     const page = await prisma.page.update({
@@ -211,6 +359,13 @@ export async function savePageAction(data: SavePageParams) {
         publication_end: data.publicationEnd
           ? new Date(data.publicationEnd)
           : null,
+        ...(Array.isArray(data.categoryIds)
+          ? {
+              categories: {
+                set: data.categoryIds.map((id) => ({ id })),
+              },
+            }
+          : {}),
       },
     });
 
@@ -246,12 +401,20 @@ export async function savePageAction(data: SavePageParams) {
   }
 
   // Create new page (gets autoincrement ID >= 1002)
+  const rawCreateSlug = (data.slug || "").trim();
+  if (rawCreateSlug && !isDefaultIdOrRootSlug(rawCreateSlug)) {
+    const cleaned = cleanSlugInput(rawCreateSlug, false);
+    const check = validateSlugInput(cleaned, { existingPages });
+    if (!check.isValid) {
+      throw new Error(check.error || "Invalid URL slug.");
+    }
+  }
   const initialSlug = sanitizeSlug(data.slug);
   const tempSlug = initialSlug || `temp-${Date.now()}`;
 
   let page = await prisma.page.create({
     data: {
-      template_name: data.templateName || "Default",
+      template_name: data.templateName || "article",
       section_id: data.sectionId || null,
       page_title: data.pageTitle,
       link_description: data.linkDescription,
@@ -266,6 +429,13 @@ export async function savePageAction(data: SavePageParams) {
         ? new Date(data.publicationEnd)
         : null,
       created_by: data.createdBy,
+      ...(Array.isArray(data.categoryIds) && data.categoryIds.length > 0
+        ? {
+            categories: {
+              connect: data.categoryIds.map((id) => ({ id })),
+            },
+          }
+        : {}),
     },
   });
 
@@ -307,30 +477,72 @@ export async function deletePageAction(id: number | string) {
 
 export async function loadAdminInitialData() {
   const { getSectionsAction } = await import("./sections");
+  const { getCategoryTypesAction } = await import("./categories");
+  const { getAdministratorsAction } = await import("./administrators");
   const { getMediaFilesAction } = await import("./media");
   const { getMailTemplatesAction } = await import("../mail");
   const { getCmsSettingsAction } = await import("./settings");
+  const { getLandlordsAction } = await import("./landlords");
+  const { getBookingObjectsAction } = await import("./booking-objects");
 
-  let pages: any[] = [];
-  let sections: any[] = [];
-  let media: any[] = [];
-  let mailTemplates: any[] = [];
-  let settings = { activeLanguages: ["sv", "en", "de"], bookingIcalUrl: "" };
+  const [
+    pages,
+    sections,
+    categoryTypes,
+    administrators,
+    media,
+    mailTemplates,
+    settings,
+    landlords,
+    bookingObjects,
+  ] = await Promise.all([
+    getPagesAction().catch((err) => {
+      console.error("[cms-core] getPagesAction failed:", err);
+      return [];
+    }),
+    getSectionsAction().catch((err) => {
+      console.error("[cms-core] getSectionsAction failed:", err);
+      return [];
+    }),
+    getCategoryTypesAction().catch((err) => {
+      console.error("[cms-core] getCategoryTypesAction failed:", err);
+      return [];
+    }),
+    getAdministratorsAction().catch((err) => {
+      console.error("[cms-core] getAdministratorsAction failed:", err);
+      return [];
+    }),
+    getMediaFilesAction().catch((err) => {
+      console.error("[cms-core] getMediaFilesAction failed:", err);
+      return [];
+    }),
+    getMailTemplatesAction().catch((err) => {
+      console.error("[cms-core] getMailTemplatesAction failed:", err);
+      return [];
+    }),
+    getCmsSettingsAction().catch((err) => {
+      console.error("[cms-core] getCmsSettingsAction failed:", err);
+      return { activeLanguages: ["sv", "en", "de"], bookingIcalUrl: "" };
+    }),
+    getLandlordsAction().catch((err) => {
+      console.error("[cms-core] getLandlordsAction failed:", err);
+      return [];
+    }),
+    getBookingObjectsAction().catch((err) => {
+      console.error("[cms-core] getBookingObjectsAction failed:", err);
+      return [];
+    }),
+  ]);
 
-  try {
-    [pages, sections, media, mailTemplates, settings] = await Promise.all([
-      getPagesAction(),
-      getSectionsAction(),
-      getMediaFilesAction(),
-      getMailTemplatesAction(),
-      getCmsSettingsAction(),
-    ]);
-  } catch {
-    pages = [];
-    sections = [];
-    media = [];
-    mailTemplates = [];
-  }
-
-  return { pages, sections, media, mailTemplates, settings };
+  return {
+    pages,
+    sections,
+    categoryTypes,
+    administrators,
+    media,
+    mailTemplates,
+    settings,
+    landlords,
+    bookingObjects,
+  };
 }

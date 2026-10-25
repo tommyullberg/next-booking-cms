@@ -21,6 +21,7 @@ import {
   LogOut,
   ExternalLink,
   Gauge,
+  UserCheck,
 } from "lucide-react";
 
 export type AdminTab =
@@ -36,7 +37,7 @@ export type AdminTab =
   | "bookings-dashboard"
   | "bookings"
   | "objects"
-  | "booking-categories"
+  | "landlords"
   | "amenities"
   | "mail-templates";
 
@@ -78,7 +79,7 @@ export function AdminLayout({
     { id: "bookings-dashboard", label: "Dashboard & Overview", icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: "bookings", label: "Bookings Calendar", icon: <Calendar className="w-4 h-4" /> },
     { id: "objects", label: "Booking Objects", icon: <Box className="w-4 h-4" /> },
-    { id: "booking-categories", label: "Categories & Types", icon: <Layers className="w-4 h-4" /> },
+    { id: "landlords", label: "Landlords", icon: <UserCheck className="w-4 h-4" /> },
     { id: "amenities", label: "Amenities", icon: <Tag className="w-4 h-4" /> },
     { id: "mail-templates", label: "Mail Templates", icon: <Mail className="w-4 h-4" /> },
   ];

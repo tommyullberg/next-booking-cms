@@ -12,12 +12,22 @@ export default async function AdminPage() {
     redirect("/admin/login");
   }
 
-  const { pages, sections, media, mailTemplates, settings } = await loadAdminInitialData();
+  const {
+    pages,
+    sections,
+    categoryTypes,
+    administrators,
+    media,
+    mailTemplates,
+    settings,
+  } = await loadAdminInitialData();
 
   return (
     <AdminApp
       initialPages={pages}
       initialSections={sections}
+      initialCategoryTypes={categoryTypes}
+      initialAdministrators={administrators}
       initialMedia={media}
       initialMailTemplates={mailTemplates as any}
       initialSettings={settings}

@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { Plus, GripVertical, Trash2, ChevronDown } from "lucide-react";
 import { SectionItem } from "./sections-view";
-import { PageListItem, HOMEPAGE_ID } from "./pages-view";
+import { PageListItem } from "./pages-view";
+import { HOMEPAGE_ID } from "../../utils/slug";
 
 export interface NavigationMenusViewProps {
   sections: SectionItem[];

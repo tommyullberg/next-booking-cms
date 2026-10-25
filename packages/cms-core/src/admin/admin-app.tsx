@@ -8,6 +8,10 @@ import { DashboardView } from "./views/dashboard-view";
 import { PagesView, PageListItem } from "./views/pages-view";
 import { PageEditorView, PageEditorData } from "./views/page-editor-view";
 import { SectionsView, SectionItem } from "./views/sections-view";
+import { CategoriesView, CategoryTypeItem } from "./views/categories-view";
+import { AdministratorsView, AdministratorItem } from "./views/administrators-view";
+import { LandlordsView, LandlordItem } from "./views/landlords-view";
+import { BookingObjectsView, BookingObjectItem } from "./views/booking-objects-view";
 import { NavigationMenusView } from "./views/navigation-menus-view";
 import { MediaView, MediaItem } from "./views/media-view";
 import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view";
@@ -16,6 +20,10 @@ import { SettingsView } from "./views/settings-view";
 export interface AdminAppProps {
   initialPages?: PageListItem[];
   initialSections?: SectionItem[];
+  initialCategoryTypes?: CategoryTypeItem[];
+  initialAdministrators?: AdministratorItem[];
+  initialLandlords?: LandlordItem[];
+  initialBookingObjects?: BookingObjectItem[];
   initialMedia?: MediaItem[];
   initialMailTemplates?: MailTemplateItem[];
   initialSettings?: {
@@ -40,6 +48,10 @@ export interface AdminAppProps {
 export function AdminApp({
   initialPages = [],
   initialSections = [],
+  initialCategoryTypes = [],
+  initialAdministrators = [],
+  initialLandlords = [],
+  initialBookingObjects = [],
   initialMedia = [],
   initialMailTemplates = [],
   initialSettings,
@@ -60,6 +72,16 @@ export function AdminApp({
   const [currentTab, setCurrentTab] = useState<AdminTab>("dashboard");
   const [pages, setPages] = useState<PageListItem[]>(initialPages);
   const [sections, setSections] = useState<SectionItem[]>(initialSections);
+  const [categoryTypes, setCategoryTypes] = useState<CategoryTypeItem[]>(
+    initialCategoryTypes
+  );
+  const [administrators, setAdministrators] = useState<AdministratorItem[]>(
+    initialAdministrators
+  );
+  const [landlords, setLandlords] = useState<LandlordItem[]>(initialLandlords);
+  const [bookingObjects, setBookingObjects] = useState<BookingObjectItem[]>(
+    initialBookingObjects
+  );
   const [media, setMedia] = useState<MediaItem[]>(initialMedia);
   const [mailTemplates, setMailTemplates] = useState<MailTemplateItem[]>(initialMailTemplates);
   const [activeLanguages, setActiveLanguages] = useState<string[]>(
@@ -78,6 +100,18 @@ export function AdminApp({
           if (data) {
             if (Array.isArray(data.pages)) setPages(data.pages);
             if (Array.isArray(data.sections)) setSections(data.sections);
+            if (Array.isArray(data.categoryTypes)) {
+              setCategoryTypes(data.categoryTypes);
+            }
+            if (Array.isArray(data.administrators)) {
+              setAdministrators(data.administrators);
+            }
+            if (Array.isArray(data.landlords)) {
+              setLandlords(data.landlords);
+            }
+            if (Array.isArray(data.bookingObjects)) {
+              setBookingObjects(data.bookingObjects);
+            }
             if (Array.isArray(data.media)) setMedia(data.media);
             if (Array.isArray(data.mailTemplates)) setMailTemplates(data.mailTemplates);
             if (data.settings) {
@@ -138,14 +172,18 @@ export function AdminApp({
   };
 
   const handleSavePageInternal = async (data: any) => {
+    let savedPage: any = null;
     if (onSavePage) {
       await onSavePage(data);
     } else {
-      await fetch(`/api/cms/pages/${data.id || ""}`, {
+      const res = await fetch(`/api/cms/pages/${data.id || ""}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+      if (res.ok) {
+        savedPage = await res.json();
+      }
     }
 
     setPages((prev) =>
@@ -166,6 +204,7 @@ export function AdminApp({
       prev && String(prev.id) === String(data.id)
         ? {
             ...prev,
+            ...(savedPage ? { categories: savedPage.categories } : {}),
             page_title: data.pageTitle,
             menu_title: data.menuTitle,
             slug: data.slug,
@@ -532,7 +571,10 @@ export function AdminApp({
         {currentTab === "page-editor" && editingPage && (
           <PageEditorView
             page={editingPage}
+            existingPages={pages}
             sections={sections}
+            categoryTypes={categoryTypes}
+            bookingObjects={bookingObjects}
             activeLanguages={activeLanguages}
             onBack={() => setCurrentTab("pages")}
             onSave={handleSavePageInternal}
@@ -578,25 +620,120 @@ export function AdminApp({
         )}
 
         {currentTab === "categories" && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
-            <h2 className="text-lg font-semibold text-white mb-2">
-              Categories & Types
-            </h2>
-            <p className="text-xs">
-              Define taxonomy groups and category classifications for pages and content.
-            </p>
-          </div>
+          <CategoriesView
+            categoryTypes={categoryTypes}
+            onSaveCategoryType={async (data) => {
+              const res = await fetch("/api/cms/categories/types", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              });
+              if (res.ok) {
+                const updated = await res.json();
+                if (Array.isArray(updated)) {
+                  setCategoryTypes(updated);
+                  return updated;
+                }
+              }
+            }}
+            onDeleteCategoryType={async (id) => {
+              const res = await fetch(`/api/cms/categories/types/${id}`, {
+                method: "DELETE",
+              });
+              if (res.ok) {
+                const updated = await res.json();
+                if (Array.isArray(updated)) {
+                  setCategoryTypes(updated);
+                  return updated;
+                }
+              }
+            }}
+            onReorderCategoryTypes={async (orderedIds) => {
+              const res = await fetch("/api/cms/categories/types/reorder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderedIds }),
+              });
+              if (res.ok) {
+                const updated = await res.json();
+                if (Array.isArray(updated)) {
+                  setCategoryTypes(updated);
+                  return updated;
+                }
+              }
+            }}
+            onSaveCategory={async (data) => {
+              const res = await fetch("/api/cms/categories/items", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              });
+              if (res.ok) {
+                const updated = await res.json();
+                if (Array.isArray(updated)) {
+                  setCategoryTypes(updated);
+                  return updated;
+                }
+              }
+            }}
+            onDeleteCategory={async (id) => {
+              const res = await fetch(`/api/cms/categories/items/${id}`, {
+                method: "DELETE",
+              });
+              if (res.ok) {
+                const updated = await res.json();
+                if (Array.isArray(updated)) {
+                  setCategoryTypes(updated);
+                  return updated;
+                }
+              }
+            }}
+            onReorderCategories={async (items) => {
+              const res = await fetch("/api/cms/categories/items/reorder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ items }),
+              });
+              if (res.ok) {
+                const updated = await res.json();
+                if (Array.isArray(updated)) {
+                  setCategoryTypes(updated);
+                  return updated;
+                }
+              }
+            }}
+          />
         )}
 
         {currentTab === "administrators" && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
-            <h2 className="text-lg font-semibold text-white mb-2">
-              Administrators
-            </h2>
-            <p className="text-xs">
-              Manage administrator accounts and Role-Based Access Control (SUPERADMIN, ADMIN, EDITOR).
-            </p>
-          </div>
+          <AdministratorsView
+            administrators={administrators}
+            onSaveAdministrator={async (data) => {
+              const res = await fetch("/api/cms/administrators", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              });
+              const payload = await res.json();
+              if (!res.ok) {
+                throw new Error(payload?.error || "Failed to save administrator");
+              }
+              if (Array.isArray(payload)) {
+                setAdministrators(payload);
+                return payload;
+              }
+            }}
+            onDeleteAdministrator={async (id) => {
+              const res = await fetch(`/api/cms/administrators/${id}`, {
+                method: "DELETE",
+              });
+              const payload = await res.json();
+              if (res.ok && Array.isArray(payload)) {
+                setAdministrators(payload);
+                return payload;
+              }
+            }}
+          />
         )}
 
         {currentTab === "settings" && (
@@ -651,25 +788,67 @@ export function AdminApp({
         )}
 
         {currentTab === "objects" && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
-            <h2 className="text-lg font-semibold text-white mb-2">
-              Booking Objects
-            </h2>
-            <p className="text-xs">
-              Manage rentable units, bed capacity, pet policies, and seasonal price matrices.
-            </p>
-          </div>
+          <BookingObjectsView
+            objects={bookingObjects}
+            landlords={landlords}
+            pages={pages}
+            onSaveObject={async (data) => {
+              const res = await fetch("/api/cms/booking-objects", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              });
+              const payload = await res.json();
+              if (!res.ok) {
+                throw new Error(payload?.error || "Failed to save booking object");
+              }
+              if (Array.isArray(payload)) {
+                setBookingObjects(payload);
+                return payload;
+              }
+            }}
+            onDeleteObject={async (id) => {
+              const res = await fetch(`/api/cms/booking-objects/${id}`, {
+                method: "DELETE",
+              });
+              const payload = await res.json();
+              if (res.ok && Array.isArray(payload)) {
+                setBookingObjects(payload);
+                return payload;
+              }
+            }}
+          />
         )}
 
-        {currentTab === "booking-categories" && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
-            <h2 className="text-lg font-semibold text-white mb-2">
-              Booking Categories & Types
-            </h2>
-            <p className="text-xs">
-              Categorize rentable booking units and accommodation types.
-            </p>
-          </div>
+        {currentTab === "landlords" && (
+          <LandlordsView
+            landlords={landlords}
+            onSaveLandlord={async (data) => {
+              const res = await fetch("/api/cms/landlords", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              });
+              const payload = await res.json();
+              if (!res.ok) {
+                throw new Error(payload?.error || "Failed to save landlord");
+              }
+              if (Array.isArray(payload)) {
+                setLandlords(payload);
+                return payload;
+              }
+            }}
+            onDeleteLandlord={async (id) => {
+              const res = await fetch(`/api/cms/landlords/${id}`, {
+                method: "DELETE",
+              });
+              const payload = await res.json();
+              if (res.ok && Array.isArray(payload)) {
+                setLandlords(payload);
+                return payload;
+              }
+            }}
+          />
         )}
 
         {currentTab === "amenities" && (

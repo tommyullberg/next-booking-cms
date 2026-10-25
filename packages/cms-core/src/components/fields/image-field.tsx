@@ -10,6 +10,7 @@ export interface CMSImageFieldProps {
   nbr: number;
   alt?: string;
   className?: string;
+  wrapperClassName?: string;
   children?: (
     imageUrl: string,
     field: CMSPageField,
@@ -21,6 +22,7 @@ export function CMSImageField({
   nbr,
   alt = "",
   className = "",
+  wrapperClassName = "",
   children,
 }: CMSImageFieldProps) {
   const { data: session } = useSession();
@@ -105,7 +107,7 @@ export function CMSImageField({
     aspectRatio: field?.ratio || undefined,
   };
 
-  return (
+  const imgElement = (
     <img
       src={imageUrl}
       alt={alt || field?.image?.file_name || `Bild ${nbr}`}
@@ -116,4 +118,10 @@ export function CMSImageField({
       className={combinedClasses || undefined}
     />
   );
+
+  if (wrapperClassName) {
+    return <div className={wrapperClassName}>{imgElement}</div>;
+  }
+
+  return imgElement;
 }

@@ -2,8 +2,11 @@
 
 import React, { useState } from "react";
 import { Plus, Edit3, Trash2, Search, Lock } from "lucide-react";
-
-export const HOMEPAGE_ID = 1001;
+import {
+  HOMEPAGE_ID,
+  cleanSlugInput,
+  validateSlugInput,
+} from "../../utils/slug";
 
 export interface PageListItem {
   id: number | string;
@@ -33,14 +36,19 @@ export interface PagesViewProps {
 const TEMPLATE_LABELS: Record<string, string> = {
   startpage: "Startpage",
   Startpage: "Startpage",
+  "booking-unit": "Booking unit",
   "Booking unit": "Booking unit",
   booking: "Booking unit",
-  Article: "Article",
+  "booking-overview": "Booking overview",
+  "Booking overview": "Booking overview",
   article: "Article",
-  "Entire page": "Entire page",
-  landing: "Entire page",
-  Default: "Default",
-  standard: "Default",
+  Article: "Article",
+  contact: "Contact",
+  Contact: "Contact",
+  "Entire page": "Article",
+  landing: "Article",
+  Default: "Article",
+  standard: "Article",
 };
 
 export function PagesView({
@@ -54,9 +62,16 @@ export function PagesView({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newSlug, setNewSlug] = useState("");
-  const [newTemplate, setNewTemplate] = useState("Default");
+  const [newTemplate, setNewTemplate] = useState("article");
   const [newSectionId, setNewSectionId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const nextIdPreview =
+    pages.reduce((max, p) => Math.max(max, Number(p.id) || 1001), 1001) + 1;
+
+  const newSlugValidation = validateSlugInput(newSlug, {
+    existingPages: pages,
+  });
 
   const filtered = pages.filter(
     (p) =>
@@ -68,12 +83,15 @@ export function PagesView({
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
+    const cleanedSlug = cleanSlugInput(newSlug, false);
+    const check = validateSlugInput(cleanedSlug, { existingPages: pages });
+    if (!check.isValid) return;
 
     setIsSubmitting(true);
     try {
       await onCreatePage({
         pageTitle: newTitle.trim(),
-        slug: newSlug.trim(),
+        slug: cleanedSlug,
         templateName: newTemplate,
         sectionId: newSectionId || null,
       });
@@ -192,8 +210,8 @@ export function PagesView({
                           page.status === "PUBLISHED"
                             ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                             : page.status === "NEW"
-                            ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                            : "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                            ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                            : "bg-red-500/10 text-red-400 border border-red-500/20"
                         }`}
                       >
                         {page.status}
@@ -278,20 +296,34 @@ export function PagesView({
                 <label className="block text-xs font-medium text-slate-300 mb-1">
                   URL Slug (Optional — defaults to numeric Page ID)
                 </label>
-                <div className="flex items-center rounded-xl border border-slate-800 bg-slate-950 overflow-hidden focus-within:border-sky-500">
+                <div
+                  className={`flex items-center rounded-xl border bg-slate-950 overflow-hidden transition ${
+                    !newSlugValidation.isValid
+                      ? "border-red-500 ring-1 ring-red-500/30"
+                      : "border-slate-800 focus-within:border-sky-500"
+                  }`}
+                >
                   <span className="px-3 py-2.5 text-xs font-mono text-slate-500 bg-slate-900/80 border-r border-slate-800">
                     /
                   </span>
                   <input
                     type="text"
-                    placeholder="leave empty for numeric ID or enter slug"
+                    placeholder={`${nextIdPreview}`}
                     value={newSlug}
                     onChange={(e) =>
-                      setNewSlug(e.target.value.replace(/^\/+/, ""))
+                      setNewSlug(cleanSlugInput(e.target.value, true))
                     }
-                    className="w-full bg-transparent p-2.5 text-xs text-white font-mono focus:outline-none"
+                    onBlur={() =>
+                      setNewSlug((prev) => cleanSlugInput(prev, false))
+                    }
+                    className="w-full bg-transparent p-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none"
                   />
                 </div>
+                {!newSlugValidation.isValid && newSlugValidation.error && (
+                  <p className="mt-1 text-[11px] font-medium text-red-400">
+                    {newSlugValidation.error}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -323,10 +355,11 @@ export function PagesView({
                   onChange={(e) => setNewTemplate(e.target.value)}
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
                 >
-                  <option value="Booking unit">Booking unit</option>
-                  <option value="Article">Article</option>
-                  <option value="Entire page">Entire page</option>
-                  <option value="Default">Default</option>
+                  <option value="article">Article</option>
+                  <option value="booking-unit">Booking unit</option>
+                  <option value="booking-overview">Booking overview</option>
+                  <option value="contact">Contact</option>
+                  <option value="startpage">Startpage</option>
                 </select>
               </div>
 
@@ -340,8 +373,8 @@ export function PagesView({
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-sky-600 text-white hover:bg-sky-500"
+                  disabled={isSubmitting || !newSlugValidation.isValid}
+                  className="px-4 py-2 text-xs font-semibold rounded-lg bg-sky-600 text-white hover:bg-sky-500 disabled:opacity-50"
                 >
                   {isSubmitting ? "Creating..." : "Create Page"}
                 </button>

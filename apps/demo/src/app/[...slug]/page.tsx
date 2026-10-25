@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { resolvePageBySlugOrIdAction } from "@next-booking/cms-core/server";
-import { DemoPageRenderer } from "../../components/demo-page-renderer";
+import { DemoTemplateRenderer } from "../../templates";
 
 export const dynamic = "force-dynamic";
 
@@ -20,5 +20,5 @@ export default async function DemoDynamicPage({
     notFound();
   }
 
-  return <DemoPageRenderer page={page as any} />;
+  return <DemoTemplateRenderer page={page as any} />;
 }

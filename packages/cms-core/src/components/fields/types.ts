@@ -52,10 +52,30 @@ export interface CMSPageTranslation {
   meta_description?: string | null;
 }
 
+export interface CMSNavigationSectionLink {
+  id: number;
+  label: string;
+  url: string;
+  status: string;
+}
+
+export interface CMSNavigationSection {
+  id: string;
+  name: string;
+  translations?: Record<string, string> | any;
+  is_root: boolean;
+  start_page_id?: number | null;
+  start_page_url: string | null;
+  items: CMSNavigationSectionLink[];
+}
+
 export interface CMSPageData {
   id: number | string;
   template_name: string;
   section_id?: string | null;
+  section?: { id: string; name: string } | null;
+  categories?: Array<{ id: string; name: string; category_type_id: string }>;
+  navigation_sections?: CMSNavigationSection[];
   page_title: string;
   link_description?: string | null;
   meta_title?: string | null;

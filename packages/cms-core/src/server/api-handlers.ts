@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { saveTextFieldAction, saveImageFieldAction } from "../actions/fields";
-import { uploadMediaAction, deleteMediaAction } from "../actions/media";
+import {
+  getMediaFilesAction,
+  uploadMediaAction,
+  deleteMediaAction,
+} from "../actions/media";
 import { translateText } from "../ai";
-import { getPageByIdAction, savePageAction, deletePageAction, loadAdminInitialData } from "../actions/pages";
+import {
+  getPageByIdAction,
+  savePageAction,
+  deletePageAction,
+  loadAdminInitialData,
+} from "../actions/pages";
 import {
   saveSectionAction,
   deleteSectionAction,
@@ -10,7 +19,37 @@ import {
   updateNavigationMenuItemAction,
   reorderNavigationMenuItemsAction,
 } from "../actions/sections";
-import { getCmsSettingsAction, saveCmsSettingsAction } from "../actions/settings";
+import {
+  getCategoryTypesAction,
+  saveCategoryTypeAction,
+  deleteCategoryTypeAction,
+  reorderCategoryTypesAction,
+  saveCategoryAction,
+  deleteCategoryAction,
+  reorderCategoriesAction,
+} from "../actions/categories";
+import {
+  getAdministratorsAction,
+  createAdministratorAction,
+  updateAdministratorAction,
+  deleteAdministratorAction,
+} from "../actions/administrators";
+import {
+  getLandlordsAction,
+  createLandlordAction,
+  updateLandlordAction,
+  deleteLandlordAction,
+} from "../actions/landlords";
+import {
+  getBookingObjectsAction,
+  createBookingObjectAction,
+  updateBookingObjectAction,
+  deleteBookingObjectAction,
+} from "../actions/booking-objects";
+import {
+  getCmsSettingsAction,
+  saveCmsSettingsAction,
+} from "../actions/settings";
 import { saveMailTemplateAction } from "../mail";
 import { syncICalBackgroundJob } from "../ical";
 import { generateICalFeed } from "../ical/generator";
@@ -95,9 +134,10 @@ export async function handleTranslate(req: NextRequest) {
  */
 export async function handleCmsApiRoute(
   req: NextRequest,
-  params: { slug: string[] }
+  params: { slug: string[] } | Promise<{ slug: string[] }>
 ) {
-  const path = params.slug.join("/");
+  const resolvedParams = await params;
+  const path = resolvedParams.slug.join("/");
   const method = req.method.toUpperCase();
 
   if (method === "POST") {
@@ -156,6 +196,77 @@ export async function handleCmsApiRoute(
       const result = await reorderNavigationMenuItemsAction(body.items || []);
       return NextResponse.json(result);
     }
+    if (path === "categories/types") {
+      const body = await req.json();
+      const result = await saveCategoryTypeAction(body);
+      return NextResponse.json(result);
+    }
+    if (path === "categories/types/reorder") {
+      const body = await req.json();
+      const result = await reorderCategoryTypesAction(body.orderedIds || []);
+      return NextResponse.json(result);
+    }
+    if (path === "categories/items") {
+      const body = await req.json();
+      const result = await saveCategoryAction(body);
+      return NextResponse.json(result);
+    }
+    if (path === "categories/items/reorder") {
+      const body = await req.json();
+      const result = await reorderCategoriesAction(body.items || []);
+      return NextResponse.json(result);
+    }
+    if (path === "administrators") {
+      try {
+        const body = await req.json();
+        if (body.id) {
+          await updateAdministratorAction(body);
+        } else {
+          await createAdministratorAction(body);
+        }
+        const admins = await getAdministratorsAction();
+        return NextResponse.json(admins);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to save administrator" },
+          { status: 400 }
+        );
+      }
+    }
+    if (path === "landlords") {
+      try {
+        const body = await req.json();
+        if (body.id) {
+          await updateLandlordAction(body);
+        } else {
+          await createLandlordAction(body);
+        }
+        const landlords = await getLandlordsAction();
+        return NextResponse.json(landlords);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to save landlord" },
+          { status: 400 }
+        );
+      }
+    }
+    if (path === "booking-objects") {
+      try {
+        const body = await req.json();
+        if (body.id) {
+          await updateBookingObjectAction(body);
+        } else {
+          await createBookingObjectAction(body);
+        }
+        const objects = await getBookingObjectsAction();
+        return NextResponse.json(objects);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to save booking object" },
+          { status: 400 }
+        );
+      }
+    }
     if (path === "settings") {
       const body = await req.json();
       const result = await saveCmsSettingsAction(body);
@@ -164,9 +275,29 @@ export async function handleCmsApiRoute(
   }
 
   if (method === "GET") {
+    if (path === "booking-objects") {
+      const objects = await getBookingObjectsAction();
+      return NextResponse.json(objects);
+    }
+    if (path === "landlords") {
+      const landlords = await getLandlordsAction();
+      return NextResponse.json(landlords);
+    }
+    if (path === "administrators") {
+      const admins = await getAdministratorsAction();
+      return NextResponse.json(admins);
+    }
+    if (path === "categories") {
+      const types = await getCategoryTypesAction();
+      return NextResponse.json(types);
+    }
     if (path === "settings") {
       const settings = await getCmsSettingsAction();
       return NextResponse.json(settings);
+    }
+    if (path === "media") {
+      const media = await getMediaFilesAction();
+      return NextResponse.json(media);
     }
     if (path === "admin-init") {
       try {
@@ -213,7 +344,10 @@ export async function handleCmsApiRoute(
         const results = await syncICalBackgroundJob();
         return NextResponse.json({ success: true, results });
       } catch (err: any) {
-        return NextResponse.json({ success: false, error: err?.message }, { status: 500 });
+        return NextResponse.json(
+          { success: false, error: err?.message },
+          { status: 500 }
+        );
       }
     }
 
@@ -239,7 +373,10 @@ export async function handleCmsApiRoute(
           },
         });
       } catch (err: any) {
-        return NextResponse.json({ success: false, error: err?.message }, { status: 500 });
+        return NextResponse.json(
+          { success: false, error: err?.message },
+          { status: 500 }
+        );
       }
     }
 
@@ -264,6 +401,60 @@ export async function handleCmsApiRoute(
       const secId = path.replace("sections/", "");
       await deleteSectionAction(secId);
       return NextResponse.json({ success: true });
+    }
+
+    if (path.startsWith("categories/types/")) {
+      const typeId = path.replace("categories/types/", "");
+      const updated = await deleteCategoryTypeAction(typeId);
+      return NextResponse.json(updated);
+    }
+
+    if (path.startsWith("categories/items/")) {
+      const itemId = path.replace("categories/items/", "");
+      const updated = await deleteCategoryAction(itemId);
+      return NextResponse.json(updated);
+    }
+
+    if (path.startsWith("administrators/")) {
+      try {
+        const adminId = path.replace("administrators/", "");
+        await deleteAdministratorAction(adminId);
+        const admins = await getAdministratorsAction();
+        return NextResponse.json(admins);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to delete administrator" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (path.startsWith("landlords/")) {
+      try {
+        const landlordId = path.replace("landlords/", "");
+        await deleteLandlordAction(landlordId);
+        const landlords = await getLandlordsAction();
+        return NextResponse.json(landlords);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to delete landlord" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (path.startsWith("booking-objects/")) {
+      try {
+        const objId = path.replace("booking-objects/", "");
+        await deleteBookingObjectAction(objId);
+        const objects = await getBookingObjectsAction();
+        return NextResponse.json(objects);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to delete booking object" },
+          { status: 400 }
+        );
+      }
     }
 
     if (path.startsWith("media/")) {
