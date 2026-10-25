@@ -14,7 +14,12 @@
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
-    "turbo": "^2.11.9"
+    "turbo": "^2.11.10"
+  },
+  "overrides": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "postcss-selector-parser": "^7.1.7"
   },
   "engines": {
     "node": ">=18.0.0"
