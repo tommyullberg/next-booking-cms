@@ -198,9 +198,10 @@ model BookingObject {
   page      Page?     @relation(fields: [page_id], references: [id], onDelete: SetNull)
   landlord  Landlord? @relation(fields: [landlord_id], references: [id], onDelete: SetNull)
   amenities Amenity[]
-  galleries Gallery[]
-  bookings  Booking[]
-  optionals BookingOptional[]
+  galleries   Gallery[]
+  bookings    Booking[]
+  optionals   BookingOptional[]
+  price_periods ObjectPricePeriod[]
 
   @@map("objects")
 }
@@ -224,6 +225,33 @@ model BookingOptional {
   object BookingObject? @relation(fields: [object_id], references: [id], onDelete: SetNull)
 
   @@map("optionals")
+}
+
+model ObjectPricePeriod {
+  id                String   @id @default(cuid()) @map("id")
+  object_id         String   @map("object_id")
+  name              String?  @map("name")
+  start_year        Int      @map("start_year")
+  start_week        Int      @map("start_week")
+  end_year          Int      @map("end_year")
+  end_week          Int      @map("end_week")
+  allow_custom_days Boolean  @default(true) @map("allow_custom_days")
+  price_day         Float?   @map("price_day")
+  price_2_days      Float?   @map("price_2_days")
+  price_3_days      Float?   @map("price_3_days")
+  price_4_days      Float?   @map("price_4_days")
+  price_5_days      Float?   @map("price_5_days")
+  price_6_days      Float?   @map("price_6_days")
+  price_week        Float?   @map("price_week")
+  price_sun_thu     Float?   @map("price_sun_thu")
+  price_thu_sun     Float?   @map("price_thu_sun")
+  created_at        DateTime @default(now()) @map("created_at")
+  updated_at        DateTime @updatedAt @map("updated_at")
+
+  object BookingObject @relation(fields: [object_id], references: [id], onDelete: Cascade)
+
+  @@index([object_id, start_year])
+  @@map("object_price_periods")
 }
 
 model Landlord {

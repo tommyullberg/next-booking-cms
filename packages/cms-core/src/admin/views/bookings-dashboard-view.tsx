@@ -41,12 +41,12 @@ export function BookingsDashboardView({ initialSyncData }: BookingsDashboardView
         cache: "no-store",
       });
       if (!res.ok) {
-        throw new Error(`Kunde inte hämta iCal-data (status ${res.status})`);
+        throw new Error(`Failed to fetch iCal data (status ${res.status})`);
       }
       const data: SyncSummaryResult = await res.json();
       setSyncData(data);
     } catch (err: any) {
-      setErrorMsg(err?.message || "Ett fel uppstod vid hämtning av kalenderdata.");
+      setErrorMsg(err?.message || "An error occurred while fetching calendar data.");
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -67,10 +67,10 @@ export function BookingsDashboardView({ initialSyncData }: BookingsDashboardView
   };
 
   const formatDateTime = (iso?: string | null) => {
-    if (!iso) return "Aldrig";
+    if (!iso) return "Never";
     try {
       const d = new Date(iso);
-      return d.toLocaleString("sv-SE", {
+      return d.toLocaleString("en-GB", {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -92,7 +92,7 @@ export function BookingsDashboardView({ initialSyncData }: BookingsDashboardView
             <span>Bookings Dashboard</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Översikt över blockerade datum synkroniserade från Booking.com och externa iCal-flöden.
+            Overview of blocked dates synchronized from Booking.com and external iCal feeds.
           </p>
         </div>
 
@@ -103,7 +103,7 @@ export function BookingsDashboardView({ initialSyncData }: BookingsDashboardView
           className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
         >
           <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-          <span>{isRefreshing ? "Hämtar från Booking.com..." : "Hämta ny Booking-data"}</span>
+          <span>{isRefreshing ? "Syncing from Booking.com..." : "Sync Booking Data"}</span>
         </button>
       </div>
 
@@ -111,10 +111,10 @@ export function BookingsDashboardView({ initialSyncData }: BookingsDashboardView
       <div className="p-4 rounded-2xl border border-sky-500/20 bg-sky-950/20 text-xs text-slate-300 space-y-2">
         <div className="flex items-center gap-2 text-sky-300 font-semibold">
           <ShieldCheck className="w-4 h-4 text-sky-400" />
-          <span>Persistent Cache & Automatisk datumhantering</span>
+          <span>Persistent Cache & Automatic Date Handling</span>
         </div>
         <p className="text-[11px] text-slate-400 leading-relaxed">
-          iCal-data cachas automatiskt i 60 minuter för hög prestanda. Om Booking.com tillfälligt inte skulle svara behålls alltid de senaste sparade datumen så att ni aldrig står utan data. I enlighet med iCalendar-standarden (RFC 5545) är utcheckningsdagen exklusiv: en gäst som checkar ut ett datum frigör stugan för en ny gästs incheckning samma dag.
+          iCal feeds are automatically cached for 60 minutes for high performance. If Booking.com is temporarily unreachable, the latest saved dates are always preserved so your calendar remains fully functional. In accordance with the iCalendar standard (RFC 5545), check-out dates are exclusive: a guest departing on a given date frees the property for a new guest checking in the same afternoon.
         </p>
       </div>
 
@@ -128,48 +128,48 @@ export function BookingsDashboardView({ initialSyncData }: BookingsDashboardView
       {/* Summary Metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
-          <span className="text-[11px] font-medium text-slate-400">Hyresobjekt</span>
+          <span className="text-[11px] font-medium text-slate-400">Rental Objects</span>
           <p className="text-xl font-bold text-white font-mono">
             {syncData ? syncData.totalObjects : "—"}
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
-          <span className="text-[11px] font-medium text-slate-400">Aktiva iCal-länkar</span>
+          <span className="text-[11px] font-medium text-slate-400">Active iCal Feeds</span>
           <p className="text-xl font-bold text-sky-400 font-mono">
             {syncData ? syncData.activeFeedsCount : "—"}
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
-          <span className="text-[11px] font-medium text-slate-400">Blockerade perioder</span>
+          <span className="text-[11px] font-medium text-slate-400">Blocked Periods</span>
           <p className="text-xl font-bold text-emerald-400 font-mono">
             {syncData ? syncData.totalImportedBookings : "—"}
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
-          <span className="text-[11px] font-medium text-slate-400">Senaste synk</span>
+          <span className="text-[11px] font-medium text-slate-400">Last Sync</span>
           <p className="text-xs font-semibold text-slate-200 mt-1 truncate">
             {syncData?.lastSynced ? formatDateTime(syncData.lastSynced) : "—"}
           </p>
-          <span className="text-[10px] text-slate-500 block">Cache: 60 minuter</span>
+          <span className="text-[10px] text-slate-500 block">Cache: 60 minutes</span>
         </div>
       </div>
 
       {/* Objects & Feeds List */}
       <div className="space-y-4">
         <h2 className="text-sm font-bold text-white flex items-center justify-between">
-          <span>Importerade bokningsdata per hyresobjekt</span>
+          <span>Imported Booking Data per Rental Object</span>
           <span className="text-xs text-slate-400 font-normal">
-            {syncData?.results?.length || 0} objekt listade
+            {syncData?.results?.length || 0} objects listed
           </span>
         </h2>
 
         {isLoading && !syncData ? (
           <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center text-slate-400 space-y-3">
             <RefreshCw className="w-6 h-6 text-sky-400 animate-spin mx-auto" />
-            <p className="text-xs">Läser in och synkroniserar kalenderflöden...</p>
+            <p className="text-xs">Loading and syncing calendar feeds...</p>
           </div>
         ) : (
           syncData?.results?.map((res) => {
@@ -198,7 +198,7 @@ export function BookingsDashboardView({ initialSyncData }: BookingsDashboardView
                             {res.icalUrl}
                           </span>
                         ) : (
-                          <span className="text-slate-500 italic">Ingen iCal-länk konfigurerad</span>
+                          <span className="text-slate-500 italic">No iCal feed configured</span>
                         )}
                       </div>
                     </div>
@@ -215,11 +215,11 @@ export function BookingsDashboardView({ initialSyncData }: BookingsDashboardView
                     {res.icalUrl ? (
                       <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-300">
                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                        <span>{res.bookings.length} perioder</span>
+                        <span>{res.bookings.length} periods</span>
                       </span>
                     ) : (
                       <span className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400 font-medium">
-                        Ej kopplad
+                        Not connected
                       </span>
                     )}
 
@@ -250,19 +250,19 @@ export function BookingsDashboardView({ initialSyncData }: BookingsDashboardView
                     {res.bookings.length === 0 ? (
                       <div className="py-6 text-center text-xs text-slate-500">
                         {res.icalUrl
-                          ? "Inga upptagna datum hittades i det aktuella kalenderflödet."
-                          : "Ingen iCal-länk är inlagd för detta objekt. Lägg in en iCal-exportlänk under Hyresobjekt för att synka datum."}
+                          ? "No occupied dates found in the current calendar feed."
+                          : "No iCal feed configured for this object. Add an iCal export URL under Booking Objects to synchronize dates."}
                       </div>
                     ) : (
                       <div className="overflow-x-auto rounded-xl border border-slate-800">
                         <table className="w-full text-left border-collapse text-xs">
                           <thead>
                             <tr className="border-b border-slate-800 bg-slate-900/90 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                              <th className="py-2.5 px-3">Incheckning</th>
-                              <th className="py-2.5 px-3">Utcheckning</th>
-                              <th className="py-2.5 px-3 text-center">Nätter</th>
-                              <th className="py-2.5 px-4">Status / Beskrivning</th>
-                              <th className="py-2.5 px-4 font-mono">Boknings-ID (iCal UID)</th>
+                              <th className="py-2.5 px-3">Check-in</th>
+                              <th className="py-2.5 px-3">Check-out</th>
+                              <th className="py-2.5 px-3 text-center">Nights</th>
+                              <th className="py-2.5 px-4">Status / Description</th>
+                              <th className="py-2.5 px-4 font-mono">Booking ID (iCal UID)</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
@@ -279,7 +279,7 @@ export function BookingsDashboardView({ initialSyncData }: BookingsDashboardView
                                 </td>
                                 <td className="py-2.5 px-3 text-center">
                                   <span className="inline-block px-2 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-sky-300 font-bold">
-                                    {b.nightsCount} {b.nightsCount === 1 ? "natt" : "nätter"}
+                                    {b.nightsCount} {b.nightsCount === 1 ? "night" : "nights"}
                                   </span>
                                 </td>
                                 <td className="py-2.5 px-4 font-sans text-xs">

@@ -15,6 +15,7 @@ export * from "./actions/administrators";
 export * from "./actions/landlords";
 export * from "./actions/optionals";
 export * from "./actions/amenities";
+export * from "./actions/price-periods";
 export * from "./server/api-handlers";
 export * from "./ical";
 export * from "./mail";

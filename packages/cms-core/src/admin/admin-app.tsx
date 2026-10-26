@@ -12,6 +12,7 @@ import { CategoriesView, CategoryTypeItem } from "./views/categories-view";
 import { AdministratorsView, AdministratorItem } from "./views/administrators-view";
 import { LandlordsView, LandlordItem } from "./views/landlords-view";
 import { BookingObjectsView, BookingObjectItem } from "./views/booking-objects-view";
+import { ObjectPricesView } from "./views/object-prices-view";
 import { OptionalsView, OptionalItem } from "./views/optionals-view";
 import { AmenitiesView } from "./views/amenities-view";
 import { BookingsDashboardView } from "./views/bookings-dashboard-view";
@@ -888,6 +889,10 @@ export function AdminApp({
               }
             }}
           />
+        )}
+
+        {currentTab === "object-prices" && (
+          <ObjectPricesView objects={bookingObjects} />
         )}
 
         {currentTab === "landlords" && (

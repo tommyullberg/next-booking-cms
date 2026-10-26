@@ -23,6 +23,7 @@ import {
   Gauge,
   UserCheck,
   Sparkles,
+  Coins,
 } from "lucide-react";
 
 export type AdminTab =
@@ -38,6 +39,7 @@ export type AdminTab =
   | "bookings-dashboard"
   | "bookings"
   | "objects"
+  | "object-prices"
   | "landlords"
   | "optionals"
   | "amenities"
@@ -81,6 +83,7 @@ export function AdminLayout({
     { id: "bookings-dashboard", label: "Dashboard & Overview", icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: "bookings", label: "Bookings Calendar", icon: <Calendar className="w-4 h-4" /> },
     { id: "objects", label: "Booking Objects", icon: <Box className="w-4 h-4" /> },
+    { id: "object-prices", label: "Object's Prices", icon: <Coins className="w-4 h-4" /> },
     { id: "landlords", label: "Landlords", icon: <UserCheck className="w-4 h-4" /> },
     { id: "optionals", label: "Optionals", icon: <Sparkles className="w-4 h-4" /> },
     { id: "amenities", label: "Amenities", icon: <Tag className="w-4 h-4" /> },

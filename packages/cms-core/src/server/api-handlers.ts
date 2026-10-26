@@ -78,6 +78,13 @@ import {
   reorderAmenitiesAction,
 } from "../actions/amenities";
 import {
+  getPricePeriodsAction,
+  createPricePeriodAction,
+  updatePricePeriodAction,
+  deletePricePeriodAction,
+  getMissingWeeksAction,
+} from "../actions/price-periods";
+import {
   getCmsSettingsAction,
   saveCmsSettingsAction,
 } from "../actions/settings";
@@ -336,6 +343,27 @@ export async function handleCmsApiRoute(
         );
       }
     }
+    if (path === "price-periods") {
+      try {
+        const body = await req.json();
+        if (body.id) {
+          await updatePricePeriodAction(body.id, body);
+        } else {
+          await createPricePeriodAction(body);
+        }
+        revalidateBookingCaches();
+        const periods = await getPricePeriodsAction({
+          objectId: body.objectId,
+          year: body.startYear,
+        });
+        return NextResponse.json(periods);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to save price period" },
+          { status: 400 }
+        );
+      }
+    }
     if (path === "amenities/reorder") {
       try {
         const body = await req.json();
@@ -396,6 +424,27 @@ export async function handleCmsApiRoute(
     if (path === "amenities") {
       const amenities = await getAmenitiesAction();
       return NextResponse.json(amenities, { headers: NO_CACHE_HEADERS });
+    }
+    if (path === "price-periods") {
+      try {
+        const objectId = req.nextUrl.searchParams.get("objectId") || undefined;
+        const yearParam = req.nextUrl.searchParams.get("year");
+        const year = yearParam ? parseInt(yearParam, 10) : undefined;
+        const periods = await getPricePeriodsAction({ objectId, year });
+        return NextResponse.json(periods, { headers: NO_CACHE_HEADERS });
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
+    }
+    if (path === "price-periods/missing-weeks") {
+      try {
+        const objectId = req.nextUrl.searchParams.get("objectId") || "";
+        const year = parseInt(req.nextUrl.searchParams.get("year") || String(new Date().getFullYear()), 10);
+        const missing = await getMissingWeeksAction(objectId, year);
+        return NextResponse.json(missing, { headers: NO_CACHE_HEADERS });
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
     }
     if (path === "settings") {
       const settings = await getCmsSettingsAction();
@@ -590,6 +639,20 @@ export async function handleCmsApiRoute(
       } catch (err: any) {
         return NextResponse.json(
           { error: err?.message || "Failed to delete amenity" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (path.startsWith("price-periods/")) {
+      try {
+        const periodId = path.replace("price-periods/", "");
+        await deletePricePeriodAction(periodId);
+        revalidateBookingCaches();
+        return NextResponse.json({ success: true });
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to delete price period" },
           { status: 400 }
         );
       }
