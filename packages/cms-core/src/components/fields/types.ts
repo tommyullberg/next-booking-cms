@@ -84,4 +84,5 @@ export interface CMSPageData {
   status: string;
   page_fields: CMSPageField[];
   translations?: CMSPageTranslation[];
+  objects?: any[];
 }

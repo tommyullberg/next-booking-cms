@@ -3,14 +3,48 @@ import { BookingStatus } from "@prisma/client";
 import { AvailabilitySearchResult, CreateBookingRequest, SearchMatchItem } from "../booking/types";
 import { sendBookingEmail } from "../mail";
 
+async function resolveBookingObjectId(idOrAlias?: string): Promise<string | undefined> {
+  if (!idOrAlias) return undefined;
+
+  // 1. Direct match on BookingObject ID
+  const exact = await prisma.bookingObject.findUnique({
+    where: { id: idOrAlias },
+    select: { id: true },
+  });
+  if (exact) return exact.id;
+
+  // 2. Match by page ID (e.g. "lullyhill-unit-1003", "unit-1003", or "1003")
+  const numMatch = idOrAlias.match(/(\d+)$/);
+  if (numMatch) {
+    const pageId = parseInt(numMatch[1], 10);
+    const byPage = await prisma.bookingObject.findFirst({
+      where: { page_id: pageId },
+      select: { id: true },
+    });
+    if (byPage) return byPage.id;
+  }
+
+  // 3. Match by name or alias
+  if (idOrAlias.toLowerCase().includes("villa") || idOrAlias.toLowerCase().includes("huset")) {
+    const byVilla = await prisma.bookingObject.findFirst({
+      where: { name: { contains: "Huset", mode: "insensitive" } },
+      select: { id: true },
+    });
+    if (byVilla) return byVilla.id;
+  }
+
+  return idOrAlias;
+}
+
 export async function getBookingsAction(params?: {
   objectId?: string;
   startDate?: Date;
   endDate?: Date;
 }) {
   try {
+    const resolvedObjectId = await resolveBookingObjectId(params?.objectId);
     const where: any = {};
-    if (params?.objectId) where.object_id = params.objectId;
+    if (resolvedObjectId) where.object_id = resolvedObjectId;
     if (params?.startDate || params?.endDate) {
       where.AND = [];
       if (params.startDate) {
@@ -185,13 +219,14 @@ export async function searchAvailabilityAction(params: {
 }
 
 export async function createBookingRequestAction(data: CreateBookingRequest) {
+  const resolvedObjectId = (await resolveBookingObjectId(data.objectId)) || data.objectId;
   const start = new Date(data.startDate);
   const end = new Date(data.endDate);
 
   // Verify availability before booking
   const conflict = await prisma.booking.findFirst({
     where: {
-      object_id: data.objectId,
+      object_id: resolvedObjectId,
       status: { in: [BookingStatus.PENDING, BookingStatus.APPROVED, BookingStatus.IMPORTED] },
       start_date: { lt: end },
       end_date: { gt: start },
@@ -203,7 +238,7 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
   }
 
   const obj = await prisma.bookingObject.findUnique({
-    where: { id: data.objectId },
+    where: { id: resolvedObjectId },
   });
 
   const nights = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
@@ -213,7 +248,7 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
   // Create booking with status PENDING (blocks calendar)
   const booking = await prisma.booking.create({
     data: {
-      object_id: data.objectId,
+      object_id: resolvedObjectId,
       start_date: start,
       end_date: end,
       customer_name: data.customerName,

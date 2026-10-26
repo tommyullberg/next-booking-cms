@@ -94,6 +94,11 @@ export async function getPageByIdAction(id: number | string) {
       section: true,
       categories: true,
       translations: true,
+      objects: {
+        include: {
+          amenities: true,
+        },
+      },
       page_fields: {
         include: {
           image: true,
@@ -118,6 +123,11 @@ export async function getPageBySlugAction(slug: string) {
       section: true,
       categories: true,
       translations: true,
+      objects: {
+        include: {
+          amenities: true,
+        },
+      },
       page_fields: {
         include: {
           image: true,
