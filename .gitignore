@@ -29,8 +29,12 @@ project-spec.md
 
 # Local / Private seed data
 scripts/local-seeds/
+scripts/setup-mock-ical.js
 apps/lullyhill/seeds/
 apps/*/seeds/
 seed_booking.ts
 seed-booking.ts
 *.local-seed.*
+mock-ical/*.ics
+public/mock-ical/
+apps/*/public/mock-ical/

@@ -20,6 +20,9 @@ import {
   ChevronDown,
   Tag,
   Check,
+  Calendar,
+  HelpCircle,
+  Info,
 } from "lucide-react";
 import {
   BookingObjectDetails,
@@ -55,6 +58,7 @@ export interface BookingObjectsViewProps {
     bed_count?: number;
     extra_bed_count?: number;
     pets_allowed?: boolean;
+    ical_url?: string | null;
     amenity_ids?: string[];
   }) => Promise<BookingObjectItem[] | void>;
   onDeleteObject?: (id: string) => Promise<BookingObjectItem[] | void>;
@@ -94,6 +98,8 @@ export function BookingObjectsView({
   const [extraBedCount, setExtraBedCount] = useState<number>(0);
   const [petsAllowed, setPetsAllowed] = useState(false);
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
+  const [icalUrl, setIcalUrl] = useState<string>("");
+  const [showIcalHelp, setShowIcalHelp] = useState(false);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -114,6 +120,8 @@ export function BookingObjectsView({
     setExtraBedCount(0);
     setPetsAllowed(false);
     setSelectedAmenityIds([]);
+    setIcalUrl("");
+    setShowIcalHelp(false);
     setErrorMsg(null);
     setIsModalOpen(true);
   };
@@ -134,6 +142,8 @@ export function BookingObjectsView({
     setExtraBedCount(item.extra_bed_count ?? 0);
     setPetsAllowed(Boolean(item.pets_allowed));
     setSelectedAmenityIds((item.amenities || []).map((a) => a.id));
+    setIcalUrl(item.ical_url || "");
+    setShowIcalHelp(false);
     setErrorMsg(null);
     setIsModalOpen(true);
   };
@@ -165,6 +175,7 @@ export function BookingObjectsView({
           bed_count: Number(bedCount) || 1,
           extra_bed_count: Number(extraBedCount) || 0,
           pets_allowed: petsAllowed,
+          ical_url: icalUrl.trim() || null,
           amenity_ids: selectedAmenityIds,
         });
 
@@ -353,6 +364,12 @@ export function BookingObjectsView({
                             <span className="inline-flex items-center gap-1 text-sky-400 font-medium" title={`${obj.amenities.length} active amenities`}>
                               <Tag className="w-2.5 h-2.5" />
                               <span>{obj.amenities.length}</span>
+                            </span>
+                          )}
+                          {obj.ical_url && (
+                            <span className="inline-flex items-center gap-1 text-emerald-400 font-medium" title={`iCal linked: ${obj.ical_url}`}>
+                              <Calendar className="w-2.5 h-2.5" />
+                              <span>iCal</span>
                             </span>
                           )}
                         </div>
@@ -726,6 +743,59 @@ export function BookingObjectsView({
                     })}
                   </div>
                 )}
+              </div>
+
+              {/* iCal Import URL with Help / Info Box */}
+              <div className="space-y-2 pt-2 border-t border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-sky-400" />
+                    <span>iCal Import URL (Booking.com m.fl.)</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowIcalHelp(!showIcalHelp)}
+                      className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-800 hover:bg-sky-500/20 text-slate-400 hover:text-sky-300 border border-slate-700 transition ml-1"
+                      title="Klicka för information om iCal-kopplingen"
+                    >
+                      <HelpCircle className="w-3 h-3" />
+                    </button>
+                  </label>
+                  {icalUrl && (
+                    <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Aktiv iCal-synk
+                    </span>
+                  )}
+                </div>
+
+                {/* Collapsible Info / Help Box */}
+                {showIcalHelp && (
+                  <div className="p-3.5 rounded-xl border border-sky-500/30 bg-sky-950/30 text-sky-200 text-xs space-y-2 animate-in fade-in duration-150">
+                    <div className="font-semibold text-sky-100 flex items-center gap-1.5">
+                      <Info className="w-4 h-4 text-sky-400 shrink-0" />
+                      <span>Hur fungerar iCal-synkronisering med Booking.com?</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-slate-300">
+                      I Booking.com Extranet hanteras varje stuga eller enhet separat. Under 'Priser & Tillgänglighet' → 'Synkronisera kalendrar' hittar du alternativet 'Exportera kalender' för just denna stuga.
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-300">
+                      Klistra in länken här. Systemet hämtar och cachar upptagna datum automatiskt (minst 60 minuter) och blockerar perioderna i kalendern så att dubbelbokningar undviks.
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-slate-300">
+                      Om Booking.com tillfälligt inte skulle svara behålls alltid de senaste sparade datumen persistent så att ni aldrig står utan skydd. En utcheckningsdag är tillgänglig för en ny gäst att checka in samma dag.
+                    </p>
+                  </div>
+                )}
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={icalUrl}
+                    onChange={(e) => setIcalUrl(e.target.value)}
+                    placeholder="https://ical.booking.com/v1/export?t=... eller /mock-ical/..."
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono text-xs"
+                  />
+                </div>
               </div>
 
               {/* Modal Actions */}

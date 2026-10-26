@@ -1,0 +1,4 @@
+# Ignore all mock iCal files except this .gitignore
+*
+!.gitignore
+

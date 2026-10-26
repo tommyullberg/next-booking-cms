@@ -43,6 +43,8 @@ export async function getBookingObjectsAction(): Promise<BookingObjectDetails[]>
       extra_bed_count: obj.extra_bed_count,
       pets_allowed: obj.pets_allowed,
       price_matrix: obj.price_matrix as any,
+      ical_url: obj.ical_url,
+      ical_last_synced: obj.ical_last_synced,
       landlord: obj.landlord
         ? {
             id: obj.landlord.id,
@@ -88,6 +90,7 @@ export async function createBookingObjectAction(data: {
   bed_count?: number;
   extra_bed_count?: number;
   pets_allowed?: boolean;
+  ical_url?: string | null;
   amenity_ids?: string[];
 }): Promise<BookingObjectDetails> {
   const normalized = {
@@ -104,6 +107,7 @@ export async function createBookingObjectAction(data: {
     bed_count: Number(data.bed_count ?? 1),
     extra_bed_count: Number(data.extra_bed_count ?? 0),
     pets_allowed: Boolean(data.pets_allowed),
+    ical_url: data.ical_url?.trim() || null,
     amenities: data.amenity_ids?.length
       ? {
           connect: data.amenity_ids.map((id) => ({ id })),
@@ -147,6 +151,8 @@ export async function createBookingObjectAction(data: {
     bed_count: created.bed_count,
     extra_bed_count: created.extra_bed_count,
     pets_allowed: created.pets_allowed,
+    ical_url: created.ical_url,
+    ical_last_synced: created.ical_last_synced,
     landlord: created.landlord
       ? {
           id: created.landlord.id,
@@ -189,6 +195,7 @@ export async function updateBookingObjectAction(data: {
   bed_count?: number;
   extra_bed_count?: number;
   pets_allowed?: boolean;
+  ical_url?: string | null;
   amenity_ids?: string[];
 }): Promise<BookingObjectDetails> {
   const normalized = {
@@ -205,6 +212,7 @@ export async function updateBookingObjectAction(data: {
     bed_count: Number(data.bed_count ?? 1),
     extra_bed_count: Number(data.extra_bed_count ?? 0),
     pets_allowed: Boolean(data.pets_allowed),
+    ical_url: data.ical_url !== undefined ? (data.ical_url?.trim() || null) : undefined,
     amenities: data.amenity_ids !== undefined
       ? {
           set: data.amenity_ids.map((id) => ({ id })),
@@ -249,6 +257,8 @@ export async function updateBookingObjectAction(data: {
     bed_count: updated.bed_count,
     extra_bed_count: updated.extra_bed_count,
     pets_allowed: updated.pets_allowed,
+    ical_url: updated.ical_url,
+    ical_last_synced: updated.ical_last_synced,
     landlord: updated.landlord
       ? {
           id: updated.landlord.id,

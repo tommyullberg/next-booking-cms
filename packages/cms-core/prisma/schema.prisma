@@ -190,6 +190,8 @@ model BookingObject {
   extra_bed_count Int      @default(0) @map("extra_bed_count")
   pets_allowed    Boolean  @default(false) @map("pets_allowed")
   price_matrix    Json?    @map("price_matrix")
+  ical_url        String?  @map("ical_url")
+  ical_last_synced DateTime? @map("ical_last_synced")
   created_at      DateTime @default(now()) @map("created_at")
   updated_at      DateTime @updatedAt @map("updated_at")
 

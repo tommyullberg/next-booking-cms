@@ -24,6 +24,8 @@ export interface BookingObjectDetails {
   extra_bed_count: number;
   pets_allowed: boolean;
   price_matrix?: Record<string, any> | null;
+  ical_url?: string | null;
+  ical_last_synced?: string | Date | null;
   landlord?: {
     id: string;
     first_name: string;

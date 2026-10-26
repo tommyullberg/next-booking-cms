@@ -82,7 +82,7 @@ import {
   saveCmsSettingsAction,
 } from "../actions/settings";
 import { saveMailTemplateAction } from "../mail";
-import { syncICalBackgroundJob } from "../ical";
+import { syncICalBackgroundJob, syncAllBookingObjects } from "../ical";
 import { generateICalFeed } from "../ical/generator";
 import {
   getBookingsAction,
@@ -355,6 +355,20 @@ export async function handleCmsApiRoute(
       const result = await saveCmsSettingsAction(body);
       return NextResponse.json(result);
     }
+    if (path === "ical/sync" || path === "ical/sync-all") {
+      try {
+        let force = true;
+        try {
+          const body = await req.json();
+          if (body && typeof body.force === "boolean") force = body.force;
+        } catch {}
+        const results = await syncAllBookingObjects({ force });
+        revalidateBookingCaches();
+        return NextResponse.json(results, { headers: NO_CACHE_HEADERS });
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
+    }
   }
 
   if (method === "GET") {
@@ -431,14 +445,15 @@ export async function handleCmsApiRoute(
       }
     }
 
-    if (path === "ical/sync") {
+    if (path === "ical/sync" || path === "ical/sync-all") {
       try {
-        const results = await syncICalBackgroundJob();
-        return NextResponse.json({ success: true, results });
+        const force = req.nextUrl.searchParams.get("force") === "true";
+        const results = await syncAllBookingObjects({ force });
+        return NextResponse.json(results, { headers: NO_CACHE_HEADERS });
       } catch (err: any) {
         return NextResponse.json(
-          { success: false, error: err?.message },
-          { status: 500 }
+          { error: err?.message },
+          { status: 500, headers: NO_CACHE_HEADERS }
         );
       }
     }
