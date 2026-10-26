@@ -17,7 +17,9 @@ export async function getBookingObjectsAction(): Promise<BookingObjectDetails[]>
             slug: true,
           },
         },
-        amenities: true,
+        amenities: {
+          orderBy: { sort_order: "asc" },
+        },
         galleries: {
           include: { image: true },
           orderBy: { sort_order: "asc" },
@@ -56,7 +58,11 @@ export async function getBookingObjectsAction(): Promise<BookingObjectDetails[]>
             slug: obj.page.slug,
           }
         : null,
-      amenities: obj.amenities.map((a) => ({ id: a.id, name: a.name })),
+      amenities: obj.amenities.map((a) => ({
+        id: a.id,
+        name: a.name,
+        sort_order: a.sort_order,
+      })),
       galleries: obj.galleries.map((g) => ({
         id: g.id,
         image: { file_url: g.image.file_url, file_name: g.image.file_name },
@@ -82,6 +88,7 @@ export async function createBookingObjectAction(data: {
   bed_count?: number;
   extra_bed_count?: number;
   pets_allowed?: boolean;
+  amenity_ids?: string[];
 }): Promise<BookingObjectDetails> {
   const normalized = {
     name: data.name.trim(),
@@ -97,6 +104,11 @@ export async function createBookingObjectAction(data: {
     bed_count: Number(data.bed_count ?? 1),
     extra_bed_count: Number(data.extra_bed_count ?? 0),
     pets_allowed: Boolean(data.pets_allowed),
+    amenities: data.amenity_ids?.length
+      ? {
+          connect: data.amenity_ids.map((id) => ({ id })),
+        }
+      : undefined,
   };
 
   const created = await prisma.bookingObject.create({
@@ -110,7 +122,9 @@ export async function createBookingObjectAction(data: {
           slug: true,
         },
       },
-      amenities: true,
+      amenities: {
+        orderBy: { sort_order: "asc" },
+      },
       galleries: {
         include: { image: true },
         orderBy: { sort_order: "asc" },
@@ -148,7 +162,11 @@ export async function createBookingObjectAction(data: {
           slug: created.page.slug,
         }
       : null,
-    amenities: created.amenities.map((a) => ({ id: a.id, name: a.name })),
+    amenities: created.amenities.map((a) => ({
+      id: a.id,
+      name: a.name,
+      sort_order: a.sort_order,
+    })),
     galleries: created.galleries.map((g) => ({
       id: g.id,
       image: { file_url: g.image.file_url, file_name: g.image.file_name },
@@ -171,6 +189,7 @@ export async function updateBookingObjectAction(data: {
   bed_count?: number;
   extra_bed_count?: number;
   pets_allowed?: boolean;
+  amenity_ids?: string[];
 }): Promise<BookingObjectDetails> {
   const normalized = {
     name: data.name.trim(),
@@ -186,6 +205,11 @@ export async function updateBookingObjectAction(data: {
     bed_count: Number(data.bed_count ?? 1),
     extra_bed_count: Number(data.extra_bed_count ?? 0),
     pets_allowed: Boolean(data.pets_allowed),
+    amenities: data.amenity_ids !== undefined
+      ? {
+          set: data.amenity_ids.map((id) => ({ id })),
+        }
+      : undefined,
   };
 
   const updated = await prisma.bookingObject.update({
@@ -200,7 +224,9 @@ export async function updateBookingObjectAction(data: {
           slug: true,
         },
       },
-      amenities: true,
+      amenities: {
+        orderBy: { sort_order: "asc" },
+      },
       galleries: {
         include: { image: true },
         orderBy: { sort_order: "asc" },
@@ -238,7 +264,11 @@ export async function updateBookingObjectAction(data: {
           slug: updated.page.slug,
         }
       : null,
-    amenities: updated.amenities.map((a) => ({ id: a.id, name: a.name })),
+    amenities: updated.amenities.map((a) => ({
+      id: a.id,
+      name: a.name,
+      sort_order: a.sort_order,
+    })),
     galleries: updated.galleries.map((g) => ({
       id: g.id,
       image: { file_url: g.image.file_url, file_name: g.image.file_name },

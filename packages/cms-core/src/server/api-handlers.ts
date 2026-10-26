@@ -1,4 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
+
+const NO_CACHE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
+function revalidateBookingCaches() {
+  try {
+    revalidatePath("/admin");
+    revalidatePath("/admin", "layout");
+    revalidatePath("/");
+    revalidatePath("/", "layout");
+  } catch {
+    // Non-fatal if invoked outside Next.js request boundary
+  }
+}
 import { saveTextFieldAction, saveImageFieldAction } from "../actions/fields";
 import {
   getMediaFilesAction,
@@ -52,6 +70,13 @@ import {
   updateBookingOptionalAction,
   deleteBookingOptionalAction,
 } from "../actions/optionals";
+import {
+  getAmenitiesAction,
+  createAmenityAction,
+  updateAmenityAction,
+  deleteAmenityAction,
+  reorderAmenitiesAction,
+} from "../actions/amenities";
 import {
   getCmsSettingsAction,
   saveCmsSettingsAction,
@@ -247,6 +272,7 @@ export async function handleCmsApiRoute(
         } else {
           await createLandlordAction(body);
         }
+        revalidateBookingCaches();
         const landlords = await getLandlordsAction();
         return NextResponse.json(landlords);
       } catch (err: any) {
@@ -264,6 +290,7 @@ export async function handleCmsApiRoute(
         } else {
           await createBookingObjectAction(body);
         }
+        revalidateBookingCaches();
         const objects = await getBookingObjectsAction();
         return NextResponse.json(objects);
       } catch (err: any) {
@@ -281,11 +308,44 @@ export async function handleCmsApiRoute(
         } else {
           await createBookingOptionalAction(body);
         }
+        revalidateBookingCaches();
         const optionals = await getBookingOptionalsAction();
         return NextResponse.json(optionals);
       } catch (err: any) {
         return NextResponse.json(
           { error: err?.message || "Failed to save optional" },
+          { status: 400 }
+        );
+      }
+    }
+    if (path === "amenities") {
+      try {
+        const body = await req.json();
+        if (body.id) {
+          await updateAmenityAction(body);
+        } else {
+          await createAmenityAction(body);
+        }
+        revalidateBookingCaches();
+        const amenities = await getAmenitiesAction();
+        return NextResponse.json(amenities);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to save amenity" },
+          { status: 400 }
+        );
+      }
+    }
+    if (path === "amenities/reorder") {
+      try {
+        const body = await req.json();
+        await reorderAmenitiesAction(body.orderedIds || []);
+        revalidateBookingCaches();
+        const amenities = await getAmenitiesAction();
+        return NextResponse.json(amenities);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to reorder amenities" },
           { status: 400 }
         );
       }
@@ -301,36 +361,40 @@ export async function handleCmsApiRoute(
     if (path === "optionals") {
       const objectId = req.nextUrl.searchParams.get("objectId") || undefined;
       const optionals = await getBookingOptionalsAction(objectId);
-      return NextResponse.json(optionals);
+      return NextResponse.json(optionals, { headers: NO_CACHE_HEADERS });
     }
     if (path === "booking-objects") {
       const objects = await getBookingObjectsAction();
-      return NextResponse.json(objects);
+      return NextResponse.json(objects, { headers: NO_CACHE_HEADERS });
     }
     if (path === "landlords") {
       const landlords = await getLandlordsAction();
-      return NextResponse.json(landlords);
+      return NextResponse.json(landlords, { headers: NO_CACHE_HEADERS });
     }
     if (path === "administrators") {
       const admins = await getAdministratorsAction();
-      return NextResponse.json(admins);
+      return NextResponse.json(admins, { headers: NO_CACHE_HEADERS });
     }
     if (path === "categories") {
       const types = await getCategoryTypesAction();
-      return NextResponse.json(types);
+      return NextResponse.json(types, { headers: NO_CACHE_HEADERS });
+    }
+    if (path === "amenities") {
+      const amenities = await getAmenitiesAction();
+      return NextResponse.json(amenities, { headers: NO_CACHE_HEADERS });
     }
     if (path === "settings") {
       const settings = await getCmsSettingsAction();
-      return NextResponse.json(settings);
+      return NextResponse.json(settings, { headers: NO_CACHE_HEADERS });
     }
     if (path === "media") {
       const media = await getMediaFilesAction();
-      return NextResponse.json(media);
+      return NextResponse.json(media, { headers: NO_CACHE_HEADERS });
     }
     if (path === "admin-init") {
       try {
         const data = await loadAdminInitialData();
-        return NextResponse.json(data);
+        return NextResponse.json(data, { headers: NO_CACHE_HEADERS });
       } catch (err: any) {
         return NextResponse.json({ error: err?.message }, { status: 500 });
       }
@@ -475,6 +539,7 @@ export async function handleCmsApiRoute(
       try {
         const objId = path.replace("booking-objects/", "");
         await deleteBookingObjectAction(objId);
+        revalidateBookingCaches();
         const objects = await getBookingObjectsAction();
         return NextResponse.json(objects);
       } catch (err: any) {
@@ -489,11 +554,27 @@ export async function handleCmsApiRoute(
       try {
         const optId = path.replace("optionals/", "");
         await deleteBookingOptionalAction(optId);
+        revalidateBookingCaches();
         const optionals = await getBookingOptionalsAction();
         return NextResponse.json(optionals);
       } catch (err: any) {
         return NextResponse.json(
           { error: err?.message || "Failed to delete optional" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (path.startsWith("amenities/")) {
+      try {
+        const amenityId = path.replace("amenities/", "");
+        await deleteAmenityAction(amenityId);
+        revalidateBookingCaches();
+        const amenities = await getAmenitiesAction();
+        return NextResponse.json(amenities);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to delete amenity" },
           { status: 400 }
         );
       }

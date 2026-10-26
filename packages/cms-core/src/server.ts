@@ -14,6 +14,7 @@ export * from "./actions/booking-objects";
 export * from "./actions/administrators";
 export * from "./actions/landlords";
 export * from "./actions/optionals";
+export * from "./actions/amenities";
 export * from "./server/api-handlers";
 export * from "./ical";
 export * from "./mail";

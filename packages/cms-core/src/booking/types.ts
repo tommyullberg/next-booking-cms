@@ -42,7 +42,17 @@ export interface BookingObjectDetails {
   amenities?: Array<{
     id: string;
     name: string;
+    sort_order?: number;
   }>;
+}
+
+export interface AmenityItem {
+  id: string;
+  name: string;
+  sort_order: number;
+  object_count?: number;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface SearchMatchItem {

@@ -24,6 +24,7 @@ export default async function AdminPage() {
     landlords,
     bookingObjects,
     optionals,
+    amenities,
   } = await loadAdminInitialData();
 
   return (
@@ -35,6 +36,7 @@ export default async function AdminPage() {
       initialLandlords={landlords}
       initialBookingObjects={bookingObjects}
       initialOptionals={optionals}
+      initialAmenities={amenities}
       initialMedia={media}
       initialMailTemplates={mailTemplates as any}
       initialSettings={settings}

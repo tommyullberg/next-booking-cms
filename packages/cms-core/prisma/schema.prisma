@@ -246,9 +246,12 @@ model Landlord {
 }
 
 model Amenity {
-  id      String          @id @default(cuid()) @map("id")
-  name    String          @unique @map("name")
-  objects BookingObject[]
+  id         String          @id @default(cuid()) @map("id")
+  name       String          @unique @map("name")
+  sort_order Int             @default(0) @map("sort_order")
+  created_at DateTime        @default(now()) @map("created_at")
+  updated_at DateTime        @updatedAt @map("updated_at")
+  objects    BookingObject[]
 
   @@map("amenities")
 }

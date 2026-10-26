@@ -18,6 +18,8 @@ import {
   Search,
   ExternalLink,
   ChevronDown,
+  Tag,
+  Check,
 } from "lucide-react";
 import {
   BookingObjectDetails,
@@ -26,6 +28,7 @@ import {
   BOOKING_ROOM_TYPES,
   formatBookingRoomType,
   formatBookingRoomTypeShort,
+  AmenityItem,
 } from "../../booking/types";
 import { LandlordItem } from "./landlords-view";
 import { PageListItem } from "./pages-view";
@@ -36,6 +39,7 @@ export interface BookingObjectsViewProps {
   objects?: BookingObjectItem[];
   landlords?: LandlordItem[];
   pages?: PageListItem[];
+  amenities?: AmenityItem[];
   onSaveObject?: (data: {
     id?: string;
     name: string;
@@ -51,6 +55,7 @@ export interface BookingObjectsViewProps {
     bed_count?: number;
     extra_bed_count?: number;
     pets_allowed?: boolean;
+    amenity_ids?: string[];
   }) => Promise<BookingObjectItem[] | void>;
   onDeleteObject?: (id: string) => Promise<BookingObjectItem[] | void>;
 }
@@ -60,6 +65,7 @@ export function BookingObjectsView({
   objects: initialObjects = [],
   landlords = [],
   pages = [],
+  amenities = [],
   onSaveObject,
   onDeleteObject,
 }: BookingObjectsViewProps) {
@@ -87,6 +93,7 @@ export function BookingObjectsView({
   const [bedCount, setBedCount] = useState<number>(2);
   const [extraBedCount, setExtraBedCount] = useState<number>(0);
   const [petsAllowed, setPetsAllowed] = useState(false);
+  const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -106,6 +113,7 @@ export function BookingObjectsView({
     setBedCount(2);
     setExtraBedCount(0);
     setPetsAllowed(false);
+    setSelectedAmenityIds([]);
     setErrorMsg(null);
     setIsModalOpen(true);
   };
@@ -125,6 +133,7 @@ export function BookingObjectsView({
     setBedCount(item.bed_count ?? 2);
     setExtraBedCount(item.extra_bed_count ?? 0);
     setPetsAllowed(Boolean(item.pets_allowed));
+    setSelectedAmenityIds((item.amenities || []).map((a) => a.id));
     setErrorMsg(null);
     setIsModalOpen(true);
   };
@@ -156,6 +165,7 @@ export function BookingObjectsView({
           bed_count: Number(bedCount) || 1,
           extra_bed_count: Number(extraBedCount) || 0,
           pets_allowed: petsAllowed,
+          amenity_ids: selectedAmenityIds,
         });
 
         if (Array.isArray(res)) {
@@ -333,10 +343,18 @@ export function BookingObjectsView({
                             <span className="text-slate-400">· {obj.size_sqm} m²</span>
                           ) : null}
                         </div>
-                        <div className="text-slate-400 text-[10px]">
-                          {obj.room_count ? `${obj.room_count} ${formatBookingRoomTypeShort(obj.room_type)}, ` : ""}
-                          {obj.bed_count} {obj.extra_bed_count ? `+ ${obj.extra_bed_count}` : ""} beds
-                          {obj.pets_allowed ? " · Pets allowed" : ""}
+                        <div className="text-slate-400 text-[10px] flex items-center gap-2 flex-wrap">
+                          <span>
+                            {obj.room_count ? `${obj.room_count} ${formatBookingRoomTypeShort(obj.room_type)}, ` : ""}
+                            {obj.bed_count} {obj.extra_bed_count ? `+ ${obj.extra_bed_count}` : ""} beds
+                            {obj.pets_allowed ? " · Pets allowed" : ""}
+                          </span>
+                          {obj.amenities && obj.amenities.length > 0 && (
+                            <span className="inline-flex items-center gap-1 text-sky-400 font-medium" title={`${obj.amenities.length} active amenities`}>
+                              <Tag className="w-2.5 h-2.5" />
+                              <span>{obj.amenities.length}</span>
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -655,6 +673,59 @@ export function BookingObjectsView({
                     }`}
                   />
                 </button>
+              </div>
+
+              {/* Active Amenities (Aktiva förnödenheter) */}
+              <div className="space-y-2 pt-2 border-t border-slate-800">
+                <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Amenities (Förnödenheter för objektet)</span>
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    {selectedAmenityIds.length} of {amenities.length} active
+                  </span>
+                </label>
+                {amenities.length === 0 ? (
+                  <p className="text-[11px] text-slate-500">
+                    No amenities registered yet. Create them under Bookings → Amenities.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto p-2 rounded-xl border border-slate-800 bg-slate-900/60">
+                    {amenities.map((amenity) => {
+                      const isSelected = selectedAmenityIds.includes(amenity.id);
+                      return (
+                        <button
+                          key={amenity.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAmenityIds((prev) =>
+                              prev.includes(amenity.id)
+                                ? prev.filter((id) => id !== amenity.id)
+                                : [...prev, amenity.id]
+                            );
+                          }}
+                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs transition border ${
+                            isSelected
+                              ? "bg-sky-500/20 text-sky-200 border-sky-500/40 font-medium"
+                              : "bg-slate-950/60 text-slate-400 border-slate-800/80 hover:border-slate-700 hover:text-slate-200"
+                          }`}
+                        >
+                          <div
+                            className={`w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 border ${
+                              isSelected
+                                ? "bg-sky-500 border-sky-400 text-white"
+                                : "border-slate-700 bg-slate-900"
+                            }`}
+                          >
+                            {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
+                          </div>
+                          <span className="truncate">{amenity.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Modal Actions */}

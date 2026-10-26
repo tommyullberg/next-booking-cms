@@ -13,11 +13,13 @@ import { AdministratorsView, AdministratorItem } from "./views/administrators-vi
 import { LandlordsView, LandlordItem } from "./views/landlords-view";
 import { BookingObjectsView, BookingObjectItem } from "./views/booking-objects-view";
 import { OptionalsView, OptionalItem } from "./views/optionals-view";
+import { AmenitiesView } from "./views/amenities-view";
 import { NavigationMenusView } from "./views/navigation-menus-view";
 import { MediaView, MediaItem } from "./views/media-view";
 import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view";
 import { SettingsView } from "./views/settings-view";
 import { CMSTemplateOption } from "../templates/types";
+import { AmenityItem } from "../booking/types";
 
 export interface AdminAppProps {
   initialPages?: PageListItem[];
@@ -27,6 +29,7 @@ export interface AdminAppProps {
   initialLandlords?: LandlordItem[];
   initialBookingObjects?: BookingObjectItem[];
   initialOptionals?: OptionalItem[];
+  initialAmenities?: AmenityItem[];
   initialMedia?: MediaItem[];
   initialMailTemplates?: MailTemplateItem[];
   initialSettings?: {
@@ -57,6 +60,7 @@ export function AdminApp({
   initialLandlords = [],
   initialBookingObjects = [],
   initialOptionals = [],
+  initialAmenities = [],
   initialMedia = [],
   initialMailTemplates = [],
   initialSettings,
@@ -89,6 +93,7 @@ export function AdminApp({
     initialBookingObjects
   );
   const [optionals, setOptionals] = useState<OptionalItem[]>(initialOptionals);
+  const [amenities, setAmenities] = useState<AmenityItem[]>(initialAmenities);
   const [media, setMedia] = useState<MediaItem[]>(initialMedia);
   const [mailTemplates, setMailTemplates] = useState<MailTemplateItem[]>(initialMailTemplates);
   const [activeLanguages, setActiveLanguages] = useState<string[]>(
@@ -121,6 +126,9 @@ export function AdminApp({
             }
             if (Array.isArray(data.optionals)) {
               setOptionals(data.optionals);
+            }
+            if (Array.isArray(data.amenities)) {
+              setAmenities(data.amenities);
             }
             if (Array.isArray(data.media)) setMedia(data.media);
             if (Array.isArray(data.mailTemplates)) setMailTemplates(data.mailTemplates);
@@ -165,6 +173,38 @@ export function AdminApp({
   useEffect(() => {
     setOptionals(initialOptionals);
   }, [initialOptionals]);
+
+  useEffect(() => {
+    setAmenities(initialAmenities);
+  }, [initialAmenities]);
+
+  // Synchronize live booking and amenity data on tab switches without manual reload
+  useEffect(() => {
+    if (currentTab === "amenities" || currentTab === "objects") {
+      fetch("/api/cms/amenities", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (Array.isArray(data)) setAmenities(data);
+        })
+        .catch(() => {});
+
+      fetch("/api/cms/booking-objects", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (Array.isArray(data)) setBookingObjects(data);
+        })
+        .catch(() => {});
+    }
+
+    if (currentTab === "optionals" || currentTab === "media") {
+      fetch("/api/cms/media", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (Array.isArray(data)) setMedia(data);
+        })
+        .catch(() => {});
+    }
+  }, [currentTab]);
 
   const handleEditPage = async (pageId: number | string) => {
     try {
@@ -816,6 +856,7 @@ export function AdminApp({
             objects={bookingObjects}
             landlords={landlords}
             pages={pages}
+            amenities={amenities}
             onSaveObject={async (data) => {
               const res = await fetch("/api/cms/booking-objects", {
                 method: "POST",
@@ -828,6 +869,12 @@ export function AdminApp({
               }
               if (Array.isArray(payload)) {
                 setBookingObjects(payload);
+                // Immediately refresh amenities so Connected Objects counts are live
+                const amRes = await fetch("/api/cms/amenities", { cache: "no-store" });
+                if (amRes.ok) {
+                  const amData = await amRes.json();
+                  if (Array.isArray(amData)) setAmenities(amData);
+                }
                 return payload;
               }
             }}
@@ -838,6 +885,11 @@ export function AdminApp({
               const payload = await res.json();
               if (res.ok && Array.isArray(payload)) {
                 setBookingObjects(payload);
+                const amRes = await fetch("/api/cms/amenities", { cache: "no-store" });
+                if (amRes.ok) {
+                  const amData = await amRes.json();
+                  if (Array.isArray(amData)) setAmenities(amData);
+                }
                 return payload;
               }
             }}
@@ -879,6 +931,7 @@ export function AdminApp({
           <OptionalsView
             optionals={optionals}
             objects={bookingObjects}
+            media={media}
             onSaveOptional={async (data) => {
               const res = await fetch("/api/cms/optionals", {
                 method: "POST",
@@ -908,14 +961,67 @@ export function AdminApp({
         )}
 
         {currentTab === "amenities" && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
-            <h2 className="text-lg font-semibold text-white mb-2">
-              Amenities
-            </h2>
-            <p className="text-xs">
-              Manage property features and amenities associated with booking objects.
-            </p>
-          </div>
+          <AmenitiesView
+            amenities={amenities}
+            onSaveAmenity={async (data) => {
+              const res = await fetch("/api/cms/amenities", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data),
+              });
+              const payload = await res.json();
+              if (!res.ok) {
+                throw new Error(payload?.error || "Failed to save amenity");
+              }
+              if (Array.isArray(payload)) {
+                setAmenities(payload);
+                const objRes = await fetch("/api/cms/booking-objects", { cache: "no-store" });
+                if (objRes.ok) {
+                  const objData = await objRes.json();
+                  if (Array.isArray(objData)) setBookingObjects(objData);
+                }
+                return payload;
+              }
+            }}
+            onDeleteAmenity={async (id) => {
+              const res = await fetch(`/api/cms/amenities/${id}`, {
+                method: "DELETE",
+              });
+              const payload = await res.json();
+              if (!res.ok) {
+                throw new Error(payload?.error || "Failed to delete amenity");
+              }
+              if (Array.isArray(payload)) {
+                setAmenities(payload);
+                const objRes = await fetch("/api/cms/booking-objects", { cache: "no-store" });
+                if (objRes.ok) {
+                  const objData = await objRes.json();
+                  if (Array.isArray(objData)) setBookingObjects(objData);
+                }
+                return payload;
+              }
+            }}
+            onReorderAmenities={async (orderedIds) => {
+              const res = await fetch("/api/cms/amenities/reorder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderedIds }),
+              });
+              const payload = await res.json();
+              if (!res.ok) {
+                throw new Error(payload?.error || "Failed to reorder amenities");
+              }
+              if (Array.isArray(payload)) {
+                setAmenities(payload);
+                const objRes = await fetch("/api/cms/booking-objects", { cache: "no-store" });
+                if (objRes.ok) {
+                  const objData = await objRes.json();
+                  if (Array.isArray(objData)) setBookingObjects(objData);
+                }
+                return payload;
+              }
+            }}
+          />
         )}
       </AdminLayout>
     </AdminThemeProvider>

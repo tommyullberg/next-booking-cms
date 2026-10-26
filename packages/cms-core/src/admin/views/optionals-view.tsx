@@ -15,15 +15,19 @@ import {
   Box,
   Layers,
   Filter,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { BookingOptionalItem } from "../../booking/types";
 import { BookingObjectItem } from "./booking-objects-view";
+import { MediaItem } from "./media-view";
 
 export type OptionalItem = BookingOptionalItem;
 
 export interface OptionalsViewProps {
   optionals?: OptionalItem[];
   objects?: BookingObjectItem[];
+  media?: MediaItem[];
   onSaveOptional?: (data: {
     id?: string;
     name: string;
@@ -44,6 +48,7 @@ export interface OptionalsViewProps {
 export function OptionalsView({
   optionals: initialOptionals = [],
   objects = [],
+  media = [],
   onSaveOptional,
   onDeleteOptional,
 }: OptionalsViewProps) {
@@ -71,8 +76,40 @@ export function OptionalsView({
   const [priceWeek, setPriceWeek] = useState<number>(0);
   const [sortOrder, setSortOrder] = useState<number>(10);
 
+  // Media picker states
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [mediaSearchQuery, setMediaSearchQuery] = useState("");
+  const [showManualUrl, setShowManualUrl] = useState(false);
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Filter media files that are images (excluding documents)
+  const imageMedia = useMemo(() => {
+    return (media || []).filter((item) => {
+      const fn = (item.file_name || "").toLowerCase();
+      const url = (item.file_url || "").toLowerCase();
+      return (
+        !fn.endsWith(".pdf") &&
+        !url.endsWith(".pdf") &&
+        !fn.endsWith(".doc") &&
+        !url.endsWith(".docx")
+      );
+    });
+  }, [media]);
+
+  const filteredMedia = useMemo(() => {
+    const q = mediaSearchQuery.toLowerCase().trim();
+    if (!q) return imageMedia;
+    return imageMedia.filter((m) =>
+      (m.file_name || "").toLowerCase().includes(q)
+    );
+  }, [imageMedia, mediaSearchQuery]);
+
+  const selectedMediaItem = useMemo(() => {
+    if (!imageUrl) return null;
+    return (media || []).find((m) => m.file_url === imageUrl);
+  }, [media, imageUrl]);
 
   const openCreateModal = () => {
     setEditingOptional(null);
@@ -87,6 +124,9 @@ export function OptionalsView({
     setPriceThuSun(0);
     setPriceWeek(0);
     setSortOrder((optionals.length + 1) * 10);
+    setIsMediaPickerOpen(false);
+    setMediaSearchQuery("");
+    setShowManualUrl(false);
     setErrorMsg(null);
     setIsModalOpen(true);
   };
@@ -95,7 +135,8 @@ export function OptionalsView({
     setEditingOptional(item);
     setName(item.name || "");
     setDescription(item.description || "");
-    setImageUrl(item.image_url || "");
+    const img = item.image_url || "";
+    setImageUrl(img);
     setObjectId(item.object_id || "");
     setIsActive(item.is_active !== undefined ? item.is_active : true);
     setPriceHour(item.price_hour ?? 0);
@@ -104,6 +145,11 @@ export function OptionalsView({
     setPriceThuSun(item.price_thu_sun ?? 0);
     setPriceWeek(item.price_week ?? 0);
     setSortOrder(item.sort_order ?? 0);
+    setIsMediaPickerOpen(false);
+    setMediaSearchQuery("");
+    // If image exists and does not match a media item, open manual URL field
+    const matchesMedia = (media || []).some((m) => m.file_url === img);
+    setShowManualUrl(Boolean(img && !matchesMedia));
     setErrorMsg(null);
     setIsModalOpen(true);
   };
@@ -519,19 +565,169 @@ export function OptionalsView({
                 </div>
               </div>
 
-              {/* Image URL / Bild */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Image (Bild)</span>
-                </label>
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="e.g. /images/bad_1.jpg or media URL"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono"
-                />
+              {/* Image (Bild) */}
+              <div className="space-y-2 pt-1 border-t border-slate-800/80">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Image (Bild)</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowManualUrl(!showManualUrl)}
+                    className="text-[10px] text-sky-400 hover:text-sky-300 transition underline underline-offset-2"
+                  >
+                    {showManualUrl ? "Hide manual URL" : "Enter manual URL / Sökväg"}
+                  </button>
+                </div>
+
+                {/* Selected Image Preview Card */}
+                {imageUrl ? (
+                  <div className="flex items-center justify-between p-2.5 rounded-xl border border-slate-800 bg-slate-900/90 gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-700 bg-slate-950 shrink-0">
+                        <img
+                          src={imageUrl}
+                          alt="Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = "none";
+                          }}
+                        />
+                      </div>
+                      <div className="min-w-0 space-y-0.5">
+                        <span className="text-xs font-medium text-white truncate block">
+                          {selectedMediaItem?.file_name || imageUrl.split("/").pop() || imageUrl}
+                        </span>
+                        <span className="text-[10px] text-slate-400 truncate block font-mono">
+                          {imageUrl}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setImageUrl("")}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition shrink-0"
+                      title="Remove image"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-2.5 rounded-xl border border-dashed border-slate-800 bg-slate-900/40 text-center">
+                    <span className="text-[11px] text-slate-400">
+                      No image selected (Ingen bild vald)
+                    </span>
+                  </div>
+                )}
+
+                {/* Media Picker Trigger */}
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsMediaPickerOpen(!isMediaPickerOpen)}
+                    className="w-full flex items-center justify-between bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 transition"
+                  >
+                    <span className="flex items-center gap-2 text-slate-300">
+                      <ImageIcon className="w-4 h-4 text-sky-400" />
+                      <span>
+                        {imageUrl ? "Change image from Media & Files" : "Choose image from Media & Files"}
+                      </span>
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-slate-400 transition-transform ${
+                        isMediaPickerOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Media Picker List */}
+                  {isMediaPickerOpen && (
+                    <div className="mt-2 rounded-xl border border-slate-800 bg-slate-900 p-2 shadow-xl space-y-2 z-10">
+                      {/* Search */}
+                      <div className="relative">
+                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type="text"
+                          value={mediaSearchQuery}
+                          onChange={(e) => setMediaSearchQuery(e.target.value)}
+                          placeholder="Search images in Media & Files..."
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+                        />
+                      </div>
+
+                      {/* Image List */}
+                      <div className="max-h-52 overflow-y-auto space-y-1 divide-y divide-slate-800/40">
+                        {imageUrl && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImageUrl("");
+                              setIsMediaPickerOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-lg text-rose-300 hover:bg-rose-500/10 text-xs transition"
+                          >
+                            <X className="w-4 h-4 text-rose-400 shrink-0" />
+                            <span>Remove image / Ingen bild</span>
+                          </button>
+                        )}
+
+                        {filteredMedia.length === 0 ? (
+                          <div className="p-3 text-center text-[11px] text-slate-400">
+                            {imageMedia.length === 0
+                              ? "No images found in Media & Files."
+                              : "No matching images found."}
+                          </div>
+                        ) : (
+                          filteredMedia.map((m) => {
+                            const isSelected = imageUrl === m.file_url;
+                            return (
+                              <button
+                                key={m.id}
+                                type="button"
+                                onClick={() => {
+                                  setImageUrl(m.file_url);
+                                  setIsMediaPickerOpen(false);
+                                }}
+                                className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-lg transition ${
+                                  isSelected
+                                    ? "bg-sky-500/20 text-sky-200 border border-sky-500/30"
+                                    : "text-slate-300 hover:bg-slate-800"
+                                }`}
+                              >
+                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-950 border border-slate-800 shrink-0">
+                                  <img
+                                    src={m.file_url}
+                                    alt={m.file_name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </div>
+                                <span className="text-xs truncate flex-1">{m.file_name}</span>
+                                {isSelected && (
+                                  <Check className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                                )}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Optional manual URL input */}
+                {showManualUrl && (
+                  <div className="space-y-1 pt-1">
+                    <span className="text-[10px] text-slate-400">Manual URL or path</span>
+                    <input
+                      type="text"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="e.g. /images/bad_1.jpg or https://..."
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono text-xs"
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Pricing Breakdown (Kr/Tim, Kr/Dag, Kr/sön-tor, Kr/tor-sön, Kr/vecka) */}
