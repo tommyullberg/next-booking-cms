@@ -7,14 +7,33 @@ export const metadata: Metadata = {
   description: "Gotlandic Luxury Boende",
 };
 
+const themeScript = `
+  (function() {
+    try {
+      var stored = localStorage.getItem('theme');
+      var prefersLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+      if (stored === 'light' || (!stored && prefersLight)) {
+        document.documentElement.classList.remove('dark');
+      } else {
+        document.documentElement.classList.add('dark');
+      }
+    } catch (e) {
+      document.documentElement.classList.add('dark');
+    }
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="sv">
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+    <html lang="sv" className="dark" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="min-h-screen bg-background text-foreground antialiased transition-colors duration-200">
         <CMSAuthProvider>{children}</CMSAuthProvider>
       </body>
     </html>

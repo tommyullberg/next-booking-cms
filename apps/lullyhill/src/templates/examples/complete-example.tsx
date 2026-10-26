@@ -20,16 +20,16 @@ export function CompleteExampleTemplate({ page }: { page: CMSPageData }) {
         <CMSField.Text
           nbr={1}
           as="h1"
-          className="text-4xl font-serif tracking-tight text-slate-900"
+          className="text-4xl font-serif tracking-tight text-slate-900 dark:text-white"
         />
         <CMSField.Text
           nbr={2}
           as="p"
-          className="text-sm text-slate-600 leading-relaxed"
+          className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"
         />
       </section>
 
-      <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white p-2 shadow-xl">
+      <section className="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/95 p-2 shadow-xl">
         <CMSField.Image
           nbr={1}
           alt="Complete Example Hero"

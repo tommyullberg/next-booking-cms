@@ -294,7 +294,7 @@ export function BookingCalendar({
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
                     placeholder="Anna Andersson"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs focus:border-sky-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none"
                   />
                 </div>
 
@@ -308,7 +308,7 @@ export function BookingCalendar({
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
                     placeholder="anna@example.com"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs focus:border-sky-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none"
                   />
                 </div>
 
@@ -321,7 +321,7 @@ export function BookingCalendar({
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
                     placeholder="+46 70 123 4567"
-                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs focus:border-sky-500 focus:outline-none"
+                    className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none"
                   />
                 </div>
 
@@ -336,7 +336,7 @@ export function BookingCalendar({
                       max={12}
                       value={guestsCount}
                       onChange={(e) => setGuestsCount(Number(e.target.value))}
-                      className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs focus:border-sky-500 focus:outline-none"
+                      className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none"
                     />
                   </div>
 
@@ -350,7 +350,7 @@ export function BookingCalendar({
                       max={4}
                       value={petsCount}
                       onChange={(e) => setPetsCount(Number(e.target.value))}
-                      className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs focus:border-sky-500 focus:outline-none"
+                      className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none"
                     />
                   </div>
                 </div>

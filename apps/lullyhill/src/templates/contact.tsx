@@ -13,20 +13,20 @@ export function ContactTemplate({ page }: { page: CMSPageData }) {
             nbr={1}
             as="h1"
             fallbackToPageTitle
-            className="text-3xl sm:text-4xl font-serif tracking-tight text-slate-900"
+            className="text-3xl sm:text-4xl font-serif tracking-tight text-slate-900 dark:text-white"
           />
 
           <CMSField.Text
             nbr={2}
             as="p"
-            className="text-sm text-slate-600 leading-relaxed"
+            className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"
           />
         </header>
 
         <CMSField.Image
           nbr={1}
           alt={page.page_title}
-          wrapperClassName="overflow-hidden rounded-3xl border border-slate-200 bg-white p-2 shadow-lg"
+          wrapperClassName="overflow-hidden rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/95 p-2 shadow-lg"
           className="w-full h-auto object-cover rounded-2xl max-h-[380px]"
         />
 
@@ -34,12 +34,12 @@ export function ContactTemplate({ page }: { page: CMSPageData }) {
           <CMSField.Text
             nbr={3}
             as="div"
-            className="text-sm text-slate-800 leading-relaxed"
+            className="text-sm text-slate-800 dark:text-slate-200 leading-relaxed"
           />
           <CMSField.Text
             nbr={4}
             as="div"
-            className="text-sm text-slate-600 leading-relaxed"
+            className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed"
           />
         </div>
       </div>

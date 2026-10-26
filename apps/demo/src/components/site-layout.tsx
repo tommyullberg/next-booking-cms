@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   CMSPageProvider,
   InlineEditor,
@@ -8,7 +8,64 @@ import {
   CMSPageData,
   CMSNavigationSection,
 } from "@next-booking/cms-core";
-import { Layers, Menu, X, ChevronRight, Home, FolderTree } from "lucide-react";
+import { Layers, Menu, X, ChevronRight, Home, FolderTree, Sun, Moon } from "lucide-react";
+
+export function ThemeToggle() {
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const isDark = document.documentElement.classList.contains("dark");
+    setTheme(isDark ? "dark" : "light");
+
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem("theme")) {
+        if (e.matches) {
+          document.documentElement.classList.add("dark");
+          setTheme("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+          setTheme("light");
+        }
+      }
+    };
+    media.addEventListener("change", handler);
+    return () => media.removeEventListener("change", handler);
+  }, []);
+
+  const toggle = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    setTheme(next);
+    localStorage.setItem("theme", next);
+    if (next === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  };
+
+  if (!mounted) {
+    return <div className="w-9 h-9 rounded-xl border border-border bg-card" />;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className="w-9 h-9 rounded-xl border border-border bg-card flex items-center justify-center text-foreground hover:bg-accent transition"
+      title={theme === "dark" ? "Växla till ljust läge" : "Växla till mörkt läge"}
+      aria-label="Växla färgtema"
+    >
+      {theme === "dark" ? (
+        <Sun className="w-4 h-4 text-amber-400" />
+      ) : (
+        <Moon className="w-4 h-4 text-slate-700" />
+      )}
+    </button>
+  );
+}
 
 export const emptyFallbackPage: CMSPageData = {
   id: 1001,
@@ -52,20 +109,23 @@ export function DemoSiteLayout({
                 </span>
               </a>
 
-              <button
-                type="button"
-                onClick={() => setIsMenuOpen((prev) => !prev)}
-                aria-expanded={isMenuOpen}
-                aria-label="Toggle navigation menu"
-                className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-accent transition"
-              >
-                {isMenuOpen ? (
-                  <X className="w-4 h-4" />
-                ) : (
-                  <Menu className="w-4 h-4" />
-                )}
-                <span>Menu</span>
-              </button>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <button
+                  type="button"
+                  onClick={() => setIsMenuOpen((prev) => !prev)}
+                  aria-expanded={isMenuOpen}
+                  aria-label="Toggle navigation menu"
+                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-accent transition"
+                >
+                  {isMenuOpen ? (
+                    <X className="w-4 h-4" />
+                  ) : (
+                    <Menu className="w-4 h-4" />
+                  )}
+                  <span>Menu</span>
+                </button>
+              </div>
             </div>
 
             {/* Expandable Hamburger Navigation Menu built from Sections & Navigation Menus */}
