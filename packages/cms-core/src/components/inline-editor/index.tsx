@@ -12,12 +12,14 @@ export interface InlineEditorProps {
   adminUrl?: string;
   onSaveText?: TextEditModalProps["onSave"];
   onSaveImage?: ImageEditModalProps["onSave"];
+  onDeleteImage?: ImageEditModalProps["onDelete"];
 }
 
 export function InlineEditor({
   adminUrl,
   onSaveText,
   onSaveImage,
+  onDeleteImage,
 }: InlineEditorProps) {
   const { data: session, status } = useSession();
   const { mode, setMode } = useEditorStore();
@@ -31,7 +33,7 @@ export function InlineEditor({
     <>
       <FloatingPanel adminUrl={adminUrl} />
       <TextEditModal onSave={onSaveText} />
-      <ImageEditModal onSave={onSaveImage} />
+      <ImageEditModal onSave={onSaveImage} onDelete={onDeleteImage} />
       {mode === "administration" && (
         <AdminApp
           isOverlay={true}

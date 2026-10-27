@@ -9,6 +9,7 @@ import {
   Upload,
   Image as ImageIcon,
   FolderOpen,
+  Trash2,
 } from "lucide-react";
 
 interface MediaFileOption {
@@ -27,15 +28,20 @@ export interface ImageEditModalProps {
     maxWidth?: number | null;
     ratio?: string | null;
   }) => Promise<void> | void;
+  onDelete?: (data: {
+    pageId: number | string;
+    nbr: number;
+  }) => Promise<void> | void;
 }
 
-export function ImageEditModal({ onSave }: ImageEditModalProps) {
+export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
   const { isModalOpen, selectedField, closeModal } = useEditorStore();
   const [imageUrl, setImageUrl] = useState("");
   const [ratio, setRatio] = useState("16/9");
   const [maxWidth, setMaxWidth] = useState<number | "">("");
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [mediaFiles, setMediaFiles] = useState<MediaFileOption[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
@@ -117,9 +123,54 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
     }
   };
 
+  const handleDelete = async () => {
+    if (
+      !confirm(
+        "Vill du tömma detta bildfält? Bilden tas inte bort från Media & Files."
+      )
+    ) {
+      return;
+    }
+
+    setIsDeleting(true);
+    setErrorMessage(null);
+    try {
+      if (onDelete) {
+        await onDelete({
+          pageId: selectedField.pageId,
+          nbr: selectedField.nbr,
+        });
+      } else {
+        const res = await fetch("/api/cms/fields/image", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            pageId: selectedField.pageId,
+            nbr: selectedField.nbr,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to delete image field");
+        }
+      }
+      closeModal();
+      if (typeof window !== "undefined") {
+        window.location.reload();
+      }
+    } catch {
+      setErrorMessage("Could not clear image field");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!imageUrl.trim()) {
-      setErrorMessage("Please enter an image URL or upload an image file");
+      if (selectedField.imageUrl) {
+        return handleDelete();
+      }
+      setErrorMessage("Please enter an image URL or choose an image");
       return;
     }
 
@@ -182,13 +233,22 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
 
         <div className="mt-4 space-y-4">
           {imageUrl ? (
-            <div className="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center p-2">
+            <div className="group relative overflow-hidden rounded-xl border border-slate-800 bg-slate-950 flex items-center justify-center p-2">
               <img
                 src={imageUrl}
                 alt="Preview"
                 className="max-h-48 w-auto rounded object-cover"
                 style={{ aspectRatio: ratio }}
               />
+              <button
+                type="button"
+                onClick={() => setImageUrl("")}
+                className="absolute top-3 right-3 flex items-center gap-1.5 rounded-lg bg-slate-900/90 border border-slate-700/80 px-2.5 py-1 text-xs text-slate-300 hover:border-red-500/60 hover:bg-red-600 hover:text-white transition shadow-lg backdrop-blur-sm"
+                title="Rensa valt bildval"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Rensa</span>
+              </button>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-800 bg-slate-950 p-6 text-slate-500">
@@ -219,6 +279,24 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
               </div>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-44 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-2">
+                <button
+                  type="button"
+                  onClick={() => setImageUrl("")}
+                  className={`group relative flex flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed text-left transition p-2 min-h-[72px] ${
+                    !imageUrl
+                      ? "border-amber-500/80 bg-amber-500/10 text-amber-300 ring-2 ring-amber-500/40"
+                      : "border-slate-800 bg-slate-900/40 text-slate-400 hover:border-slate-600 hover:text-slate-200"
+                  }`}
+                  title="Ingen bild / Töm bildfält"
+                >
+                  <Trash2 className="w-5 h-5 mb-1 opacity-70 group-hover:opacity-100" />
+                  <span className="text-[10px] text-center font-medium">Ingen bild</span>
+                  {!imageUrl && (
+                    <div className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow">
+                      <Check className="h-3 w-3 stroke-[3]" />
+                    </div>
+                  )}
+                </button>
                 {mediaFiles.map((item) => {
                   const isSelected = imageUrl === item.file_url;
                   return (
@@ -330,27 +408,48 @@ export function ImageEditModal({ onSave }: ImageEditModalProps) {
           )}
         </div>
 
-        <div className="mt-6 flex items-center justify-end gap-2 border-t border-slate-800 pt-4">
-          <button
-            type="button"
-            onClick={closeModal}
-            className="rounded-lg px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isSaving || isUploading}
-            className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-xs font-medium text-white shadow-lg shadow-amber-600/20 hover:bg-amber-500 disabled:opacity-50"
-          >
-            {isSaving ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Check className="w-3.5 h-3.5" />
-            )}
-            <span>Save Changes</span>
-          </button>
+        <div className="mt-6 flex items-center justify-between border-t border-slate-800 pt-4">
+          <div>
+            {selectedField.imageUrl ? (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting || isSaving || isUploading}
+                className="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-xs font-medium text-red-400 hover:border-red-500/60 hover:bg-red-600 hover:text-white transition disabled:opacity-50"
+                title="Töm bildfältet utan att ta bort filen från Media & Files"
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5" />
+                )}
+                <span>Ta bort bild</span>
+              </button>
+            ) : null}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={closeModal}
+              className="rounded-lg px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={isSaving || isUploading || isDeleting}
+              className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-xs font-medium text-white shadow-lg shadow-amber-600/20 hover:bg-amber-500 disabled:opacity-50"
+            >
+              {isSaving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Check className="w-3.5 h-3.5" />
+              )}
+              <span>Save Changes</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

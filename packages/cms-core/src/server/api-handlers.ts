@@ -17,7 +17,11 @@ function revalidateBookingCaches() {
     // Non-fatal if invoked outside Next.js request boundary
   }
 }
-import { saveTextFieldAction, saveImageFieldAction } from "../actions/fields";
+import {
+  saveTextFieldAction,
+  saveImageFieldAction,
+  deleteImageFieldAction,
+} from "../actions/fields";
 import {
   getMediaFilesAction,
   uploadMediaAction,
@@ -121,6 +125,38 @@ export async function handleSaveImageField(req: NextRequest) {
   } catch (err: any) {
     return NextResponse.json(
       { success: false, error: err?.message || "Failed to save image field" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function handleDeleteImageField(req: NextRequest) {
+  try {
+    let pageId: any;
+    let nbr: any;
+    try {
+      const body = await req.json();
+      pageId = body?.pageId;
+      nbr = body?.nbr;
+    } catch {
+      const url = new URL(req.url);
+      pageId = url.searchParams.get("pageId");
+      nbr = url.searchParams.get("nbr");
+    }
+
+    if (!pageId || nbr === undefined || nbr === null) {
+      return NextResponse.json(
+        { success: false, error: "Missing pageId or nbr" },
+        { status: 400 }
+      );
+    }
+
+    await deleteImageFieldAction({ pageId, nbr: Number(nbr) });
+    revalidateBookingCaches();
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, error: err?.message || "Failed to delete image field" },
       { status: 500 }
     );
   }
@@ -554,6 +590,10 @@ export async function handleCmsApiRoute(
   }
 
   if (method === "DELETE") {
+    if (path === "fields/image" || path.startsWith("fields/image/")) {
+      return handleDeleteImageField(req);
+    }
+
     if (path.startsWith("pages/")) {
       const pageId = path.replace("pages/", "");
       await deletePageAction(pageId);

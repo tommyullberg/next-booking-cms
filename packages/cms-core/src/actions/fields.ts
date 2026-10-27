@@ -107,6 +107,29 @@ export interface SaveImageFieldParams {
   classNames?: string | null;
 }
 
+export interface DeleteImageFieldParams {
+  pageId: number | string;
+  nbr: number;
+}
+
+export async function deleteImageFieldAction({
+  pageId,
+  nbr,
+}: DeleteImageFieldParams) {
+  const numericPageId = Number(pageId) || 1001;
+  // Delete the PageField record for this field on this page.
+  // Crucially, this only removes the page field association and DOES NOT delete any records in FileAndImage (Media & Files).
+  await prisma.pageField.deleteMany({
+    where: {
+      page_id: numericPageId,
+      nbr,
+      field_type: "IMAGE",
+    },
+  });
+
+  return { success: true };
+}
+
 export async function saveImageFieldAction({
   pageId,
   nbr,
@@ -119,6 +142,12 @@ export async function saveImageFieldAction({
   classNames,
 }: SaveImageFieldParams) {
   const numericPageId = Number(pageId) || 1001;
+
+  if (!imageUrl || !imageUrl.trim()) {
+    await deleteImageFieldAction({ pageId: numericPageId, nbr });
+    return null;
+  }
+
   // Find or create FileAndImage entry
   let fileRecord = await prisma.fileAndImage.findFirst({
     where: { file_url: imageUrl },
