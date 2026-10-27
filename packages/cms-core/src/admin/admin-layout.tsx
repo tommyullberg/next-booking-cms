@@ -26,29 +26,15 @@ import {
   Coins,
 } from "lucide-react";
 
-export type AdminTab =
-  | "dashboard"
-  | "sections"
-  | "pages"
-  | "page-editor"
-  | "navigation-menus"
-  | "media"
-  | "categories"
-  | "administrators"
-  | "settings"
-  | "bookings-dashboard"
-  | "bookings"
-  | "objects"
-  | "object-prices"
-  | "landlords"
-  | "optionals"
-  | "amenities"
-  | "mail-templates";
+import { AdminTab } from "../types/admin";
+import { AdminLanguage, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
+
+export type { AdminTab };
 
 export interface AdminLayoutProps {
   currentTab: AdminTab;
   onTabChange: (tab: AdminTab) => void;
-  adminLanguage?: "en" | "sv";
+  adminLanguage?: AdminLanguage;
   adminName?: string;
   onLogout?: () => void;
   frontendUrl?: string;
@@ -60,7 +46,7 @@ export interface AdminLayoutProps {
 export function AdminLayout({
   currentTab,
   onTabChange,
-  adminLanguage = "en",
+  adminLanguage = DEFAULT_ADMIN_LANGUAGE,
   adminName = "Super Admin",
   onLogout,
   frontendUrl = "/",

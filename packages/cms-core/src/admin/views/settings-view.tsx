@@ -3,83 +3,20 @@
 import React, { useState, useEffect } from "react";
 import { Globe, Languages, Check, Save, Lock } from "lucide-react";
 import { FlagIcon } from "../../components/ui/flag-icon";
+import {
+  AVAILABLE_LANGUAGES,
+  ADMIN_LANGUAGES,
+  AdminLanguage,
+} from "../../constants/languages";
 
 export interface SettingsViewProps {
   activeLanguages: string[];
-  adminLanguage?: "en" | "sv";
+  adminLanguage?: AdminLanguage;
   onSaveSettings: (data: {
     activeLanguages: string[];
-    adminLanguage: "en" | "sv";
+    adminLanguage: AdminLanguage;
   }) => Promise<void>;
 }
-
-const AVAILABLE_LANGUAGES = [
-  {
-    locale: "sv",
-    code: "SE",
-    flag: "🇸🇪",
-    name: "Swedish",
-    subtitle: "Primary system & content language (Locked)",
-    locked: true,
-  },
-  {
-    locale: "en",
-    code: "GB",
-    flag: "🇬🇧",
-    name: "English",
-    subtitle: "International translations & English visitors",
-    locked: false,
-  },
-  {
-    locale: "de",
-    code: "DE",
-    flag: "🇩🇪",
-    name: "German",
-    subtitle: "German translations for DACH market guests",
-    locked: false,
-  },
-  {
-    locale: "fi",
-    code: "FI",
-    flag: "🇫🇮",
-    name: "Finnish",
-    subtitle: "Finnish translations for Nordic visitors",
-    locked: false,
-  },
-  {
-    locale: "no",
-    code: "NO",
-    flag: "🇳🇴",
-    name: "Norwegian",
-    subtitle: "Norwegian translations for Nordic visitors",
-    locked: false,
-  },
-  {
-    locale: "da",
-    code: "DK",
-    flag: "🇩🇰",
-    name: "Danish",
-    subtitle: "Danish translations for Nordic visitors",
-    locked: false,
-  },
-];
-
-const ADMIN_LANGUAGES = [
-  {
-    locale: "en" as const,
-    code: "GB",
-    name: "English",
-    subtitle: "Default administration interface language",
-    isDefault: true,
-  },
-  {
-    locale: "sv" as const,
-    code: "SE",
-    name: "Svenska",
-    subtitle: "Svenskt administrationsgränssnitt",
-    isDefault: false,
-  },
-];
 
 export function SettingsView({
   activeLanguages,

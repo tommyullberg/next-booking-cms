@@ -2,12 +2,22 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from "lucide-react";
+import {
+  MONTH_NAMES_EN,
+  MONTH_NAMES_SV,
+  WEEKDAY_SHORT_EN,
+  WEEKDAY_SHORT_SV,
+  toISODateString,
+  parseISODate,
+  getISOWeekNumber,
+} from "../../constants/dates";
+import { AdminLanguage } from "../../constants/languages";
 
 export interface DatePickerProps {
   value: string; // ISO string "YYYY-MM-DD" or ""
   onChange: (val: string) => void;
   placeholder?: string;
-  locale?: "en" | "sv";
+  locale?: AdminLanguage;
   disabled?: boolean;
   minDate?: string; // "YYYY-MM-DD"
   maxDate?: string; // "YYYY-MM-DD"
@@ -16,47 +26,6 @@ export interface DatePickerProps {
   clearLabel?: string;
   openDirection?: "up" | "down" | "auto";
   showWeekNumbers?: boolean;
-}
-
-const MONTH_NAMES_EN = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
-
-const MONTH_NAMES_SV = [
-  "Januari", "Februari", "Mars", "April", "Maj", "Juni",
-  "Juli", "Augusti", "September", "Oktober", "November", "December"
-];
-
-const WEEKDAY_NAMES_EN = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const WEEKDAY_NAMES_SV = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
-
-function pad2(n: number): string {
-  return n < 10 ? `0${n}` : `${n}`;
-}
-
-function toISODateString(year: number, month: number, day: number): string {
-  return `${year}-${pad2(month + 1)}-${pad2(day)}`;
-}
-
-function parseISODate(str?: string): { year: number; month: number; day: number } | null {
-  if (!str) return null;
-  const parts = str.trim().split("-");
-  if (parts.length !== 3) return null;
-  const year = parseInt(parts[0], 10);
-  const month = parseInt(parts[1], 10) - 1;
-  const day = parseInt(parts[2], 10);
-  if (isNaN(year) || isNaN(month) || isNaN(day)) return null;
-  if (month < 0 || month > 11 || day < 1 || day > 31) return null;
-  return { year, month, day };
-}
-
-function getISOWeekNumber(d: Date): number {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
 
 export function DatePicker({
@@ -140,7 +109,7 @@ export function DatePicker({
   }, [isOpen]);
 
   const monthNames = locale === "sv" ? MONTH_NAMES_SV : MONTH_NAMES_EN;
-  const weekdayNames = locale === "sv" ? WEEKDAY_NAMES_SV : WEEKDAY_NAMES_EN;
+  const weekdayNames = locale === "sv" ? WEEKDAY_SHORT_SV : WEEKDAY_SHORT_EN;
   const defaultPlaceholder = locale === "sv" ? "ÅÅÅÅ-MM-DD" : "YYYY-MM-DD";
   const effectivePlaceholder = placeholder || defaultPlaceholder;
   const effectiveClearLabel =

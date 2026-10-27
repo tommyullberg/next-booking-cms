@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import { AdminThemeProvider } from "./theme-context";
-import { AdminLayout, AdminTab } from "./admin-layout";
+import { AdminLayout } from "./admin-layout";
 import { DashboardView } from "./views/dashboard-view";
 import { PagesView, PageListItem } from "./views/pages-view";
 import { PageEditorView, PageEditorData } from "./views/page-editor-view";
@@ -23,6 +23,9 @@ import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view
 import { SettingsView } from "./views/settings-view";
 import { CMSTemplateOption } from "../templates/types";
 import { AmenityItem } from "../booking/types";
+import { AdminTab } from "../types/admin";
+import { CmsSettingsData } from "../types/settings";
+import { AdminLanguage, DEFAULT_ACTIVE_LANGUAGES, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
 
 export interface AdminAppProps {
   initialPages?: PageListItem[];
@@ -35,10 +38,7 @@ export interface AdminAppProps {
   initialAmenities?: AmenityItem[];
   initialMedia?: MediaItem[];
   initialMailTemplates?: MailTemplateItem[];
-  initialSettings?: {
-    activeLanguages: string[];
-    adminLanguage?: "en" | "sv";
-  };
+  initialSettings?: Partial<CmsSettingsData>;
   availableTemplates?: CMSTemplateOption[];
   adminName?: string;
   frontendUrl?: string;
@@ -100,10 +100,10 @@ export function AdminApp({
   const [media, setMedia] = useState<MediaItem[]>(initialMedia);
   const [mailTemplates, setMailTemplates] = useState<MailTemplateItem[]>(initialMailTemplates);
   const [activeLanguages, setActiveLanguages] = useState<string[]>(
-    initialSettings?.activeLanguages || ["sv", "en", "de"]
+    initialSettings?.activeLanguages || [...DEFAULT_ACTIVE_LANGUAGES]
   );
-  const [adminLanguage, setAdminLanguage] = useState<"en" | "sv">(
-    initialSettings?.adminLanguage || "en"
+  const [adminLanguage, setAdminLanguage] = useState<AdminLanguage>(
+    initialSettings?.adminLanguage || DEFAULT_ADMIN_LANGUAGE
   );
   const [editingPage, setEditingPage] = useState<PageEditorData | null>(null);
 

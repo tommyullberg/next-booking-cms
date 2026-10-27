@@ -39,6 +39,15 @@ import {
   DEFAULT_CMS_TEMPLATES,
   resolveTemplateOption,
 } from "../../templates/types";
+import {
+  LANGUAGE_META,
+  getLanguageMeta,
+  AdminLanguage,
+} from "../../constants/languages";
+import { formatDateInput } from "../../constants/dates";
+import { PageStatus } from "../../types/admin";
+
+export type { PageStatus };
 
 export interface PageEditorData {
   id: number | string;
@@ -50,7 +59,7 @@ export interface PageEditorData {
   meta_title?: string | null;
   meta_description?: string | null;
   slug: string;
-  status: "NEW" | "PUBLISHED" | "ARCHIVED";
+  status: PageStatus;
   publication_start?: string | Date | null;
   publication_end?: string | Date | null;
   created_date?: string | Date;
@@ -77,19 +86,10 @@ export interface PageEditorViewProps {
   bookingObjects?: BookingObjectDetails[];
   activeLanguages?: string[];
   activeLocales?: string[];
-  adminLanguage?: "en" | "sv";
+  adminLanguage?: AdminLanguage;
   onBack: () => void;
   onSave: (data: any) => Promise<void>;
 }
-
-const LANGUAGE_META: Record<string, { code: string; flag: string; label: string }> = {
-  sv: { code: "SE", flag: "🇸🇪", label: "Swedish" },
-  en: { code: "GB", flag: "🇬🇧", label: "English" },
-  de: { code: "DE", flag: "🇩🇪", label: "German" },
-  fi: { code: "FI", flag: "🇫🇮", label: "Finnish" },
-  no: { code: "NO", flag: "🇳🇴", label: "Norwegian" },
-  da: { code: "DA", flag: "🇩🇰", label: "Danish" },
-};
 
 function getTemplateIcon(templateId: string) {
   switch (templateId.toLowerCase()) {
@@ -106,13 +106,6 @@ function getTemplateIcon(templateId: string) {
     default:
       return FileText;
   }
-}
-
-function formatDateInput(val?: string | Date | null): string {
-  if (!val) return "";
-  const d = typeof val === "string" ? new Date(val) : val;
-  if (isNaN(d.getTime())) return "";
-  return d.toISOString().split("T")[0];
 }
 
 export function PageEditorView({

@@ -1,11 +1,8 @@
 import { prisma } from "../db";
+import { DEFAULT_ACTIVE_LANGUAGES } from "../constants/languages";
+import { CmsSettingsData } from "../types/settings";
 
-export interface CmsSettingsData {
-  activeLanguages: string[];
-  adminLanguage: "en" | "sv";
-}
-
-const DEFAULT_ACTIVE_LANGUAGES = ["sv", "en", "de"];
+export type { CmsSettingsData };
 
 export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
   try {
@@ -20,7 +17,7 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
     const langRow = rows.find((r) => r.setting_key === "active_languages");
     const adminLangRow = rows.find((r) => r.setting_key === "admin_language");
 
-    let activeLanguages = DEFAULT_ACTIVE_LANGUAGES;
+    let activeLanguages: string[] = [...DEFAULT_ACTIVE_LANGUAGES];
     if (langRow?.setting_value) {
       try {
         const parsed = JSON.parse(langRow.setting_value);
@@ -43,7 +40,7 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
     };
   } catch {
     return {
-      activeLanguages: DEFAULT_ACTIVE_LANGUAGES,
+      activeLanguages: [...DEFAULT_ACTIVE_LANGUAGES],
       adminLanguage: "en",
     };
   }

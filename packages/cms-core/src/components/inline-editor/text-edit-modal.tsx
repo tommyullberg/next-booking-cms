@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useEditorStore } from "../../state/editor-store";
 import { Sparkles, X, Check, Loader2 } from "lucide-react";
 import { FlagIcon } from "../ui/flag-icon";
+import { LANGUAGE_META } from "../../constants/languages";
 
 export interface TextEditModalProps {
   activeLanguages?: string[];
@@ -15,18 +16,6 @@ export interface TextEditModalProps {
     translations?: Record<string, string>;
   }) => Promise<void> | void;
 }
-
-const LANGUAGE_META: Record<
-  string,
-  { code: string; flag: string; label: string }
-> = {
-  sv: { code: "SE", flag: "🇸🇪", label: "Swedish (Default)" },
-  en: { code: "GB", flag: "🇬🇧", label: "English" },
-  de: { code: "DE", flag: "🇩🇪", label: "German" },
-  fi: { code: "FI", flag: "🇫🇮", label: "Finnish" },
-  no: { code: "NO", flag: "🇳🇴", label: "Norwegian" },
-  da: { code: "DK", flag: "🇩🇰", label: "Danish" },
-};
 
 export function TextEditModal({
   activeLanguages: propLanguages,

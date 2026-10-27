@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Plus, Trash2, Pencil, Check, GripVertical, ChevronDown, Lock } from "lucide-react";
 import { FlagIcon } from "../../components/ui/flag-icon";
 import { HOMEPAGE_ID } from "../../utils/slug";
+import { LANGUAGE_META } from "../../constants/languages";
 
 export interface SectionItem {
   id: string;
@@ -44,15 +45,6 @@ export interface SectionsViewProps {
   onReorderSections?: (orderedIds: string[]) => Promise<void>;
   onToggleVisibility?: (id: string, current: boolean) => Promise<void>;
 }
-
-const LANGUAGE_META: Record<string, { code: string; flag: string; label: string }> = {
-  sv: { code: "SE", flag: "🇸🇪", label: "Swedish" },
-  en: { code: "GB", flag: "🇬🇧", label: "English" },
-  de: { code: "DE", flag: "🇩🇪", label: "German" },
-  fi: { code: "FI", flag: "🇫🇮", label: "Finnish" },
-  no: { code: "NO", flag: "🇳🇴", label: "Norwegian" },
-  da: { code: "DK", flag: "🇩🇰", label: "Danish" },
-};
 
 export function SectionsView({
   sections,

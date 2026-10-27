@@ -8,6 +8,10 @@ import {
   validateSlugInput,
   isDefaultIdOrRootSlug,
 } from "../utils/slug";
+import {
+  DEFAULT_ACTIVE_LANGUAGES,
+  DEFAULT_ADMIN_LANGUAGE,
+} from "../constants/languages";
 
 export { HOMEPAGE_ID };
 
@@ -536,7 +540,10 @@ export async function loadAdminInitialData() {
     }),
     getCmsSettingsAction().catch((err) => {
       console.error("[cms-core] getCmsSettingsAction failed:", err);
-      return { activeLanguages: ["sv", "en", "de"], adminLanguage: "en" as const };
+      return {
+        activeLanguages: [...DEFAULT_ACTIVE_LANGUAGES],
+        adminLanguage: DEFAULT_ADMIN_LANGUAGE,
+      };
     }),
     getLandlordsAction().catch((err) => {
       console.error("[cms-core] getLandlordsAction failed:", err);
