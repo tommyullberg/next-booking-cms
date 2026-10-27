@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { CMSPageField } from "../../components/fields/types";
 import { FlagIcon } from "../../components/ui/flag-icon";
+import { DatePicker } from "../../components/ui/date-picker";
 import { CategoryTypeItem } from "./categories-view";
 import {
   BookingObjectDetails,
@@ -76,6 +77,7 @@ export interface PageEditorViewProps {
   bookingObjects?: BookingObjectDetails[];
   activeLanguages?: string[];
   activeLocales?: string[];
+  adminLanguage?: "en" | "sv";
   onBack: () => void;
   onSave: (data: any) => Promise<void>;
 }
@@ -122,6 +124,7 @@ export function PageEditorView({
   bookingObjects = [],
   activeLanguages,
   activeLocales = ["sv", "en", "de"],
+  adminLanguage = "en",
   onBack,
   onSave,
 }: PageEditorViewProps) {
@@ -807,17 +810,15 @@ export function PageEditorView({
                 </div>
               )}
 
-              <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
-                <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
-                  <Calendar className='w-4 h-4' />
-                </span>
-                <input
-                  type='date'
-                  value={publicationStart}
-                  onChange={(e) => setPublicationStart(e.target.value)}
-                  className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white focus:outline-none'
-                />
-              </div>
+              <DatePicker
+                value={publicationStart}
+                onChange={setPublicationStart}
+                locale={adminLanguage}
+                openDirection="up"
+                showWeekNumbers={true}
+                placeholder={adminLanguage === "sv" ? "Omedelbart (lämna tomt)" : "Immediately (leave empty)"}
+                clearLabel={adminLanguage === "sv" ? "Rensa" : "Clear"}
+              />
             </div>
 
             {/* 7. Unpublish Date */}
@@ -842,16 +843,15 @@ export function PageEditorView({
               )}
 
               <div className='flex items-center gap-2'>
-                <div className='flex-1 flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
-                  <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
-                    <Calendar className='w-4 h-4' />
-                  </span>
-                  <input
-                    type='date'
+                <div className='flex-1'>
+                  <DatePicker
                     value={publicationEnd}
-                    onChange={(e) => setPublicationEnd(e.target.value)}
-                    placeholder='Never'
-                    className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none'
+                    onChange={setPublicationEnd}
+                    locale={adminLanguage}
+                    openDirection="up"
+                    showWeekNumbers={true}
+                    placeholder={adminLanguage === "sv" ? "Aldrig (lämna tomt)" : "Never (leave empty)"}
+                    clearLabel={adminLanguage === "sv" ? "Aldrig" : "Never"}
                   />
                 </div>
                 <button

@@ -605,6 +605,7 @@ export function AdminApp({
   return (
     <AdminThemeProvider>
       <AdminLayout
+        adminLanguage={adminLanguage}
         currentTab={currentTab}
         onTabChange={setCurrentTab}
         adminName={adminName}
@@ -642,6 +643,7 @@ export function AdminApp({
             categoryTypes={categoryTypes}
             bookingObjects={bookingObjects}
             activeLanguages={activeLanguages}
+            adminLanguage={adminLanguage}
             availableTemplates={availableTemplates}
             onBack={() => setCurrentTab("pages")}
             onSave={handleSavePageInternal}

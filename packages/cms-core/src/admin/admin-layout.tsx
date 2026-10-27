@@ -48,6 +48,7 @@ export type AdminTab =
 export interface AdminLayoutProps {
   currentTab: AdminTab;
   onTabChange: (tab: AdminTab) => void;
+  adminLanguage?: "en" | "sv";
   adminName?: string;
   onLogout?: () => void;
   frontendUrl?: string;
@@ -59,6 +60,7 @@ export interface AdminLayoutProps {
 export function AdminLayout({
   currentTab,
   onTabChange,
+  adminLanguage = "en",
   adminName = "Super Admin",
   onLogout,
   frontendUrl = "/",
@@ -110,6 +112,7 @@ export function AdminLayout({
 
   return (
     <div
+      lang={adminLanguage === "sv" ? "sv-SE" : "en-CA"}
       className={`${
         isOverlay ? "fixed inset-0 z-50" : "min-h-screen"
       } flex flex-col font-sans bg-slate-950 text-slate-100`}

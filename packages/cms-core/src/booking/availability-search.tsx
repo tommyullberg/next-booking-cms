@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useAvailabilitySearchQuery, useCreateBookingMutation } from "./hooks";
 import { Search, Users, Calendar, Dog, Sparkles, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 import { SearchMatchItem } from "./types";
+import { DatePicker } from "../components/ui/date-picker";
 
 export interface AvailabilitySearchProps {
   onSelectBooking?: (item: SearchMatchItem) => void;
@@ -91,12 +92,12 @@ export function AvailabilitySearch({
             <Calendar className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
             <span>Incheckning</span>
           </label>
-          <input
-            type="date"
-            required
+          <DatePicker
             value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white dark:[color-scheme:dark] focus:outline-none focus:border-sky-500 transition-colors"
+            onChange={setStartDate}
+            locale="sv"
+            allowClear={false}
+            minDate={new Date().toISOString().split("T")[0]}
           />
         </div>
 
@@ -105,12 +106,12 @@ export function AvailabilitySearch({
             <Calendar className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
             <span>Utcheckning</span>
           </label>
-          <input
-            type="date"
-            required
+          <DatePicker
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white dark:[color-scheme:dark] focus:outline-none focus:border-sky-500 transition-colors"
+            onChange={setEndDate}
+            locale="sv"
+            allowClear={false}
+            minDate={startDate}
           />
         </div>
 
