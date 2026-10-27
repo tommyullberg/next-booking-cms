@@ -2,30 +2,66 @@ import { prisma } from "../db";
 import { HOMEPAGE_ID } from "./pages";
 
 export async function getSectionsAction() {
-  const sections = await prisma.section.findMany({
-    orderBy: { sort_order: "asc" },
-    include: {
-      pages: {
-        orderBy: { sort_order: "asc" },
-        select: {
-          id: true,
-          page_title: true,
-          link_description: true,
-          slug: true,
-          status: true,
-          sort_order: true,
-          section_id: true,
+  const [sections, navMenuSetting] = await Promise.all([
+    prisma.section.findMany({
+      orderBy: { sort_order: "asc" },
+      include: {
+        pages: {
+          orderBy: { sort_order: "asc" },
+          select: {
+            id: true,
+            page_title: true,
+            link_description: true,
+            slug: true,
+            status: true,
+            sort_order: true,
+            section_id: true,
+          },
         },
       },
-    },
-  });
+    }),
+    prisma.setting
+      .findUnique({
+        where: { setting_key: "navigation_menus" },
+      })
+      .catch(() => null),
+  ]);
+
+  let menuConfig: Record<string, Array<{ pageId: number; title?: string }>> = {};
+  if (navMenuSetting?.setting_value) {
+    try {
+      menuConfig = JSON.parse(navMenuSetting.setting_value);
+    } catch {
+      menuConfig = {};
+    }
+  }
 
   // Always guarantee the root section (start_page_id === 1001) is first
-  return sections.sort((a, b) => {
+  const sorted = sections.sort((a, b) => {
     const aIsRoot = a.start_page_id === HOMEPAGE_ID ? 0 : 1;
     const bIsRoot = b.start_page_id === HOMEPAGE_ID ? 0 : 1;
     if (aIsRoot !== bIsRoot) return aIsRoot - bIsRoot;
     return a.sort_order - b.sort_order;
+  });
+
+  return sorted.map((s) => {
+    const menuEntries = menuConfig[s.id] || [];
+    const menuItems = menuEntries
+      .map((entry) => {
+        const p = s.pages.find((page) => page.id === entry.pageId);
+        return p
+          ? {
+              ...p,
+              link_description: entry.title || p.link_description,
+            }
+          : null;
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    return {
+      ...s,
+      menu_items: menuItems,
+    };
   });
 }
 
@@ -152,27 +188,85 @@ export async function updateNavigationMenuItemAction(params: {
 
   const targetId = Number(params.targetPageId);
 
-  if (prevId && prevId !== targetId && prevId !== HOMEPAGE_ID) {
-    await prisma.page.update({
-      where: { id: prevId },
-      data: { section_id: null },
-    });
+  // Fetch current menu config from settings
+  const settingRow = await prisma.setting
+    .findUnique({
+      where: { setting_key: "navigation_menus" },
+    })
+    .catch(() => null);
+
+  let menuConfig: Record<string, Array<{ pageId: number; title?: string }>> = {};
+  if (settingRow?.setting_value) {
+    try {
+      menuConfig = JSON.parse(settingRow.setting_value);
+    } catch {
+      menuConfig = {};
+    }
   }
 
-  if (!isNaN(targetId)) {
+  if (!params.sectionId) {
+    // Remove from navigation menu
+    for (const secKey of Object.keys(menuConfig)) {
+      menuConfig[secKey] = menuConfig[secKey].filter(
+        (e) => e.pageId !== targetId && e.pageId !== prevId
+      );
+    }
+  } else {
+    const secId = params.sectionId;
+    if (!menuConfig[secId]) {
+      menuConfig[secId] = [];
+    }
+
+    if (prevId && prevId !== targetId) {
+      menuConfig[secId] = menuConfig[secId].filter((e) => e.pageId !== prevId);
+    }
+
+    const existingIdx = menuConfig[secId].findIndex(
+      (e) => e.pageId === targetId
+    );
+    if (existingIdx >= 0) {
+      menuConfig[secId][existingIdx] = {
+        pageId: targetId,
+        title: params.menuTitle || menuConfig[secId][existingIdx].title,
+      };
+    } else {
+      menuConfig[secId].push({
+        pageId: targetId,
+        title: params.menuTitle,
+      });
+    }
+
+    if (params.sortOrder !== undefined && params.sortOrder > 0) {
+      const itemToMove = menuConfig[secId].find((e) => e.pageId === targetId);
+      if (itemToMove) {
+        menuConfig[secId] = menuConfig[secId].filter(
+          (e) => e.pageId !== targetId
+        );
+        menuConfig[secId].splice(params.sortOrder - 1, 0, itemToMove);
+      }
+    }
+  }
+
+  // Update page title if specified
+  if (!isNaN(targetId) && params.menuTitle !== undefined) {
     await prisma.page.update({
       where: { id: targetId },
       data: {
-        section_id: params.sectionId,
-        ...(params.menuTitle !== undefined
-          ? { link_description: params.menuTitle }
-          : {}),
-        ...(params.sortOrder !== undefined
-          ? { sort_order: params.sortOrder }
-          : {}),
+        link_description: params.menuTitle,
       },
     });
   }
+
+  await prisma.setting.upsert({
+    where: { setting_key: "navigation_menus" },
+    create: {
+      setting_key: "navigation_menus",
+      setting_value: JSON.stringify(menuConfig),
+    },
+    update: {
+      setting_value: JSON.stringify(menuConfig),
+    },
+  });
 
   return getSectionsAction();
 }
@@ -184,18 +278,58 @@ export async function reorderNavigationMenuItemsAction(
     sortOrder: number;
   }>
 ) {
-  const validItems = items.filter((item) => !isNaN(Number(item.pageId)));
-  await prisma.$transaction(
-    validItems.map((item) =>
-      prisma.page.update({
-        where: { id: Number(item.pageId) },
-        data: {
-          section_id: item.sectionId,
-          sort_order: item.sortOrder,
-        },
-      })
-    )
-  );
+  const settingRow = await prisma.setting
+    .findUnique({
+      where: { setting_key: "navigation_menus" },
+    })
+    .catch(() => null);
+
+  let menuConfig: Record<string, Array<{ pageId: number; title?: string }>> = {};
+  if (settingRow?.setting_value) {
+    try {
+      menuConfig = JSON.parse(settingRow.setting_value);
+    } catch {
+      menuConfig = {};
+    }
+  }
+
+  const grouped: Record<
+    string,
+    Array<{ pageId: number; sortOrder: number }>
+  > = {};
+  for (const it of items) {
+    if (it.sectionId && !isNaN(Number(it.pageId))) {
+      if (!grouped[it.sectionId]) grouped[it.sectionId] = [];
+      grouped[it.sectionId].push({
+        pageId: Number(it.pageId),
+        sortOrder: it.sortOrder,
+      });
+    }
+  }
+
+  for (const [secId, list] of Object.entries(grouped)) {
+    list.sort((a, b) => a.sortOrder - b.sortOrder);
+    const existingList = menuConfig[secId] || [];
+    menuConfig[secId] = list.map((l) => {
+      const match = existingList.find((e) => e.pageId === l.pageId);
+      return {
+        pageId: l.pageId,
+        title: match?.title,
+      };
+    });
+  }
+
+  await prisma.setting.upsert({
+    where: { setting_key: "navigation_menus" },
+    create: {
+      setting_key: "navigation_menus",
+      setting_value: JSON.stringify(menuConfig),
+    },
+    update: {
+      setting_value: JSON.stringify(menuConfig),
+    },
+  });
+
   return getSectionsAction();
 }
 

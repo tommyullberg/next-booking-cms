@@ -176,12 +176,29 @@ export async function getPublicNavigationSectionsAction(isAdmin = false) {
       const startPageAllowed =
         startPage && (isAdmin || isPageVisibleToVisitor(startPage));
 
-      const sectionPages = allPages.filter(
-        (p) =>
-          p.section_id === s.id &&
-          p.id !== HOMEPAGE_ID &&
-          (isAdmin || isPageVisibleToVisitor(p))
-      );
+      // Resolve items: only items explicitly configured in Navigation Menus
+      let sectionItems: Array<{
+        id: number;
+        label: string;
+        url: string;
+        status: string;
+      }> = [];
+
+      const menuItems = (s as any).menu_items;
+      if (Array.isArray(menuItems)) {
+        sectionItems = menuItems
+          .map((p: any) => {
+            if (!isAdmin && !isPageVisibleToVisitor(p)) return null;
+            if (p.id === s.start_page_id) return null; // never include section start page as sub-item
+            return {
+              id: p.id,
+              label: p.link_description || p.page_title,
+              url: toUrl(p),
+              status: p.status,
+            };
+          })
+          .filter((item: any): item is NonNullable<typeof item> => item !== null);
+      }
 
       return {
         id: s.id,
@@ -194,12 +211,7 @@ export async function getPublicNavigationSectionsAction(isAdmin = false) {
           : startPageAllowed && startPage
             ? toUrl(startPage)
             : null,
-        items: sectionPages.map((p) => ({
-          id: p.id,
-          label: p.link_description || p.page_title,
-          url: toUrl(p),
-          status: p.status,
-        })),
+        items: sectionItems,
       };
     });
 }

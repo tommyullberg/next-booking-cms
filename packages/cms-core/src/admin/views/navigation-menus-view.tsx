@@ -64,13 +64,10 @@ export function NavigationMenusView({
   const subPages = pages.filter((p) => Number(p.id) !== HOMEPAGE_ID);
 
   const getSectionMenuItems = (sec: SectionItem): PageListItem[] => {
-    const items = subPages.filter((p) => {
-      const secId = p.section?.id || (p as any).section_id;
-      return secId === sec.id;
-    });
-    return items.sort(
-      (a, b) => ((a as any).sort_order ?? 0) - ((b as any).sort_order ?? 0)
-    );
+    if ((sec as any).menu_items && Array.isArray((sec as any).menu_items)) {
+      return (sec as any).menu_items;
+    }
+    return [];
   };
 
   const formatSlugDisplay = (slug: string, id: number | string) => {
@@ -88,15 +85,21 @@ export function NavigationMenusView({
   const handleStartAddItem = (sectionId: string) => {
     setEditingItemKey(null);
     setAddingToSectionId(sectionId);
-    const unassignedOrFirst =
-      subPages.find((p) => !p.section || p.section.id !== sectionId) ||
-      subPages[0];
+    const sec = sections.find((s) => s.id === sectionId);
+    const currentItems = sec ? getSectionMenuItems(sec) : [];
+    const currentItemIds = new Set(currentItems.map((i) => Number(i.id)));
+    const eligiblePages = subPages.filter(
+      (p) =>
+        Number(p.id) !== Number(sec?.start_page_id) &&
+        !currentItemIds.has(Number(p.id))
+    );
+    const firstEligible = eligiblePages[0] || subPages[0];
     setSelectedPageId(
-      unassignedOrFirst?.id != null ? String(unassignedOrFirst.id) : ""
+      firstEligible?.id != null ? String(firstEligible.id) : ""
     );
     setEditMenuTitle(
-      (unassignedOrFirst as any)?.link_description ||
-        unassignedOrFirst?.page_title ||
+      (firstEligible as any)?.link_description ||
+        firstEligible?.page_title ||
         ""
     );
   };
@@ -486,16 +489,18 @@ export function NavigationMenusView({
                               }}
                               className="w-full appearance-none rounded-lg border border-sky-500/50 bg-slate-900/95 pl-3 pr-8 py-1.5 text-xs text-slate-200 focus:border-sky-400 focus:outline-none"
                             >
-                              {subPages.length === 0 ? (
+                              {subPages.filter((p) => Number(p.id) !== Number(sec.start_page_id)).length === 0 ? (
                                 <option value="">
                                   No subpages available — create a page first
                                 </option>
                               ) : (
-                                subPages.map((p) => (
-                                  <option key={p.id} value={String(p.id)}>
-                                    Select Page...  {p.page_title} (#{p.id})
-                                  </option>
-                                ))
+                                subPages
+                                  .filter((p) => Number(p.id) !== Number(sec.start_page_id))
+                                  .map((p) => (
+                                    <option key={p.id} value={String(p.id)}>
+                                      Select Page...  {p.page_title} (#{p.id})
+                                    </option>
+                                  ))
                               )}
                             </select>
                             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
