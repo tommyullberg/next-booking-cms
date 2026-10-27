@@ -316,6 +316,7 @@ export function PageEditorView({
   const publicUrlPath = isHomepage
     ? "/"
     : `/${cleanActiveSlug || page.id}`;
+  const systemUrlPath = isHomepage ? "/" : `/${page.id}`;
 
   return (
     <div className='space-y-6 max-w-6xl'>
@@ -917,10 +918,16 @@ export function PageEditorView({
               </p>
             </div>
 
-            {/* Page Template */}
-            <div className='space-y-1'>
-              <div className='text-xs font-medium text-slate-400'>Page Template</div>
-              <div className='text-xs text-slate-200 font-medium'>{currentTemplateOption.label}</div>
+            {/* Page ID & Page Template */}
+            <div className='grid grid-cols-2 gap-4'>
+              <div className='space-y-1'>
+                <div className='text-xs font-medium text-slate-400'>Page-ID</div>
+                <div className='text-xs text-slate-200 font-medium font-mono'>{page.id}</div>
+              </div>
+              <div className='space-y-1'>
+                <div className='text-xs font-medium text-slate-400'>Page Template</div>
+                <div className='text-xs text-slate-200 font-medium'>{currentTemplateOption.label}</div>
+              </div>
             </div>
 
             {/* Linked Booking Object */}
@@ -975,6 +982,23 @@ export function PageEditorView({
                   {typeof window !== "undefined"
                     ? `${window.location.origin}${publicUrlPath}`
                     : `http://localhost:3000${publicUrlPath}`}
+                </span>
+              </a>
+            </div>
+
+            {/* System Link */}
+            <div className='space-y-1'>
+              <div className='text-xs font-medium text-slate-400'>System Link</div>
+              <a
+                href={systemUrlPath}
+                target='_blank'
+                rel='noreferrer'
+                className='inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 underline underline-offset-4 break-all'>
+                <ExternalLink className='w-3.5 h-3.5 shrink-0' />
+                <span>
+                  {typeof window !== "undefined"
+                    ? `${window.location.origin}${systemUrlPath}`
+                    : `http://localhost:3000${systemUrlPath}`}
                 </span>
               </a>
             </div>
