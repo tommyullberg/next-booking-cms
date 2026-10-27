@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import Link from "next/link";
 import { Home, CornerDownRight } from "lucide-react";
 import { CMSNavigationSection } from "@next-booking/cms-core";
 
@@ -113,7 +114,7 @@ export function MobileMenu({
       className="absolute right-6 top-[calc(100%+8px)] w-72 sm:w-80 max-h-[calc(100vh-5rem)] overflow-y-auto rounded-2xl border border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-2xl shadow-slate-900/10 dark:shadow-[0_12px_40px_rgba(255,255,255,0.08)] z-50 p-2.5 space-y-1.5 animate-in fade-in-0 zoom-in-95 duration-150"
     >
       {/* Root Section (Hem) */}
-      <a
+      <Link
         href="/"
         onClick={onClose}
         className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-tight transition ${
@@ -126,7 +127,7 @@ export function MobileMenu({
           <Home className="w-4 h-4 shrink-0" />
           <span>{rootSection?.name || "Hem"}</span>
         </div>
-      </a>
+      </Link>
 
       {/* Root Section Sub-Items (if explicitly configured) */}
       {rootSection && rootSection.items.length > 0 && (
@@ -134,7 +135,7 @@ export function MobileMenu({
           {rootSection.items.map((item) => {
             const isActive = Number(currentPageId) === item.id;
             return (
-              <a
+              <Link
                 key={item.id}
                 href={item.url}
                 onClick={onClose}
@@ -152,7 +153,7 @@ export function MobileMenu({
                   }`}
                 />
                 <span className="truncate">{item.label}</span>
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -173,7 +174,7 @@ export function MobileMenu({
           <div key={sec.id} className="space-y-1">
             {/* Direct Section Link */}
             {sec.start_page_url ? (
-              <a
+              <Link
                 href={sec.start_page_url}
                 onClick={onClose}
                 className={`group flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
@@ -192,7 +193,7 @@ export function MobileMenu({
                   />
                   <span>{sec.name}</span>
                 </div>
-              </a>
+              </Link>
             ) : (
               <div className="flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <CornerDownRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -206,7 +207,7 @@ export function MobileMenu({
                 {sec.items.map((item) => {
                   const isActive = Number(currentPageId) === item.id;
                   return (
-                    <a
+                    <Link
                       key={item.id}
                       href={item.url}
                       onClick={onClose}
@@ -224,7 +225,7 @@ export function MobileMenu({
                         }`}
                       />
                       <span className="truncate">{item.label}</span>
-                    </a>
+                    </Link>
                   );
                 })}
               </div>

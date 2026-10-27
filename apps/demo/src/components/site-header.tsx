@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import Link from "next/link";
 import { Layers, Menu, X } from "lucide-react";
 import { CMSPageData, CMSNavigationSection } from "@next-booking/cms-core";
 import { ThemeToggle } from "./theme-toggle";
@@ -45,14 +46,14 @@ export function SiteHeader({
   return (
     <header className="border-b border-border bg-background/85 backdrop-blur sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between relative">
-        <a href="/" className="flex items-center gap-3">
+        <Link href="/" className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
             <Layers className="w-5 h-5" />
           </div>
           <span className="text-base font-bold tracking-tight">
             {rootSection?.name || "NextBooking"}
           </span>
-        </a>
+        </Link>
 
         <div className="flex items-center gap-2">
           <ThemeToggle />

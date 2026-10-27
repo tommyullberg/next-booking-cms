@@ -102,6 +102,7 @@ export async function handleSaveTextField(req: NextRequest) {
   try {
     const body = await req.json();
     const result = await saveTextFieldAction(body);
+    revalidateBookingCaches();
     return NextResponse.json({ success: true, field: result });
   } catch (err: any) {
     return NextResponse.json(
@@ -115,6 +116,7 @@ export async function handleSaveImageField(req: NextRequest) {
   try {
     const body = await req.json();
     const result = await saveImageFieldAction(body);
+    revalidateBookingCaches();
     return NextResponse.json({ success: true, field: result });
   } catch (err: any) {
     return NextResponse.json(
@@ -212,26 +214,31 @@ export async function handleCmsApiRoute(
     if (path === "pages" || path.startsWith("pages/")) {
       const body = await req.json();
       const result = await savePageAction(body);
+      revalidateBookingCaches();
       return NextResponse.json(result);
     }
     if (path === "sections") {
       const body = await req.json();
       const result = await saveSectionAction(body);
+      revalidateBookingCaches();
       return NextResponse.json(result);
     }
     if (path === "sections/reorder") {
       const body = await req.json();
       const result = await reorderSectionsAction(body.orderedIds || []);
+      revalidateBookingCaches();
       return NextResponse.json(result);
     }
     if (path === "navigation-menus/item") {
       const body = await req.json();
       const result = await updateNavigationMenuItemAction(body);
+      revalidateBookingCaches();
       return NextResponse.json(result);
     }
     if (path === "navigation-menus/reorder") {
       const body = await req.json();
       const result = await reorderNavigationMenuItemsAction(body.items || []);
+      revalidateBookingCaches();
       return NextResponse.json(result);
     }
     if (path === "categories/types") {
@@ -550,12 +557,14 @@ export async function handleCmsApiRoute(
     if (path.startsWith("pages/")) {
       const pageId = path.replace("pages/", "");
       await deletePageAction(pageId);
+      revalidateBookingCaches();
       return NextResponse.json({ success: true });
     }
 
     if (path.startsWith("sections/")) {
       const secId = path.replace("sections/", "");
       await deleteSectionAction(secId);
+      revalidateBookingCaches();
       return NextResponse.json({ success: true });
     }
 
