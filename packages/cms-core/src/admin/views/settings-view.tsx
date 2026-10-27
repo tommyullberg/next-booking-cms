@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Globe, Calendar, Link2, Info, Check, Save, Lock } from "lucide-react";
+import { Globe, Check, Save, Lock } from "lucide-react";
 import { FlagIcon } from "../../components/ui/flag-icon";
 
 export interface SettingsViewProps {
   activeLanguages: string[];
-  bookingIcalUrl: string;
+  bookingIcalUrl?: string;
   onSaveSettings: (data: {
     activeLanguages: string[];
-    bookingIcalUrl: string;
+    bookingIcalUrl?: string;
   }) => Promise<void>;
 }
 
@@ -72,17 +72,12 @@ export function SettingsView({
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
     Array.from(new Set(["sv", ...activeLanguages]))
   );
-  const [icalUrl, setIcalUrl] = useState(bookingIcalUrl || "");
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
     setSelectedLanguages(Array.from(new Set(["sv", ...activeLanguages])));
   }, [activeLanguages]);
-
-  useEffect(() => {
-    setIcalUrl(bookingIcalUrl || "");
-  }, [bookingIcalUrl]);
 
   const toggleLanguage = (locale: string, locked: boolean) => {
     if (locked) return;
@@ -100,7 +95,7 @@ export function SettingsView({
     try {
       await onSaveSettings({
         activeLanguages: Array.from(new Set(["sv", ...selectedLanguages])),
-        bookingIcalUrl: icalUrl.trim(),
+        bookingIcalUrl: bookingIcalUrl || "",
       });
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
@@ -118,15 +113,14 @@ export function SettingsView({
             Settings
           </h1>
           <p className="mt-1 text-xs text-slate-400">
-            Configure active site languages for multi-language content and
-            external iCal calendar synchronization.
+            Configure active site languages for multi-language content across the CMS.
           </p>
         </div>
 
         <button
           type="submit"
           disabled={isSaving}
-          className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/25 hover:bg-sky-500 disabled:opacity-50 transition shrink-0"
+          className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/25 hover:bg-sky-500 disabled:opacity-50 transition shrink-0 cursor-pointer"
         >
           {savedSuccess ? (
             <>
@@ -213,72 +207,6 @@ export function SettingsView({
               </label>
             );
           })}
-        </div>
-      </div>
-
-      {/* Card 2: Booking iCal Integration */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/50 p-6 shadow-xl">
-        <div className="flex items-start gap-3 mb-5 pb-4 border-b border-slate-800/80">
-          <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
-            <Calendar className="w-4 h-4" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-white">
-              Booking iCal Integration
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">
-              Connect an external iCal (.ics) feed to automatically block dates
-              and import external reservations into the booking calendar.
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="ical-feed-input"
-              className="text-xs font-medium text-slate-200"
-            >
-              External iCal Feed URL
-            </label>
-
-            {/* [i] Info Tooltip */}
-            <div className="relative group inline-flex items-center">
-              <button
-                type="button"
-                aria-label="iCal synchronization info"
-                className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-800 border border-slate-700 text-slate-400 hover:text-sky-400 hover:border-sky-500/50 transition"
-              >
-                <Info className="w-2.5 h-2.5" />
-              </button>
-              <div className="pointer-events-none opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-150 absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 rounded-xl border border-slate-700 bg-slate-950 p-3 text-[11px] leading-relaxed text-slate-200 shadow-2xl z-30">
-                One-way synchronization: External bookings from this iCal URL
-                (e.g. Airbnb, Booking.com, or Google Calendar) are imported as
-                blocked/occupied dates into NextBooking. Changes made in
-                NextBooking will not overwrite the external source calendar.
-              </div>
-            </div>
-          </div>
-
-          {/* Input Group with Left Icon */}
-          <div className="flex items-center rounded-xl border border-slate-800 bg-slate-950/90 focus-within:border-sky-500/80 transition overflow-hidden">
-            <div className="flex items-center justify-center px-3.5 py-2.5 border-r border-slate-800 bg-slate-900/70 text-slate-400">
-              <Link2 className="w-4 h-4" />
-            </div>
-            <input
-              id="ical-feed-input"
-              type="url"
-              value={icalUrl}
-              onChange={(e) => setIcalUrl(e.target.value)}
-              placeholder="https://.../calendar.ics"
-              className="w-full bg-transparent px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none font-mono"
-            />
-          </div>
-          <p className="text-[11px] text-slate-500">
-            Provide a valid public <code className="text-slate-400">.ics</code>{" "}
-            URL. Background synchronization runs automatically at scheduled
-            intervals.
-          </p>
         </div>
       </div>
     </form>

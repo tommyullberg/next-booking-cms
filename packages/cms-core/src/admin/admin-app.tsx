@@ -809,7 +809,7 @@ export function AdminApp({
             bookingIcalUrl={bookingIcalUrl}
             onSaveSettings={async (newSettings) => {
               setActiveLanguages(newSettings.activeLanguages);
-              setBookingIcalUrl(newSettings.bookingIcalUrl);
+              setBookingIcalUrl(newSettings.bookingIcalUrl || "");
               try {
                 const res = await fetch("/api/cms/settings", {
                   method: "POST",
