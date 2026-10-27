@@ -118,7 +118,7 @@ export function MobileMenu({
         onClick={onClose}
         className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-tight transition ${
           isRootActive
-            ? "bg-primary text-primary-foreground shadow-sm"
+            ? "bg-slate-300 text-slate-950 shadow-sm dark:bg-slate-700 dark:text-white"
             : "text-slate-800 dark:text-slate-200 hover:bg-slate-200/90 dark:hover:bg-slate-800 hover:text-slate-950 dark:hover:text-white focus:bg-slate-200/90 dark:focus:bg-slate-800 focus:outline-none"
         }`}
       >
@@ -140,11 +140,17 @@ export function MobileMenu({
                 onClick={onClose}
                 className={`group flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition ${
                   isActive
-                    ? "bg-primary/20 text-primary font-bold shadow-xs dark:bg-primary/25 dark:text-primary-foreground"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-200/80 dark:hover:bg-slate-800/80 focus:bg-slate-200/80 dark:focus:bg-slate-800/80 focus:outline-none"
+                    ? "bg-slate-300 text-slate-950 font-bold shadow-xs dark:bg-slate-700 dark:text-white"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-slate-800 focus:bg-slate-200/80 dark:focus:bg-slate-800 focus:outline-none"
                 }`}
               >
-                <CornerDownRight className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                <CornerDownRight
+                  className={`w-3.5 h-3.5 shrink-0 ${
+                    isActive
+                      ? "text-slate-950 dark:text-white"
+                      : "text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300"
+                  }`}
+                />
                 <span className="truncate">{item.label}</span>
               </a>
             );
@@ -172,12 +178,18 @@ export function MobileMenu({
                 onClick={onClose}
                 className={`group flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition ${
                   isSectionActive
-                    ? "bg-primary/20 text-primary font-bold dark:bg-primary/25 dark:text-primary-foreground"
+                    ? "bg-slate-300 text-slate-950 font-bold dark:bg-slate-700 dark:text-white"
                     : "text-slate-800 dark:text-slate-200 hover:bg-slate-200/90 dark:hover:bg-slate-800 hover:text-slate-950 dark:hover:text-white focus:bg-slate-200/90 dark:focus:bg-slate-800 focus:outline-none"
                 }`}
               >
                 <div className="flex items-center gap-2">
-                  <CornerDownRight className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <CornerDownRight
+                    className={`w-3.5 h-3.5 shrink-0 ${
+                      isSectionActive
+                        ? "text-slate-950 dark:text-white"
+                        : "text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300"
+                    }`}
+                  />
                   <span>{sec.name}</span>
                 </div>
               </a>
@@ -200,11 +212,17 @@ export function MobileMenu({
                       onClick={onClose}
                       className={`group flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                         isActive
-                          ? "bg-primary/20 text-primary font-bold dark:bg-primary/25 dark:text-primary-foreground"
-                          : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-slate-100 hover:bg-slate-200/80 dark:hover:bg-slate-800/80 focus:bg-slate-200/80 dark:focus:bg-slate-800/80 focus:outline-none"
+                          ? "bg-slate-300 text-slate-950 font-bold dark:bg-slate-700 dark:text-white"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-slate-800 focus:bg-slate-200/80 dark:focus:bg-slate-800 focus:outline-none"
                       }`}
                     >
-                      <CornerDownRight className="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" />
+                      <CornerDownRight
+                        className={`w-3 h-3 shrink-0 ${
+                          isActive
+                            ? "text-slate-950 dark:text-white"
+                            : "text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300"
+                        }`}
+                      />
                       <span className="truncate">{item.label}</span>
                     </a>
                   );
