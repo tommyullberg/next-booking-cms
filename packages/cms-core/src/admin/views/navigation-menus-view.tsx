@@ -42,6 +42,7 @@ export function NavigationMenusView({
   const [isSaving, setIsSaving] = useState(false);
 
   const [draggedPageId, setDraggedPageId] = useState<string | null>(null);
+  const [draggedSourceSectionId, setDraggedSourceSectionId] = useState<string | null>(null);
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
 
   // Level 1: Root Section (the section whose start_page_id === 1001)
@@ -85,23 +86,8 @@ export function NavigationMenusView({
   const handleStartAddItem = (sectionId: string) => {
     setEditingItemKey(null);
     setAddingToSectionId(sectionId);
-    const sec = sections.find((s) => s.id === sectionId);
-    const currentItems = sec ? getSectionMenuItems(sec) : [];
-    const currentItemIds = new Set(currentItems.map((i) => Number(i.id)));
-    const eligiblePages = subPages.filter(
-      (p) =>
-        Number(p.id) !== Number(sec?.start_page_id) &&
-        !currentItemIds.has(Number(p.id))
-    );
-    const firstEligible = eligiblePages[0] || subPages[0];
-    setSelectedPageId(
-      firstEligible?.id != null ? String(firstEligible.id) : ""
-    );
-    setEditMenuTitle(
-      (firstEligible as any)?.link_description ||
-        firstEligible?.page_title ||
-        ""
-    );
+    setSelectedPageId("");
+    setEditMenuTitle("");
   };
 
   const handleSaveItem = async (
@@ -141,9 +127,14 @@ export function NavigationMenusView({
     }
   };
 
-  const handleDragStart = (e: React.DragEvent, pageId: number | string) => {
+  const handleDragStart = (
+    e: React.DragEvent,
+    pageId: number | string,
+    sourceSectionId: string
+  ) => {
     const idStr = String(pageId);
     setDraggedPageId(idStr);
+    setDraggedSourceSectionId(sourceSectionId);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", idStr);
   };
@@ -158,23 +149,25 @@ export function NavigationMenusView({
     if (!draggedPageId) return;
     if (targetPageId !== undefined && draggedPageId === String(targetPageId)) {
       setDraggedPageId(null);
+      setDraggedSourceSectionId(null);
       return;
     }
 
     const targetSec = sections.find((s) => s.id === targetSectionId);
     if (!targetSec) {
       setDraggedPageId(null);
+      setDraggedSourceSectionId(null);
       return;
     }
 
     const draggedPage = subPages.find((p) => String(p.id) === draggedPageId);
     if (!draggedPage) {
       setDraggedPageId(null);
+      setDraggedSourceSectionId(null);
       return;
     }
 
-    const sourceSectionId =
-      draggedPage.section?.id || (draggedPage as any).section_id || null;
+    const sourceSectionId = draggedSourceSectionId || targetSectionId;
 
     const updates: Array<{
       pageId: number | string;
@@ -202,20 +195,18 @@ export function NavigationMenusView({
       }
     } else {
       // Moving across sections
-      if (sourceSectionId) {
-        const sourceSec = sections.find((s) => s.id === sourceSectionId);
-        if (sourceSec) {
-          const remaining = getSectionMenuItems(sourceSec).filter(
-            (i) => String(i.id) !== draggedPageId
-          );
-          remaining.forEach((item, idx) => {
-            updates.push({
-              pageId: Number(item.id),
-              sectionId: sourceSectionId,
-              sortOrder: idx + 1,
-            });
+      const sourceSec = sections.find((s) => s.id === sourceSectionId);
+      if (sourceSec) {
+        const remaining = getSectionMenuItems(sourceSec).filter(
+          (i) => String(i.id) !== draggedPageId
+        );
+        remaining.forEach((item, idx) => {
+          updates.push({
+            pageId: Number(item.id),
+            sectionId: sourceSectionId,
+            sortOrder: idx + 1,
           });
-        }
+        });
       }
 
       const targetItems = [...getSectionMenuItems(targetSec)].filter(
@@ -238,6 +229,7 @@ export function NavigationMenusView({
     }
 
     setDraggedPageId(null);
+    setDraggedSourceSectionId(null);
     if (updates.length > 0) {
       await onReorderMenuItems(updates);
     }
@@ -360,7 +352,7 @@ export function NavigationMenusView({
                                     const nextPage = subPages.find(
                                       (p) => String(p.id) === nextId
                                     );
-                                    if (nextPage) {
+                                    if (nextPage && !editMenuTitle.trim()) {
                                       setEditMenuTitle(
                                         (nextPage as any).link_description ||
                                           nextPage.page_title
@@ -369,11 +361,13 @@ export function NavigationMenusView({
                                   }}
                                   className="w-full appearance-none rounded-lg border border-sky-500/50 bg-slate-900/95 pl-3 pr-8 py-1.5 text-xs text-slate-200 focus:border-sky-400 focus:outline-none"
                                 >
-                                  {subPages.map((p) => (
-                                    <option key={p.id} value={String(p.id)}>
-                                      Select Page...  {p.page_title} (#{p.id})
-                                    </option>
-                                  ))}
+                                  {subPages
+                                    .filter((p) => Number(p.id) !== Number(sec.start_page_id))
+                                    .map((p) => (
+                                      <option key={p.id} value={String(p.id)}>
+                                        {p.page_title} (#{p.id})
+                                      </option>
+                                    ))}
                                 </select>
                                 <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                               </div>
@@ -405,7 +399,7 @@ export function NavigationMenusView({
                         <div
                           key={item.id}
                           draggable
-                          onDragStart={(e) => handleDragStart(e, item.id)}
+                          onDragStart={(e) => handleDragStart(e, item.id, sec.id)}
                           onDragOver={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -465,7 +459,7 @@ export function NavigationMenusView({
                             type="text"
                             value={editMenuTitle}
                             onChange={(e) => setEditMenuTitle(e.target.value)}
-                            placeholder="Menu item label"
+                            placeholder="Menyvalets namn (valfritt)"
                             className="w-60 rounded-lg border border-sky-500/60 bg-slate-950/90 px-3.5 py-1.5 text-xs font-medium text-white focus:outline-none"
                           />
                         </div>
@@ -480,7 +474,7 @@ export function NavigationMenusView({
                                 const nextPage = subPages.find(
                                   (p) => String(p.id) === nextId
                                 );
-                                if (nextPage) {
+                                if (nextPage && !editMenuTitle.trim()) {
                                   setEditMenuTitle(
                                     (nextPage as any).link_description ||
                                       nextPage.page_title
@@ -489,19 +483,14 @@ export function NavigationMenusView({
                               }}
                               className="w-full appearance-none rounded-lg border border-sky-500/50 bg-slate-900/95 pl-3 pr-8 py-1.5 text-xs text-slate-200 focus:border-sky-400 focus:outline-none"
                             >
-                              {subPages.filter((p) => Number(p.id) !== Number(sec.start_page_id)).length === 0 ? (
-                                <option value="">
-                                  No subpages available — create a page first
-                                </option>
-                              ) : (
-                                subPages
-                                  .filter((p) => Number(p.id) !== Number(sec.start_page_id))
-                                  .map((p) => (
-                                    <option key={p.id} value={String(p.id)}>
-                                      Select Page...  {p.page_title} (#{p.id})
-                                    </option>
-                                  ))
-                              )}
+                              <option value="">-- Välj sida... --</option>
+                              {subPages
+                                .filter((p) => Number(p.id) !== Number(sec.start_page_id))
+                                .map((p) => (
+                                  <option key={p.id} value={String(p.id)}>
+                                    {p.page_title} (#{p.id})
+                                  </option>
+                                ))}
                             </select>
                             <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                           </div>

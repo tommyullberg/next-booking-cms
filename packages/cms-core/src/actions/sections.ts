@@ -2,7 +2,7 @@ import { prisma } from "../db";
 import { HOMEPAGE_ID } from "./pages";
 
 export async function getSectionsAction() {
-  const [sections, navMenuSetting] = await Promise.all([
+  const [sections, allPages, navMenuSetting] = await Promise.all([
     prisma.section.findMany({
       orderBy: { sort_order: "asc" },
       include: {
@@ -20,12 +20,25 @@ export async function getSectionsAction() {
         },
       },
     }),
+    prisma.page.findMany({
+      select: {
+        id: true,
+        page_title: true,
+        link_description: true,
+        slug: true,
+        status: true,
+        sort_order: true,
+        section_id: true,
+      },
+    }),
     prisma.setting
       .findUnique({
         where: { setting_key: "navigation_menus" },
       })
       .catch(() => null),
   ]);
+
+  const pageMap = new Map(allPages.map((p) => [p.id, p]));
 
   let menuConfig: Record<string, Array<{ pageId: number; title?: string }>> = {};
   if (navMenuSetting?.setting_value) {
@@ -48,7 +61,7 @@ export async function getSectionsAction() {
     const menuEntries = menuConfig[s.id] || [];
     const menuItems = menuEntries
       .map((entry) => {
-        const p = s.pages.find((page) => page.id === entry.pageId);
+        const p = pageMap.get(entry.pageId);
         return p
           ? {
               ...p,
@@ -217,6 +230,15 @@ export async function updateNavigationMenuItemAction(params: {
       menuConfig[secId] = [];
     }
 
+    // Ensure targetId (and prevId if different) is removed from any other section
+    for (const secKey of Object.keys(menuConfig)) {
+      if (secKey !== secId) {
+        menuConfig[secKey] = menuConfig[secKey].filter(
+          (e) => e.pageId !== targetId && (prevId ? e.pageId !== prevId : true)
+        );
+      }
+    }
+
     if (prevId && prevId !== targetId) {
       menuConfig[secId] = menuConfig[secId].filter((e) => e.pageId !== prevId);
     }
@@ -293,6 +315,15 @@ export async function reorderNavigationMenuItemsAction(
     }
   }
 
+  // Helper to preserve titles across sections when moving items
+  const findTitleAcrossAll = (pId: number) => {
+    for (const list of Object.values(menuConfig)) {
+      const found = list.find((e) => e.pageId === pId);
+      if (found?.title) return found.title;
+    }
+    return undefined;
+  };
+
   const grouped: Record<
     string,
     Array<{ pageId: number; sortOrder: number }>
@@ -309,14 +340,10 @@ export async function reorderNavigationMenuItemsAction(
 
   for (const [secId, list] of Object.entries(grouped)) {
     list.sort((a, b) => a.sortOrder - b.sortOrder);
-    const existingList = menuConfig[secId] || [];
-    menuConfig[secId] = list.map((l) => {
-      const match = existingList.find((e) => e.pageId === l.pageId);
-      return {
-        pageId: l.pageId,
-        title: match?.title,
-      };
-    });
+    menuConfig[secId] = list.map((l) => ({
+      pageId: l.pageId,
+      title: findTitleAcrossAll(l.pageId),
+    }));
   }
 
   await prisma.setting.upsert({
