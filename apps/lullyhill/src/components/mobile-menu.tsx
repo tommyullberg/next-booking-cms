@@ -110,7 +110,7 @@ export function MobileMenu({
       role="dialog"
       aria-modal="true"
       aria-label="Webbplatsens navigering"
-      className="absolute right-6 top-[calc(100%+8px)] w-72 sm:w-80 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-slate-300/80 dark:border-slate-700/80 bg-slate-100/98 dark:bg-slate-900/98 backdrop-blur-xl shadow-2xl shadow-slate-900/10 dark:shadow-[0_12px_40px_rgba(255,255,255,0.08)] z-50 p-2.5 space-y-1.5 animate-in fade-in-0 zoom-in-95 duration-150"
+      className="absolute right-6 top-[calc(100%+8px)] w-72 sm:w-80 max-h-[calc(100vh-6rem)] overflow-y-auto rounded-2xl border border-slate-300 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 shadow-2xl shadow-slate-900/10 dark:shadow-[0_12px_40px_rgba(255,255,255,0.08)] z-50 p-2.5 space-y-1.5 animate-in fade-in-0 zoom-in-95 duration-150"
     >
       {/* Root Section (Hem) */}
       <a
