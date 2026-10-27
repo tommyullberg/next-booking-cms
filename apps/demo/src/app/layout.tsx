@@ -33,7 +33,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-screen bg-background text-foreground antialiased transition-colors duration-200">
+      <body
+        suppressHydrationWarning
+        className="min-h-screen bg-background text-foreground antialiased transition-colors duration-200"
+      >
         <CMSAuthProvider>{children}</CMSAuthProvider>
       </body>
     </html>

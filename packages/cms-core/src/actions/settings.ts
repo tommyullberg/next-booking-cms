@@ -2,7 +2,7 @@ import { prisma } from "../db";
 
 export interface CmsSettingsData {
   activeLanguages: string[];
-  bookingIcalUrl: string;
+  adminLanguage: "en" | "sv";
 }
 
 const DEFAULT_ACTIVE_LANGUAGES = ["sv", "en", "de"];
@@ -12,13 +12,13 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
     const rows = await prisma.setting.findMany({
       where: {
         setting_key: {
-          in: ["active_languages", "booking_ical_url"],
+          in: ["active_languages", "admin_language"],
         },
       },
     });
 
     const langRow = rows.find((r) => r.setting_key === "active_languages");
-    const icalRow = rows.find((r) => r.setting_key === "booking_ical_url");
+    const adminLangRow = rows.find((r) => r.setting_key === "admin_language");
 
     let activeLanguages = DEFAULT_ACTIVE_LANGUAGES;
     if (langRow?.setting_value) {
@@ -34,14 +34,17 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
       }
     }
 
+    const adminLanguage: "en" | "sv" =
+      adminLangRow?.setting_value === "sv" ? "sv" : "en";
+
     return {
       activeLanguages,
-      bookingIcalUrl: icalRow?.setting_value || "",
+      adminLanguage,
     };
   } catch {
     return {
       activeLanguages: DEFAULT_ACTIVE_LANGUAGES,
-      bookingIcalUrl: "",
+      adminLanguage: "en",
     };
   }
 }
@@ -63,13 +66,14 @@ export async function saveCmsSettingsAction(
     });
   }
 
-  if (data.bookingIcalUrl !== undefined) {
+  if (data.adminLanguage) {
+    const adminLangValue = data.adminLanguage === "sv" ? "sv" : "en";
     await prisma.setting.upsert({
-      where: { setting_key: "booking_ical_url" },
-      update: { setting_value: data.bookingIcalUrl.trim() },
+      where: { setting_key: "admin_language" },
+      update: { setting_value: adminLangValue },
       create: {
-        setting_key: "booking_ical_url",
-        setting_value: data.bookingIcalUrl.trim(),
+        setting_key: "admin_language",
+        setting_value: adminLangValue,
       },
     });
   }

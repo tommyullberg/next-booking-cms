@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Globe, Check, Save, Lock } from "lucide-react";
+import { Globe, Languages, Check, Save, Lock } from "lucide-react";
 import { FlagIcon } from "../../components/ui/flag-icon";
 
 export interface SettingsViewProps {
   activeLanguages: string[];
-  bookingIcalUrl?: string;
+  adminLanguage?: "en" | "sv";
   onSaveSettings: (data: {
     activeLanguages: string[];
-    bookingIcalUrl?: string;
+    adminLanguage: "en" | "sv";
   }) => Promise<void>;
 }
 
@@ -64,13 +64,33 @@ const AVAILABLE_LANGUAGES = [
   },
 ];
 
+const ADMIN_LANGUAGES = [
+  {
+    locale: "en" as const,
+    code: "GB",
+    name: "English",
+    subtitle: "Default administration interface language",
+    isDefault: true,
+  },
+  {
+    locale: "sv" as const,
+    code: "SE",
+    name: "Svenska",
+    subtitle: "Svenskt administrationsgränssnitt",
+    isDefault: false,
+  },
+];
+
 export function SettingsView({
   activeLanguages,
-  bookingIcalUrl,
+  adminLanguage = "en",
   onSaveSettings,
 }: SettingsViewProps) {
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
     Array.from(new Set(["sv", ...activeLanguages]))
+  );
+  const [selectedAdminLanguage, setSelectedAdminLanguage] = useState<"en" | "sv">(
+    adminLanguage || "en"
   );
   const [isSaving, setIsSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
@@ -78,6 +98,12 @@ export function SettingsView({
   useEffect(() => {
     setSelectedLanguages(Array.from(new Set(["sv", ...activeLanguages])));
   }, [activeLanguages]);
+
+  useEffect(() => {
+    if (adminLanguage) {
+      setSelectedAdminLanguage(adminLanguage);
+    }
+  }, [adminLanguage]);
 
   const toggleLanguage = (locale: string, locked: boolean) => {
     if (locked) return;
@@ -95,7 +121,7 @@ export function SettingsView({
     try {
       await onSaveSettings({
         activeLanguages: Array.from(new Set(["sv", ...selectedLanguages])),
-        bookingIcalUrl: bookingIcalUrl || "",
+        adminLanguage: selectedAdminLanguage,
       });
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
@@ -113,7 +139,7 @@ export function SettingsView({
             Settings
           </h1>
           <p className="mt-1 text-xs text-slate-400">
-            Configure active site languages for multi-language content across the CMS.
+            Configure active site languages and admin interface preferences.
           </p>
         </div>
 
@@ -136,7 +162,7 @@ export function SettingsView({
         </button>
       </div>
 
-      {/* Card 1: Language Configuration */}
+      {/* Card 1: Site Language Configuration */}
       <div className="rounded-2xl border border-slate-800/90 bg-slate-900/50 p-6 shadow-xl">
         <div className="flex items-start gap-3 mb-5 pb-4 border-b border-slate-800/80">
           <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
@@ -144,10 +170,10 @@ export function SettingsView({
           </div>
           <div>
             <h2 className="text-base font-semibold text-white">
-              Language Configuration
+              Site Language Configuration
             </h2>
             <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">
-              Select which languages are active across the CMS. Active languages
+              Select which languages are active across public pages. Active languages
               automatically appear in Page Editor, Sections, and Inline Text
               Translation modals.
             </p>
@@ -205,6 +231,96 @@ export function SettingsView({
                   </span>
                 )}
               </label>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Card 2: Admin Language Configuration */}
+      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/50 p-6 shadow-xl">
+        <div className="flex items-start gap-3 mb-5 pb-4 border-b border-slate-800/80">
+          <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
+            <Languages className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-base font-semibold text-white">
+              Admin Language Configuration
+            </h2>
+            <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">
+              Select the preferred interface language for the administration dashboard and management tools. Defaults to English.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {ADMIN_LANGUAGES.map((lang) => {
+            const isSelected = selectedAdminLanguage === lang.locale;
+            return (
+              <div
+                key={lang.locale}
+                role="radio"
+                aria-checked={isSelected}
+                tabIndex={0}
+                onClick={() => setSelectedAdminLanguage(lang.locale)}
+                onKeyDown={(e) => {
+                  if (e.key === " " || e.key === "Enter") {
+                    e.preventDefault();
+                    setSelectedAdminLanguage(lang.locale);
+                  }
+                }}
+                className={`flex items-center justify-between gap-3 rounded-xl border p-3.5 transition select-none cursor-pointer ${
+                  isSelected
+                    ? "border-sky-500/60 bg-slate-900/95 hover:border-sky-400 ring-1 ring-sky-500/20"
+                    : "border-slate-800 bg-slate-950/50 hover:border-slate-700 hover:bg-slate-900/60"
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  {/* Custom Styled Radio */}
+                  <div
+                    className={`w-4 h-4 rounded-full flex items-center justify-center border transition shrink-0 ${
+                      isSelected
+                        ? "bg-sky-600 border-sky-500"
+                        : "bg-slate-950 border-slate-700"
+                    }`}
+                  >
+                    <div
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        isSelected ? "bg-white" : "bg-transparent"
+                      }`}
+                    />
+                  </div>
+
+                  <FlagIcon code={lang.locale} size="md" />
+
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-white">
+                        {lang.name}
+                      </span>
+                      <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-300">
+                        {lang.code}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                      {lang.subtitle}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {lang.isDefault && (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-slate-700/80 bg-slate-800/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                      Default
+                    </span>
+                  )}
+                  {isSelected && (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-300">
+                      <Check className="w-2.5 h-2.5" />
+                      <span>Active</span>
+                    </span>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>

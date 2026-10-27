@@ -115,7 +115,7 @@ export function DashboardView({
             onClick={() => onNavigate("settings")}
             className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800 transition"
           >
-            Language & iCal Settings
+            Language Settings
           </button>
         </div>
       </div>

@@ -536,7 +536,7 @@ export async function loadAdminInitialData() {
     }),
     getCmsSettingsAction().catch((err) => {
       console.error("[cms-core] getCmsSettingsAction failed:", err);
-      return { activeLanguages: ["sv", "en", "de"], bookingIcalUrl: "" };
+      return { activeLanguages: ["sv", "en", "de"], adminLanguage: "en" as const };
     }),
     getLandlordsAction().catch((err) => {
       console.error("[cms-core] getLandlordsAction failed:", err);

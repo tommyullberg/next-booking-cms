@@ -37,7 +37,7 @@ export interface AdminAppProps {
   initialMailTemplates?: MailTemplateItem[];
   initialSettings?: {
     activeLanguages: string[];
-    bookingIcalUrl: string;
+    adminLanguage?: "en" | "sv";
   };
   availableTemplates?: CMSTemplateOption[];
   adminName?: string;
@@ -102,8 +102,8 @@ export function AdminApp({
   const [activeLanguages, setActiveLanguages] = useState<string[]>(
     initialSettings?.activeLanguages || ["sv", "en", "de"]
   );
-  const [bookingIcalUrl, setBookingIcalUrl] = useState<string>(
-    initialSettings?.bookingIcalUrl || ""
+  const [adminLanguage, setAdminLanguage] = useState<"en" | "sv">(
+    initialSettings?.adminLanguage || "en"
   );
   const [editingPage, setEditingPage] = useState<PageEditorData | null>(null);
 
@@ -139,8 +139,8 @@ export function AdminApp({
               if (Array.isArray(data.settings.activeLanguages)) {
                 setActiveLanguages(data.settings.activeLanguages);
               }
-              if (typeof data.settings.bookingIcalUrl === "string") {
-                setBookingIcalUrl(data.settings.bookingIcalUrl);
+              if (data.settings.adminLanguage === "sv" || data.settings.adminLanguage === "en") {
+                setAdminLanguage(data.settings.adminLanguage);
               }
             }
           }
@@ -156,8 +156,8 @@ export function AdminApp({
             if (Array.isArray(data.activeLanguages)) {
               setActiveLanguages(data.activeLanguages);
             }
-            if (typeof data.bookingIcalUrl === "string") {
-              setBookingIcalUrl(data.bookingIcalUrl);
+            if (data.adminLanguage === "sv" || data.adminLanguage === "en") {
+              setAdminLanguage(data.adminLanguage);
             }
           }
         })
@@ -806,10 +806,12 @@ export function AdminApp({
         {currentTab === "settings" && (
           <SettingsView
             activeLanguages={activeLanguages}
-            bookingIcalUrl={bookingIcalUrl}
+            adminLanguage={adminLanguage}
             onSaveSettings={async (newSettings) => {
               setActiveLanguages(newSettings.activeLanguages);
-              setBookingIcalUrl(newSettings.bookingIcalUrl || "");
+              if (newSettings.adminLanguage) {
+                setAdminLanguage(newSettings.adminLanguage);
+              }
               try {
                 const res = await fetch("/api/cms/settings", {
                   method: "POST",
@@ -821,8 +823,8 @@ export function AdminApp({
                   if (Array.isArray(saved.activeLanguages)) {
                     setActiveLanguages(saved.activeLanguages);
                   }
-                  if (typeof saved.bookingIcalUrl === "string") {
-                    setBookingIcalUrl(saved.bookingIcalUrl);
+                  if (saved.adminLanguage === "sv" || saved.adminLanguage === "en") {
+                    setAdminLanguage(saved.adminLanguage);
                   }
                 }
               } catch {
