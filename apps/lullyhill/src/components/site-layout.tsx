@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   CMSPageProvider,
   InlineEditor,
@@ -8,64 +8,11 @@ import {
   CMSPageData,
   CMSNavigationSection,
 } from "@next-booking/cms-core";
-import { Menu, X, ChevronRight, Home, FolderTree, Sun, Moon } from "lucide-react";
+import { ThemeToggle } from "./theme-toggle";
+import { SiteHeader } from "./site-header";
+import { SiteFooter } from "./site-footer";
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    const isDark = document.documentElement.classList.contains("dark");
-    setTheme(isDark ? "dark" : "light");
-
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem("theme")) {
-        if (e.matches) {
-          document.documentElement.classList.add("dark");
-          setTheme("dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-          setTheme("light");
-        }
-      }
-    };
-    media.addEventListener("change", handler);
-    return () => media.removeEventListener("change", handler);
-  }, []);
-
-  const toggle = () => {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    localStorage.setItem("theme", next);
-    if (next === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  };
-
-  if (!mounted) {
-    return <div className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900" />;
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-sm"
-      title={theme === "dark" ? "Växla till ljust läge" : "Växla till mörkt läge"}
-      aria-label="Växla färgtema"
-    >
-      {theme === "dark" ? (
-        <Sun className="w-4 h-4 text-amber-400" />
-      ) : (
-        <Moon className="w-4 h-4 text-slate-700" />
-      )}
-    </button>
-  );
-}
+export { ThemeToggle, SiteHeader, SiteFooter };
 
 export const emptyFallbackLullyhillPage: CMSPageData = {
   id: 1001,
@@ -87,7 +34,6 @@ export function LullyhillSiteLayout({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navSections: CMSNavigationSection[] = page.navigation_sections || [];
   const rootSection = navSections.find((s) => s.is_root);
-  const childSections = navSections.filter((s) => !s.is_root);
 
   return (
     <CMSQueryProvider>
@@ -97,172 +43,15 @@ export function LullyhillSiteLayout({
           data-template={page.template_name}
           className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 selection:bg-sky-100 selection:text-sky-900"
         >
-          {/* Header with Hamburger Menu */}
-          <header className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/85 backdrop-blur sticky top-0 z-40 transition-colors">
-            <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
-              <a href="/" className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-sky-700 text-white flex items-center justify-center font-serif text-lg shadow-md shadow-sky-900/10">
-                  L
-                </div>
-                <div>
-                  <span className="text-base font-semibold tracking-wider uppercase font-serif text-slate-900 dark:text-white block">
-                    {rootSection?.name || "Villa Lullyhill"}
-                  </span>
-                </div>
-              </a>
+          {/* Extracted Header */}
+          <SiteHeader
+            page={page}
+            isMenuOpen={isMenuOpen}
+            onToggleMenu={() => setIsMenuOpen((prev) => !prev)}
+            onCloseMenu={() => setIsMenuOpen(false)}
+          />
 
-              <div className="flex items-center gap-2">
-                <ThemeToggle />
-                <button
-                  type="button"
-                  onClick={() => setIsMenuOpen((prev) => !prev)}
-                  aria-expanded={isMenuOpen}
-                  aria-label="Toggle navigation menu"
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition shadow-sm"
-                >
-                  {isMenuOpen ? (
-                    <X className="w-4 h-4" />
-                  ) : (
-                    <Menu className="w-4 h-4" />
-                  )}
-                  <span>Menu</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Expandable Hamburger Navigation Menu built from Sections & Navigation Menus */}
-            {isMenuOpen && (
-              <div className="border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md shadow-xl">
-                <nav
-                  aria-label="Site navigation"
-                  className="max-w-6xl mx-auto px-6 py-6 space-y-6"
-                >
-                  {/* Root Section (Page 1001) */}
-                  <div className="space-y-2">
-                    <a
-                      href="/"
-                      onClick={() => setIsMenuOpen(false)}
-                      className={`inline-flex items-center gap-2 text-sm font-bold transition ${
-                        Number(page.id) === 1001
-                          ? "text-sky-600 dark:text-sky-400"
-                          : "text-slate-900 dark:text-slate-100 hover:text-sky-600 dark:hover:text-sky-400"
-                      }`}
-                    >
-                      <Home className="w-4 h-4" />
-                      <span>{rootSection?.name || "Home"}</span>
-                    </a>
-
-                    {rootSection && rootSection.items.length > 0 && (
-                      <ul className="pl-6 space-y-1.5 border-l border-slate-200 dark:border-slate-800 ml-2">
-                        {rootSection.items.map((item) => {
-                          const isActive = Number(page.id) === item.id;
-                          return (
-                            <li key={item.id}>
-                              <a
-                                href={item.url}
-                                onClick={() => setIsMenuOpen(false)}
-                                className={`inline-flex items-center gap-2 text-xs py-1 transition ${
-                                  isActive
-                                    ? "font-bold text-sky-600 dark:text-sky-400"
-                                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                                }`}
-                              >
-                                <ChevronRight className="w-3.5 h-3.5" />
-                                <span>{item.label}</span>
-                                {item.status !== "PUBLISHED" && (
-                                  <span
-                                    className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
-                                      item.status === "NEW"
-                                        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-                                        : "bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30"
-                                    }`}
-                                  >
-                                    {item.status}
-                                  </span>
-                                )}
-                              </a>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    )}
-                  </div>
-
-                  {/* Level 2 Sections & their Navigation Menu Items */}
-                  {childSections.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 pt-4 border-t border-slate-200 dark:border-slate-800">
-                      {childSections.map((sec) => {
-                        const isSectionPageActive =
-                          sec.start_page_id != null &&
-                          Number(page.id) === Number(sec.start_page_id);
-
-                        return (
-                          <div key={sec.id} className="space-y-2.5">
-                            <div className="flex items-center gap-2">
-                              <FolderTree className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                              {sec.start_page_url ? (
-                                <a
-                                  href={sec.start_page_url}
-                                  onClick={() => setIsMenuOpen(false)}
-                                  className={`text-xs font-bold uppercase tracking-wider transition ${
-                                    isSectionPageActive
-                                      ? "text-sky-600 dark:text-sky-400"
-                                      : "text-slate-900 dark:text-slate-100 hover:text-sky-600 dark:hover:text-sky-400"
-                                  }`}
-                                >
-                                  {sec.name}
-                                </a>
-                              ) : (
-                                <span className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-slate-100">
-                                  {sec.name}
-                                </span>
-                              )}
-                            </div>
-
-                            {sec.items.length > 0 && (
-                              <ul className="space-y-1.5 pl-4 border-l border-slate-200 dark:border-slate-800">
-                                {sec.items.map((item) => {
-                                  const isActive = Number(page.id) === item.id;
-                                  return (
-                                    <li key={item.id}>
-                                      <a
-                                        href={item.url}
-                                        onClick={() => setIsMenuOpen(false)}
-                                        className={`inline-flex items-center gap-2 text-xs py-0.5 transition ${
-                                          isActive
-                                            ? "font-semibold text-sky-600 dark:text-sky-400"
-                                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                                        }`}
-                                      >
-                                        <span>{item.label}</span>
-                                        {item.status !== "PUBLISHED" && (
-                                          <span
-                                            className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
-                                              item.status === "NEW"
-                                                ? "bg-amber-500/15 text-amber-600 border border-amber-500/30"
-                                                : "bg-red-500/15 text-red-600 border border-red-500/30"
-                                            }`}
-                                          >
-                                            {item.status}
-                                          </span>
-                                        )}
-                                      </a>
-                                    </li>
-                                  );
-                                })}
-                              </ul>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </nav>
-              </div>
-            )}
-          </header>
-
-          {/* Main Content */}
+          {/* Template Main Content */}
           <main className="flex-1 max-w-6xl w-full mx-auto px-6 py-12 space-y-12">
             {/* Assigned Categories (if any on this page) */}
             {page.categories && page.categories.length > 0 && (
@@ -281,15 +70,11 @@ export function LullyhillSiteLayout({
             {children}
           </main>
 
-          {/* Footer */}
-          <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 py-10 mt-12 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
-            <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-              <span className="font-serif font-semibold text-slate-900 dark:text-white">
-                {rootSection?.name || "Villa Lullyhill"}
-              </span>
-              <span>{page.page_title}</span>
-            </div>
-          </footer>
+          {/* Extracted Footer */}
+          <SiteFooter
+            brandName={rootSection?.name || "Villa Lullyhill"}
+            pageTitle={page.page_title}
+          />
 
           {/* Floating Inline Editor Toolbar */}
           <InlineEditor adminUrl="/admin" />
