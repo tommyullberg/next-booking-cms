@@ -159,7 +159,12 @@ export function PageEditorView({
 
   // Primary Swedish values
   const [svTitle, setSvTitle] = useState(page.page_title || "");
-  const [svLinkTitle, setSvLinkTitle] = useState(page.link_description || page.page_title || "");
+  const [svLinkTitle, setSvLinkTitle] = useState(() => {
+    if (page.link_description && page.link_description.trim() !== (page.page_title || "").trim()) {
+      return page.link_description;
+    }
+    return "";
+  });
   const [svMetaTitle, setSvMetaTitle] = useState(page.meta_title || "");
   const [svMetaDesc, setSvMetaDesc] = useState(page.meta_description || "");
 
@@ -186,9 +191,15 @@ export function PageEditorView({
     > = {};
     for (const loc of secondaryLocales) {
       const existing = page.translations?.find((t) => t.locale === loc);
+      const existingTitle = existing?.page_title || "";
+      const existingLink = existing?.link_description || "";
+      const customLink =
+        existingLink && existingLink.trim() !== existingTitle.trim()
+          ? existingLink
+          : "";
       map[loc] = {
-        pageTitle: existing?.page_title || "",
-        linkDescription: existing?.link_description || "",
+        pageTitle: existingTitle,
+        linkDescription: customLink,
         metaTitle: existing?.meta_title || "",
         metaDescription: existing?.meta_description || "",
       };
@@ -253,10 +264,14 @@ export function PageEditorView({
           metaTitle: "",
           metaDescription: "",
         };
+        const effPageTitle = useSamePageTitle ? svTitle : current.pageTitle || svTitle;
+        const rawLink = useSameLinkTitle ? svLinkTitle : current.linkDescription;
+        const effLink = rawLink && rawLink.trim() ? rawLink.trim() : null;
+
         return {
           locale: loc,
-          pageTitle: useSamePageTitle ? svTitle : current.pageTitle || svTitle,
-          linkDescription: useSameLinkTitle ? svLinkTitle : current.linkDescription || svLinkTitle,
+          pageTitle: effPageTitle,
+          linkDescription: effLink,
           metaTitle: current.metaTitle || svMetaTitle,
           metaDescription: current.metaDescription || svMetaDesc,
         };
@@ -268,7 +283,7 @@ export function PageEditorView({
         sectionId: sectionId || null,
         categoryIds: selectedCategoryIds,
         pageTitle: svTitle,
-        linkDescription: svLinkTitle,
+        linkDescription: svLinkTitle.trim() || null,
         metaTitle: svMetaTitle,
         metaDescription: svMetaDesc,
         slug: isHomepage
@@ -412,9 +427,9 @@ export function PageEditorView({
               </div>
             </div>
 
-            {/* 2. Link Title (Menu text) */}
+            {/* 2. Link text (if other) */}
             <div className='space-y-2.5'>
-              <label className='block text-xs font-medium text-slate-200'>Link Title (Menu text)</label>
+              <label className='block text-xs font-medium text-slate-200'>Link text (if other)</label>
 
               {/* Primary Language (SE) */}
               <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
@@ -424,9 +439,9 @@ export function PageEditorView({
                 </span>
                 <input
                   type='text'
-                  value={svLinkDescOrTitle(svLinkTitle)}
+                  value={svLinkTitle}
                   onChange={(e) => setSvLinkTitle(e.target.value)}
-                  placeholder='Menytext på svenska...'
+                  placeholder={svTitle.trim() || 'Link text in Swedish...'}
                   className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none'
                 />
               </div>
@@ -439,6 +454,11 @@ export function PageEditorView({
                     flag: "",
                     label: loc,
                   };
+                  const locPageTitle =
+                    translations[loc]?.pageTitle?.trim() ||
+                    (useSamePageTitle ? svTitle.trim() : "");
+                  const locPlaceholder = locPageTitle || `Link text in ${meta.label}...`;
+
                   return (
                     <div
                       key={loc}
@@ -451,7 +471,7 @@ export function PageEditorView({
                         type='text'
                         value={translations[loc]?.linkDescription || ""}
                         onChange={(e) => updateTranslation(loc, "linkDescription", e.target.value)}
-                        placeholder={`Menu link text in ${meta.label}...`}
+                        placeholder={locPlaceholder}
                         className='w-full bg-transparent px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
                       />
                     </div>
@@ -467,7 +487,7 @@ export function PageEditorView({
                     onChange={(e) => setUseSameLinkTitle(e.target.checked)}
                     className='h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-950'
                   />
-                  <span>Use same title for all languages (Hide translations)</span>
+                  <span>Use same link text for all languages (Hide translations)</span>
                 </label>
 
                 {useSameLinkTitle && (
@@ -1005,8 +1025,4 @@ export function PageEditorView({
       </div>
     </div>
   );
-}
-
-function svLinkDescOrTitle(val: string): string {
-  return val;
 }

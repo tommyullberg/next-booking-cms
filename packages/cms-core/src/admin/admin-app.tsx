@@ -629,6 +629,7 @@ export function AdminApp({
             pages={pages}
             sections={sections}
             availableTemplates={availableTemplates}
+            activeLanguages={activeLanguages}
             onEditPage={handleEditPage}
             onCreatePage={handleCreatePageInternal}
             onDeletePage={handleDeletePageInternal}

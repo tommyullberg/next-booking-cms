@@ -12,6 +12,8 @@ import {
   DEFAULT_CMS_TEMPLATES,
   formatTemplateLabel,
 } from "../../templates/types";
+import { FlagIcon } from "../../components/ui/flag-icon";
+import { LANGUAGE_META } from "../../constants/languages";
 
 export interface PageListItem {
   id: number | string;
@@ -29,12 +31,15 @@ export interface PagesViewProps {
   pages: PageListItem[];
   sections: Array<{ id: string; name: string; start_page_id?: number | string | null }>;
   availableTemplates?: CMSTemplateOption[];
+  activeLanguages?: string[];
+  activeLocales?: string[];
   onEditPage: (pageId: number | string) => void;
   onCreatePage: (data: {
     pageTitle: string;
     slug: string;
     templateName: string;
     sectionId?: string | null;
+    translations?: Array<{ locale: string; pageTitle: string }>;
   }) => Promise<void>;
   onDeletePage: (pageId: number | string) => Promise<void>;
 }
@@ -43,17 +48,23 @@ export function PagesView({
   pages,
   sections,
   availableTemplates = DEFAULT_CMS_TEMPLATES,
+  activeLanguages,
+  activeLocales,
   onEditPage,
   onCreatePage,
   onDeletePage,
 }: PagesViewProps) {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
+  const [newTitleSv, setNewTitleSv] = useState("");
+  const [newTranslations, setNewTranslations] = useState<Record<string, string>>({});
   const [newSlug, setNewSlug] = useState("");
   const [newTemplate, setNewTemplate] = useState("article");
   const [newSectionId, setNewSectionId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const effectiveLocales = activeLocales || activeLanguages || ["sv", "en"];
+  const secondaryLocales = effectiveLocales.filter((l) => l !== "sv");
 
   const nextIdPreview =
     pages.reduce((max, p) => Math.max(max, Number(p.id) || 1001), 1001) + 1;
@@ -71,22 +82,31 @@ export function PagesView({
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim()) return;
+    if (!newTitleSv.trim()) return;
     const cleanedSlug = cleanSlugInput(newSlug, false);
     const check = validateSlugInput(cleanedSlug, { existingPages: pages });
     if (!check.isValid) return;
 
     setIsSubmitting(true);
     try {
+      const translationPayload = secondaryLocales.map((loc) => ({
+        locale: loc,
+        pageTitle: (newTranslations[loc] || "").trim() || newTitleSv.trim(),
+      }));
+
       await onCreatePage({
-        pageTitle: newTitle.trim(),
+        pageTitle: newTitleSv.trim(),
         slug: cleanedSlug,
         templateName: newTemplate,
         sectionId: newSectionId || null,
+        translations: translationPayload,
       });
       setIsModalOpen(false);
-      setNewTitle("");
+      setNewTitleSv("");
+      setNewTranslations({});
       setNewSlug("");
+      setNewSectionId("");
+      setNewTemplate("article");
     } finally {
       setIsSubmitting(false);
     }
@@ -267,17 +287,58 @@ export function PagesView({
             <h2 className="text-base font-semibold mb-4">Create New Page</h2>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-slate-300 mb-1.5">
                   Page Title
                 </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. About Us, Cottages"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
-                />
+                <div className="space-y-2">
+                  {/* Primary Language (SE) */}
+                  <div className="flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition">
+                    <span className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20">
+                      <FlagIcon code="sv" size="sm" />
+                      <span className="font-mono text-[11px]">{LANGUAGE_META.sv?.code || "SE"}</span>
+                    </span>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Sidrubrik på svenska..."
+                      value={newTitleSv}
+                      onChange={(e) => setNewTitleSv(e.target.value)}
+                      className="w-full bg-transparent px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Secondary Active Languages */}
+                  {secondaryLocales.map((loc) => {
+                    const meta = LANGUAGE_META[loc] || {
+                      code: loc.toUpperCase(),
+                      flag: "",
+                      label: loc,
+                    };
+                    return (
+                      <div
+                        key={loc}
+                        className="flex items-center rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition"
+                      >
+                        <span className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20">
+                          <FlagIcon code={loc} size="sm" />
+                          <span className="font-mono text-[11px]">{meta.code}</span>
+                        </span>
+                        <input
+                          type="text"
+                          value={newTranslations[loc] || ""}
+                          onChange={(e) =>
+                            setNewTranslations((prev) => ({
+                              ...prev,
+                              [loc]: e.target.value,
+                            }))
+                          }
+                          placeholder={`Page title in ${meta.label}...`}
+                          className="w-full bg-transparent px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               <div>
