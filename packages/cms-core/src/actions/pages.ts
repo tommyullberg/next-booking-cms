@@ -7,6 +7,7 @@ import {
   cleanSlugInput,
   validateSlugInput,
   isDefaultIdOrRootSlug,
+  RESERVED_SLUG_PREFIXES,
 } from "../utils/slug";
 import {
   DEFAULT_ACTIVE_LANGUAGES,
@@ -33,18 +34,7 @@ export function isPageVisibleToVisitor(page: {
   return true;
 }
 
-export const SLUG_BLACKLIST = [
-  "admin",
-  "api",
-  "login",
-  "auth",
-  "dashboard",
-  "settings",
-  "booking",
-  "uploads",
-  "static",
-  "_next",
-];
+export const SLUG_BLACKLIST = RESERVED_SLUG_PREFIXES;
 
 export function sanitizeSlug(
   rawSlug: string,

@@ -19,6 +19,9 @@ import {
 } from "lucide-react";
 import { BookingObjectItem } from "./booking-objects-view";
 import { getWeeksInYear } from "../../utils/weeks";
+import type { MissingWeekRange } from "../../actions/price-periods";
+
+export type { MissingWeekRange };
 
 export interface PricePeriodItem {
   id: string;
@@ -46,10 +49,7 @@ export interface PricePeriodItem {
   };
 }
 
-export interface MissingWeekRange {
-  startWeek: number;
-  endWeek: number;
-}
+
 
 export interface ObjectPricesViewProps {
   objects: BookingObjectItem[];

@@ -18,3 +18,4 @@ export type AdminTab =
   | "mail-templates";
 
 export type PageStatus = "NEW" | "PUBLISHED" | "ARCHIVED";
+

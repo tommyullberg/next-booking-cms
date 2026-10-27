@@ -6,3 +6,4 @@ export interface CmsSettingsData {
 }
 
 export type { AdminLanguage, SupportedLocale };
+

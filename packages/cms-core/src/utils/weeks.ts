@@ -2,6 +2,11 @@
  * ISO 8601 week calculation utilities.
  */
 
+export interface ISOWeekInfo {
+  year: number;
+  week: number;
+}
+
 /**
  * Returns the number of ISO 8601 weeks in a given year (52 or 53).
  * A year has 53 ISO weeks if 1 January or 31 December is a Thursday.
@@ -15,7 +20,7 @@ export function getWeeksInYear(year: number): number {
 /**
  * Returns the ISO 8601 week number and year for any given date.
  */
-export function getISOWeekNumber(date: Date | string): { year: number; week: number } {
+export function getISOWeek(date: Date | string): ISOWeekInfo {
   const d = typeof date === "string" ? new Date(date + "T00:00:00") : new Date(date);
   const day = (d.getDay() + 6) % 7; // Monday = 0
   d.setDate(d.getDate() - day + 3); // nearest Thursday
@@ -27,11 +32,18 @@ export function getISOWeekNumber(date: Date | string): { year: number; week: num
 }
 
 /**
+ * Returns only the ISO 8601 week number (1–53) for any given date.
+ */
+export function getISOWeekNumber(date: Date | string): number {
+  return getISOWeek(date).week;
+}
+
+/**
  * Formats a booking week span (e.g. "26" if within same week, or "26–27" across weeks).
  */
 export function formatBookingWeekSpan(startDate: string, endDate: string): string {
-  const startWeek = getISOWeekNumber(startDate).week;
-  const endWeek = getISOWeekNumber(endDate).week;
+  const startWeek = getISOWeekNumber(startDate);
+  const endWeek = getISOWeekNumber(endDate);
   if (startWeek === endWeek) {
     return `${startWeek}`;
   }

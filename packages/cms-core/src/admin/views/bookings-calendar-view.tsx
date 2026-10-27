@@ -32,7 +32,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { BookingItem, BookingObjectDetails } from "../../booking/types";
-import { getISOWeekNumber, formatBookingWeekSpan } from "../../utils/weeks";
+import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "../../utils/weeks";
 
 export interface BookingsCalendarViewProps {
   objects?: BookingObjectDetails[];
@@ -357,7 +357,7 @@ export function BookingsCalendarView({ objects = [] }: BookingsCalendarViewProps
       const weekEndStr = days[6].dateStr;
 
       // Calculate ISO week number for this row
-      const weekNumber = getISOWeekNumber(days[3].dateStr).week; // Thursday in week defines ISO week
+      const weekNumber = getISOWeekNumber(days[3].dateStr); // Thursday in week defines ISO week
 
       // Find bookings overlapping this week (inclusive of check-in and check-out dates)
       const weekBookings = filteredBookings.filter((b) => b.startDate <= weekEndStr && b.endDate >= weekStartStr);
@@ -462,8 +462,8 @@ export function BookingsCalendarView({ objects = [] }: BookingsCalendarViewProps
         comparison = nameA.localeCompare(nameB);
         if (comparison === 0) comparison = a.startDate.localeCompare(b.startDate);
       } else if (sortField === "week") {
-        const aInfo = getISOWeekNumber(a.startDate);
-        const bInfo = getISOWeekNumber(b.startDate);
+        const aInfo = getISOWeek(a.startDate);
+        const bInfo = getISOWeek(b.startDate);
         const aScore = aInfo.year * 100 + aInfo.week;
         const bScore = bInfo.year * 100 + bInfo.week;
         comparison = aScore - bScore;

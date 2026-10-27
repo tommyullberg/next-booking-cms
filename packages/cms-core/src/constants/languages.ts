@@ -129,3 +129,4 @@ export function getLanguageMeta(locale: string): LanguageMetaItem {
     label: normalized ? normalized.toUpperCase() : "Unknown",
   };
 }
+

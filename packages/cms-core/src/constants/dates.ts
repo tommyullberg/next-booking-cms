@@ -2,7 +2,13 @@
  * Centralized date and time constants and formatting utilities.
  */
 
-import { getISOWeekNumber as calcISOWeekNumber } from "../utils/weeks";
+export {
+  getISOWeek,
+  getISOWeekNumber,
+  getWeeksInYear,
+  formatBookingWeekSpan,
+} from "../utils/weeks";
+export type { ISOWeekInfo } from "../utils/weeks";
 
 export const MONTH_NAMES_EN: readonly string[] = [
   "January", "February", "March", "April", "May", "June",
@@ -68,9 +74,5 @@ export function formatDateInput(val?: string | Date | null): string {
   return d.toISOString().split("T")[0];
 }
 
-/**
- * Re-exports ISO week number calculation.
- */
-export function getISOWeekNumber(date: Date | string): number {
-  return calcISOWeekNumber(date).week;
-}
+
+
