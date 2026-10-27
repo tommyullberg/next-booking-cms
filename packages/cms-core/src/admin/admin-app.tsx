@@ -16,6 +16,7 @@ import { ObjectPricesView } from "./views/object-prices-view";
 import { OptionalsView, OptionalItem } from "./views/optionals-view";
 import { AmenitiesView } from "./views/amenities-view";
 import { BookingsDashboardView } from "./views/bookings-dashboard-view";
+import { BookingsCalendarView } from "./views/bookings-calendar-view";
 import { NavigationMenusView } from "./views/navigation-menus-view";
 import { MediaView, MediaItem } from "./views/media-view";
 import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view";
@@ -836,14 +837,7 @@ export function AdminApp({
         )}
 
         {currentTab === "bookings" && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
-            <h2 className="text-lg font-semibold text-white mb-2">
-              Bookings Calendar
-            </h2>
-            <p className="text-xs">
-              Interactive booking calendar synchronized via TanStack Query and iCal feeds.
-            </p>
-          </div>
+          <BookingsCalendarView objects={bookingObjects} />
         )}
 
         {currentTab === "objects" && (

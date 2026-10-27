@@ -57,17 +57,32 @@ export async function getBookingsAction(params?: {
 
     const raw = await prisma.booking.findMany({
       where,
+      include: {
+        object: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
       orderBy: { start_date: "asc" },
     });
 
     return raw.map((b) => ({
       id: b.id,
       objectId: b.object_id,
+      objectName: b.object?.name || "Unknown Object",
       startDate: b.start_date.toISOString().split("T")[0],
       endDate: b.end_date.toISOString().split("T")[0],
       status: b.status,
       customerName: b.customer_name,
+      customerEmail: b.customer_email,
+      customerPhone: b.customer_phone,
+      guestsCount: b.guests_count,
+      petsCount: b.pets_count,
       price: b.price,
+      icalSourceId: b.ical_source_id,
+      createdAt: b.created_at.toISOString(),
     }));
   } catch (error) {
     console.error("[cms-core] Failed to fetch bookings:", error);

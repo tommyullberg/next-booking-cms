@@ -10,6 +10,8 @@ export * from "./views/administrators-view";
 export * from "./views/landlords-view";
 export * from "./views/booking-objects-view";
 export * from "./views/object-prices-view";
+export * from "./views/bookings-calendar-view";
+export * from "./views/bookings-dashboard-view";
 export * from "./views/optionals-view";
 export * from "./views/amenities-view";
 export * from "./views/navigation-menus-view";

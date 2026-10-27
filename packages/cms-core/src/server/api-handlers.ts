@@ -467,7 +467,7 @@ export async function handleCmsApiRoute(
       try {
         const objectId = req.nextUrl.searchParams.get("objectId") || undefined;
         const bookings = await getBookingsAction({ objectId });
-        return NextResponse.json(bookings);
+        return NextResponse.json(bookings, { headers: NO_CACHE_HEADERS });
       } catch (err: any) {
         return NextResponse.json({ error: err?.message }, { status: 500 });
       }

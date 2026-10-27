@@ -1,11 +1,18 @@
 export interface BookingItem {
   id: string;
   objectId: string;
+  objectName?: string;
   startDate: string;
   endDate: string;
   status: "PENDING" | "APPROVED" | "REJECTED" | "IMPORTED";
   customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string | null;
+  guestsCount?: number;
+  petsCount?: number;
   price?: number | null;
+  icalSourceId?: string | null;
+  createdAt?: string;
 }
 
 export interface BookingObjectDetails {
