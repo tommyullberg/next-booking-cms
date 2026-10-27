@@ -213,14 +213,11 @@ export function SectionsView({
         ? `${home.page_title} (Homepage #1001)`
         : "Startsida (Homepage #1001)";
     }
-    if (sec.start_page_id != null) {
+    if (sec.start_page_id != null && sec.start_page_id !== "") {
       const found =
         pages.find((p) => Number(p.id) === Number(sec.start_page_id)) ||
         sec.pages?.find((p) => Number(p.id) === Number(sec.start_page_id));
       if (found) return `${found.page_title} (#${found.id})`;
-    }
-    if (sec.pages && sec.pages.length > 0) {
-      return `${sec.pages[0].page_title} (#${sec.pages[0].id})`;
     }
     return "No start page assigned";
   };
