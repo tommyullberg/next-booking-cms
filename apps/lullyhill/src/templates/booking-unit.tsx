@@ -48,6 +48,10 @@ export function BookingUnitTemplate({ page }: { page: CMSPageData }) {
       </section>
 
       <section className="space-y-4">
+        <CMSField.Gallery nbr={1} />
+      </section>
+
+      <section className="space-y-4">
         <BookingCalendar
           objectId={objectId}
           objectName={objectName}

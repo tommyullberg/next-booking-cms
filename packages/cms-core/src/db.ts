@@ -6,7 +6,11 @@ const connectionString =
   process.env.DATABASE_URL ||
   "postgresql://nextbooking:nextbooking_secret@localhost:5432/nextbooking_cms?schema=public";
 
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+const PRISMA_SCHEMA_VERSION = "2026-10-30-gallery-and-subfolders";
+const globalForPrisma = globalThis as unknown as {
+  prisma?: PrismaClient;
+  prismaSchemaVersion?: string;
+};
 
 function createPrismaClient(): PrismaClient {
   try {
@@ -30,12 +34,14 @@ function createPrismaClient(): PrismaClient {
 }
 
 export const prisma =
-  globalForPrisma.prisma && "mediaFolder" in globalForPrisma.prisma
+  globalForPrisma.prisma &&
+  globalForPrisma.prismaSchemaVersion === PRISMA_SCHEMA_VERSION
     ? globalForPrisma.prisma
     : createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
+  globalForPrisma.prismaSchemaVersion = PRISMA_SCHEMA_VERSION;
 }
 
 export default prisma;

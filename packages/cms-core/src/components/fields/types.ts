@@ -1,3 +1,5 @@
+import { GallerySettings } from "../../types/settings";
+
 export interface CMSNavigationLink {
   id: string;
   link_url: string;
@@ -18,6 +20,18 @@ export interface CMSImage {
   file_url: string;
 }
 
+export interface CMSGalleryItem {
+  id: string;
+  page_id?: number | null;
+  object_id?: string | null;
+  nbr: number;
+  image_id: string;
+  sort_order: number;
+  caption?: string | null;
+  translations?: Record<string, string> | any;
+  image?: CMSImage | null;
+}
+
 export interface CMSFieldTranslation {
   locale: string;
   content: string;
@@ -27,7 +41,7 @@ export interface CMSPageField {
   id: string;
   page_id: number | string;
   nbr: number;
-  field_type: "TEXT" | "IMAGE" | "NAVIGATION";
+  field_type: "TEXT" | "IMAGE" | "NAVIGATION" | "GALLERY";
   class_names?: string | null;
   content?: string | null;
   type?: string | null;
@@ -76,6 +90,7 @@ export interface CMSPageData {
   section?: { id: string; name: string } | null;
   categories?: Array<{ id: string; name: string; category_type_id: string }>;
   navigation_sections?: CMSNavigationSection[];
+  gallery_settings?: GallerySettings;
   page_title: string;
   link_description?: string | null;
   meta_title?: string | null;
@@ -83,6 +98,7 @@ export interface CMSPageData {
   slug: string;
   status: string;
   page_fields: CMSPageField[];
+  galleries?: CMSGalleryItem[];
   translations?: CMSPageTranslation[];
   objects?: any[];
 }

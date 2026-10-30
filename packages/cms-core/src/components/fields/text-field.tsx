@@ -75,7 +75,7 @@ export function CMSTextField({
         onClick={isEditing ? handleClick : undefined}
         className={
           isEditing
-            ? "cursor-pointer outline-dashed outline-2 outline-sky-500 rounded p-1 hover:bg-sky-50/20"
+            ? "cursor-pointer outline-dashed outline-2 outline-sky-500 rounded p-1 hover:bg-sky-500/10"
             : undefined
         }
       >
@@ -88,7 +88,7 @@ export function CMSTextField({
     field?.class_names,
     className,
     isEditing
-      ? "cursor-pointer outline-dashed outline-2 outline-sky-500 rounded p-1 hover:bg-sky-50/20"
+      ? "cursor-pointer outline-dashed outline-2 outline-sky-500 rounded p-1 hover:bg-sky-500/10"
       : "",
   ]
     .filter(Boolean)

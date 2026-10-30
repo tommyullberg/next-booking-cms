@@ -38,6 +38,10 @@ export function CompleteExampleTemplate({ page }: { page: CMSPageData }) {
       </section>
 
       <section className="space-y-4">
+        <CMSField.Gallery nbr={1} />
+      </section>
+
+      <section className="space-y-4">
         <BookingCalendar
           objectId="lullyhill-villa"
           objectName="Villa Lullyhill"

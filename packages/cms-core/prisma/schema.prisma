@@ -29,6 +29,7 @@ enum FieldType {
   TEXT
   IMAGE
   NAVIGATION
+  GALLERY
 }
 
 enum AdminRole {
@@ -97,6 +98,7 @@ model Page {
   translations PageTranslation[]
   objects      BookingObject[]
   categories   Category[]
+  galleries    Gallery[]
 
   @@map("pages")
 }
@@ -303,15 +305,20 @@ model Amenity {
 }
 
 model Gallery {
-  id         String  @id @default(cuid()) @map("id")
-  object_id  String  @map("object_id")
-  image_id   String  @map("image_id")
-  sort_order Int     @default(0) @map("sort_order")
-  caption    String? @map("caption")
+  id           String  @id @default(cuid()) @map("id")
+  object_id    String? @map("object_id")
+  page_id      Int?    @map("page_id")
+  nbr          Int     @default(1) @map("nbr")
+  image_id     String  @map("image_id")
+  sort_order   Int     @default(0) @map("sort_order")
+  caption      String? @map("caption")
+  translations Json?   @map("translations")
 
-  object BookingObject @relation(fields: [object_id], references: [id], onDelete: Cascade)
-  image  FileAndImage  @relation(fields: [image_id], references: [id], onDelete: Cascade)
+  object BookingObject? @relation(fields: [object_id], references: [id], onDelete: Cascade)
+  page   Page?          @relation(fields: [page_id], references: [id], onDelete: Cascade)
+  image  FileAndImage   @relation(fields: [image_id], references: [id], onDelete: Cascade)
 
+  @@index([page_id, nbr, sort_order])
   @@map("galleries")
 }
 

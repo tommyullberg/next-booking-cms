@@ -68,7 +68,7 @@ export function CMSImageField({
         onClick={isEditing ? handleClick : undefined}
         className={
           isEditing
-            ? "cursor-pointer outline-dashed outline-2 outline-amber-500 rounded p-1 hover:bg-amber-50/20"
+            ? "cursor-pointer outline-dashed outline-2 outline-amber-500 rounded p-1 hover:bg-amber-500/10"
             : undefined
         }
       >
@@ -81,7 +81,7 @@ export function CMSImageField({
     field?.class_names,
     className,
     isEditing
-      ? "cursor-pointer outline-dashed outline-2 outline-amber-500 rounded p-1 hover:bg-amber-50/20"
+      ? "cursor-pointer outline-dashed outline-2 outline-amber-500 rounded p-1 hover:bg-amber-500/10"
       : "",
   ]
     .filter(Boolean)
@@ -91,12 +91,12 @@ export function CMSImageField({
     return (
       <div
         onClick={handleClick}
-        className={`flex items-center justify-center border-2 border-dashed border-amber-400 bg-amber-50/30 p-8 text-amber-700 text-sm font-medium ${combinedClasses}`}
+        className={`flex items-center justify-center rounded-2xl border-2 border-dashed border-amber-500/60 dark:border-amber-400/50 bg-amber-500/10 hover:bg-amber-500/15 p-8 text-amber-900 dark:text-amber-300 text-sm font-semibold transition ${combinedClasses}`}
         style={{
           aspectRatio: field?.ratio || "16/9",
         }}
       >
-        Klicka för att välja bild #{nbr}
+        Click to select Image #{nbr}
       </div>
     );
   }

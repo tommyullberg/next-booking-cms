@@ -6,6 +6,7 @@ import { useEditorStore } from "../../state/editor-store";
 import { FloatingPanel, FloatingPanelProps } from "./floating-panel";
 import { TextEditModal, TextEditModalProps } from "./text-edit-modal";
 import { ImageEditModal, ImageEditModalProps } from "./image-edit-modal";
+import { GalleryEditModal, GalleryEditModalProps } from "./gallery-edit-modal";
 import { AdminApp } from "../../admin/admin-app";
 
 export interface InlineEditorProps {
@@ -13,6 +14,7 @@ export interface InlineEditorProps {
   onSaveText?: TextEditModalProps["onSave"];
   onSaveImage?: ImageEditModalProps["onSave"];
   onDeleteImage?: ImageEditModalProps["onDelete"];
+  onSaveGallery?: GalleryEditModalProps["onSave"];
 }
 
 export function InlineEditor({
@@ -20,6 +22,7 @@ export function InlineEditor({
   onSaveText,
   onSaveImage,
   onDeleteImage,
+  onSaveGallery,
 }: InlineEditorProps) {
   const { data: session, status } = useSession();
   const { mode, setMode } = useEditorStore();
@@ -34,6 +37,7 @@ export function InlineEditor({
       <FloatingPanel adminUrl={adminUrl} />
       <TextEditModal onSave={onSaveText} />
       <ImageEditModal onSave={onSaveImage} onDelete={onDeleteImage} />
+      <GalleryEditModal onSave={onSaveGallery} />
       {mode === "administration" && (
         <AdminApp
           isOverlay={true}
@@ -45,4 +49,4 @@ export function InlineEditor({
   );
 }
 
-export { FloatingPanel, TextEditModal, ImageEditModal };
+export { FloatingPanel, TextEditModal, ImageEditModal, GalleryEditModal };

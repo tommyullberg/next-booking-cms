@@ -188,3 +188,103 @@ export async function saveImageFieldAction({
 
   return field;
 }
+
+export interface SaveGalleryFieldItem {
+  imageId?: string | null;
+  imageUrl?: string;
+  caption?: string | null;
+  translations?: Record<string, string> | null;
+  sortOrder?: number;
+}
+
+export interface SaveGalleryFieldParams {
+  pageId: number | string;
+  nbr: number;
+  items: SaveGalleryFieldItem[];
+}
+
+export async function saveGalleryFieldAction({
+  pageId,
+  nbr,
+  items,
+}: SaveGalleryFieldParams) {
+  const numericPageId = Number(pageId) || 1001;
+  const numericNbr = Number(nbr) || 1;
+
+  const resolvedItems: Array<{
+    image_id: string;
+    sort_order: number;
+    caption: string | null;
+    translations: Record<string, string> | undefined;
+  }> = [];
+
+  for (let i = 0; i < (items || []).length; i++) {
+    const item = items[i];
+    let imageId = item.imageId || null;
+
+    if (!imageId && item.imageUrl) {
+      const fileRecord = await ensureLocalMediaFromUrl(item.imageUrl);
+      if (fileRecord) {
+        imageId = fileRecord.id;
+      }
+    } else if (imageId) {
+      // Verify the image exists in FileAndImage
+      const exists = await prisma.fileAndImage.findUnique({
+        where: { id: imageId },
+        select: { id: true },
+      });
+      if (!exists && item.imageUrl) {
+        const fileRecord = await ensureLocalMediaFromUrl(item.imageUrl);
+        if (fileRecord) {
+          imageId = fileRecord.id;
+        }
+      }
+    }
+
+    if (imageId) {
+      resolvedItems.push({
+        image_id: imageId,
+        sort_order: typeof item.sortOrder === "number" ? item.sortOrder : i,
+        caption: item.caption?.trim() || null,
+        translations:
+          item.translations && typeof item.translations === "object"
+            ? item.translations
+            : undefined,
+      });
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.gallery.deleteMany({
+      where: {
+        page_id: numericPageId,
+        nbr: numericNbr,
+      },
+    });
+
+    for (let i = 0; i < resolvedItems.length; i++) {
+      const row = resolvedItems[i];
+      await tx.gallery.create({
+        data: {
+          page_id: numericPageId,
+          nbr: numericNbr,
+          image_id: row.image_id,
+          sort_order: i,
+          caption: row.caption,
+          translations: row.translations ?? undefined,
+        },
+      });
+    }
+  });
+
+  return prisma.gallery.findMany({
+    where: {
+      page_id: numericPageId,
+      nbr: numericNbr,
+    },
+    orderBy: { sort_order: "asc" },
+    include: {
+      image: true,
+    },
+  });
+}

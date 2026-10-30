@@ -93,6 +93,12 @@ export async function getPageByIdAction(id: number | string) {
           amenities: true,
         },
       },
+      galleries: {
+        orderBy: { sort_order: "asc" },
+        include: {
+          image: true,
+        },
+      },
       page_fields: {
         include: {
           image: true,
@@ -120,6 +126,12 @@ export async function getPageBySlugAction(slug: string) {
       objects: {
         include: {
           amenities: true,
+        },
+      },
+      galleries: {
+        orderBy: { sort_order: "asc" },
+        include: {
+          image: true,
         },
       },
       page_fields: {
@@ -224,6 +236,9 @@ export async function resolvePageBySlugOrIdAction(
         navigation_sections?: Awaited<
           ReturnType<typeof getPublicNavigationSectionsAction>
         >;
+        gallery_settings?: Awaited<
+          ReturnType<typeof import("./settings").getCmsSettingsAction>
+        >["gallerySettings"];
       })
     | null;
   shouldRedirectToRoot: boolean;
@@ -231,7 +246,11 @@ export async function resolvePageBySlugOrIdAction(
 }> {
   const session = await getServerSession(authOptions).catch(() => null);
   const isAdmin = Boolean(session?.user);
-  const navigationSections = await getPublicNavigationSectionsAction(isAdmin);
+  const { getCmsSettingsAction } = await import("./settings");
+  const [navigationSections, cmsSettings] = await Promise.all([
+    getPublicNavigationSectionsAction(isAdmin),
+    getCmsSettingsAction().catch(() => null),
+  ]);
 
   const checkAccess = (
     p: Awaited<ReturnType<typeof getPageByIdAction>>,
@@ -249,6 +268,7 @@ export async function resolvePageBySlugOrIdAction(
         page: {
           ...p,
           navigation_sections: navigationSections,
+          gallery_settings: cmsSettings?.gallerySettings,
         },
         shouldRedirectToRoot: shouldRedirect,
         isHiddenFromVisitor: false,

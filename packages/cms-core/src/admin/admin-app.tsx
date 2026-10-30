@@ -24,7 +24,11 @@ import { SettingsView } from "./views/settings-view";
 import { CMSTemplateOption } from "../templates/types";
 import { AmenityItem } from "../booking/types";
 import { AdminTab } from "../types/admin";
-import { CmsSettingsData } from "../types/settings";
+import {
+  CmsSettingsData,
+  DEFAULT_GALLERY_SETTINGS,
+  GallerySettings,
+} from "../types/settings";
 import { AdminLanguage, DEFAULT_ACTIVE_LANGUAGES, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
 
 export interface AdminAppProps {
@@ -118,6 +122,9 @@ export function AdminApp({
   const [adminLanguage, setAdminLanguage] = useState<AdminLanguage>(
     initialSettings?.adminLanguage || DEFAULT_ADMIN_LANGUAGE
   );
+  const [gallerySettings, setGallerySettings] = useState<GallerySettings>(
+    initialSettings?.gallerySettings || { ...DEFAULT_GALLERY_SETTINGS }
+  );
   const [editingPage, setEditingPage] = useState<PageEditorData | null>(null);
 
   useEffect(() => {
@@ -156,6 +163,9 @@ export function AdminApp({
               if (data.settings.adminLanguage === "sv" || data.settings.adminLanguage === "en") {
                 setAdminLanguage(data.settings.adminLanguage);
               }
+              if (data.settings.gallerySettings) {
+                setGallerySettings(data.settings.gallerySettings);
+              }
             }
           }
         })
@@ -172,6 +182,9 @@ export function AdminApp({
             }
             if (data.adminLanguage === "sv" || data.adminLanguage === "en") {
               setAdminLanguage(data.adminLanguage);
+            }
+            if (data.gallerySettings) {
+              setGallerySettings(data.gallerySettings);
             }
           }
         })
@@ -950,10 +963,14 @@ export function AdminApp({
           <SettingsView
             activeLanguages={activeLanguages}
             adminLanguage={adminLanguage}
+            gallerySettings={gallerySettings}
             onSaveSettings={async (newSettings) => {
               setActiveLanguages(newSettings.activeLanguages);
               if (newSettings.adminLanguage) {
                 setAdminLanguage(newSettings.adminLanguage);
+              }
+              if (newSettings.gallerySettings) {
+                setGallerySettings(newSettings.gallerySettings);
               }
               try {
                 const res = await fetch("/api/cms/settings", {
@@ -968,6 +985,9 @@ export function AdminApp({
                   }
                   if (saved.adminLanguage === "sv" || saved.adminLanguage === "en") {
                     setAdminLanguage(saved.adminLanguage);
+                  }
+                  if (saved.gallerySettings) {
+                    setGallerySettings(saved.gallerySettings);
                   }
                 }
               } catch {

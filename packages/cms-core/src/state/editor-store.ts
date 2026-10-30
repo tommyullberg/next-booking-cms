@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { CMSGalleryItem } from "../components/fields/types";
 
 export type EditorMode = "normal" | "text" | "image" | "administration";
 
@@ -6,7 +7,7 @@ export interface SelectedFieldData {
   fieldId?: string;
   pageId: number | string;
   nbr: number;
-  fieldType: "TEXT" | "IMAGE" | "NAVIGATION";
+  fieldType: "TEXT" | "IMAGE" | "NAVIGATION" | "GALLERY";
   content?: string | null;
   translations?: Record<string, string>;
   textType?: string | null;
@@ -21,6 +22,7 @@ export interface SelectedFieldData {
   classNames?: string | null;
   navigationId?: string | null;
   locale?: string;
+  galleryItems?: CMSGalleryItem[];
 }
 
 export interface EditorState {

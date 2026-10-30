@@ -6,9 +6,10 @@
  * Demonstrates every available component and CMSField primitive in @next-booking/cms-core:
  * 1. CMSField.Text (plain & formatted headings, paragraphs, rich blocks)
  * 2. CMSField.Image (with ratio & maxWidth constraints)
- * 3. CMSField.Navigation (render-prop navigation links)
- * 4. BookingCalendar (interactive unit calendar with seasonal pricing & iCal sync)
- * 5. AvailabilitySearch (flexible +- days search engine with guest & pet filters)
+ * 3. CMSField.Gallery (multi-image gallery with drag-and-drop sorting, localized captions & Fancybox lightbox)
+ * 4. CMSField.Navigation (render-prop navigation links)
+ * 5. BookingCalendar (interactive unit calendar with seasonal pricing & iCal sync)
+ * 6. AvailabilitySearch (flexible +- days search engine with guest & pet filters)
  */
 
 import React from "react";
@@ -46,7 +47,12 @@ export function CompleteExampleTemplate({ page }: { page: CMSPageData }) {
         />
       </section>
 
-      {/* 3. Secondary Navigation Field (Render Props) */}
+      {/* 3. Gallery Field (Fancybox Lightbox + Drag & Drop Sorting + Localized Captions) */}
+      <section className="space-y-4">
+        <CMSField.Gallery nbr={1} />
+      </section>
+
+      {/* 4. Secondary Navigation Field (Render Props) */}
       <section className="rounded-2xl border border-border p-6">
         <CMSField.Navigation nbr={2}>
           {(links) => (

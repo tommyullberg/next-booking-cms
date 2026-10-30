@@ -21,6 +21,7 @@ import {
   saveTextFieldAction,
   saveImageFieldAction,
   deleteImageFieldAction,
+  saveGalleryFieldAction,
 } from "../actions/fields";
 import {
   getMediaFilesAction,
@@ -167,6 +168,20 @@ export async function handleDeleteImageField(req: NextRequest) {
   }
 }
 
+export async function handleSaveGalleryField(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const result = await saveGalleryFieldAction(body);
+    revalidateBookingCaches();
+    return NextResponse.json({ success: true, gallery: result });
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, error: err?.message || "Failed to save gallery field" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function handleUploadMedia(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -243,6 +258,7 @@ export async function handleCmsApiRoute(
         const mediaId = path.replace(/^media\//, "").replace(/\/move$/, "");
         const body = await req.json();
         const result = await moveMediaFileAction(mediaId, body.targetFolderId ?? null);
+        revalidateBookingCaches();
         return NextResponse.json(result);
       } catch (err: any) {
         return NextResponse.json({ error: err?.message }, { status: 400 });
@@ -253,6 +269,9 @@ export async function handleCmsApiRoute(
     }
     if (path === "fields/image") {
       return handleSaveImageField(req);
+    }
+    if (path === "fields/gallery") {
+      return handleSaveGalleryField(req);
     }
     if (path === "upload") {
       return handleUploadMedia(req);
@@ -469,6 +488,7 @@ export async function handleCmsApiRoute(
     if (path === "settings") {
       const body = await req.json();
       const result = await saveCmsSettingsAction(body);
+      revalidateBookingCaches();
       return NextResponse.json(result);
     }
     if (path === "ical/sync" || path === "ical/sync-all") {
