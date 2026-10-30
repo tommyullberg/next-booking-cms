@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { BookingOptionalItem } from "../booking/types";
+import { ensureLocalMediaFromUrl } from "./media";
 
 export async function getBookingOptionalsAction(objectId?: string): Promise<BookingOptionalItem[]> {
   try {
@@ -53,10 +54,16 @@ export async function createBookingOptionalAction(data: {
     _max: { sort_order: true },
   }) : null;
 
+  let resolvedImageUrl = data.image_url?.trim() || null;
+  if (resolvedImageUrl && /^https?:\/\//i.test(resolvedImageUrl)) {
+    const fileRecord = await ensureLocalMediaFromUrl(resolvedImageUrl);
+    resolvedImageUrl = fileRecord.file_url;
+  }
+
   const normalized = {
     name: data.name.trim(),
     description: data.description?.trim() || null,
-    image_url: data.image_url?.trim() || null,
+    image_url: resolvedImageUrl,
     object_id: data.object_id?.trim() || null,
     is_active: data.is_active !== undefined ? Boolean(data.is_active) : true,
     price_hour: Number(data.price_hour || 0),
@@ -109,10 +116,16 @@ export async function updateBookingOptionalAction(data: {
   price_week?: number | null;
   sort_order?: number;
 }): Promise<BookingOptionalItem> {
+  let resolvedImageUrl = data.image_url?.trim() || null;
+  if (resolvedImageUrl && /^https?:\/\//i.test(resolvedImageUrl)) {
+    const fileRecord = await ensureLocalMediaFromUrl(resolvedImageUrl);
+    resolvedImageUrl = fileRecord.file_url;
+  }
+
   const normalized: any = {
     name: data.name.trim(),
     description: data.description?.trim() || null,
-    image_url: data.image_url?.trim() || null,
+    image_url: resolvedImageUrl,
     object_id: data.object_id?.trim() || null,
     is_active: data.is_active !== undefined ? Boolean(data.is_active) : true,
     price_hour: Number(data.price_hour || 0),

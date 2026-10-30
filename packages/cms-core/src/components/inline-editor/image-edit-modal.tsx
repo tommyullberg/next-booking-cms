@@ -127,7 +127,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
   const handleDelete = async () => {
     if (
       !confirm(
-        "Vill du tömma detta bildfält? Bilden tas inte bort från Media & Files."
+        "Are you sure you want to clear this image field? The image file will not be deleted from Media & Files."
       )
     ) {
       return;
@@ -246,10 +246,10 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                 type="button"
                 onClick={() => setImageUrl("")}
                 className="absolute top-3 right-3 flex items-center gap-1.5 rounded-lg bg-slate-900/90 border border-slate-700/80 px-2.5 py-1 text-xs text-slate-300 hover:border-red-500/60 hover:bg-red-600 hover:text-white transition shadow-lg backdrop-blur-sm"
-                title="Rensa valt bildval"
+                title="Clear selected image"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Rensa</span>
+                <span>Clear</span>
               </button>
             </div>
           ) : (
@@ -289,10 +289,10 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                       ? "border-amber-500/80 bg-amber-500/10 text-amber-300 ring-2 ring-amber-500/40"
                       : "border-slate-800 bg-slate-900/40 text-slate-400 hover:border-slate-600 hover:text-slate-200"
                   }`}
-                  title="Ingen bild / Töm bildfält"
+                  title="No image / Clear image field"
                 >
                   <Trash2 className="w-5 h-5 mb-1 opacity-70 group-hover:opacity-100" />
-                  <span className="text-[10px] text-center font-medium">Ingen bild</span>
+                  <span className="text-[10px] text-center font-medium">No image</span>
                   {!imageUrl && (
                     <div className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow">
                       <Check className="h-3 w-3 stroke-[3]" />
@@ -346,6 +346,11 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
               className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
               placeholder="https://... or /uploads/..."
             />
+            {/^https?:\/\//i.test(imageUrl.trim()) && (
+              <p className="mt-1.5 text-[11px] text-amber-300/90">
+                External image URL detected — when you save, the image will be automatically downloaded and stored as a physical file in Media & Files.
+              </p>
+            )}
           </div>
 
           <div>
@@ -418,14 +423,14 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                 onClick={handleDelete}
                 disabled={isDeleting || isSaving || isUploading}
                 className="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-xs font-medium text-red-400 hover:border-red-500/60 hover:bg-red-600 hover:text-white transition disabled:opacity-50"
-                title="Töm bildfältet utan att ta bort filen från Media & Files"
+                title="Clear this image field without deleting the file from Media & Files"
               >
                 {isDeleting ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <Trash2 className="w-3.5 h-3.5" />
                 )}
-                <span>Ta bort bild</span>
+                <span>Remove image</span>
               </button>
             ) : null}
           </div>

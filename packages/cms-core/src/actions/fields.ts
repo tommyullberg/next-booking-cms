@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { ensureLocalMediaFromUrl } from "./media";
 
 export interface SaveTextFieldParams {
   pageId: number | string;
@@ -148,20 +149,8 @@ export async function saveImageFieldAction({
     return null;
   }
 
-  // Find or create FileAndImage entry
-  let fileRecord = await prisma.fileAndImage.findFirst({
-    where: { file_url: imageUrl },
-  });
-
-  if (!fileRecord && imageUrl) {
-    const fileName = imageUrl.split("/").pop() || "uploaded-image";
-    fileRecord = await prisma.fileAndImage.create({
-      data: {
-        file_name: fileName,
-        file_url: imageUrl,
-      },
-    });
-  }
+  // Ensure image is stored locally in FileAndImage (downloads external URLs into physical files)
+  const fileRecord = await ensureLocalMediaFromUrl(imageUrl);
 
   const field = await prisma.pageField.upsert({
     where: {

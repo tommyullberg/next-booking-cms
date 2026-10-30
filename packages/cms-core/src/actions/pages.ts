@@ -495,7 +495,7 @@ export async function loadAdminInitialData() {
   const { getSectionsAction } = await import("./sections");
   const { getCategoryTypesAction } = await import("./categories");
   const { getAdministratorsAction } = await import("./administrators");
-  const { getMediaFilesAction } = await import("./media");
+  const { getMediaFilesAction, getMediaFoldersAction } = await import("./media");
   const { getMailTemplatesAction } = await import("../mail");
   const { getCmsSettingsAction } = await import("./settings");
   const { getLandlordsAction } = await import("./landlords");
@@ -509,6 +509,7 @@ export async function loadAdminInitialData() {
     categoryTypes,
     administrators,
     media,
+    mediaFolders,
     mailTemplates,
     settings,
     landlords,
@@ -534,6 +535,10 @@ export async function loadAdminInitialData() {
     }),
     getMediaFilesAction().catch((err) => {
       console.error("[cms-core] getMediaFilesAction failed:", err);
+      return [];
+    }),
+    getMediaFoldersAction().catch((err) => {
+      console.error("[cms-core] getMediaFoldersAction failed:", err);
       return [];
     }),
     getMailTemplatesAction().catch((err) => {
@@ -571,6 +576,7 @@ export async function loadAdminInitialData() {
     categoryTypes,
     administrators,
     media,
+    mediaFolders,
     mailTemplates,
     settings,
     landlords,

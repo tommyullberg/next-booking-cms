@@ -810,6 +810,11 @@ export function OptionalsView({
                       placeholder="e.g. /images/bad_1.jpg or https://..."
                       className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono text-xs"
                     />
+                    {/^https?:\/\//i.test(imageUrl.trim()) && (
+                      <p className="text-[11px] text-sky-400/90 pt-0.5">
+                        External image URL detected — when you save, the image will be automatically downloaded and stored as a physical file in Media & Files.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

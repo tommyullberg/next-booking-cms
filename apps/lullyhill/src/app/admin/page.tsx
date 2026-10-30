@@ -19,6 +19,7 @@ export default async function AdminPage() {
     categoryTypes,
     administrators,
     media,
+    mediaFolders,
     mailTemplates,
     settings,
     landlords,
@@ -38,6 +39,7 @@ export default async function AdminPage() {
       initialOptionals={optionals}
       initialAmenities={amenities}
       initialMedia={media}
+      initialMediaFolders={mediaFolders}
       initialMailTemplates={mailTemplates as any}
       initialSettings={settings}
       availableTemplates={CMS_PAGE_TEMPLATE_OPTIONS}

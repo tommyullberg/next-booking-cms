@@ -140,15 +140,27 @@ model Category {
 }
 
 model FileAndImage {
-  id           String   @id @default(cuid()) @map("id")
-  file_name    String   @map("file_name")
-  file_url     String   @map("file_url")
-  created_date DateTime @default(now()) @map("created_date")
+  id           String       @id @default(cuid()) @map("id")
+  file_name    String       @map("file_name")
+  file_url     String       @map("file_url")
+  folder_id    String?      @map("folder_id")
+  created_date DateTime     @default(now()) @map("created_date")
 
+  folder      MediaFolder? @relation(fields: [folder_id], references: [id], onDelete: SetNull)
   galleries   Gallery[]
   page_fields PageField[]
 
   @@map("files_and_images")
+}
+
+model MediaFolder {
+  id           String         @id @default(cuid()) @map("id")
+  name         String         @map("name")
+  slug         String         @unique @map("slug")
+  created_date DateTime       @default(now()) @map("created_date")
+  files        FileAndImage[]
+
+  @@map("media_folders")
 }
 
 model NavigationAndLink {

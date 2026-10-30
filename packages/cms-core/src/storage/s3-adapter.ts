@@ -2,6 +2,7 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  CopyObjectCommand,
 } from "@aws-sdk/client-s3";
 import path from "path";
 import { StorageAdapter, StorageResult } from "./types";
@@ -50,13 +51,32 @@ export class S3StorageAdapter implements StorageAdapter {
     });
   }
 
+  private getKeyFromUrl(fileUrl: string): string {
+    if (this.publicUrlPrefix && fileUrl.startsWith(this.publicUrlPrefix)) {
+      return fileUrl.slice(this.publicUrlPrefix.length).replace(/^\/+/, "");
+    }
+    try {
+      const url = new URL(fileUrl);
+      const pathname = url.pathname.replace(/^\/+/, "");
+      if (this.endpoint && pathname.startsWith(this.bucket + "/")) {
+        return pathname.slice(this.bucket.length + 1);
+      }
+      return pathname;
+    } catch {
+      return fileUrl.replace(/^\/+/, "");
+    }
+  }
+
   async upload(
     file: Buffer | Uint8Array,
     fileName: string,
-    mimeType?: string
+    mimeType?: string,
+    folderSlug?: string | null
   ): Promise<StorageResult> {
     const sanitizedName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const uniqueKey = `${Date.now()}-${sanitizedName}`;
+    const uniqueKey = folderSlug
+      ? `${folderSlug}/${Date.now()}-${sanitizedName}`
+      : `${Date.now()}-${sanitizedName}`;
 
     await this.client.send(
       new PutObjectCommand({
@@ -70,14 +90,14 @@ export class S3StorageAdapter implements StorageAdapter {
     const fileUrl = this.getUrl(uniqueKey);
     return {
       fileUrl,
-      fileName: uniqueKey,
+      fileName: path.basename(uniqueKey),
       size: file.length,
     };
   }
 
   async delete(fileUrl: string): Promise<boolean> {
     try {
-      const key = path.basename(fileUrl);
+      const key = this.getKeyFromUrl(fileUrl);
       await this.client.send(
         new DeleteObjectCommand({
           Bucket: this.bucket,
@@ -90,13 +110,50 @@ export class S3StorageAdapter implements StorageAdapter {
     }
   }
 
-  getUrl(fileName: string): string {
+  getUrl(fileNameOrKey: string, folderSlug?: string | null): string {
+    const key = folderSlug ? `${folderSlug}/${fileNameOrKey}` : fileNameOrKey;
     if (this.publicUrlPrefix) {
-      return `${this.publicUrlPrefix.replace(/\/$/, "")}/${fileName}`;
+      return `${this.publicUrlPrefix.replace(/\/$/, "")}/${key}`;
     }
     if (this.endpoint) {
-      return `${this.endpoint.replace(/\/$/, "")}/${this.bucket}/${fileName}`;
+      return `${this.endpoint.replace(/\/$/, "")}/${this.bucket}/${key}`;
     }
-    return `https://${this.bucket}.s3.amazonaws.com/${fileName}`;
+    return `https://${this.bucket}.s3.amazonaws.com/${key}`;
+  }
+
+  async move(
+    fileUrl: string,
+    targetFolderSlug: string | null
+  ): Promise<{ newFileUrl: string; newFileName: string }> {
+    const oldKey = this.getKeyFromUrl(fileUrl);
+    const fileName = path.basename(oldKey);
+    const newKey = targetFolderSlug ? `${targetFolderSlug}/${fileName}` : fileName;
+
+    if (oldKey !== newKey) {
+      await this.client.send(
+        new CopyObjectCommand({
+          Bucket: this.bucket,
+          CopySource: `${this.bucket}/${oldKey}`,
+          Key: newKey,
+        })
+      );
+      await this.client.send(
+        new DeleteObjectCommand({
+          Bucket: this.bucket,
+          Key: oldKey,
+        })
+      );
+    }
+
+    const newFileUrl = this.getUrl(newKey);
+    return {
+      newFileUrl,
+      newFileName: fileName,
+    };
+  }
+
+  async deleteFolder(_folderSlug: string): Promise<boolean> {
+    // S3 directories are virtual prefixes, no explicit folder deletion is required
+    return true;
   }
 }

@@ -18,7 +18,7 @@ import { AmenitiesView } from "./views/amenities-view";
 import { BookingsDashboardView } from "./views/bookings-dashboard-view";
 import { BookingsCalendarView } from "./views/bookings-calendar-view";
 import { NavigationMenusView } from "./views/navigation-menus-view";
-import { MediaView, MediaItem } from "./views/media-view";
+import { MediaView, MediaItem, MediaFolderItem } from "./views/media-view";
 import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view";
 import { SettingsView } from "./views/settings-view";
 import { CMSTemplateOption } from "../templates/types";
@@ -37,6 +37,7 @@ export interface AdminAppProps {
   initialOptionals?: OptionalItem[];
   initialAmenities?: AmenityItem[];
   initialMedia?: MediaItem[];
+  initialMediaFolders?: MediaFolderItem[];
   initialMailTemplates?: MailTemplateItem[];
   initialSettings?: Partial<CmsSettingsData>;
   availableTemplates?: CMSTemplateOption[];
@@ -50,8 +51,11 @@ export interface AdminAppProps {
   onCreateSection?: (data: any) => Promise<void>;
   onDeleteSection?: (id: string) => Promise<void>;
   onToggleSectionVisibility?: (id: string, current: boolean) => Promise<void>;
-  onUploadMedia?: (file: File) => Promise<void>;
+  onUploadMedia?: (file: File, folderId?: string | null) => Promise<void>;
   onDeleteMedia?: (id: string) => Promise<void>;
+  onCreateMediaFolder?: (name: string, slug?: string) => Promise<MediaFolderItem | void>;
+  onDeleteMediaFolder?: (id: string) => Promise<void>;
+  onMoveMediaFile?: (fileId: string, targetFolderId: string | null) => Promise<void>;
   onSaveMailTemplate?: (type: any, subject: string, body: string) => Promise<void>;
 }
 
@@ -65,6 +69,7 @@ export function AdminApp({
   initialOptionals = [],
   initialAmenities = [],
   initialMedia = [],
+  initialMediaFolders = [],
   initialMailTemplates = [],
   initialSettings,
   availableTemplates,
@@ -80,6 +85,9 @@ export function AdminApp({
   onToggleSectionVisibility,
   onUploadMedia,
   onDeleteMedia,
+  onCreateMediaFolder,
+  onDeleteMediaFolder,
+  onMoveMediaFile,
   onSaveMailTemplate,
 }: AdminAppProps) {
   const [currentTab, setCurrentTab] = useState<AdminTab>("dashboard");
@@ -98,6 +106,7 @@ export function AdminApp({
   const [optionals, setOptionals] = useState<OptionalItem[]>(initialOptionals);
   const [amenities, setAmenities] = useState<AmenityItem[]>(initialAmenities);
   const [media, setMedia] = useState<MediaItem[]>(initialMedia);
+  const [mediaFolders, setMediaFolders] = useState<MediaFolderItem[]>(initialMediaFolders);
   const [mailTemplates, setMailTemplates] = useState<MailTemplateItem[]>(initialMailTemplates);
   const [activeLanguages, setActiveLanguages] = useState<string[]>(
     initialSettings?.activeLanguages || [...DEFAULT_ACTIVE_LANGUAGES]
@@ -134,6 +143,7 @@ export function AdminApp({
               setAmenities(data.amenities);
             }
             if (Array.isArray(data.media)) setMedia(data.media);
+            if (Array.isArray(data.mediaFolders)) setMediaFolders(data.mediaFolders);
             if (Array.isArray(data.mailTemplates)) setMailTemplates(data.mailTemplates);
             if (data.settings) {
               if (Array.isArray(data.settings.activeLanguages)) {
@@ -540,12 +550,15 @@ export function AdminApp({
     );
   };
 
-  const handleUploadMediaInternal = async (file: File) => {
+  const handleUploadMediaInternal = async (file: File, folderId?: string | null) => {
     if (onUploadMedia) {
-      await onUploadMedia(file);
+      await onUploadMedia(file, folderId);
     } else {
       const formData = new FormData();
       formData.append("file", file);
+      if (folderId) {
+        formData.append("folderId", folderId);
+      }
       const res = await fetch("/api/cms/upload", {
         method: "POST",
         body: formData,
@@ -557,21 +570,129 @@ export function AdminApp({
             id: data.id || `m-${Date.now()}`,
             file_name: data.fileName || file.name,
             file_url: data.fileUrl,
+            folder_id: data.folderId || folderId || null,
+            folder: data.folder || null,
             created_date: new Date(),
+            is_used: false,
+            usage_count: 0,
           },
           ...prev,
         ]);
+        if (folderId) {
+          setMediaFolders((prev) =>
+            prev.map((f) =>
+              f.id === folderId
+                ? { ...f, _count: { files: (f._count?.files || 0) + 1 } }
+                : f
+            )
+          );
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to upload file");
       }
     }
   };
 
   const handleDeleteMediaInternal = async (id: string) => {
+    const targetFile = media.find((m) => m.id === id);
     if (onDeleteMedia) {
       await onDeleteMedia(id);
     } else {
-      await fetch(`/api/cms/media/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/cms/media/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete file");
+      }
     }
     setMedia((prev) => prev.filter((m) => m.id !== id));
+    if (targetFile?.folder_id) {
+      setMediaFolders((prev) =>
+        prev.map((f) =>
+          f.id === targetFile.folder_id
+            ? { ...f, _count: { files: Math.max(0, (f._count?.files || 1) - 1) } }
+            : f
+        )
+      );
+    }
+  };
+
+  const handleCreateMediaFolderInternal = async (name: string, slug?: string) => {
+    if (onCreateMediaFolder) {
+      return await onCreateMediaFolder(name, slug);
+    }
+    const res = await fetch("/api/cms/media/folders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, slug }),
+    });
+    if (res.ok) {
+      const created = await res.json();
+      setMediaFolders((prev) => [...prev, created]);
+      return created;
+    } else {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "Failed to create folder");
+    }
+  };
+
+  const handleDeleteMediaFolderInternal = async (id: string) => {
+    if (onDeleteMediaFolder) {
+      await onDeleteMediaFolder(id);
+    } else {
+      const res = await fetch(`/api/cms/media/folders/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to delete folder");
+      }
+    }
+    setMediaFolders((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const handleMoveMediaFileInternal = async (fileId: string, targetFolderId: string | null) => {
+    const targetFile = media.find((m) => m.id === fileId);
+    const oldFolderId = targetFile?.folder_id || null;
+    if (onMoveMediaFile) {
+      await onMoveMediaFile(fileId, targetFolderId);
+    } else {
+      const res = await fetch(`/api/cms/media/${fileId}/move`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetFolderId }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setMedia((prev) =>
+          prev.map((m) =>
+            m.id === fileId
+              ? {
+                  ...m,
+                  file_url: updated.file_url,
+                  file_name: updated.file_name,
+                  folder_id: updated.folder_id,
+                  folder: updated.folder,
+                }
+              : m
+          )
+        );
+      } else {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to move file");
+      }
+    }
+    if (oldFolderId !== targetFolderId) {
+      setMediaFolders((prev) =>
+        prev.map((f) => {
+          if (f.id === oldFolderId) {
+            return { ...f, _count: { files: Math.max(0, (f._count?.files || 1) - 1) } };
+          }
+          if (f.id === targetFolderId) {
+            return { ...f, _count: { files: (f._count?.files || 0) + 1 } };
+          }
+          return f;
+        })
+      );
+    }
   };
 
   const handleSaveMailTemplateInternal = async (
@@ -667,8 +788,12 @@ export function AdminApp({
         {currentTab === "media" && (
           <MediaView
             media={media}
+            folders={mediaFolders}
             onUpload={handleUploadMediaInternal}
             onDelete={handleDeleteMediaInternal}
+            onCreateFolder={handleCreateMediaFolderInternal}
+            onDeleteFolder={handleDeleteMediaFolderInternal}
+            onMoveFile={handleMoveMediaFileInternal}
           />
         )}
 

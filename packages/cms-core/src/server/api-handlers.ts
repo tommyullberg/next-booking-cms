@@ -24,7 +24,11 @@ import {
 } from "../actions/fields";
 import {
   getMediaFilesAction,
+  getMediaFoldersAction,
+  createMediaFolderAction,
+  deleteMediaFolderAction,
   uploadMediaAction,
+  moveMediaFileAction,
   deleteMediaAction,
 } from "../actions/media";
 import { translateText } from "../ai";
@@ -177,13 +181,16 @@ export async function handleUploadMedia(req: NextRequest) {
 
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const result = await uploadMediaAction(buffer, file.name, file.type);
+    const folderId = (formData.get("folderId") as string) || null;
+    const result = await uploadMediaAction(buffer, file.name, file.type, folderId);
 
     return NextResponse.json({
       success: true,
       fileUrl: result.file_url,
       fileName: result.file_name,
       id: result.id,
+      folderId: result.folder_id,
+      folder: result.folder,
     });
   } catch (err: any) {
     return NextResponse.json(
@@ -218,6 +225,25 @@ export async function handleCmsApiRoute(
   const method = req.method.toUpperCase();
 
   if (method === "POST") {
+    if (path === "media/folders") {
+      try {
+        const body = await req.json();
+        const result = await createMediaFolderAction(body.name, body.slug);
+        return NextResponse.json(result);
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 400 });
+      }
+    }
+    if (path.startsWith("media/") && path.endsWith("/move")) {
+      try {
+        const mediaId = path.replace(/^media\//, "").replace(/\/move$/, "");
+        const body = await req.json();
+        const result = await moveMediaFileAction(mediaId, body.targetFolderId ?? null);
+        return NextResponse.json(result);
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 400 });
+      }
+    }
     if (path === "fields/text") {
       return handleSaveTextField(req);
     }
@@ -508,9 +534,23 @@ export async function handleCmsApiRoute(
       const settings = await getCmsSettingsAction();
       return NextResponse.json(settings, { headers: NO_CACHE_HEADERS });
     }
+    if (path === "media/folders") {
+      try {
+        const folders = await getMediaFoldersAction();
+        return NextResponse.json(folders, { headers: NO_CACHE_HEADERS });
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
+    }
     if (path === "media") {
-      const media = await getMediaFilesAction();
-      return NextResponse.json(media, { headers: NO_CACHE_HEADERS });
+      try {
+        const folderIdParam = req.nextUrl.searchParams.get("folderId");
+        const folderId = folderIdParam === "root" ? null : folderIdParam || undefined;
+        const media = await getMediaFilesAction(folderId);
+        return NextResponse.json(media, { headers: NO_CACHE_HEADERS });
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
     }
     if (path === "admin-init") {
       try {
@@ -722,10 +762,30 @@ export async function handleCmsApiRoute(
       }
     }
 
+    if (path.startsWith("media/folders/")) {
+      try {
+        const folderId = path.replace("media/folders/", "");
+        await deleteMediaFolderAction(folderId);
+        return NextResponse.json({ success: true });
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to delete folder" },
+          { status: 400 }
+        );
+      }
+    }
+
     if (path.startsWith("media/")) {
-      const mediaId = path.replace("media/", "");
-      await deleteMediaAction(mediaId);
-      return NextResponse.json({ success: true });
+      try {
+        const mediaId = path.replace("media/", "");
+        await deleteMediaAction(mediaId);
+        return NextResponse.json({ success: true });
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to delete media" },
+          { status: 400 }
+        );
+      }
     }
   }
 
