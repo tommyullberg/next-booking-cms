@@ -226,22 +226,54 @@ async function runSyncDiskMediaWithDb() {
   const existingFolders = await prisma.mediaFolder.findMany();
   const folderBySlug = new Map(existingFolders.map((f) => [f.slug, f]));
 
-  // 2. Scan disk for subdirectories and ensure they exist in media_folders
+  // 2. Scan disk for subdirectories (level 1 and level 2) and ensure they exist in media_folders
   const rootEntries = await fs.readdir(uploadDir, { withFileTypes: true });
   for (const entry of rootEntries) {
     if (entry.isDirectory() && !entry.name.startsWith(".")) {
       const slug = generateFolderSlug(entry.name);
-      if (!folderBySlug.has(slug) && !folderBySlug.has(entry.name)) {
+      let topFolder = folderBySlug.get(slug) || folderBySlug.get(entry.name);
+      if (!topFolder) {
         try {
-          const created = await prisma.mediaFolder.create({
+          topFolder = await prisma.mediaFolder.create({
             data: {
               name: entry.name,
               slug: entry.name,
+              parent_id: null,
             },
           });
-          folderBySlug.set(created.slug, created);
+          folderBySlug.set(topFolder.slug, topFolder);
         } catch {
           // Ignore duplicate race condition
+        }
+      }
+
+      // Scan level 2 subdirectories inside this top-level folder
+      if (topFolder) {
+        try {
+          const level2Entries = await fs.readdir(path.join(uploadDir, entry.name), {
+            withFileTypes: true,
+          });
+          for (const childEntry of level2Entries) {
+            if (childEntry.isDirectory() && !childEntry.name.startsWith(".")) {
+              const childSlug = `${topFolder.slug}/${childEntry.name}`;
+              if (!folderBySlug.has(childSlug)) {
+                try {
+                  const createdChild = await prisma.mediaFolder.create({
+                    data: {
+                      name: childEntry.name,
+                      slug: childSlug,
+                      parent_id: topFolder.id,
+                    },
+                  });
+                  folderBySlug.set(createdChild.slug, createdChild);
+                } catch {
+                  // Ignore duplicate race condition
+                }
+              }
+            }
+          }
+        } catch {
+          // Ignore read error
         }
       }
     }
@@ -306,7 +338,7 @@ async function runSyncDiskMediaWithDb() {
     }
   }
 
-  // 4. Scan files inside each subfolder
+  // 4. Scan files inside each subfolder (level 1 and level 2)
   for (const [slug, folder] of folderBySlug.entries()) {
     const folderDir = path.join(uploadDir, slug);
     let subEntries;
@@ -350,23 +382,43 @@ export async function getMediaFoldersAction() {
       _count: {
         select: {
           files: true,
+          children: true,
         },
       },
     },
   });
 }
 
-export async function createMediaFolderAction(name: string, customSlug?: string) {
+export async function createMediaFolderAction(
+  name: string,
+  customSlug?: string,
+  parentId?: string | null
+) {
   const sanitized = generateFolderSlug((customSlug || name || "").trim());
   if (!sanitized) {
     throw new Error("Folder name is required");
   }
 
+  let parentFolder: { id: string; slug: string; parent_id: string | null } | null = null;
+  if (parentId) {
+    parentFolder = await prisma.mediaFolder.findUnique({
+      where: { id: parentId },
+    });
+    if (!parentFolder) {
+      throw new Error("Parent folder not found");
+    }
+    if (parentFolder.parent_id) {
+      throw new Error("Maximum folder depth is 2 levels");
+    }
+  }
+
   // Ensure unique folder name/slug
-  let uniqueSlug = sanitized;
+  let uniqueName = sanitized;
+  let uniqueSlug = parentFolder ? `${parentFolder.slug}/${uniqueName}` : uniqueName;
   let counter = 1;
   while (await prisma.mediaFolder.findUnique({ where: { slug: uniqueSlug } })) {
-    uniqueSlug = `${sanitized}-${counter}`;
+    uniqueName = `${sanitized}-${counter}`;
+    uniqueSlug = parentFolder ? `${parentFolder.slug}/${uniqueName}` : uniqueName;
     counter++;
   }
 
@@ -378,13 +430,15 @@ export async function createMediaFolderAction(name: string, customSlug?: string)
 
   const folder = await prisma.mediaFolder.create({
     data: {
-      name: uniqueSlug,
+      name: uniqueName,
       slug: uniqueSlug,
+      parent_id: parentFolder ? parentFolder.id : null,
     },
     include: {
       _count: {
         select: {
           files: true,
+          children: true,
         },
       },
     },
@@ -400,6 +454,7 @@ export async function deleteMediaFolderAction(id: string) {
       _count: {
         select: {
           files: true,
+          children: true,
         },
       },
     },
@@ -407,6 +462,10 @@ export async function deleteMediaFolderAction(id: string) {
 
   if (!folder) {
     throw new Error("Folder not found");
+  }
+
+  if (folder._count.children > 0) {
+    throw new Error("Cannot delete folder because it contains subfolders. Delete subfolders first.");
   }
 
   if (folder._count.files > 0) {

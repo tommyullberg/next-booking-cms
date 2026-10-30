@@ -24,8 +24,9 @@ export interface MediaFolderItem {
   id: string;
   name: string;
   slug: string;
+  parent_id?: string | null;
   created_date?: string | Date;
-  _count?: { files: number };
+  _count?: { files: number; children?: number };
 }
 
 export interface MediaItem {
@@ -33,7 +34,7 @@ export interface MediaItem {
   file_name: string;
   file_url: string;
   folder_id?: string | null;
-  folder?: { id: string; name: string; slug: string } | null;
+  folder?: { id: string; name: string; slug: string; parent_id?: string | null } | null;
   created_date: string | Date;
   is_used?: boolean;
   usage_count?: number;
@@ -44,7 +45,11 @@ export interface MediaViewProps {
   folders?: MediaFolderItem[];
   onUpload: (file: File, folderId?: string | null) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  onCreateFolder?: (name: string, slug?: string) => Promise<MediaFolderItem | void>;
+  onCreateFolder?: (
+    name: string,
+    slug?: string,
+    parentId?: string | null
+  ) => Promise<MediaFolderItem | void>;
   onDeleteFolder?: (id: string) => Promise<void>;
   onMoveFile?: (fileId: string, targetFolderId: string | null) => Promise<void>;
 }
@@ -62,6 +67,26 @@ function sanitizeFolderInput(name: string): string {
 
 function sanitizeFolderSlug(name: string): string {
   return sanitizeFolderInput(name).replace(/[-_]+$/, "");
+}
+
+function FolderTreePipeIcon({ showLine }: { showLine: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 18 28"
+      fill="none"
+      className="w-4 h-6 -my-1 text-slate-500 shrink-0"
+      aria-hidden="true"
+    >
+      {showLine && (
+        <path
+          d="M 6 0 L 6 28"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+        />
+      )}
+    </svg>
+  );
 }
 
 function FolderTreeBranchIcon({ isLast }: { isLast: boolean }) {
@@ -119,6 +144,7 @@ export function MediaView({
   // Folder creation modal state
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
+  const [newFolderParentId, setNewFolderParentId] = useState<string | null>(null);
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
 
   // Move file modal state
@@ -168,11 +194,29 @@ export function MediaView({
           id: item.folder.id,
           name: item.folder.name,
           slug: item.folder.slug,
+          parent_id: item.folder.parent_id ?? null,
         });
       }
     });
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "sv"));
   }, [folders, media]);
+
+  const rootLevelFolders = useMemo(
+    () => effectiveFolders.filter((f) => !f.parent_id),
+    [effectiveFolders]
+  );
+
+  const childrenByParentId = useMemo(() => {
+    const map = new Map<string, MediaFolderItem[]>();
+    effectiveFolders.forEach((f) => {
+      if (f.parent_id) {
+        const list = map.get(f.parent_id) || [];
+        list.push(f);
+        map.set(f.parent_id, list);
+      }
+    });
+    return map;
+  }, [effectiveFolders]);
 
   // Folder counts
   const folderCounts = useMemo(() => {
@@ -197,6 +241,18 @@ export function MediaView({
     if (selectedFolderId === "ALL" || selectedFolderId === null) return null;
     return effectiveFolders.find((f) => f.id === selectedFolderId) || null;
   }, [effectiveFolders, selectedFolderId]);
+
+  const activeFolderBreadcrumb = useMemo(() => {
+    if (selectedFolderId === "ALL") return "All Files";
+    if (selectedFolderId === null || !activeFolder) return "Mediafolder";
+    if (activeFolder.parent_id) {
+      const parent = effectiveFolders.find((f) => f.id === activeFolder.parent_id);
+      if (parent) {
+        return `Mediafolder / ${parent.name} / ${activeFolder.name}`;
+      }
+    }
+    return `Mediafolder / ${activeFolder.name}`;
+  }, [selectedFolderId, activeFolder, effectiveFolders]);
 
   const uploadFiles = async (fileList: FileList | File[]) => {
     const files = Array.from(fileList);
@@ -276,6 +332,18 @@ export function MediaView({
     }
   };
 
+  const handleOpenCreateFolder = (defaultParentId?: string | null) => {
+    setNewFolderName("");
+    if (defaultParentId !== undefined) {
+      setNewFolderParentId(defaultParentId);
+    } else if (activeFolder) {
+      setNewFolderParentId(activeFolder.parent_id ? activeFolder.parent_id : activeFolder.id);
+    } else {
+      setNewFolderParentId(null);
+    }
+    setIsCreateFolderOpen(true);
+  };
+
   const handleCreateFolder = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanedName = sanitizeFolderSlug(newFolderName);
@@ -285,13 +353,14 @@ export function MediaView({
     setActionError(null);
     try {
       if (onCreateFolder) {
-        const created = await onCreateFolder(cleanedName, cleanedName);
+        const created = await onCreateFolder(cleanedName, cleanedName, newFolderParentId);
         if (created && created.id) {
           setSelectedFolderId(created.id);
         }
       }
       setIsCreateFolderOpen(false);
       setNewFolderName("");
+      setNewFolderParentId(null);
     } catch (err: any) {
       setActionError(err?.message || "Failed to create folder");
     } finally {
@@ -300,6 +369,11 @@ export function MediaView({
   };
 
   const handleDeleteFolder = async (folder: MediaFolderItem) => {
+    const childCount = childrenByParentId.get(folder.id)?.length || 0;
+    if (childCount > 0) {
+      alert(`The folder "${folder.name}" contains ${childCount} subfolder(s). Delete the subfolders first.`);
+      return;
+    }
     const count = folderCounts[folder.id] || 0;
     if (count > 0) {
       alert(`The folder "${folder.name}" contains ${count} file(s). Move or delete the files first.`);
@@ -314,7 +388,7 @@ export function MediaView({
       if (onDeleteFolder) {
         await onDeleteFolder(folder.id);
         if (selectedFolderId === folder.id) {
-          setSelectedFolderId("ALL");
+          setSelectedFolderId(folder.parent_id || "ALL");
         }
       }
     } catch (err: any) {
@@ -390,10 +464,7 @@ export function MediaView({
           {onCreateFolder && (
             <button
               type="button"
-              onClick={() => {
-                setNewFolderName("");
-                setIsCreateFolderOpen(true);
-              }}
+              onClick={() => handleOpenCreateFolder()}
               className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:text-white hover:border-slate-700 transition"
             >
               <FolderPlus className="w-4 h-4 text-sky-400" />
@@ -453,10 +524,7 @@ export function MediaView({
               {onCreateFolder && (
                 <button
                   type="button"
-                  onClick={() => {
-                    setNewFolderName("");
-                    setIsCreateFolderOpen(true);
-                  }}
+                  onClick={() => handleOpenCreateFolder(null)}
                   className="p-1 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition"
                   title="Create new folder"
                 >
@@ -518,62 +586,135 @@ export function MediaView({
                 </span>
               </div>
 
-              {/* User Folders */}
-              {effectiveFolders.map((folder, index) => {
+              {/* User Folders (Level 1 & Level 2) */}
+              {rootLevelFolders.map((folder, index) => {
                 const isSelected = selectedFolderId === folder.id;
                 const isDragOver = dragOverFolderId === folder.id;
                 const count = folderCounts[folder.id] || 0;
-                const isLast = index === effectiveFolders.length - 1;
+                const isLastTop = index === rootLevelFolders.length - 1;
+                const childFolders = childrenByParentId.get(folder.id) || [];
+                const canDeleteTop = count === 0 && childFolders.length === 0;
 
                 return (
-                  <div
-                    key={folder.id}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.dataTransfer.dropEffect = "move";
-                      if (dragOverFolderId !== folder.id) setDragOverFolderId(folder.id);
-                    }}
-                    onDragLeave={() => {
-                      if (dragOverFolderId === folder.id) setDragOverFolderId(null);
-                    }}
-                    onDrop={(e) => handleFolderDrop(e, folder.id)}
-                    onClick={() => setSelectedFolderId(folder.id)}
-                    className={`group w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition cursor-pointer ${
-                      isDragOver
-                        ? "border-2 border-dashed border-sky-400 bg-sky-500/20 text-white"
-                        : isSelected
-                        ? "bg-sky-600/15 border border-sky-500/30 text-white font-semibold"
-                        : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 truncate">
-                      <FolderTreeBranchIcon isLast={isLast} />
-                      {isSelected ? (
-                        <FolderOpen className="w-4 h-4 text-sky-400 shrink-0" />
-                      ) : (
-                        <Folder className="w-4 h-4 text-slate-400 group-hover:text-sky-300 shrink-0" />
-                      )}
-                      <span className="truncate pl-0.5" title={folder.name}>
-                        {folder.name}
-                      </span>
+                  <React.Fragment key={folder.id}>
+                    <div
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.dataTransfer.dropEffect = "move";
+                        if (dragOverFolderId !== folder.id) setDragOverFolderId(folder.id);
+                      }}
+                      onDragLeave={() => {
+                        if (dragOverFolderId === folder.id) setDragOverFolderId(null);
+                      }}
+                      onDrop={(e) => handleFolderDrop(e, folder.id)}
+                      onClick={() => setSelectedFolderId(folder.id)}
+                      className={`group w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition cursor-pointer ${
+                        isDragOver
+                          ? "border-2 border-dashed border-sky-400 bg-sky-500/20 text-white"
+                          : isSelected
+                          ? "bg-sky-600/15 border border-sky-500/30 text-white font-semibold"
+                          : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 truncate">
+                        <FolderTreeBranchIcon isLast={isLastTop} />
+                        {isSelected ? (
+                          <FolderOpen className="w-4 h-4 text-sky-400 shrink-0" />
+                        ) : (
+                          <Folder className="w-4 h-4 text-slate-400 group-hover:text-sky-300 shrink-0" />
+                        )}
+                        <span className="truncate pl-0.5" title={folder.name}>
+                          {folder.name}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {onCreateFolder && (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenCreateFolder(folder.id)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-sky-400 hover:bg-slate-800 rounded transition"
+                            title={`Create subfolder in ${folder.name}`}
+                          >
+                            <FolderPlus className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {canDeleteTop && onDeleteFolder && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteFolder(folder)}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded transition"
+                            title="Delete empty folder"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
+                          {count}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
-                        {count}
-                      </span>
-                      {count === 0 && onDeleteFolder && (
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteFolder(folder)}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded transition"
-                          title="Delete empty folder"
+                    {/* Level 2 Subfolders */}
+                    {childFolders.map((child, childIdx) => {
+                      const isChildSelected = selectedFolderId === child.id;
+                      const isChildDragOver = dragOverFolderId === child.id;
+                      const childCount = folderCounts[child.id] || 0;
+                      const isLastChild = childIdx === childFolders.length - 1;
+
+                      return (
+                        <div
+                          key={child.id}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.dataTransfer.dropEffect = "move";
+                            if (dragOverFolderId !== child.id) setDragOverFolderId(child.id);
+                          }}
+                          onDragLeave={() => {
+                            if (dragOverFolderId === child.id) setDragOverFolderId(null);
+                          }}
+                          onDrop={(e) => handleFolderDrop(e, child.id)}
+                          onClick={() => setSelectedFolderId(child.id)}
+                          className={`group w-full flex items-center justify-between px-3 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer ${
+                            isChildDragOver
+                              ? "border-2 border-dashed border-sky-400 bg-sky-500/20 text-white"
+                              : isChildSelected
+                              ? "bg-sky-600/15 border border-sky-500/30 text-white font-semibold"
+                              : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
+                          }`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                          <div className="flex items-center gap-1.5 truncate">
+                            <FolderTreePipeIcon showLine={!isLastTop} />
+                            <FolderTreeBranchIcon isLast={isLastChild} />
+                            {isChildSelected ? (
+                              <FolderOpen className="w-4 h-4 text-sky-400 shrink-0" />
+                            ) : (
+                              <Folder className="w-4 h-4 text-slate-400 group-hover:text-sky-300 shrink-0" />
+                            )}
+                            <span className="truncate pl-0.5" title={`${folder.name}/${child.name}`}>
+                              {child.name}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                            {childCount === 0 && onDeleteFolder && (
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteFolder(child)}
+                                className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded transition"
+                                title="Delete empty folder"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
+                              {childCount}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </React.Fragment>
                 );
               })}
             </div>
@@ -592,11 +733,7 @@ export function MediaView({
             <div className="flex items-center gap-2 text-xs">
               <span className="text-slate-400">Path:</span>
               <span className="font-semibold text-white">
-                {selectedFolderId === "ALL"
-                  ? "All Files"
-                  : selectedFolderId === null
-                  ? "Mediafolder"
-                  : `Mediafolder / ${activeFolder?.name || "Folder"}`}
+                {activeFolderBreadcrumb}
               </span>
               <span className="text-slate-600 font-mono">
                 ({displayedFiles.length} {displayedFiles.length === 1 ? "file" : "files"})
@@ -715,7 +852,7 @@ export function MediaView({
                       {selectedFolderId === "ALL" && item.folder && (
                         <div className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-md bg-slate-950/80 backdrop-blur border border-slate-700 px-2 py-0.5 text-[10px] font-medium text-slate-300 shadow">
                           <Folder className="w-2.5 h-2.5 text-sky-400" />
-                          <span className="truncate max-w-[120px]">{item.folder.name}</span>
+                          <span className="truncate max-w-[140px]">{item.folder.slug || item.folder.name}</span>
                         </div>
                       )}
                     </div>
@@ -803,6 +940,24 @@ export function MediaView({
               <form onSubmit={handleCreateFolder} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-300">
+                    Parent Folder
+                  </label>
+                  <select
+                    value={newFolderParentId || ""}
+                    onChange={(e) => setNewFolderParentId(e.target.value || null)}
+                    className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
+                  >
+                    <option value="">Mediafolder (Root level)</option>
+                    {rootLevelFolders.map((f) => (
+                      <option key={f.id} value={f.id}>
+                        Mediafolder / {f.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-slate-300">
                     Folder Name *
                   </label>
                   <input
@@ -866,7 +1021,7 @@ export function MediaView({
                   Move <span className="font-semibold text-white">"{movingFile.file_name}"</span> to:
                 </div>
 
-                <div className="max-h-60 overflow-y-auto space-y-1.5 border border-slate-800 rounded-xl p-2 bg-slate-900/60">
+                <div className="max-h-60 overflow-y-auto space-y-1 border border-slate-800 rounded-xl p-2 bg-slate-900/60">
                   {/* Option: Mediafolder (Root) */}
                   <label
                     className={`flex items-center justify-between p-2.5 rounded-lg text-xs cursor-pointer transition ${
@@ -892,31 +1047,62 @@ export function MediaView({
                     />
                   </label>
 
-                  {/* Options: User Folders */}
-                  {effectiveFolders.map((f, idx) => {
-                    const isLast = idx === effectiveFolders.length - 1;
+                  {/* Options: User Folders (Level 1 & Level 2) */}
+                  {rootLevelFolders.map((f, idx) => {
+                    const isLastTop = idx === rootLevelFolders.length - 1;
+                    const childFolders = childrenByParentId.get(f.id) || [];
+
                     return (
-                      <label
-                        key={f.id}
-                        className={`flex items-center justify-between p-2.5 rounded-lg text-xs cursor-pointer transition ${
-                          targetFolderChoice === f.id
-                            ? "bg-sky-600/20 border border-sky-500/40 text-white font-semibold"
-                            : "text-slate-300 hover:bg-slate-800"
-                        }`}
-                      >
-                        <div className="flex items-center gap-1.5">
-                          <FolderTreeBranchIcon isLast={isLast} />
-                          <Folder className="w-4 h-4 text-sky-400 shrink-0" />
-                          <span className="pl-0.5">{f.name}</span>
-                        </div>
-                        <input
-                          type="radio"
-                          name="targetFolder"
-                          checked={targetFolderChoice === f.id}
-                          onChange={() => setTargetFolderChoice(f.id)}
-                          className="text-sky-600 focus:ring-0"
-                        />
-                      </label>
+                      <React.Fragment key={f.id}>
+                        <label
+                          className={`flex items-center justify-between p-2 rounded-lg text-xs cursor-pointer transition ${
+                            targetFolderChoice === f.id
+                              ? "bg-sky-600/20 border border-sky-500/40 text-white font-semibold"
+                              : "text-slate-300 hover:bg-slate-800"
+                          }`}
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <FolderTreeBranchIcon isLast={isLastTop} />
+                            <Folder className="w-4 h-4 text-sky-400 shrink-0" />
+                            <span className="pl-0.5">{f.name}</span>
+                          </div>
+                          <input
+                            type="radio"
+                            name="targetFolder"
+                            checked={targetFolderChoice === f.id}
+                            onChange={() => setTargetFolderChoice(f.id)}
+                            className="text-sky-600 focus:ring-0"
+                          />
+                        </label>
+
+                        {childFolders.map((child, childIdx) => {
+                          const isLastChild = childIdx === childFolders.length - 1;
+                          return (
+                            <label
+                              key={child.id}
+                              className={`flex items-center justify-between p-2 rounded-lg text-xs cursor-pointer transition ${
+                                targetFolderChoice === child.id
+                                  ? "bg-sky-600/20 border border-sky-500/40 text-white font-semibold"
+                                  : "text-slate-300 hover:bg-slate-800"
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <FolderTreePipeIcon showLine={!isLastTop} />
+                                <FolderTreeBranchIcon isLast={isLastChild} />
+                                <Folder className="w-4 h-4 text-sky-400 shrink-0" />
+                                <span className="pl-0.5">{child.name}</span>
+                              </div>
+                              <input
+                                type="radio"
+                                name="targetFolder"
+                                checked={targetFolderChoice === child.id}
+                                onChange={() => setTargetFolderChoice(child.id)}
+                                className="text-sky-600 focus:ring-0"
+                              />
+                            </label>
+                          );
+                        })}
+                      </React.Fragment>
                     );
                   })}
                 </div>

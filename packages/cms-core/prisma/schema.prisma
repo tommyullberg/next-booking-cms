@@ -157,7 +157,11 @@ model MediaFolder {
   id           String         @id @default(cuid()) @map("id")
   name         String         @map("name")
   slug         String         @unique @map("slug")
+  parent_id    String?        @map("parent_id")
   created_date DateTime       @default(now()) @map("created_date")
+
+  parent       MediaFolder?   @relation("MediaFolderTree", fields: [parent_id], references: [id], onDelete: Restrict)
+  children     MediaFolder[]  @relation("MediaFolderTree")
   files        FileAndImage[]
 
   @@map("media_folders")

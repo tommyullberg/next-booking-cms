@@ -53,7 +53,11 @@ export interface AdminAppProps {
   onToggleSectionVisibility?: (id: string, current: boolean) => Promise<void>;
   onUploadMedia?: (file: File, folderId?: string | null) => Promise<void>;
   onDeleteMedia?: (id: string) => Promise<void>;
-  onCreateMediaFolder?: (name: string, slug?: string) => Promise<MediaFolderItem | void>;
+  onCreateMediaFolder?: (
+    name: string,
+    slug?: string,
+    parentId?: string | null
+  ) => Promise<MediaFolderItem | void>;
   onDeleteMediaFolder?: (id: string) => Promise<void>;
   onMoveMediaFile?: (fileId: string, targetFolderId: string | null) => Promise<void>;
   onSaveMailTemplate?: (type: any, subject: string, body: string) => Promise<void>;
@@ -214,6 +218,13 @@ export function AdminApp({
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           if (Array.isArray(data)) setMedia(data);
+        })
+        .catch(() => {});
+
+      fetch("/api/cms/media/folders", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (Array.isArray(data)) setMediaFolders(data);
         })
         .catch(() => {});
     }
@@ -617,14 +628,18 @@ export function AdminApp({
     }
   };
 
-  const handleCreateMediaFolderInternal = async (name: string, slug?: string) => {
+  const handleCreateMediaFolderInternal = async (
+    name: string,
+    slug?: string,
+    parentId?: string | null
+  ) => {
     if (onCreateMediaFolder) {
-      return await onCreateMediaFolder(name, slug);
+      return await onCreateMediaFolder(name, slug, parentId);
     }
     const res = await fetch("/api/cms/media/folders", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, slug }),
+      body: JSON.stringify({ name, slug, parentId: parentId || null }),
     });
     if (res.ok) {
       const created = await res.json();

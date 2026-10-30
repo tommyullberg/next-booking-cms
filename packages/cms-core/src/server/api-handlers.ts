@@ -228,7 +228,11 @@ export async function handleCmsApiRoute(
     if (path === "media/folders") {
       try {
         const body = await req.json();
-        const result = await createMediaFolderAction(body.name, body.slug);
+        const result = await createMediaFolderAction(
+          body.name,
+          body.slug,
+          body.parentId || null
+        );
         return NextResponse.json(result);
       } catch (err: any) {
         return NextResponse.json({ error: err?.message }, { status: 400 });
