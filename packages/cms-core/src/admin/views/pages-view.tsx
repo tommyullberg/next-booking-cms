@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Plus, Edit3, Trash2, Search, Lock } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Plus, Edit3, Trash2, Search, Lock, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { HOMEPAGE_ID, cleanSlugInput, validateSlugInput } from "../../utils/slug";
 import { CMSTemplateOption, DEFAULT_CMS_TEMPLATES, formatTemplateLabel } from "../../templates/types";
 import { FlagIcon } from "../../components/ui/flag-icon";
@@ -19,6 +19,9 @@ export interface PageListItem {
   translations?: Array<{ locale: string; page_title?: string }>;
   _count?: { page_fields: number };
 }
+
+export type PageSortField = "id" | "title" | "slug" | "section" | "template" | "status";
+export type SortDirection = "asc" | "desc";
 
 export interface PagesViewProps {
   pages: PageListItem[];
@@ -56,6 +59,9 @@ export function PagesView({
   const [newSectionId, setNewSectionId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [sortField, setSortField] = useState<PageSortField>("id");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+
   const effectiveLocales = activeLocales || activeLanguages || ["sv", "en"];
   const secondaryLocales = effectiveLocales.filter((l) => l !== "sv");
 
@@ -65,12 +71,96 @@ export function PagesView({
     existingPages: pages,
   });
 
-  const filtered = pages.filter(
-    (p) =>
-      p.page_title.toLowerCase().includes(search.toLowerCase()) ||
-      p.slug.toLowerCase().includes(search.toLowerCase()) ||
-      String(p.id).includes(search.trim()),
-  );
+  const handleToggleSort = (field: PageSortField) => {
+    if (sortField === field) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  const renderSortIcon = (field: PageSortField) => {
+    if (sortField !== field) {
+      return <ArrowUpDown className='w-3 h-3 text-slate-500 opacity-60' />;
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className='w-3 h-3 text-sky-400 font-bold' />
+    ) : (
+      <ArrowDown className='w-3 h-3 text-sky-400 font-bold' />
+    );
+  };
+
+  const formatSlugDisplay = (page: PageListItem) => {
+    if (Number(page.id) === HOMEPAGE_ID || !page.slug || page.slug === "/") {
+      return "/";
+    }
+    return page.slug.startsWith("/") ? page.slug : `/${page.slug}`;
+  };
+
+  const sortedAndFilteredPages = useMemo(() => {
+    const list = pages.filter(
+      (p) =>
+        p.page_title.toLowerCase().includes(search.toLowerCase()) ||
+        p.slug.toLowerCase().includes(search.toLowerCase()) ||
+        String(p.id).includes(search.trim()),
+    );
+
+    return [...list].sort((a, b) => {
+      let cmp = 0;
+      switch (sortField) {
+        case "id": {
+          const numA = Number(a.id);
+          const numB = Number(b.id);
+          if (!isNaN(numA) && !isNaN(numB)) {
+            cmp = numA - numB;
+          } else {
+            cmp = String(a.id).localeCompare(String(b.id));
+          }
+          break;
+        }
+        case "title": {
+          cmp = a.page_title.localeCompare(b.page_title, "sv", { sensitivity: "base" });
+          break;
+        }
+        case "slug": {
+          cmp = formatSlugDisplay(a).localeCompare(formatSlugDisplay(b), "sv", { sensitivity: "base" });
+          break;
+        }
+        case "section": {
+          const secA = a.section?.name || "";
+          const secB = b.section?.name || "";
+          cmp = secA.localeCompare(secB, "sv", { sensitivity: "base" });
+          break;
+        }
+        case "template": {
+          const labelA =
+            Number(a.id) === HOMEPAGE_ID ? "Startpage" : formatTemplateLabel(a.template_name, availableTemplates);
+          const labelB =
+            Number(b.id) === HOMEPAGE_ID ? "Startpage" : formatTemplateLabel(b.template_name, availableTemplates);
+          cmp = labelA.localeCompare(labelB, "sv", { sensitivity: "base" });
+          break;
+        }
+        case "status": {
+          cmp = a.status.localeCompare(b.status);
+          break;
+        }
+        default:
+          cmp = 0;
+      }
+
+      if (cmp === 0) {
+        const numA = Number(a.id);
+        const numB = Number(b.id);
+        if (!isNaN(numA) && !isNaN(numB)) {
+          return numA - numB;
+        }
+        return String(a.id).localeCompare(String(b.id));
+      }
+
+      return sortDirection === "asc" ? cmp : -cmp;
+    });
+  }, [pages, search, sortField, sortDirection, availableTemplates]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,13 +192,6 @@ export function PagesView({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const formatSlugDisplay = (page: PageListItem) => {
-    if (Number(page.id) === HOMEPAGE_ID || !page.slug || page.slug === "/") {
-      return "/";
-    }
-    return page.slug.startsWith("/") ? page.slug : `/${page.slug}`;
   };
 
   return (
@@ -148,24 +231,84 @@ export function PagesView({
         <table className='w-full text-left text-xs'>
           <thead className='border-b border-slate-800 bg-slate-900/80 text-slate-400 font-medium'>
             <tr>
-              <th className='py-3 px-4 w-20'>ID</th>
-              <th className='py-3 px-4'>Title & URL</th>
-              <th className='py-3 px-4'>Section</th>
-              <th className='py-3 px-4'>Template</th>
-              <th className='py-3 px-4'>Status</th>
+              <th
+                onClick={() => handleToggleSort("id")}
+                className={`py-3 px-4 w-20 cursor-pointer transition select-none ${
+                  sortField === "id" ? "text-white font-semibold" : "hover:text-white"
+                }`}>
+                <div className='flex items-center gap-1.5'>
+                  <span>ID</span>
+                  {renderSortIcon("id")}
+                </div>
+              </th>
+              <th className='py-3 px-4 select-none'>
+                <div className='flex items-center gap-1.5'>
+                  <button
+                    type='button'
+                    onClick={() => handleToggleSort("title")}
+                    className={`flex items-center gap-1 transition cursor-pointer text-left ${
+                      sortField === "title" ? "text-white font-semibold" : "text-slate-400 hover:text-white"
+                    }`}
+                    title='Sort by Title'>
+                    <span>Title</span>
+                    {renderSortIcon("title")}
+                  </button>
+                  <span className='text-slate-600 font-normal'>/</span>
+                  <button
+                    type='button'
+                    onClick={() => handleToggleSort("slug")}
+                    className={`flex items-center gap-1 transition cursor-pointer text-left ${
+                      sortField === "slug" ? "text-white font-semibold" : "text-slate-400 hover:text-white"
+                    }`}
+                    title='Sort by URL / Slug'>
+                    <span>URL</span>
+                    {renderSortIcon("slug")}
+                  </button>
+                </div>
+              </th>
+              <th
+                onClick={() => handleToggleSort("section")}
+                className={`py-3 px-4 cursor-pointer transition select-none ${
+                  sortField === "section" ? "text-white font-semibold" : "hover:text-white"
+                }`}>
+                <div className='flex items-center gap-1.5'>
+                  <span>Section</span>
+                  {renderSortIcon("section")}
+                </div>
+              </th>
+              <th
+                onClick={() => handleToggleSort("template")}
+                className={`py-3 px-4 cursor-pointer transition select-none ${
+                  sortField === "template" ? "text-white font-semibold" : "hover:text-white"
+                }`}>
+                <div className='flex items-center gap-1.5'>
+                  <span>Template</span>
+                  {renderSortIcon("template")}
+                </div>
+              </th>
+              <th
+                onClick={() => handleToggleSort("status")}
+                className={`py-3 px-4 cursor-pointer transition select-none ${
+                  sortField === "status" ? "text-white font-semibold" : "hover:text-white"
+                }`}>
+                <div className='flex items-center gap-1.5'>
+                  <span>Status</span>
+                  {renderSortIcon("status")}
+                </div>
+              </th>
               <th className='py-3 px-4'>Languages</th>
               <th className='py-3 px-4 text-right'>Actions</th>
             </tr>
           </thead>
           <tbody className='divide-y divide-slate-800/60'>
-            {filtered.length === 0 ? (
+            {sortedAndFilteredPages.length === 0 ? (
               <tr>
                 <td colSpan={7} className='py-8 text-center text-slate-500'>
                   No pages found.
                 </td>
               </tr>
             ) : (
-              filtered.map((page) => {
+              sortedAndFilteredPages.map((page) => {
                 const isHomepage = Number(page.id) === HOMEPAGE_ID;
                 return (
                   <tr
