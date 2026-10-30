@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { BookingItem, BookingObjectDetails } from "../../booking/types";
 import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "../../utils/weeks";
+import { ModalPortal } from "../../components/ui/modal-portal";
 
 export interface BookingsCalendarViewProps {
   objects?: BookingObjectDetails[];
@@ -979,7 +980,8 @@ export function BookingsCalendarView({ objects = [] }: BookingsCalendarViewProps
 
       {/* Booking Details Modal Dialog */}
       {selectedBooking && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-150'>
+        <ModalPortal>
+          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-150'>
           <div className='w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl p-6 text-white my-8'>
             {/* Modal Header */}
             <div className='flex items-start justify-between border-b border-slate-800 pb-4 mb-4'>
@@ -1185,7 +1187,8 @@ export function BookingsCalendarView({ objects = [] }: BookingsCalendarViewProps
             </div>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </ModalPortal>
+    )}
+  </div>
+);
 }

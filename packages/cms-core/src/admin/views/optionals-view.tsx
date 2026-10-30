@@ -22,6 +22,7 @@ import {
 import { BookingOptionalItem } from "../../booking/types";
 import { BookingObjectItem } from "./booking-objects-view";
 import { MediaItem } from "./media-view";
+import { ModalPortal } from "../../components/ui/modal-portal";
 
 export type OptionalItem = BookingOptionalItem;
 
@@ -533,8 +534,9 @@ export function OptionalsView({
 
       {/* Create / Edit Optional Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto">
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+            <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div className="flex items-center gap-2.5">
@@ -911,8 +913,9 @@ export function OptionalsView({
             </form>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </ModalPortal>
+    )}
+  </div>
+);
 }
 

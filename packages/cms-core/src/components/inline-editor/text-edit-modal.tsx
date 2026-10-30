@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useEditorStore } from "../../state/editor-store";
 import { Sparkles, X, Check, Loader2 } from "lucide-react";
 import { FlagIcon } from "../ui/flag-icon";
+import { ModalPortal } from "../ui/modal-portal";
 import { LANGUAGE_META } from "../../constants/languages";
 
 export interface TextEditModalProps {
@@ -200,7 +201,8 @@ export function TextEditModal({
       : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <ModalPortal>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="w-full max-w-5xl rounded-2xl border border-slate-700/90 bg-slate-900 p-6 text-white shadow-2xl">
         {/* Modal Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
@@ -343,5 +345,6 @@ export function TextEditModal({
         </div>
       </div>
     </div>
-  );
+  </ModalPortal>
+);
 }

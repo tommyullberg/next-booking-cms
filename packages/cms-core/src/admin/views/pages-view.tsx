@@ -6,6 +6,7 @@ import { HOMEPAGE_ID, cleanSlugInput, validateSlugInput } from "../../utils/slug
 import { CMSTemplateOption, DEFAULT_CMS_TEMPLATES, formatTemplateLabel } from "../../templates/types";
 import { FlagIcon } from "../../components/ui/flag-icon";
 import { LANGUAGE_META } from "../../constants/languages";
+import { ModalPortal } from "../../components/ui/modal-portal";
 
 export interface PageListItem {
   id: number | string;
@@ -251,7 +252,8 @@ export function PagesView({
 
       {/* Create Page Modal */}
       {isModalOpen && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4'>
+        <ModalPortal>
+          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4'>
           <div className='w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 text-white shadow-2xl'>
             <h2 className='text-base font-semibold mb-4'>Create New Page</h2>
             <form onSubmit={handleCreate} className='space-y-4'>
@@ -384,7 +386,8 @@ export function PagesView({
             </form>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </ModalPortal>
+    )}
+  </div>
+);
 }

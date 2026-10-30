@@ -35,6 +35,7 @@ import {
 } from "../../booking/types";
 import { LandlordItem } from "./landlords-view";
 import { PageListItem } from "./pages-view";
+import { ModalPortal } from "../../components/ui/modal-portal";
 
 export type BookingObjectItem = BookingObjectDetails;
 
@@ -421,7 +422,8 @@ export function BookingObjectsView({
 
       {/* Create / Edit Booking Object Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -834,8 +836,9 @@ export function BookingObjectsView({
             </form>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </ModalPortal>
+    )}
+  </div>
+);
 }
 

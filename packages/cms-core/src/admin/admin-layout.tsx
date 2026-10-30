@@ -234,8 +234,8 @@ export function AdminLayout({
         <main className="flex-1 overflow-y-auto p-8 bg-slate-950">
           <motion.div
             key={currentTab}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.15 }}
           >
             {children}

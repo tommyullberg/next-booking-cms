@@ -5,6 +5,7 @@ import { useAvailabilitySearchQuery, useCreateBookingMutation } from "./hooks";
 import { Search, Users, Calendar, Dog, Sparkles, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 import { SearchMatchItem } from "./types";
 import { DatePicker } from "../components/ui/date-picker";
+import { ModalPortal } from "../components/ui/modal-portal";
 
 export interface AvailabilitySearchProps {
   onSelectBooking?: (item: SearchMatchItem) => void;
@@ -298,7 +299,8 @@ export function AvailabilitySearch({
 
       {/* Booking Modal */}
       {bookingModalItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white">
             <h3 className="text-lg font-bold mb-1">Bekräfta bokningsförfrågan</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
@@ -378,7 +380,8 @@ export function AvailabilitySearch({
             )}
           </div>
         </div>
-      )}
-    </div>
-  );
+      </ModalPortal>
+    )}
+  </div>
+);
 }

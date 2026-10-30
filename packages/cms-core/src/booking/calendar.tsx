@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useBookingsQuery, useCreateBookingMutation } from "./hooks";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { ModalPortal } from "../components/ui/modal-portal";
 
 export interface BookingCalendarProps {
   objectId: string;
@@ -419,7 +420,8 @@ export function BookingCalendar({
 
       {/* Booking Modal */}
       {isFormOpen && (
-        <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4'>
+        <ModalPortal>
+          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4'>
           <div className='w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white'>
             <h3 className='text-lg font-bold mb-1'>Slutför bokningsförfrågan</h3>
             <p className='text-xs text-slate-500 dark:text-slate-400 mb-4'>
@@ -540,7 +542,8 @@ export function BookingCalendar({
             )}
           </div>
         </div>
-      )}
-    </div>
-  );
+      </ModalPortal>
+    )}
+  </div>
+);
 }

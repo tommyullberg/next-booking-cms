@@ -20,6 +20,7 @@ import {
 import { BookingObjectItem } from "./booking-objects-view";
 import { getWeeksInYear } from "../../utils/weeks";
 import type { MissingWeekRange } from "../../actions/price-periods";
+import { ModalPortal } from "../../components/ui/modal-portal";
 
 export type { MissingWeekRange };
 
@@ -586,7 +587,8 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
 
       {/* Modal Dialog for Create & Edit */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
           <div className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl p-6 text-white my-8">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-5">
               <div className="flex items-center gap-2.5">
@@ -917,7 +919,8 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
             </form>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </ModalPortal>
+    )}
+  </div>
+);
 }

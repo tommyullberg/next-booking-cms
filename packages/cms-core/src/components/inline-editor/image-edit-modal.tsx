@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useEditorStore } from "../../state/editor-store";
+import { ModalPortal } from "../ui/modal-portal";
 import {
   X,
   Check,
@@ -214,7 +215,8 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <ModalPortal>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
       <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-6 text-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-2">
@@ -453,5 +455,6 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
         </div>
       </div>
     </div>
-  );
+  </ModalPortal>
+);
 }

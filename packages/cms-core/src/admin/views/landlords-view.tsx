@@ -19,6 +19,7 @@ import {
   Building,
 } from "lucide-react";
 import { LandlordDto } from "../../actions/landlords";
+import { ModalPortal } from "../../components/ui/modal-portal";
 
 export type LandlordItem = LandlordDto;
 
@@ -412,7 +413,8 @@ export function LandlordsView({
 
       {/* Create / Edit Landlord Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -691,8 +693,9 @@ export function LandlordsView({
             </form>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </ModalPortal>
+    )}
+  </div>
+);
 }
 

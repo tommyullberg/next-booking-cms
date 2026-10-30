@@ -14,6 +14,7 @@ import {
   X,
   UserCheck,
 } from "lucide-react";
+import { ModalPortal } from "../../components/ui/modal-portal";
 
 export interface AdministratorItem {
   id: string;
@@ -354,7 +355,8 @@ export function AdministratorsView({
 
       {/* Add / Edit Administrator Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 text-white shadow-2xl space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">
@@ -486,7 +488,8 @@ export function AdministratorsView({
             </form>
           </div>
         </div>
-      )}
-    </div>
-  );
+      </ModalPortal>
+    )}
+  </div>
+);
 }
