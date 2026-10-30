@@ -49,6 +49,10 @@ export async function createBookingOptionalAction(data: {
   price_week?: number | null;
   sort_order?: number;
 }): Promise<BookingOptionalItem> {
+  const maxSort = data.sort_order === undefined ? await prisma.bookingOptional.aggregate({
+    _max: { sort_order: true },
+  }) : null;
+
   const normalized = {
     name: data.name.trim(),
     description: data.description?.trim() || null,
@@ -60,7 +64,7 @@ export async function createBookingOptionalAction(data: {
     price_sun_thu: Number(data.price_sun_thu || 0),
     price_thu_sun: Number(data.price_thu_sun || 0),
     price_week: Number(data.price_week || 0),
-    sort_order: Number(data.sort_order || 0),
+    sort_order: data.sort_order !== undefined ? Number(data.sort_order) : (maxSort?._max.sort_order ?? 0) + 1,
   };
 
   const created = await prisma.bookingOptional.create({
@@ -105,7 +109,7 @@ export async function updateBookingOptionalAction(data: {
   price_week?: number | null;
   sort_order?: number;
 }): Promise<BookingOptionalItem> {
-  const normalized = {
+  const normalized: any = {
     name: data.name.trim(),
     description: data.description?.trim() || null,
     image_url: data.image_url?.trim() || null,
@@ -116,7 +120,7 @@ export async function updateBookingOptionalAction(data: {
     price_sun_thu: Number(data.price_sun_thu || 0),
     price_thu_sun: Number(data.price_thu_sun || 0),
     price_week: Number(data.price_week || 0),
-    sort_order: Number(data.sort_order || 0),
+    ...(data.sort_order !== undefined ? { sort_order: Number(data.sort_order) } : {}),
   };
 
   const updated = await prisma.bookingOptional.update({
@@ -146,6 +150,17 @@ export async function updateBookingOptionalAction(data: {
     created_at: updated.created_at.toISOString(),
     updated_at: updated.updated_at.toISOString(),
   };
+}
+
+export async function reorderBookingOptionalsAction(orderedIds: string[]): Promise<void> {
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.bookingOptional.update({
+        where: { id },
+        data: { sort_order: index },
+      })
+    )
+  );
 }
 
 export async function deleteBookingOptionalAction(id: string): Promise<void> {

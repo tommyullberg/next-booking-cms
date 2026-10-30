@@ -17,6 +17,7 @@ import {
   Filter,
   ChevronDown,
   Check,
+  GripVertical,
 } from "lucide-react";
 import { BookingOptionalItem } from "../../booking/types";
 import { BookingObjectItem } from "./booking-objects-view";
@@ -43,6 +44,7 @@ export interface OptionalsViewProps {
     sort_order?: number;
   }) => Promise<OptionalItem[] | void>;
   onDeleteOptional?: (id: string) => Promise<OptionalItem[] | void>;
+  onReorderOptionals?: (orderedIds: string[]) => Promise<OptionalItem[] | void>;
 }
 
 export function OptionalsView({
@@ -51,6 +53,7 @@ export function OptionalsView({
   media = [],
   onSaveOptional,
   onDeleteOptional,
+  onReorderOptionals,
 }: OptionalsViewProps) {
   const [optionals, setOptionals] = useState<OptionalItem[]>(initialOptionals);
 
@@ -74,7 +77,10 @@ export function OptionalsView({
   const [priceSunThu, setPriceSunThu] = useState<number>(0);
   const [priceThuSun, setPriceThuSun] = useState<number>(0);
   const [priceWeek, setPriceWeek] = useState<number>(0);
-  const [sortOrder, setSortOrder] = useState<number>(10);
+
+  // Drag and drop states
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   // Media picker states
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
@@ -83,6 +89,57 @@ export function OptionalsView({
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Drag & drop handlers
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverId !== id) {
+      setDragOverId(id);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    setDragOverId(null);
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      return;
+    }
+
+    const currentList = [...optionals];
+    const fromIndex = currentList.findIndex((o) => o.id === draggedId);
+    const toIndex = currentList.findIndex((o) => o.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) {
+      setDraggedId(null);
+      return;
+    }
+
+    const [moved] = currentList.splice(fromIndex, 1);
+    currentList.splice(toIndex, 0, moved);
+    setDraggedId(null);
+
+    // Optimistically update
+    setOptionals(currentList);
+
+    if (onReorderOptionals) {
+      const res = await onReorderOptionals(currentList.map((o) => o.id));
+      if (Array.isArray(res)) {
+        setOptionals(res);
+      }
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
+  };
 
   // Filter media files that are images (excluding documents)
   const imageMedia = useMemo(() => {
@@ -123,7 +180,6 @@ export function OptionalsView({
     setPriceSunThu(0);
     setPriceThuSun(0);
     setPriceWeek(0);
-    setSortOrder((optionals.length + 1) * 10);
     setIsMediaPickerOpen(false);
     setMediaSearchQuery("");
     setShowManualUrl(false);
@@ -144,7 +200,6 @@ export function OptionalsView({
     setPriceSunThu(item.price_sun_thu ?? 0);
     setPriceThuSun(item.price_thu_sun ?? 0);
     setPriceWeek(item.price_week ?? 0);
-    setSortOrder(item.sort_order ?? 0);
     setIsMediaPickerOpen(false);
     setMediaSearchQuery("");
     // If image exists and does not match a media item, open manual URL field
@@ -167,7 +222,7 @@ export function OptionalsView({
     try {
       if (onSaveOptional) {
         const res = await onSaveOptional({
-          ...(editingOptional ? { id: editingOptional.id } : {}),
+          ...(editingOptional ? { id: editingOptional.id, sort_order: editingOptional.sort_order } : {}),
           name: name.trim(),
           description: description.trim() || undefined,
           image_url: imageUrl.trim() || undefined,
@@ -178,7 +233,6 @@ export function OptionalsView({
           price_sun_thu: Number(priceSunThu) || 0,
           price_thu_sun: Number(priceThuSun) || 0,
           price_week: Number(priceWeek) || 0,
-          sort_order: Number(sortOrder) || 0,
         });
 
         if (Array.isArray(res)) {
@@ -256,7 +310,7 @@ export function OptionalsView({
             <span>Optionals (Tillval)</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Manage rentable add-ons, extra services, cleaning options, and object locks for customer bookings.
+            Manage rentable add-ons, extra services, cleaning options, and object locks for customer bookings. Drag and drop to sort order.
           </p>
         </div>
 
@@ -316,6 +370,7 @@ export function OptionalsView({
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                <th className="py-3.5 px-3 w-10"></th>
                 <th className="py-3.5 px-3 w-16 text-center">Active</th>
                 <th className="py-3.5 px-5">Optional</th>
                 <th className="py-3.5 px-4">Locked to Object</th>
@@ -332,14 +387,41 @@ export function OptionalsView({
                 // Resolve locked object name
                 const targetObject =
                   opt.object || objects.find((o) => o.id === opt.object_id);
+                const isDraggable = !searchQuery && selectedObjectFilter === "ALL";
+                const isDragging = draggedId === opt.id;
+                const isDragOver = dragOverId === opt.id;
 
                 return (
                   <tr
                     key={opt.id}
-                    className={`hover:bg-slate-900/60 transition group ${
-                      !opt.is_active ? "opacity-60" : ""
+                    draggable={isDraggable}
+                    onDragStart={(e) => isDraggable && handleDragStart(e, opt.id)}
+                    onDragOver={(e) => isDraggable && handleDragOver(e, opt.id)}
+                    onDragLeave={() => dragOverId === opt.id && setDragOverId(null)}
+                    onDrop={(e) => isDraggable && handleDrop(e, opt.id)}
+                    onDragEnd={handleDragEnd}
+                    className={`transition group ${
+                      !opt.is_active ? "opacity-60 " : ""
+                    }${
+                      isDragging
+                        ? "opacity-30 bg-slate-800/20"
+                        : isDragOver
+                        ? "bg-sky-500/15 border-t-2 border-sky-400"
+                        : "hover:bg-slate-900/60"
                     }`}
                   >
+                    {/* Drag Handle */}
+                    <td className="py-3.5 px-3 text-slate-500">
+                      {isDraggable ? (
+                        <span
+                          className="cursor-grab active:cursor-grabbing inline-flex p-1 rounded hover:text-slate-300 hover:bg-slate-800/60 transition"
+                          title="Dra för att ändra ordning"
+                        >
+                          <GripVertical className="w-4 h-4" />
+                        </span>
+                      ) : null}
+                    </td>
+
                     {/* Active Switch Toggle */}
                     <td className="py-3.5 px-3 text-center">
                       <button
@@ -437,7 +519,7 @@ export function OptionalsView({
               {filteredOptionals.length === 0 && (
                 <tr>
                   <td
-                    colSpan={9}
+                    colSpan={10}
                     className="py-12 text-center text-slate-500 text-xs"
                   >
                     No optionals found. Click "+ Create Optional" to add one.
@@ -791,19 +873,6 @@ export function OptionalsView({
                     />
                   </div>
                 </div>
-              </div>
-
-              {/* Sort Order */}
-              <div className="space-y-1.5 pt-1">
-                <label className="text-[11px] font-semibold text-slate-300">
-                  Sort Order (Sortering)
-                </label>
-                <input
-                  type="number"
-                  value={sortOrder}
-                  onChange={(e) => setSortOrder(Number(e.target.value))}
-                  className="w-32 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-white font-mono focus:outline-none focus:border-sky-500 transition"
-                />
               </div>
 
               {/* Modal Actions */}

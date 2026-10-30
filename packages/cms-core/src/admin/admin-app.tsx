@@ -955,6 +955,21 @@ export function AdminApp({
                 return payload;
               }
             }}
+            onReorderOptionals={async (orderedIds) => {
+              const res = await fetch("/api/cms/optionals/reorder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderedIds }),
+              });
+              const payload = await res.json();
+              if (!res.ok) {
+                throw new Error(payload?.error || "Failed to reorder optionals");
+              }
+              if (Array.isArray(payload)) {
+                setOptionals(payload);
+                return payload;
+              }
+            }}
           />
         )}
 
