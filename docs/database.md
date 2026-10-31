@@ -43,7 +43,7 @@ export const prisma = new PrismaClient({ adapter });
 
 This configuration eliminates IDE schema deprecation warnings, supports native server connection pooling, and ensures zero deprecation warnings across local and CI/CD environments.
 
-## Database Models (19 Models)
+## Database Models (21 Models)
 
 ### 1. `administrators`
 
@@ -135,9 +135,21 @@ Media library for uploaded photos, assets, and documents:
 - `id` (CUID, PK)
 - `file_name` (VarChar 255)
 - `file_url` (VarChar 1024)
+- `folder_id` (CUID, FK to `media_folders.id`, Nullable)
 - `created_date` (DateTime, default now)
 
-### 9. `navigations_and_links`
+### 9. `media_folders`
+
+Two-level nested hierarchical folder structure for organizing media library assets:
+
+- `id` (CUID, PK)
+- `name` (VarChar 255)
+- `slug` (VarChar 255, Unique)
+- `parent_id` (CUID, FK to self `media_folders.id`, Nullable, Restrict delete)
+- `created_date` (DateTime, default now)
+- Self-referencing tree relation (`parent` and `children`).
+
+### 10. `navigations_and_links`
 
 Navigation menu containers (e.g. "Main Menu", "Footer"):
 
@@ -145,7 +157,7 @@ Navigation menu containers (e.g. "Main Menu", "Footer"):
 - `name` (VarChar 100)
 - `type` (VarChar 50)
 
-### 10. `navigation_links`
+### 11. `navigation_links`
 
 Menu link entries:
 
@@ -155,7 +167,7 @@ Menu link entries:
 - `link_text` (VarChar 100)
 - `sort_order` (Integer, default 0)
 
-### 11. `landlords`
+### 12. `landlords`
 
 Property owners and rental hosts:
 
@@ -173,9 +185,9 @@ Property owners and rental hosts:
 - `account_number` (VarChar 100, Nullable)
 - `created_at`, `updated_at` (DateTime)
 
-### 12. `objects` (`BookingObject`)
+### 13. `objects` (`BookingObject`)
 
-Rentable cabins, houses, apartments, and mobile homes:
+Rentable cabins, houses, apartments, and units:
 
 - `id` (CUID, PK)
 - `name` (VarChar 255)
@@ -194,15 +206,15 @@ Rentable cabins, houses, apartments, and mobile homes:
 - `price_matrix` (Json, Nullable)
 - `created_at`, `updated_at` (DateTime)
 
-### 13. `optionals` (`BookingOptional`)
+### 14. `optionals` (`BookingOptional`)
 
-Rentable add-on services and accessories (e.g. cleaning, baby cot, high chair):
+Rentable add-on services and accessories (e.g. cleaning, baby cot, linen):
 
 - `id` (CUID, PK)
 - `name` (VarChar 255)
 - `description` (Text, Nullable)
 - `image_url` (VarChar 1024, Nullable)
-- `object_id` (CUID, FK to `objects.id`, Nullable - `null` means applicable to all objects)
+- `object_id` (CUID, FK to `objects.id`, Nullable - `null` applies globally to all objects)
 - `is_active` (Boolean, default true)
 - `price_hour` (Float, default 0)
 - `price_day` (Float, default 0)
@@ -212,32 +224,51 @@ Rentable add-on services and accessories (e.g. cleaning, baby cot, high chair):
 - `sort_order` (Integer, default 0)
 - `created_at`, `updated_at` (DateTime)
 
-### 14. `amenities`
+### 15. `object_price_periods`
 
-Amenities and amenities tags for booking units:
+Granular calendar season and weekly pricing matrices per booking object:
+
+- `id` (CUID, PK)
+- `object_id` (CUID, FK to `objects.id`, Cascade delete)
+- `name` (VarChar 255, Nullable)
+- `start_year`, `start_week` (Integer)
+- `end_year`, `end_week` (Integer)
+- `allow_custom_days` (Boolean, default true)
+- `price_day`, `price_2_days`, `price_3_days`, `price_4_days`, `price_5_days`, `price_6_days` (Float, Nullable)
+- `price_week`, `price_sun_thu`, `price_thu_sun` (Float, Nullable)
+- `created_at`, `updated_at` (DateTime)
+- Composite index on `[object_id, start_year]`.
+
+### 16. `amenities`
+
+Amenity classification tags for booking units:
 
 - `id` (CUID, PK)
 - `name` (VarChar 100, Unique)
 - Implicit Many-to-Many relation with `objects`.
 
-### 15. `galleries`
+### 17. `galleries`
 
-Unit photo gallery collections linked to booking objects:
+Multi-image photo galleries linked to pages and booking objects:
 
 - `id` (CUID, PK)
-- `object_id` (CUID, FK to `objects.id`)
-- `image_id` (CUID, FK to `files_and_images.id`)
+- `object_id` (CUID, FK to `objects.id`, Nullable, Cascade delete)
+- `page_id` (Integer, FK to `pages.id`, Nullable, Cascade delete)
+- `nbr` (Integer, default 1)
+- `image_id` (CUID, FK to `files_and_images.id`, Cascade delete)
 - `sort_order` (Integer, default 0)
 - `caption` (VarChar 255, Nullable)
+- `translations` (Json, Nullable, localized captions)
+- Composite index on `[page_id, nbr, sort_order]`.
 
-### 16. `page_fields`
+### 18. `page_fields`
 
 Dynamic content field definitions tied to pages:
 
 - `id` (CUID, PK)
 - `page_id` (Integer, FK to `pages.id`)
 - `nbr` (Integer)
-- `field_type` (FieldType enum: `TEXT`, `IMAGE`, `NAVIGATION`)
+- `field_type` (FieldType enum: `TEXT`, `IMAGE`, `NAVIGATION`, `GALLERY`)
 - `class_names` (Text, Nullable)
 - `content` (Text, Nullable)
 - `type` (VarChar 50, Nullable)
@@ -248,7 +279,7 @@ Dynamic content field definitions tied to pages:
 - `navigation_id` (CUID, FK to `navigations_and_links.id`, Nullable)
 - Unique composite index on `[page_id, nbr, field_type]`.
 
-### 17. `page_field_translations`
+### 19. `page_field_translations`
 
 Localized field content supporting multi-language:
 
@@ -258,7 +289,7 @@ Localized field content supporting multi-language:
 - `content` (Text)
 - Unique composite index on `[page_field_id, locale]`.
 
-### 18. `bookings`
+### 20. `bookings`
 
 Guest reservations and calendar blocks:
 
@@ -276,7 +307,7 @@ Guest reservations and calendar blocks:
 - `ical_source_id` (VarChar 255, Nullable)
 - `created_at`, `updated_at` (DateTime)
 
-### 19. `mail_templates`
+### 21. `mail_templates`
 
 Email notification templates:
 
@@ -317,10 +348,3 @@ Seed base SuperAdmin and startsida:
 ```bash
 npm run db:seed --workspace=@next-booking/cms-core
 ```
-
-Seed base SuperAdmin and startsida:
-
-```bash
-npm run db:seed --workspace=@next-booking/cms-core
-```
-

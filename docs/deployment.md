@@ -58,22 +58,22 @@ In production environments, configure `STORAGE_PROVIDER="s3"`:
 
 Ensure the following variables are configured in production:
 
-| Variable | Description | Example |
-|---|---|---|
-| `DATABASE_URL` | PostgreSQL connection string with SSL | `postgresql://user:pass@db.provider.com:5432/cms?sslmode=require` |
-| `NEXTAUTH_SECRET` | 32+ character random cryptographic secret | `openssl rand -base64 32` |
-| `NEXTAUTH_URL` | Canonical production URL | `https://lullyhill.se` |
-| `STORAGE_PROVIDER` | Active storage adapter (`s3` recommended) | `s3` |
-| `MINIO_ENDPOINT` | Endpoint for S3-compatible cloud storage | `https://s3.eu-north-1.amazonaws.com` |
-| `MINIO_ACCESS_KEY` | Storage Access Key | `AKIAIOSFODNN7EXAMPLE` |
-| `MINIO_SECRET_KEY` | Storage Secret Key | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY` |
-| `MINIO_BUCKET` | Production bucket name | `lullyhill-production-media` |
-| `GEMINI_API_KEY` | Google Gemini API key for translation | `AIzaSy...` |
-| `RESEND_API_KEY` | Transactional email provider key | `re_123456789` |
-| `SUPERADMIN_EMAIL` | Initial root SuperAdmin account email | `admin@customerdomain.com` |
-| `SUPERADMIN_PASSWORD` | Initial root SuperAdmin secure password | `StrongSecretPassword123!` |
-| `SUPERADMIN_FIRSTNAME` | Initial root SuperAdmin first name | `Admin` |
-| `SUPERADMIN_LASTNAME` | Initial root SuperAdmin last name | `User` |
+| Variable               | Description                               | Example                                                           |
+| ---------------------- | ----------------------------------------- | ----------------------------------------------------------------- |
+| `DATABASE_URL`         | PostgreSQL connection string with SSL     | `postgresql://user:pass@db.provider.com:5432/cms?sslmode=require` |
+| `NEXTAUTH_SECRET`      | 32+ character random cryptographic secret | `openssl rand -base64 32`                                         |
+| `NEXTAUTH_URL`         | Canonical production URL                  | `https://lullyhill.se`                                            |
+| `STORAGE_PROVIDER`     | Active storage adapter (`s3` recommended) | `s3`                                                              |
+| `MINIO_ENDPOINT`       | Endpoint for S3-compatible cloud storage  | `https://s3.eu-north-1.amazonaws.com`                             |
+| `MINIO_ACCESS_KEY`     | Storage Access Key                        | `AKIAIOSFODNN7EXAMPLE`                                            |
+| `MINIO_SECRET_KEY`     | Storage Secret Key                        | `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`                        |
+| `MINIO_BUCKET`         | Production bucket name                    | `lullyhill-production-media`                                      |
+| `GEMINI_API_KEY`       | Google Gemini API key for translation     | `AIzaSy...`                                                       |
+| `RESEND_API_KEY`       | Transactional email provider key          | `re_123456789`                                                    |
+| `SUPERADMIN_EMAIL`     | Initial root SuperAdmin account email     | `admin@customerdomain.com`                                        |
+| `SUPERADMIN_PASSWORD`  | Initial root SuperAdmin secure password   | `StrongSecretPassword123!`                                        |
+| `SUPERADMIN_FIRSTNAME` | Initial root SuperAdmin first name        | `Admin`                                                           |
+| `SUPERADMIN_LASTNAME`  | Initial root SuperAdmin last name         | `User`                                                            |
 
 ## Initial SuperAdmin Provisioning & Customer Setup
 

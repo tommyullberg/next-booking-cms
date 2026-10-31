@@ -11,20 +11,35 @@ The booking calendar (`BookingCalendar`) leverages `@tanstack/react-query` for a
 The calendar component provides the following capabilities:
 
 - Displays available, reserved, and blocked dates in a fluid monthly grid.
+- **Half-Day Visual Indicators (Checkout / Check-in Splits)**: When a guest checks out in the morning and a new guest checks in during the afternoon, the calendar renders a diagonal half-day split style. The left half shows booked/occupied and the right half shows available/incoming, ensuring clarity on transition days.
+- **Multi-Unit Color Palettes**: When viewing multiple booking units simultaneously, `OBJECT_COLOR_PALETTES` applies distinct, accessible accent colors to reservations and units.
 - Enforces date boundaries to prevent overlapping or invalid bookings.
-- Automatically computes night counts and total price based on unit base rates (`base_price`).
+- Dynamic Pricing Calculation: Computes night counts and total prices based on unit base rates (`base_price`) and seasonal price periods (`object_price_periods`).
 - Integrates guest contact information collection (name, email, phone) with client-side validation.
 
-## Flexible Availability Search
+## Flexible Availability Search & Animated Loaders
 
 The `AvailabilitySearch` module provides intuitive booking exploration:
 
-- Exact Match: If the requested date range is free, the user is presented with immediate reservation options.
-- Alternative Suggestions: If the exact period is occupied, the search algorithm analyzes adjacent availability windows and presents the three closest available date blocks of identical duration.
+- **Exact Match**: If the requested date range is free, the user is presented with immediate reservation options.
+- **Alternative Suggestions**: If the exact period is occupied, the search algorithm analyzes adjacent availability windows and presents the three closest available date blocks of identical duration.
+- **Graceful Loading Experience**: To prevent visual layout flashing during quick API responses, search execution is paced with `MIN_SEARCH_LOADER_DURATION_MS = 900` before displaying search results.
+
+### Animated Search Loader (`Loader`)
+
+Located in `packages/cms-core/src/components/ui/loader.tsx`, the `Loader` component delivers polished, hardware-accelerated SVG animations tailored for travel and hospitality workflows:
+
+| Variant  | Name                    | Description                                                                                                            |
+| -------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `matrix` | Calendar Matrix Scanner | An interactive 3x3 / 4x4 calendar grid where cells light up in an undulating scanning pattern with glowing pulse rays. |
+| `radar`  | Booking Radar           | A circular sonar/radar sweep scanning through booking frequencies with a trailing ping effect.                         |
+| `cards`  | Harmonic Cards          | Staggered floating cards simulating search filters and availability cards settling into place.                         |
+
+Each variant accepts customizable sizing (`sm`, `md`, `lg`), custom label text, and theme-adaptive coloring.
 
 ## iCal Synchronization (RFC 5545)
 
-To prevent double bookings, the CMS provides bidirectional iCal feed handling adhering to RFC 5545 specifications.
+To prevent double bookings across diverse platforms, the CMS provides bidirectional iCal feed handling adhering to RFC 5545 specifications.
 
 ### 1. iCal Export (Feed Generation)
 
@@ -41,7 +56,7 @@ Each confirmed reservation is exported as a `VEVENT` with:
 - `SUMMARY`: Reservation status
 - `STATUS`: CONFIRMED
 
-This URL can be imported directly into external OTA calendars.
+This URL can be imported directly into external OTA calendars (Airbnb, Booking.com, VRBO, Google Calendar, Apple Calendar).
 
 ### 2. iCal Import and Parsing
 

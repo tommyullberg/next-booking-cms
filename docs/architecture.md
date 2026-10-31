@@ -31,28 +31,29 @@ Provides shared `tsconfig.json` configurations for strict type safety:
 
 ### 2. `@next-booking/config-tailwind`
 
-Provides shared Tailwind CSS presets:
+Provides shared Tailwind CSS presets and themes:
 
-- Extends default palettes with custom design tokens (`navy`, `accent`, `sand`, `slate`).
+- Extends default palettes with customizable design tokens (`navy`, `accent`, `sand`, `slate`, neutral grayscale light-mode tokens).
 - Configures dark mode using CSS class strategy (`darkMode: 'class'`).
-- Bundles official Tailwind plugins for forms and typography.
+- Bundles official Tailwind plugins for forms, typography, and container queries.
 
 ### 3. `@next-booking/cms-core`
 
 The central package encapsulating all CMS capabilities. To guarantee clean separation between client-side bundles and server-only runtime logic, the package provides three distinct entry points:
 
-- `@next-booking/cms-core`: Universal client and template components (`CMSField`, `CMSPageProvider`, `useEditorStore`, `FloatingPanel`, editing modals, administrative views, TanStack Query calendar). Contains no Node.js built-ins (`fs`, `path`, native database drivers).
-- `@next-booking/cms-core/server`: Server-only infrastructure and actions (Prisma ORM singleton, Storage Adapters, NextAuth configuration, Server Actions, iCal synchronization, and email dispatchers).
-- `@next-booking/cms-core/middleware`: Centralized NextAuth route protection middleware imported by customer applications.
+- `@next-booking/cms-core`: Universal client and template components including `CMSField` compound components (`Text`, `Image`, `Gallery`, `Group`, `Navigation`), `CMSPageProvider` in-memory React context, `CmsBrandLogo`, animated `Loader` (`matrix`, `radar`, `cards`), floating inline editing toolbar, modal dialogs via `ModalPortal`, `AdminApp`, and TanStack Query booking calendar.
+- `@next-booking/cms-core/server`: Server-only infrastructure and actions including Prisma ORM singleton with Prisma 7 pg adapter (`@prisma/adapter-pg`), Storage Adapters (`LocalStorageAdapter`, `S3StorageAdapter`), NextAuth Credentials authentication handler, Server Actions for inline edits and AI translations, RFC 5545 iCal synchronization workers, and transactional email dispatchers (`Resend`, `SendGrid`, `Console`).
+- `@next-booking/cms-core/middleware`: Centralized NextAuth route protection middleware imported by tenant applications.
 
 ### 4. `apps/demo` and `apps/lullyhill`
 
 Both applications utilize Next.js 16 App Router with React 19 and mount the core CMS:
 
-- Root page (`/`): Renders public website content using `CMSPageProvider` and dynamic fields (`CMSField.Text`, `CMSField.Image`, `CMSField.Navigation`).
+- Root page (`/`): Renders public website content using `CMSPageProvider` and dynamic fields (`CMSField.Text`, `CMSField.Image`, `CMSField.Gallery`, `CMSField.Group`, `CMSField.Navigation`).
 - Admin panel (`/admin`): Mounts the administrative dashboard via `<AdminApp />`, populated server-side with `loadAdminInitialData()`.
 - Authentication (`/admin/login` and `/api/auth/[...nextauth]`): NextAuth Credentials-based authentication.
-- CMS API (`/api/cms/[...slug]`): REST endpoints for media streaming, iCal calendar export, booking workflows, and page data.
+- CMS API (`/api/cms/[...slug]`): REST endpoints for media streaming, brand asset resolution (`/api/cms/assets/*`), iCal calendar export, booking workflows, and page data.
+- Design System: Harmonized contrast ratios, WCAG compliance, responsive typography, and grayscale light themes.
 
 ## Client and Server Boundary Isolation (Webpack and Turbopack)
 
