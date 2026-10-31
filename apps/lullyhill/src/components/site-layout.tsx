@@ -72,7 +72,7 @@ export function LullyhillSiteLayout({
 
           {/* Extracted Footer */}
           <SiteFooter
-            brandName={rootSection?.name || "Villa Lullyhill"}
+            brandName="Villa Lullyhill"
             pageTitle={page.page_title}
           />
 

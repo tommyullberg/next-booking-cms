@@ -5,6 +5,7 @@ export * from "./utils/slug";
 export * from "./components/ui/flag-icon";
 export * from "./components/ui/date-picker";
 export * from "./components/ui/modal-portal";
+export * from "./components/ui/cms-brand-logo";
 export * from "./components/fields";
 export * from "./components/inline-editor";
 export * from "./booking";

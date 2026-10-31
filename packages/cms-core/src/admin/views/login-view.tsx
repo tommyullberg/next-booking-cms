@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { signIn } from "next-auth/react";
-import { Layers, Lock, Mail, Loader2 } from "lucide-react";
+import { Lock, Mail, Loader2 } from "lucide-react";
+import { CmsBrandLogo } from "../../components/ui/cms-brand-logo";
 
 export interface LoginViewProps {
   callbackUrl?: string;
@@ -43,12 +44,9 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
     <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
       <div className="w-full max-w-sm rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl backdrop-blur">
         <div className="flex flex-col items-center text-center mb-8">
-          <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white shadow-xl shadow-sky-500/20 mb-3">
-            <Layers className="w-6 h-6" />
+          <div className="mb-3">
+            <CmsBrandLogo variant="dark" heightClassName="h-9" />
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-white">
-            NextBooking <span className="text-sky-400 font-normal">CMS</span>
-          </h1>
           <p className="mt-1 text-xs text-slate-400">
             Sign in to the administration panel
           </p>

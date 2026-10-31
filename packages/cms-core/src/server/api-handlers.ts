@@ -508,6 +508,51 @@ export async function handleCmsApiRoute(
   }
 
   if (method === "GET") {
+    if (
+      path === "assets/nextbooking-logo-dark.png" ||
+      path === "assets/nextbooking-logo-light.png"
+    ) {
+      const fs = await import("fs/promises");
+      const nodePath = await import("path");
+      const fileName = path.replace(/^assets\//, "");
+      const candidates = [
+        nodePath.resolve(
+          process.cwd(),
+          "packages/cms-core/src/assets/branding",
+          fileName
+        ),
+        nodePath.resolve(
+          process.cwd(),
+          "../../packages/cms-core/src/assets/branding",
+          fileName
+        ),
+        nodePath.resolve(
+          process.cwd(),
+          "../packages/cms-core/src/assets/branding",
+          fileName
+        ),
+      ];
+
+      for (const candidate of candidates) {
+        try {
+          const buffer = await fs.readFile(candidate);
+          return new NextResponse(new Uint8Array(buffer), {
+            status: 200,
+            headers: {
+              "Content-Type": "image/png",
+              "Cache-Control": "public, max-age=86400",
+            },
+          });
+        } catch {
+          // Try next candidate path
+        }
+      }
+
+      return NextResponse.json(
+        { error: "Logo asset not found" },
+        { status: 404 }
+      );
+    }
     if (path === "optionals") {
       const objectId = req.nextUrl.searchParams.get("objectId") || undefined;
       const optionals = await getBookingOptionalsAction(objectId);

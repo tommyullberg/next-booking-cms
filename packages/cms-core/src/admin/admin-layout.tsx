@@ -28,6 +28,7 @@ import {
 
 import { AdminTab } from "../types/admin";
 import { AdminLanguage, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
+import { CmsBrandLogo } from "../components/ui/cms-brand-logo";
 
 export type { AdminTab };
 
@@ -106,17 +107,10 @@ export function AdminLayout({
       {/* Top Header */}
       <header className="h-14 border-b border-slate-800/90 bg-slate-950/95 backdrop-blur sticky top-0 z-40 px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-white font-bold shadow-lg shadow-sky-500/20">
-            <Layers className="w-4 h-4" />
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold tracking-tight text-white">
-              NextBooking <span className="text-sky-400 font-normal">CMS</span>
-            </span>
-            <span className="text-[10px] font-semibold uppercase tracking-wider bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded px-1.5 py-0.5">
-              ADMIN
-            </span>
-          </div>
+          <CmsBrandLogo variant="dark" heightClassName="h-7" />
+          <span className="text-[10px] font-semibold uppercase tracking-wider bg-sky-500/10 text-sky-400 border border-sky-500/20 rounded px-1.5 py-0.5">
+            ADMIN
+          </span>
         </div>
 
         <div className="flex items-center gap-3">

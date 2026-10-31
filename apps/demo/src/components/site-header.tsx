@@ -2,8 +2,12 @@
 
 import React, { useState, useRef } from "react";
 import Link from "next/link";
-import { Layers, Menu, X } from "lucide-react";
-import { CMSPageData, CMSNavigationSection } from "@next-booking/cms-core";
+import { Menu, X } from "lucide-react";
+import {
+  CMSPageData,
+  CMSNavigationSection,
+  CmsBrandLogo,
+} from "@next-booking/cms-core";
 import { ThemeToggle } from "./theme-toggle";
 import { MobileMenu } from "./mobile-menu";
 
@@ -46,17 +50,25 @@ export function SiteHeader({
   return (
     <header className="border-b border-border bg-background/85 backdrop-blur sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between relative">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md">
-            <Layers className="w-5 h-5" />
-          </div>
-          <span className="text-base font-bold tracking-tight">
-            {rootSection?.name || "NextBooking"}
+        <Link href="/" className="flex items-center gap-3 group">
+          <CmsBrandLogo
+            variant="auto"
+            heightClassName="h-8 sm:h-9"
+            className="group-hover:opacity-95 transition-opacity"
+          />
+          <span className="hidden sm:inline-block h-5 w-px bg-border" />
+          <span className="inline-flex items-center gap-1.5 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-sky-600 dark:text-sky-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-sky-500 dark:bg-sky-400" />
+            <span>
+              Demo<span className="hidden sm:inline"> Template</span>
+            </span>
           </span>
         </Link>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle />
+          <div className="hidden sm:block">
+            <ThemeToggle />
+          </div>
           <button
             ref={menuButtonRef}
             type="button"
@@ -67,7 +79,7 @@ export function SiteHeader({
             className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-accent transition"
           >
             {isMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            <span>Menu</span>
+            <span className="hidden min-[480px]:inline">Menu</span>
           </button>
         </div>
 

@@ -7,6 +7,7 @@ import {
   CMSQueryProvider,
   CMSPageData,
   CMSNavigationSection,
+  formatTemplateLabel,
 } from "@next-booking/cms-core";
 import { ThemeToggle } from "./theme-toggle";
 import { SiteHeader } from "./site-header";
@@ -34,6 +35,10 @@ export function DemoSiteLayout({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navSections: CMSNavigationSection[] = page.navigation_sections || [];
   const rootSection = navSections.find((s) => s.is_root);
+  const isHomepage = Number(page.id) === 1001;
+  const templateLabel = formatTemplateLabel(
+    isHomepage ? "startpage" : page.template_name || "article"
+  );
 
   return (
     <CMSQueryProvider>
@@ -72,7 +77,8 @@ export function DemoSiteLayout({
 
           {/* Extracted Footer */}
           <SiteFooter
-            brandName={rootSection?.name || "NextBooking"}
+            brandName="NextBooking CMS"
+            templateName={templateLabel}
             pageTitle={page.page_title}
           />
 

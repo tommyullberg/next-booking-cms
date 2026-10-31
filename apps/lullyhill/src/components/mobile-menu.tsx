@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import Link from "next/link";
 import { Home, CornerDownRight } from "lucide-react";
 import { CMSNavigationSection } from "@next-booking/cms-core";
+import { ThemeToggle } from "./theme-toggle";
 
 export interface MobileMenuProps {
   isOpen: boolean;
@@ -233,6 +234,14 @@ export function MobileMenu({
           </div>
         );
       })}
+
+      {/* Mobile Theme Toggle (< 640px) */}
+      <div className="sm:hidden pt-1.5 mt-1.5 border-t border-slate-300/80 dark:border-slate-700/80 flex items-center justify-between px-3 py-1.5">
+        <span className="text-xs font-medium text-slate-600 dark:text-slate-400 font-serif">
+          Tema
+        </span>
+        <ThemeToggle />
+      </div>
     </div>
   );
 }
