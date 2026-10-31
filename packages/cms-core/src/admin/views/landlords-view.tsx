@@ -532,7 +532,7 @@ export function LandlordsView({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="e.g. jan.ullberg@lullyhill.se"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8.5 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
               </div>
@@ -550,7 +550,7 @@ export function LandlordsView({
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="e.g. 0498-21 10 87"
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8.5 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                     />
                   </div>
                 </div>
@@ -566,7 +566,7 @@ export function LandlordsView({
                       value={mobile}
                       onChange={(e) => setMobile(e.target.value)}
                       placeholder="e.g. 070-620 96 11"
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-8.5 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                     />
                   </div>
                 </div>
