@@ -99,6 +99,7 @@ export function AdminApp({
   onSaveMailTemplate,
 }: AdminAppProps) {
   const [currentTab, setCurrentTab] = useState<AdminTab>("dashboard");
+  const [calendarFilterObjectId, setCalendarFilterObjectId] = useState<string | null>(null);
   const [pages, setPages] = useState<PageListItem[]>(initialPages);
   const [sections, setSections] = useState<SectionItem[]>(initialSections);
   const [categoryTypes, setCategoryTypes] = useState<CategoryTypeItem[]>(
@@ -998,11 +999,24 @@ export function AdminApp({
         )}
 
         {currentTab === "bookings-dashboard" && (
-          <BookingsDashboardView />
+          <BookingsDashboardView
+            bookingObjects={bookingObjects}
+            onNavigateTab={(tab) => {
+              if (tab !== "bookings") setCalendarFilterObjectId(null);
+              setCurrentTab(tab);
+            }}
+            onNavigateToCalendar={(objectId) => {
+              setCalendarFilterObjectId(objectId);
+              setCurrentTab("bookings");
+            }}
+          />
         )}
 
         {currentTab === "bookings" && (
-          <BookingsCalendarView objects={bookingObjects} />
+          <BookingsCalendarView
+            objects={bookingObjects}
+            initialFilterObjectId={calendarFilterObjectId}
+          />
         )}
 
         {currentTab === "objects" && (

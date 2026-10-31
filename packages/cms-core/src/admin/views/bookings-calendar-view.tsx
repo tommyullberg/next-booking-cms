@@ -37,6 +37,7 @@ import { ModalPortal } from "../../components/ui/modal-portal";
 
 export interface BookingsCalendarViewProps {
   objects?: BookingObjectDetails[];
+  initialFilterObjectId?: string | null;
 }
 
 export interface ObjectColorTheme {
@@ -167,7 +168,10 @@ interface WeekRowData {
 type SortField = "stayDates" | "object" | "week";
 type SortDirection = "asc" | "desc";
 
-export function BookingsCalendarView({ objects = [] }: BookingsCalendarViewProps) {
+export function BookingsCalendarView({
+  objects = [],
+  initialFilterObjectId = null,
+}: BookingsCalendarViewProps) {
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -180,7 +184,19 @@ export function BookingsCalendarView({ objects = [] }: BookingsCalendarViewProps
   // Filter states
   const [showLocalBookings, setShowLocalBookings] = useState<boolean>(true);
   const [showImportedBookings, setShowImportedBookings] = useState<boolean>(true);
-  const [activeObjectIds, setActiveObjectIds] = useState<Set<string>>(() => new Set(objects.map((o) => o.id)));
+  const [activeObjectIds, setActiveObjectIds] = useState<Set<string>>(() => {
+    if (initialFilterObjectId) {
+      return new Set([initialFilterObjectId]);
+    }
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("cms_calendar_filter_object_id");
+      if (stored) {
+        localStorage.removeItem("cms_calendar_filter_object_id");
+        return new Set([stored]);
+      }
+    }
+    return new Set(objects.map((o) => o.id));
+  });
 
   // Modal inspection state
   const [selectedBooking, setSelectedBooking] = useState<BookingItem | null>(null);
@@ -188,13 +204,25 @@ export function BookingsCalendarView({ objects = [] }: BookingsCalendarViewProps
 
   // Sync activeObjectIds when objects list loads or updates
   useEffect(() => {
+    if (initialFilterObjectId) {
+      setActiveObjectIds(new Set([initialFilterObjectId]));
+      return;
+    }
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("cms_calendar_filter_object_id");
+      if (stored) {
+        localStorage.removeItem("cms_calendar_filter_object_id");
+        setActiveObjectIds(new Set([stored]));
+        return;
+      }
+    }
     if (objects.length > 0) {
       setActiveObjectIds((prev) => {
         if (prev.size === 0) return new Set(objects.map((o) => o.id));
         return prev;
       });
     }
-  }, [objects]);
+  }, [objects, initialFilterObjectId]);
 
   // Fetch all bookings
   const fetchBookings = async () => {
