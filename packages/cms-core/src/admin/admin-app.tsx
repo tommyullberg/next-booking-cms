@@ -1061,6 +1061,18 @@ export function AdminApp({
                 return payload;
               }
             }}
+            onReorderObjects={async (orderedIds) => {
+              const res = await fetch("/api/cms/booking-objects/reorder", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderedIds }),
+              });
+              const payload = await res.json();
+              if (res.ok && Array.isArray(payload)) {
+                setBookingObjects(payload);
+                return payload;
+              }
+            }}
           />
         )}
 

@@ -23,6 +23,7 @@ import {
   Calendar,
   HelpCircle,
   Info,
+  GripVertical,
 } from "lucide-react";
 import {
   BookingObjectDetails,
@@ -63,6 +64,7 @@ export interface BookingObjectsViewProps {
     amenity_ids?: string[];
   }) => Promise<BookingObjectItem[] | void>;
   onDeleteObject?: (id: string) => Promise<BookingObjectItem[] | void>;
+  onReorderObjects?: (orderedIds: string[]) => Promise<BookingObjectItem[] | void>;
 }
 
 
@@ -73,6 +75,7 @@ export function BookingObjectsView({
   amenities = [],
   onSaveObject,
   onDeleteObject,
+  onReorderObjects,
 }: BookingObjectsViewProps) {
   const [objects, setObjects] = useState<BookingObjectItem[]>(initialObjects);
 
@@ -83,6 +86,10 @@ export function BookingObjectsView({
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingObject, setEditingObject] = useState<BookingObjectItem | null>(null);
+
+  // Drag and drop states
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
   // Form states
   const [name, setName] = useState("");
@@ -207,6 +214,57 @@ export function BookingObjectsView({
     }
   };
 
+  // Drag & drop handlers
+  const handleDragStart = (e: React.DragEvent, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragOverId !== id) {
+      setDragOverId(id);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetId: string) => {
+    e.preventDefault();
+    setDragOverId(null);
+    if (!draggedId || draggedId === targetId) {
+      setDraggedId(null);
+      return;
+    }
+
+    const currentList = [...objects];
+    const fromIndex = currentList.findIndex((o) => o.id === draggedId);
+    const toIndex = currentList.findIndex((o) => o.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) {
+      setDraggedId(null);
+      return;
+    }
+
+    const [moved] = currentList.splice(fromIndex, 1);
+    currentList.splice(toIndex, 0, moved);
+    setDraggedId(null);
+
+    // Optimistically update
+    setObjects(currentList);
+
+    if (onReorderObjects) {
+      const res = await onReorderObjects(currentList.map((o) => o.id));
+      if (Array.isArray(res)) {
+        setObjects(res);
+      }
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedId(null);
+    setDragOverId(null);
+  };
+
   const filteredObjects = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     if (!q) return objects;
@@ -271,7 +329,7 @@ export function BookingObjectsView({
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                <th className="py-3.5 px-4 w-16">Sort</th>
+                <th className="py-3.5 px-3 w-10 text-center" />
                 <th className="py-3.5 px-3 w-16 text-center">Status</th>
                 <th className="py-3.5 px-5">Object</th>
                 <th className="py-3.5 px-4">Linked CMS Page</th>
@@ -282,6 +340,8 @@ export function BookingObjectsView({
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               {filteredObjects.map((obj) => {
+                const isDragging = draggedId === obj.id;
+                const isDragOver = dragOverId === obj.id;
                 const landlordName = obj.landlord
                   ? `${obj.landlord.first_name} ${obj.landlord.last_name}`.trim()
                   : "None assigned";
@@ -293,11 +353,30 @@ export function BookingObjectsView({
                 return (
                   <tr
                     key={obj.id}
-                    className="hover:bg-slate-900/60 transition group"
+                    draggable={!searchQuery}
+                    onDragStart={(e) => handleDragStart(e, obj.id)}
+                    onDragOver={(e) => handleDragOver(e, obj.id)}
+                    onDragLeave={() => dragOverId === obj.id && setDragOverId(null)}
+                    onDrop={(e) => handleDrop(e, obj.id)}
+                    onDragEnd={handleDragEnd}
+                    className={`transition group ${
+                      isDragging
+                        ? "opacity-30 bg-slate-800/20"
+                        : isDragOver
+                        ? "bg-sky-500/15 border-t-2 border-sky-400"
+                        : "hover:bg-slate-900/60"
+                    }`}
                   >
-                    {/* Sort Order */}
-                    <td className="py-3.5 px-4 font-mono text-slate-400">
-                      {obj.sort_order ?? 0}
+                    {/* Drag Handle */}
+                    <td className="py-3.5 px-3 text-slate-500 text-center">
+                      {!searchQuery && (
+                        <span
+                          className="cursor-grab active:cursor-grabbing inline-flex p-1 rounded hover:text-slate-300 hover:bg-slate-800/60 transition"
+                          title="Drag to reorder booking object"
+                        >
+                          <GripVertical className="w-4 h-4" />
+                        </span>
+                      )}
                     </td>
 
                     {/* Status / Visibility */}
@@ -462,7 +541,7 @@ export function BookingObjectsView({
                 <div className="space-y-1.5 sm:col-span-2">
                   <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Active Landlord (Hyresvärd)</span>
+                    <span>Active Landlord</span>
                   </label>
                   <select
                     value={landlordId}
@@ -480,7 +559,7 @@ export function BookingObjectsView({
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Visible (Synlig)
+                    Visible
                   </label>
                   <div className="flex items-center gap-3 pt-1.5">
                     <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-300">
@@ -507,11 +586,11 @@ export function BookingObjectsView({
                 </div>
               </div>
 
-              {/* Name & Sort Order */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <div className="space-y-1.5 sm:col-span-3">
+              {/* Object Name & Page in CMS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Object Name (Namn) <span className="text-rose-400">*</span>
+                    Object Name <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -524,47 +603,34 @@ export function BookingObjectsView({
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    Sort Order (Sortering)
+                  <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Page in CMS</span>
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      Connects unit data to template page
+                    </span>
                   </label>
-                  <input
-                    type="number"
-                    value={sortOrder}
-                    onChange={(e) => setSortOrder(Number(e.target.value))}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition font-mono"
-                  />
+                  <select
+                    value={pageId}
+                    onChange={(e) => setPageId(e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
+                  >
+                    <option value="">-- No page connected --</option>
+                    {pages.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.page_title} (ID: {p.id})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
-              {/* Page in CMS (Sida i systemet) */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Page in CMS (Sida i systemet)</span>
-                  </span>
-                  <span className="text-[10px] text-slate-500">
-                    Connects unit data to the selected template page
-                  </span>
-                </label>
-                <select
-                  value={pageId}
-                  onChange={(e) => setPageId(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
-                >
-                  <option value="">-- No page connected --</option>
-                  {pages.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.page_title} (ID: {p.id}, /{p.slug})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Short Description (Kort beskrivning bokningskalendern) */}
+              {/* Short Description */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-slate-300">
-                  Short Description (Kort beskrivning - bokningskalendern)
+                  Short Description
                 </label>
                 <textarea
                   rows={4}
@@ -579,7 +645,7 @@ export function BookingObjectsView({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Type (Typ)
+                    Type
                   </label>
                   <select
                     value={type}
@@ -596,7 +662,7 @@ export function BookingObjectsView({
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Size / Yta (m²)
+                    Size (m²)
                   </label>
                   <input
                     type="number"
@@ -613,7 +679,7 @@ export function BookingObjectsView({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Rooms (Rum)
+                    Rooms
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     <input
@@ -639,7 +705,7 @@ export function BookingObjectsView({
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Beds (Bäddar + Extrabäddar)
+                    Beds & Extra Beds
                   </label>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 flex items-center gap-1.5">
@@ -650,7 +716,7 @@ export function BookingObjectsView({
                         onChange={(e) => setBedCount(Number(e.target.value))}
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition font-mono text-center"
                       />
-                      <span className="text-[11px] text-slate-400">bäddar</span>
+                      <span className="text-[11px] text-slate-400">beds</span>
                     </div>
                     <span className="text-slate-500">+</span>
                     <div className="flex-1 flex items-center gap-1.5">
@@ -671,7 +737,7 @@ export function BookingObjectsView({
               <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-semibold text-white block">
-                    Pets Allowed (Husdjur tillåtna)
+                    Pets Allowed
                   </span>
                   <span className="text-[10px] text-slate-400">
                     Allows guests with pets to filter and book this unit
@@ -694,12 +760,12 @@ export function BookingObjectsView({
                 </button>
               </div>
 
-              {/* Active Amenities (Aktiva förnödenheter) */}
+              {/* Active Amenities */}
               <div className="space-y-2 pt-2 border-t border-slate-800">
                 <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Tag className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Amenities (Förnödenheter för objektet)</span>
+                    <span>Amenities</span>
                   </span>
                   <span className="text-[10px] text-slate-400">
                     {selectedAmenityIds.length} of {amenities.length} active
@@ -752,12 +818,12 @@ export function BookingObjectsView({
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-sky-400" />
-                    <span>iCal Import URL (Booking.com m.fl.)</span>
+                    <span>iCal Import URL</span>
                     <button
                       type="button"
                       onClick={() => setShowIcalHelp(!showIcalHelp)}
                       className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-800 hover:bg-sky-500/20 text-slate-400 hover:text-sky-300 border border-slate-700 transition ml-1"
-                      title="Klicka för information om iCal-kopplingen"
+                      title="Click for information about iCal sync"
                     >
                       <HelpCircle className="w-3 h-3" />
                     </button>
@@ -765,7 +831,7 @@ export function BookingObjectsView({
                   {icalUrl && (
                     <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Aktiv iCal-synk
+                      Active iCal sync
                     </span>
                   )}
                 </div>
@@ -794,7 +860,7 @@ export function BookingObjectsView({
                     type="text"
                     value={icalUrl}
                     onChange={(e) => setIcalUrl(e.target.value)}
-                    placeholder="https://ical.booking.com/v1/export?t=... eller /mock-ical/..."
+                    placeholder="https://ical.booking.com/v1/export?t=... or /mock-ical/..."
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono text-xs"
                   />
                 </div>

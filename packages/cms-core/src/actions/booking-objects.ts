@@ -291,3 +291,16 @@ export async function deleteBookingObjectAction(id: string): Promise<void> {
     where: { id },
   });
 }
+
+export async function reorderBookingObjectsAction(
+  orderedIds: string[]
+): Promise<void> {
+  await prisma.$transaction(
+    orderedIds.map((id, index) =>
+      prisma.bookingObject.update({
+        where: { id },
+        data: { sort_order: (index + 1) * 10 },
+      })
+    )
+  );
+}

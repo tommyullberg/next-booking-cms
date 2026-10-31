@@ -72,6 +72,7 @@ import {
   createBookingObjectAction,
   updateBookingObjectAction,
   deleteBookingObjectAction,
+  reorderBookingObjectsAction,
 } from "../actions/booking-objects";
 import {
   getBookingOptionalsAction,
@@ -399,6 +400,20 @@ export async function handleCmsApiRoute(
       } catch (err: any) {
         return NextResponse.json(
           { error: err?.message || "Failed to save booking object" },
+          { status: 400 }
+        );
+      }
+    }
+    if (path === "booking-objects/reorder") {
+      try {
+        const body = await req.json();
+        await reorderBookingObjectsAction(body.orderedIds || []);
+        revalidateBookingCaches();
+        const objects = await getBookingObjectsAction();
+        return NextResponse.json(objects);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to reorder booking objects" },
           { status: 400 }
         );
       }
