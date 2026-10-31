@@ -6,6 +6,10 @@ import { Search, Users, Calendar, Dog, Sparkles, CheckCircle2, Loader2, ArrowRig
 import { SearchMatchItem } from "./types";
 import { DatePicker } from "../components/ui/date-picker";
 import { ModalPortal } from "../components/ui/modal-portal";
+import { Loader } from "../components/ui/loader";
+
+/** Minimum time (in ms) to display the search loader animation when triggered */
+export const MIN_SEARCH_LOADER_DURATION_MS = 900;
 
 export interface AvailabilitySearchProps {
   onSelectBooking?: (item: SearchMatchItem) => void;
@@ -34,10 +38,11 @@ export function AvailabilitySearch({
   const [customerEmail, setCustomerEmail] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [isAnimatingSearch, setIsAnimatingSearch] = useState(false);
 
   const createMutation = useCreateBookingMutation();
 
-  const { data, isLoading } = useAvailabilitySearchQuery({
+  const { data, isLoading, isFetching, refetch } = useAvailabilitySearchQuery({
     startDate,
     endDate,
     guests,
@@ -46,9 +51,21 @@ export function AvailabilitySearch({
     enabled: searchTriggered,
   });
 
+  const isSearching = isLoading || isFetching || isAnimatingSearch;
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearchTriggered(true);
+    if (searchTriggered) {
+      refetch();
+    } else {
+      setSearchTriggered(true);
+    }
+    if (MIN_SEARCH_LOADER_DURATION_MS > 0) {
+      setIsAnimatingSearch(true);
+      setTimeout(() => {
+        setIsAnimatingSearch(false);
+      }, MIN_SEARCH_LOADER_DURATION_MS);
+    }
   };
 
   const handleBookItem = (item: SearchMatchItem) => {
@@ -164,10 +181,10 @@ export function AvailabilitySearch({
 
         <button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || isFetching}
           className="h-10 w-full flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
         >
-          {isLoading ? (
+          {isSearching ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : (
             <Search className="w-4 h-4" />
@@ -184,11 +201,18 @@ export function AvailabilitySearch({
             <div className="flex items-center gap-2.5">
               <span className="h-3 w-3 rounded-full bg-emerald-500 inline-block shadow-sm shadow-emerald-500/50" />
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Exakta träffar ({data?.exactMatches?.length || 0})
+                Exakta träffar ({isSearching ? "..." : data?.exactMatches?.length || 0})
               </h3>
             </div>
 
-            {data?.exactMatches?.length === 0 ? (
+            {isSearching ? (
+              <Loader
+                variant="scanner"
+                theme="emerald"
+                label="Söker exakta datumträffar..."
+                sublabel="Skannar kalendrar, bytesdagar och stugkapacitet i realtid"
+              />
+            ) : data?.exactMatches?.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/40 p-6 text-center text-xs text-slate-600 dark:text-slate-400">
                 Inga exakta matchningar hittades för de valda datumen. Se alternativa förslag nedan.
               </div>
@@ -242,11 +266,18 @@ export function AvailabilitySearch({
               <div className="flex items-center gap-2.5">
                 <span className="h-3 w-3 rounded-full bg-amber-500 inline-block shadow-sm shadow-amber-500/50" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Alternativa förslag inom +-{flexDays} dagar ({data?.alternatives?.length || 0})
+                  Alternativa förslag inom +-{flexDays} dagar ({isSearching ? "..." : data?.alternatives?.length || 0})
                 </h3>
               </div>
 
-              {data?.alternatives?.length === 0 ? (
+              {isSearching ? (
+                <Loader
+                  variant="scanner"
+                  theme="amber"
+                  label={`Söker alternativa datum inom +-${flexDays} dagar...`}
+                  sublabel="Utvärderar närliggande in- och utcheckningsdagar"
+                />
+              ) : data?.alternatives?.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900/40 p-6 text-center text-xs text-slate-600 dark:text-slate-400">
                   Inga alternativa datum tillgängliga inom vald tidsram.
                 </div>
