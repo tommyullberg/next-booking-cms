@@ -46,15 +46,20 @@ export function SiteHeader({
   return (
     <header className="border-b border-slate-200/80 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-950/85 backdrop-blur sticky top-0 z-40 transition-colors">
       <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between relative">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-2xl bg-sky-700 text-white flex items-center justify-center font-serif text-lg shadow-md shadow-sky-900/10">
-            L
-          </div>
-          <div>
-            <span className="text-base font-semibold tracking-wider uppercase font-serif text-slate-900 dark:text-white block">
-              Villa Lullyhill
-            </span>
-          </div>
+        <Link
+          href="/"
+          className="inline-flex items-center hover:opacity-95 transition-opacity"
+        >
+          <img
+            src="/branding/villa-lullyhill-logo-light.png"
+            alt="Villa Lullyhill Gotland"
+            className="w-full max-w-[180px] sm:max-w-[220px] h-auto object-contain select-none block dark:hidden"
+          />
+          <img
+            src="/branding/villa-lullyhill-logo-dark.png"
+            alt="Villa Lullyhill Gotland"
+            className="w-full max-w-[180px] sm:max-w-[220px] h-auto object-contain select-none hidden dark:block"
+          />
         </Link>
 
         <div className="flex items-center gap-2">
