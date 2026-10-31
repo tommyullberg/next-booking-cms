@@ -35,7 +35,11 @@ export function BookingOverviewTemplate({ page }: { page: CMSPageData }) {
         <AvailabilitySearch />
       </section>
 
-      <section className="max-w-3xl mx-auto rounded-3xl border border-neutral-300 dark:border-border bg-neutral-100 dark:bg-card/60 p-6 sm:p-8 shadow-md shadow-black/5 space-y-3">
+      <CMSField.Group
+        as="section"
+        texts={[3, 4]}
+        className="max-w-3xl mx-auto rounded-3xl border border-neutral-300 dark:border-border bg-neutral-100 dark:bg-card/60 p-6 sm:p-8 shadow-md shadow-black/5 space-y-3"
+      >
         <CMSField.Text
           nbr={3}
           as="h2"
@@ -46,7 +50,7 @@ export function BookingOverviewTemplate({ page }: { page: CMSPageData }) {
           as="div"
           className="text-sm text-slate-700 dark:text-muted-foreground leading-relaxed"
         />
-      </section>
+      </CMSField.Group>
     </DemoSiteLayout>
   );
 }

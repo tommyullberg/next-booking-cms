@@ -37,7 +37,7 @@ export function StartpageTemplate({ page }: { page: CMSPageData }) {
       />
 
       <section id="calendar" className="space-y-4">
-        <div className="text-center max-w-xl mx-auto space-y-1">
+        <CMSField.Group texts={[3, 4]} className="text-center max-w-xl mx-auto space-y-1">
           <CMSField.Text
             nbr={3}
             as="h2"
@@ -48,7 +48,7 @@ export function StartpageTemplate({ page }: { page: CMSPageData }) {
             as="p"
             className="text-xs text-slate-600 dark:text-slate-400"
           />
-        </div>
+        </CMSField.Group>
 
         <BookingCalendar
           objectId="lullyhill-villa"

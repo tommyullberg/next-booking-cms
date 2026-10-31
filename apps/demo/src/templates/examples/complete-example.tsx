@@ -48,9 +48,9 @@ export function CompleteExampleTemplate({ page }: { page: CMSPageData }) {
       </section>
 
       {/* 3. Gallery Field (Fancybox Lightbox + Drag & Drop Sorting + Localized Captions) */}
-      <section className="space-y-4">
+      <CMSField.Group as="section" galleries={[1]} className="space-y-4">
         <CMSField.Gallery nbr={1} />
-      </section>
+      </CMSField.Group>
 
       {/* 4. Secondary Navigation Field (Render Props) */}
       <section className="rounded-2xl border border-border p-6">

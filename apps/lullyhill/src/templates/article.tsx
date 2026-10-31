@@ -32,13 +32,17 @@ export function ArticleTemplate({ page }: { page: CMSPageData }) {
           className="w-full h-auto object-cover rounded-2xl max-h-[420px]"
         />
 
-        <div className="rounded-3xl border border-neutral-300 dark:border-slate-800 bg-neutral-100 dark:bg-slate-900/90 p-6 sm:p-8 shadow-md shadow-black/5">
+        <CMSField.Group
+          as="div"
+          texts={[3]}
+          className="rounded-3xl border border-neutral-300 dark:border-slate-800 bg-neutral-100 dark:bg-slate-900/90 p-6 sm:p-8 shadow-md shadow-black/5"
+        >
           <CMSField.Text
             nbr={3}
             as="div"
             className="text-sm leading-relaxed text-slate-700 dark:text-slate-300 space-y-4"
           />
-        </div>
+        </CMSField.Group>
       </article>
     </LullyhillSiteLayout>
   );

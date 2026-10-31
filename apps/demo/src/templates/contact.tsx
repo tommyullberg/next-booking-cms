@@ -32,7 +32,11 @@ export function ContactTemplate({ page }: { page: CMSPageData }) {
           className="w-full h-auto object-cover rounded-2xl max-h-[380px]"
         />
 
-        <div className="rounded-3xl border border-neutral-300 dark:border-border bg-neutral-100 dark:bg-card/60 p-6 sm:p-8 shadow-md shadow-black/5 space-y-4 border-l-4 border-l-sky-600 dark:border-l-sky-500">
+        <CMSField.Group
+          as="div"
+          texts={[3, 4]}
+          className="rounded-3xl border border-neutral-300 dark:border-border bg-neutral-100 dark:bg-card/60 p-6 sm:p-8 shadow-md shadow-black/5 space-y-4 border-l-4 border-l-sky-600 dark:border-l-sky-500"
+        >
           <CMSField.Text
             nbr={3}
             as="div"
@@ -43,7 +47,7 @@ export function ContactTemplate({ page }: { page: CMSPageData }) {
             as="div"
             className="text-sm text-slate-600 dark:text-muted-foreground leading-relaxed"
           />
-        </div>
+        </CMSField.Group>
       </div>
     </DemoSiteLayout>
   );

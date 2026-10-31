@@ -36,7 +36,11 @@ export function BookingUnitTemplate({ page }: { page: CMSPageData }) {
         className="w-full h-auto object-cover rounded-2xl max-h-[460px]"
       />
 
-      <section className="space-y-3 max-w-3xl rounded-3xl border border-neutral-300 dark:border-slate-800 bg-neutral-100 dark:bg-slate-900/90 p-6 sm:p-8 shadow-md shadow-black/5 border-l-4 border-l-sky-700 dark:border-l-sky-500">
+      <CMSField.Group
+        as="section"
+        texts={[3, 4]}
+        className="space-y-3 max-w-3xl rounded-3xl border border-neutral-300 dark:border-slate-800 bg-neutral-100 dark:bg-slate-900/90 p-6 sm:p-8 shadow-md shadow-black/5 border-l-4 border-l-sky-700 dark:border-l-sky-500"
+      >
         <CMSField.Text
           nbr={3}
           as="h2"
@@ -47,11 +51,11 @@ export function BookingUnitTemplate({ page }: { page: CMSPageData }) {
           as="div"
           className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed"
         />
-      </section>
+      </CMSField.Group>
 
-      <section className="space-y-4">
+      <CMSField.Group as="section" galleries={[1]} className="space-y-4">
         <CMSField.Gallery nbr={1} />
-      </section>
+      </CMSField.Group>
 
       <section className="space-y-4">
         <BookingCalendar

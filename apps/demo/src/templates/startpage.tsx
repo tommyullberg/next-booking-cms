@@ -32,7 +32,7 @@ export function StartpageTemplate({ page }: { page: CMSPageData }) {
       />
 
       <section id="booking" className="space-y-6">
-        <div className="text-center max-w-xl mx-auto space-y-1.5">
+        <CMSField.Group texts={[3, 4]} className="text-center max-w-xl mx-auto space-y-1.5">
           <CMSField.Text
             nbr={3}
             as="h2"
@@ -43,7 +43,7 @@ export function StartpageTemplate({ page }: { page: CMSPageData }) {
             as="p"
             className="text-xs text-slate-600 dark:text-muted-foreground"
           />
-        </div>
+        </CMSField.Group>
 
         <AvailabilitySearch />
       </section>
