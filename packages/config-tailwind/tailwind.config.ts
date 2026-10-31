@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
 export const sharedConfig: Omit<Config, "content"> = {
   darkMode: ["class"],
@@ -46,7 +47,7 @@ export const sharedConfig: Omit<Config, "content"> = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate],
 };
 
 export default sharedConfig;

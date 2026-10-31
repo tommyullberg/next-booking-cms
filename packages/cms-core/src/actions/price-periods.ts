@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import {
   getWeeksInYear,
   getISOWeekNumber,
+  getISOWeek,
   getMondayOfISOWeek,
   getSundayOfISOWeek,
 } from "../utils/weeks";
@@ -12,10 +13,12 @@ export { getWeeksInYear };
 export interface CreatePricePeriodInput {
   objectId: string;
   name?: string;
-  startYear: number;
-  startWeek: number;
-  endYear: number;
-  endWeek: number;
+  startDate?: string;
+  endDate?: string;
+  startYear?: number;
+  startWeek?: number;
+  endYear?: number;
+  endWeek?: number;
   allowCustomDays?: boolean;
   priceDay?: number | null;
   price2Days?: number | null;
@@ -44,53 +47,47 @@ export interface BlockedPeriodItem {
   createdAt?: string | Date;
 }
 
-function weekScore(year: number, week: number): number {
-  return year * 100 + week;
-}
-
-function checkPeriodOverlap(
-  startYear: number,
-  startWeek: number,
-  endYear: number,
-  endWeek: number,
+function checkDatePeriodOverlap(
+  startDate: Date,
+  endDate: Date,
   existingPeriods: Array<{
     id: string;
     name: string | null;
-    start_year: number;
-    start_week: number;
-    end_year: number;
-    end_week: number;
+    start_date: Date | null;
+    end_date: Date | null;
+    start_year?: number | null;
+    start_week?: number | null;
+    end_year?: number | null;
+    end_week?: number | null;
   }>,
   excludeId?: string
 ) {
-  const maxStartWeeks = getWeeksInYear(startYear);
-  const maxEndWeeks = getWeeksInYear(endYear);
-
-  if (startWeek < 1 || startWeek > maxStartWeeks) {
-    throw new Error(`Startvecka måste vara mellan 1 och ${maxStartWeeks} för år ${startYear}.`);
-  }
-  if (endWeek < 1 || endWeek > maxEndWeeks) {
-    throw new Error(`Slutvecka måste vara mellan 1 och ${maxEndWeeks} för år ${endYear}.`);
-  }
-
-  const newStart = weekScore(startYear, startWeek);
-  const newEnd = weekScore(endYear, endWeek);
-
-  if (newStart > newEnd) {
-    throw new Error("Startvecka kan inte vara senare än slutvecka.");
+  if (startDate > endDate) {
+    throw new Error("Start date cannot be later than end date.");
   }
 
   for (const existing of existingPeriods) {
     if (excludeId && existing.id === excludeId) continue;
-
-    const existStart = weekScore(existing.start_year, existing.start_week);
-    const existEnd = weekScore(existing.end_year, existing.end_week);
+    let existStart: Date | null = existing.start_date;
+    let existEnd: Date | null = existing.end_date;
+    if (!existStart && existing.start_year && existing.start_week) {
+      existStart = getMondayOfISOWeek(existing.start_year, existing.start_week);
+    }
+    if (!existEnd && existing.end_year && existing.end_week) {
+      existEnd = getSundayOfISOWeek(existing.end_year, existing.end_week);
+    }
+    if (!existStart || !existEnd) continue;
 
     // Overlap condition: max(start) <= min(end)
-    if (Math.max(newStart, existStart) <= Math.min(newEnd, existEnd)) {
-      const label = existing.name ? `"${existing.name}"` : "befintlig period";
+    if (
+      Math.max(startDate.getTime(), existStart.getTime()) <=
+      Math.min(endDate.getTime(), existEnd.getTime())
+    ) {
+      const label = existing.name ? `"${existing.name}"` : "existing period";
+      const sStr = existStart.toISOString().split("T")[0];
+      const eStr = existEnd.toISOString().split("T")[0];
       throw new Error(
-        `Veckospannet (v.${startWeek}–${endWeek}, ${startYear}) överlappar med ${label} (v.${existing.start_week}–${existing.end_week}, ${existing.start_year}).`
+        `The period (${startDate.toISOString().split("T")[0]} to ${endDate.toISOString().split("T")[0]}) overlaps with ${label} (${sStr} to ${eStr}).`
       );
     }
   }
@@ -106,8 +103,15 @@ export async function getPricePeriodsAction(params?: {
       where.object_id = params.objectId;
     }
     if (params?.year) {
-      // Return periods that cover or intersect this year
+      const yearStart = new Date(`${params.year}-01-01T00:00:00.000Z`);
+      const yearEnd = new Date(`${params.year}-12-31T23:59:59.999Z`);
       where.OR = [
+        {
+          AND: [
+            { start_date: { lte: yearEnd } },
+            { end_date: { gte: yearStart } },
+          ],
+        },
         { start_year: params.year },
         { end_year: params.year },
         {
@@ -130,6 +134,7 @@ export async function getPricePeriodsAction(params?: {
         },
       },
       orderBy: [
+        { start_date: "asc" },
         { start_year: "asc" },
         { start_week: "asc" },
       ],
@@ -172,10 +177,18 @@ export async function getMissingWeeksAction(objectId: string, year: number): Pro
     }
 
     // Active price periods
+    const yearStart = new Date(`${year}-01-01T00:00:00.000Z`);
+    const yearEnd = new Date(`${year}-12-31T23:59:59.999Z`);
     const periods = await prisma.objectPricePeriod.findMany({
       where: {
         object_id: objectId,
         OR: [
+          {
+            AND: [
+              { start_date: { lte: yearEnd } },
+              { end_date: { gte: yearStart } },
+            ],
+          },
           { start_year: year },
           { end_year: year },
           {
@@ -186,10 +199,10 @@ export async function getMissingWeeksAction(objectId: string, year: number): Pro
           },
         ],
       },
-      orderBy: { start_week: "asc" },
+      orderBy: { start_date: "asc" },
     });
 
-    // Active blocked periods ("Ej uthyrning")
+    // Active blocked periods ("Not for rent")
     const blockedBookings = await prisma.booking.findMany({
       where: {
         object_id: objectId,
@@ -207,10 +220,22 @@ export async function getMissingWeeksAction(objectId: string, year: number): Pro
 
     const coveredWeeks = new Set<number>();
     for (const p of periods) {
-      const sWeek = p.start_year < year ? 1 : p.start_week;
-      const eWeek = p.end_year > year ? maxWeeks : p.end_week;
-      for (let w = sWeek; w <= eWeek; w++) {
-        coveredWeeks.add(w);
+      if (p.start_date && p.end_date) {
+        const pStart = new Date(p.start_date);
+        const pEnd = new Date(p.end_date);
+        for (let w = 1; w <= maxWeeks; w++) {
+          const mon = getMondayOfISOWeek(year, w);
+          const sun = getSundayOfISOWeek(year, w);
+          if (pStart <= sun && pEnd >= mon) {
+            coveredWeeks.add(w);
+          }
+        }
+      } else if (p.start_year && p.start_week && p.end_year && p.end_week) {
+        const sWeek = p.start_year < year ? 1 : p.start_week;
+        const eWeek = p.end_year > year ? maxWeeks : p.end_week;
+        for (let w = sWeek; w <= eWeek; w++) {
+          coveredWeeks.add(w);
+        }
       }
     }
 
@@ -349,12 +374,39 @@ export async function deleteBlockedPeriodAction(id: string) {
 
 
 export async function createPricePeriodAction(data: CreatePricePeriodInput) {
+  let startDateObj: Date;
+  let endDateObj: Date;
+
+  if (data.startDate && data.endDate) {
+    startDateObj = new Date(data.startDate + "T12:00:00.000Z");
+    endDateObj = new Date(data.endDate + "T12:00:00.000Z");
+  } else if (
+    data.startYear !== undefined &&
+    data.startWeek !== undefined &&
+    data.endYear !== undefined &&
+    data.endWeek !== undefined
+  ) {
+    startDateObj = getMondayOfISOWeek(data.startYear, data.startWeek);
+    endDateObj = getSundayOfISOWeek(data.endYear, data.endWeek);
+  } else {
+    throw new Error("Start date and end date are required.");
+  }
+
+  if (startDateObj > endDateObj) {
+    throw new Error("Start date cannot be later than end date.");
+  }
+
+  const startIso = getISOWeek(startDateObj);
+  const endIso = getISOWeek(endDateObj);
+
   // Validate overlap with existing periods for this object
   const existing = await prisma.objectPricePeriod.findMany({
     where: { object_id: data.objectId },
     select: {
       id: true,
       name: true,
+      start_date: true,
+      end_date: true,
       start_year: true,
       start_week: true,
       end_year: true,
@@ -362,22 +414,18 @@ export async function createPricePeriodAction(data: CreatePricePeriodInput) {
     },
   });
 
-  checkPeriodOverlap(
-    data.startYear,
-    data.startWeek,
-    data.endYear,
-    data.endWeek,
-    existing
-  );
+  checkDatePeriodOverlap(startDateObj, endDateObj, existing);
 
   const created = await prisma.objectPricePeriod.create({
     data: {
       object_id: data.objectId,
       name: data.name || null,
-      start_year: data.startYear,
-      start_week: data.startWeek,
-      end_year: data.endYear,
-      end_week: data.endWeek,
+      start_date: startDateObj,
+      end_date: endDateObj,
+      start_year: startIso.year,
+      start_week: startIso.week,
+      end_year: endIso.year,
+      end_week: endIso.week,
       allow_custom_days: data.allowCustomDays ?? true,
       price_day: data.priceDay !== undefined ? data.priceDay : null,
       price_2_days: data.price2Days !== undefined ? data.price2Days : null,
@@ -408,14 +456,50 @@ export async function updatePricePeriodAction(
   });
 
   if (!current) {
-    throw new Error("Prisperiod hittades inte.");
+    throw new Error("Price period not found.");
   }
 
   const objectId = data.objectId || current.object_id;
-  const startYear = data.startYear ?? current.start_year;
-  const startWeek = data.startWeek ?? current.start_week;
-  const endYear = data.endYear ?? current.end_year;
-  const endWeek = data.endWeek ?? current.end_week;
+
+  let startDateObj: Date;
+  let endDateObj: Date;
+
+  if (data.startDate && data.endDate) {
+    startDateObj = new Date(data.startDate + "T12:00:00.000Z");
+    endDateObj = new Date(data.endDate + "T12:00:00.000Z");
+  } else if (data.startDate) {
+    startDateObj = new Date(data.startDate + "T12:00:00.000Z");
+    endDateObj = current.end_date
+      ? new Date(current.end_date)
+      : getSundayOfISOWeek(current.end_year || 2026, current.end_week || 52);
+  } else if (data.endDate) {
+    startDateObj = current.start_date
+      ? new Date(current.start_date)
+      : getMondayOfISOWeek(current.start_year || 2026, current.start_week || 1);
+    endDateObj = new Date(data.endDate + "T12:00:00.000Z");
+  } else if (
+    data.startYear !== undefined &&
+    data.startWeek !== undefined &&
+    data.endYear !== undefined &&
+    data.endWeek !== undefined
+  ) {
+    startDateObj = getMondayOfISOWeek(data.startYear, data.startWeek);
+    endDateObj = getSundayOfISOWeek(data.endYear, data.endWeek);
+  } else {
+    startDateObj = current.start_date
+      ? new Date(current.start_date)
+      : getMondayOfISOWeek(current.start_year || 2026, current.start_week || 1);
+    endDateObj = current.end_date
+      ? new Date(current.end_date)
+      : getSundayOfISOWeek(current.end_year || 2026, current.end_week || 52);
+  }
+
+  if (startDateObj > endDateObj) {
+    throw new Error("Start date cannot be later than end date.");
+  }
+
+  const startIso = getISOWeek(startDateObj);
+  const endIso = getISOWeek(endDateObj);
 
   // Validate overlap with existing periods
   const existing = await prisma.objectPricePeriod.findMany({
@@ -423,6 +507,8 @@ export async function updatePricePeriodAction(
     select: {
       id: true,
       name: true,
+      start_date: true,
+      end_date: true,
       start_year: true,
       start_week: true,
       end_year: true,
@@ -430,16 +516,18 @@ export async function updatePricePeriodAction(
     },
   });
 
-  checkPeriodOverlap(startYear, startWeek, endYear, endWeek, existing, id);
+  checkDatePeriodOverlap(startDateObj, endDateObj, existing, id);
 
   const updated = await prisma.objectPricePeriod.update({
     where: { id },
     data: {
       ...(data.name !== undefined ? { name: data.name } : {}),
-      ...(data.startYear !== undefined ? { start_year: data.startYear } : {}),
-      ...(data.startWeek !== undefined ? { start_week: data.startWeek } : {}),
-      ...(data.endYear !== undefined ? { end_year: data.endYear } : {}),
-      ...(data.endWeek !== undefined ? { end_week: data.endWeek } : {}),
+      start_date: startDateObj,
+      end_date: endDateObj,
+      start_year: startIso.year,
+      start_week: startIso.week,
+      end_year: endIso.year,
+      end_week: endIso.week,
       ...(data.allowCustomDays !== undefined ? { allow_custom_days: data.allowCustomDays } : {}),
       ...(data.priceDay !== undefined ? { price_day: data.priceDay } : {}),
       ...(data.price2Days !== undefined ? { price_2_days: data.price2Days } : {}),

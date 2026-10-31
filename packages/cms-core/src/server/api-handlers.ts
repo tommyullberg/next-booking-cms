@@ -464,7 +464,7 @@ export async function handleCmsApiRoute(
         revalidateBookingCaches();
         const periods = await getPricePeriodsAction({
           objectId: body.objectId,
-          year: body.startYear,
+          year: body.startYear || (body.startDate ? new Date(body.startDate).getFullYear() : undefined),
         });
         return NextResponse.json(periods);
       } catch (err: any) {

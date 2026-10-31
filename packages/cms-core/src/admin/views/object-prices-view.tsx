@@ -19,9 +19,15 @@ import {
   Ban,
   ChevronDown,
   ChevronUp,
+  MousePointerClick,
 } from "lucide-react";
 import { BookingObjectItem } from "./booking-objects-view";
-import { getWeeksInYear, getISOWeek } from "../../utils/weeks";
+import {
+  getWeeksInYear,
+  getISOWeek,
+  getMondayOfISOWeek,
+  getSundayOfISOWeek,
+} from "../../utils/weeks";
 import {
   MONTH_NAMES_EN,
   WEEKDAY_INITIALS_EN,
@@ -33,14 +39,38 @@ import { ModalPortal } from "../../components/ui/modal-portal";
 
 export type { MissingWeekRange, BlockedPeriodItem };
 
+export function formatWeekSpan(
+  startWeek?: number | null,
+  startYear?: number | null,
+  endWeek?: number | null,
+  endYear?: number | null
+): string {
+  if (!startWeek) return "";
+  const endW = endWeek || startWeek;
+  const startY = startYear || null;
+  const endY = endYear || startYear || null;
+
+  if (startY && endY && startY !== endY) {
+    return `w.${startWeek} ${startY}–w.${endW} ${endY}`;
+  }
+
+  const yearSuffix = startY ? ` ${startY}` : "";
+  if (startWeek === endW) {
+    return `w.${startWeek}${yearSuffix}`;
+  }
+  return `w.${startWeek}–${endW}${yearSuffix}`;
+}
+
 export interface PricePeriodItem {
   id: string;
   object_id: string;
   name: string | null;
-  start_year: number;
-  start_week: number;
-  end_year: number;
-  end_week: number;
+  start_date?: string | Date | null;
+  end_date?: string | Date | null;
+  start_year?: number | null;
+  start_week?: number | null;
+  end_year?: number | null;
+  end_week?: number | null;
   allow_custom_days: boolean;
   price_day: number | null;
   price_2_days: number | null;
@@ -109,18 +139,21 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
   // Year calendar toggle
   const [showYearCalendar, setShowYearCalendar] = useState<boolean>(true);
 
+  // Calendar date range selection states
+  const [rangeStart, setRangeStart] = useState<string | null>(null);
+  const [rangeEnd, setRangeEnd] = useState<string | null>(null);
+  const [hoverDate, setHoverDate] = useState<string | null>(null);
+
   // Price period modal states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingPeriod, setEditingPeriod] = useState<PricePeriodItem | null>(null);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Price period form fields
+  // Price period form fields (date-based)
   const [formName, setFormName] = useState<string>("");
-  const [formStartYear, setFormStartYear] = useState<number>(selectedYear);
-  const [formStartWeek, setFormStartWeek] = useState<number>(1);
-  const [formEndYear, setFormEndYear] = useState<number>(selectedYear);
-  const [formEndWeek, setFormEndWeek] = useState<number>(maxWeeksInSelectedYear);
+  const [formStartDate, setFormStartDate] = useState<string>("");
+  const [formEndDate, setFormEndDate] = useState<string>("");
   const [formAllowCustomDays, setFormAllowCustomDays] = useState<boolean>(false);
   const [formPriceDay, setFormPriceDay] = useState<string>("");
   const [formPriceSunThu, setFormPriceSunThu] = useState<string>("");
@@ -131,6 +164,18 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
   const [formPrice4Days, setFormPrice4Days] = useState<string>("");
   const [formPrice5Days, setFormPrice5Days] = useState<string>("");
   const [formPrice6Days, setFormPrice6Days] = useState<string>("");
+
+  const formDateSpanInfo = useMemo(() => {
+    if (!formStartDate || !formEndDate) return null;
+    const s = new Date(formStartDate);
+    const e = new Date(formEndDate);
+    if (isNaN(s.getTime()) || isNaN(e.getTime()) || s > e) return null;
+    const days = Math.round((e.getTime() - s.getTime()) / 86400000) + 1;
+    const sIso = getISOWeek(formStartDate);
+    const eIso = getISOWeek(formEndDate);
+    const weekLabel = formatWeekSpan(sIso.week, sIso.year, eIso.week, eIso.year);
+    return { days, weekLabel };
+  }, [formStartDate, formEndDate]);
 
   // Blocked period ("Not for rent") modal states
   const [isBlockedModalOpen, setIsBlockedModalOpen] = useState<boolean>(false);
@@ -210,8 +255,10 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
       yearsSet.add(y);
     }
     for (const p of allPeriodsForCopy) {
-      if (p.start_year >= currentActualYear) yearsSet.add(p.start_year);
-      if (p.end_year >= currentActualYear) yearsSet.add(p.end_year);
+      const sY = p.start_date ? new Date(p.start_date).getFullYear() : p.start_year;
+      const eY = p.end_date ? new Date(p.end_date).getFullYear() : p.end_year;
+      if (sY && sY >= currentActualYear) yearsSet.add(sY);
+      if (eY && eY >= currentActualYear) yearsSet.add(eY);
     }
     return Array.from(yearsSet).sort((a, b) => a - b);
   }, [currentActualYear, allPeriodsForCopy]);
@@ -225,21 +272,75 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
     return selectedYear === currentActualYear + 1 && !isFutureYearWarningActive();
   }, [selectedYear, currentActualYear]);
 
+  // Effective range from calendar click / selection
+  const effectiveRange = useMemo(() => {
+    if (!rangeStart) return null;
+    const end = rangeEnd || hoverDate || rangeStart;
+    const startStr = rangeStart <= end ? rangeStart : end;
+    const endStr = rangeStart <= end ? end : rangeStart;
+    const sDate = new Date(startStr);
+    const eDate = new Date(endStr);
+    const daysCount = Math.round((eDate.getTime() - sDate.getTime()) / 86400000) + 1;
+    const startIso = getISOWeek(startStr);
+    const endIso = getISOWeek(endStr);
+    return {
+      startStr,
+      endStr,
+      daysCount,
+      startIso,
+      endIso,
+      isFinalized: Boolean(rangeEnd),
+    };
+  }, [rangeStart, rangeEnd, hoverDate]);
+
+  const handleDayClick = (dateStr: string) => {
+    if (!rangeStart || rangeEnd) {
+      setRangeStart(dateStr);
+      setRangeEnd(null);
+      setHoverDate(null);
+    } else {
+      if (dateStr < rangeStart) {
+        setRangeEnd(rangeStart);
+        setRangeStart(dateStr);
+      } else {
+        setRangeEnd(dateStr);
+      }
+    }
+  };
+
+  const handleClearSelection = () => {
+    setRangeStart(null);
+    setRangeEnd(null);
+    setHoverDate(null);
+  };
+
   // Open modal for Create Price Period
   const handleOpenCreate = () => {
     setEditingPeriod(null);
     setErrorMessage(null);
     setFormName("");
-    setFormStartYear(selectedYear);
-    const maxWeeks = getWeeksInYear(selectedYear);
-    if (missingWeeks.length > 0) {
-      setFormStartWeek(missingWeeks[0].startWeek);
-      setFormEndWeek(missingWeeks[0].endWeek);
-    } else {
-      setFormStartWeek(1);
-      setFormEndWeek(maxWeeks);
-    }
-    setFormEndYear(selectedYear);
+    setFormStartDate(`${selectedYear}-06-01`);
+    setFormEndDate(`${selectedYear}-08-31`);
+    setFormAllowCustomDays(false);
+    setFormPriceDay("");
+    setFormPriceSunThu("");
+    setFormPriceThuSun("");
+    setFormPriceWeek("");
+    setFormPrice2Days("");
+    setFormPrice3Days("");
+    setFormPrice4Days("");
+    setFormPrice5Days("");
+    setFormPrice6Days("");
+    setIsModalOpen(true);
+  };
+
+  // Open modal for Create Price Period targeting a specific date range
+  const handleOpenCreateForRange = (startDate: string, endDate: string) => {
+    setEditingPeriod(null);
+    setErrorMessage(null);
+    setFormName("");
+    setFormStartDate(startDate);
+    setFormEndDate(endDate);
     setFormAllowCustomDays(false);
     setFormPriceDay("");
     setFormPriceSunThu("");
@@ -255,24 +356,18 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
 
   // Open modal for Create Price Period targeting a clicked week
   const handleOpenCreateForWeek = (week: number) => {
-    setEditingPeriod(null);
-    setErrorMessage(null);
-    setFormName("");
-    setFormStartYear(selectedYear);
-    setFormStartWeek(week);
-    setFormEndYear(selectedYear);
-    setFormEndWeek(week);
-    setFormAllowCustomDays(false);
-    setFormPriceDay("");
-    setFormPriceSunThu("");
-    setFormPriceThuSun("");
-    setFormPriceWeek("");
-    setFormPrice2Days("");
-    setFormPrice3Days("");
-    setFormPrice4Days("");
-    setFormPrice5Days("");
-    setFormPrice6Days("");
-    setIsModalOpen(true);
+    const mon = getMondayOfISOWeek(selectedYear, week).toISOString().split("T")[0];
+    const sun = getSundayOfISOWeek(selectedYear, week).toISOString().split("T")[0];
+    handleOpenCreateForRange(mon, sun);
+  };
+
+  // Open modal for Create Blocked Period targeting a specific date range
+  const handleOpenCreateBlockedForRange = (startDate: string, endDate: string) => {
+    setBlockedFormName("");
+    setBlockedFormStartDate(startDate);
+    setBlockedFormEndDate(endDate);
+    setBlockedErrorMessage(null);
+    setIsBlockedModalOpen(true);
   };
 
   // Open modal for Edit Price Period
@@ -280,10 +375,18 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
     setEditingPeriod(period);
     setErrorMessage(null);
     setFormName(period.name || "");
-    setFormStartYear(period.start_year);
-    setFormStartWeek(period.start_week);
-    setFormEndYear(period.end_year);
-    setFormEndWeek(period.end_week);
+    const sDateStr = period.start_date
+      ? new Date(period.start_date).toISOString().split("T")[0]
+      : period.start_year && period.start_week
+      ? getMondayOfISOWeek(period.start_year, period.start_week).toISOString().split("T")[0]
+      : `${selectedYear}-06-01`;
+    const eDateStr = period.end_date
+      ? new Date(period.end_date).toISOString().split("T")[0]
+      : period.end_year && period.end_week
+      ? getSundayOfISOWeek(period.end_year, period.end_week).toISOString().split("T")[0]
+      : `${selectedYear}-08-31`;
+    setFormStartDate(sDateStr);
+    setFormEndDate(eDateStr);
     setFormAllowCustomDays(Boolean(period.allow_custom_days));
     setFormPriceDay(period.price_day !== null ? String(period.price_day) : "");
     setFormPriceSunThu(period.price_sun_thu !== null ? String(period.price_sun_thu) : "");
@@ -302,16 +405,18 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
     setEditingPeriod(null);
     setErrorMessage(null);
     setFormName(period.name ? `${period.name} (Copy)` : "Copy");
-    setFormStartYear(selectedYear);
-    const maxWeeks = getWeeksInYear(selectedYear);
-    if (missingWeeks.length > 0) {
-      setFormStartWeek(missingWeeks[0].startWeek);
-      setFormEndWeek(missingWeeks[0].endWeek);
-    } else {
-      setFormStartWeek(Math.min(period.start_week, maxWeeks));
-      setFormEndWeek(Math.min(period.end_week, maxWeeks));
-    }
-    setFormEndYear(selectedYear);
+    const sDateStr = period.start_date
+      ? new Date(period.start_date).toISOString().split("T")[0]
+      : period.start_year && period.start_week
+      ? getMondayOfISOWeek(period.start_year, period.start_week).toISOString().split("T")[0]
+      : `${selectedYear}-06-01`;
+    const eDateStr = period.end_date
+      ? new Date(period.end_date).toISOString().split("T")[0]
+      : period.end_year && period.end_week
+      ? getSundayOfISOWeek(period.end_year, period.end_week).toISOString().split("T")[0]
+      : `${selectedYear}-08-31`;
+    setFormStartDate(sDateStr);
+    setFormEndDate(eDateStr);
     setFormAllowCustomDays(Boolean(period.allow_custom_days));
     setFormPriceDay(period.price_day !== null ? String(period.price_day) : "");
     setFormPriceSunThu(period.price_sun_thu !== null ? String(period.price_sun_thu) : "");
@@ -357,10 +462,8 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
       ...(editingPeriod ? { id: editingPeriod.id } : {}),
       objectId: selectedObjectId,
       name: formName.trim() || undefined,
-      startYear: Number(formStartYear),
-      startWeek: Number(formStartWeek),
-      endYear: Number(formEndYear),
-      endWeek: Number(formEndWeek),
+      startDate: formStartDate,
+      endDate: formEndDate,
       allowCustomDays: formAllowCustomDays,
       priceDay: formPriceDay !== "" ? parseFloat(formPriceDay) : null,
       priceSunThu: formPriceSunThu !== "" ? parseFloat(formPriceSunThu) : null,
@@ -501,12 +604,17 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
         // Check if inside a blocked period ("Not for rent")
         const blockedMatch = blockedPeriods.find((b) => dateStr >= b.startDate && dateStr <= b.endDate);
 
-        // Check if inside a price period by ISO week
+        // Check if inside a price period by date
         const iso = getISOWeek(dateStr);
         const score = iso.year * 100 + iso.week;
         const priceMatch = periods.find((p) => {
-          const pStart = p.start_year * 100 + p.start_week;
-          const pEnd = p.end_year * 100 + p.end_week;
+          if (p.start_date && p.end_date) {
+            const s = new Date(p.start_date).toISOString().split("T")[0];
+            const e = new Date(p.end_date).toISOString().split("T")[0];
+            return dateStr >= s && dateStr <= e;
+          }
+          const pStart = (p.start_year || 0) * 100 + (p.start_week || 0);
+          const pEnd = (p.end_year || 0) * 100 + (p.end_week || 0);
           return score >= pStart && score <= pEnd;
         });
 
@@ -638,57 +746,30 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
         </div>
       </div>
 
-      {/* Missing Weeks / Planning Warning Banner */}
+      {/* Rental Season Status Banner */}
       {selectedObjectId && (
         <>
-          {isFutureYearWarningSuppressed ? (
-            <div className='rounded-xl border border-sky-500/30 bg-sky-500/10 p-3.5 text-sky-200 flex items-center gap-2.5 text-xs'>
-              <Info className='w-4 h-4 text-sky-400 shrink-0' />
-              <span>
-                Planning for {selectedYear}: Missing pricing warnings for next year will become active on{" "}
-                {FUTURE_YEAR_WARNING_THRESHOLD_LABEL_EN}.
-              </span>
-            </div>
-          ) : periods.length === 0 && blockedPeriods.length === 0 ? (
-            <div className='rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-rose-200 flex items-start gap-3'>
-              <AlertTriangle className='w-5 h-5 text-rose-400 shrink-0 mt-0.5' />
+          {periods.length === 0 ? (
+            <div className='rounded-xl border border-slate-700/60 bg-slate-900/60 p-4 text-slate-300 flex items-start gap-3'>
+              <Info className='w-5 h-5 text-slate-400 shrink-0 mt-0.5' />
               <div className='text-xs space-y-1'>
-                <div className='font-semibold text-rose-300'>
-                  No active prices or blocked periods configured for {selectedObject?.name || "this object"} in{" "}
-                  {selectedYear}.
+                <div className='font-semibold text-white'>
+                  No rental season configured for {selectedObject?.name || "this object"} in {selectedYear}.
                 </div>
-                <div className='text-rose-200/90 pt-0.5'>
-                  Click &quot;New Price Period&quot; to configure seasonal prices, or &quot;Block Period&quot; to close
-                  the object.
-                </div>
-              </div>
-            </div>
-          ) : missingWeeks.length > 0 ? (
-            <div className='rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-amber-200 flex items-start gap-3'>
-              <AlertTriangle className='w-5 h-5 text-amber-400 shrink-0 mt-0.5' />
-              <div className='text-xs space-y-1'>
-                <div className='font-semibold text-amber-300'>
-                  The following future weeks lack pricing for {selectedObject?.name || "this object"} in {selectedYear}:
-                </div>
-                <div className='text-amber-200/90 flex flex-wrap gap-1.5 pt-0.5'>
-                  {missingWeeks.map((mw, idx) => (
-                    <span
-                      key={idx}
-                      className='inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/20 border border-amber-500/30 text-amber-200 font-mono text-[11px]'>
-                      {mw.startWeek === mw.endWeek ? `w.${mw.startWeek}` : `w.${mw.startWeek}–w.${mw.endWeek}`}
-                    </span>
-                  ))}
+                <div className='text-slate-400 leading-relaxed'>
+                  Dates outside configured price periods are automatically closed for booking. Click &quot;New Price Period&quot; or select dates in the calendar to open for rental.
                 </div>
               </div>
             </div>
           ) : (
-            <div className='rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-emerald-300 flex items-center gap-2.5 text-xs'>
-              <CheckCircle2 className='w-4 h-4 text-emerald-400 shrink-0' />
-              <span>
-                {selectedYear === currentActualYear
-                  ? `All ${remainingWeeksCount} weeks remaining in ${selectedYear} have active pricing for ${selectedObject?.name || "this object"}.`
-                  : `All ${maxWeeksInSelectedYear} weeks in ${selectedYear} have active pricing for ${selectedObject?.name || "this object"}.`}
-              </span>
+            <div className='rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-emerald-300 flex items-center justify-between gap-3 text-xs'>
+              <div className='flex items-center gap-2.5'>
+                <CheckCircle2 className='w-4 h-4 text-emerald-400 shrink-0' />
+                <span>
+                  Rental Season {selectedYear}: {periods.length} {periods.length === 1 ? "price period" : "price periods"} active for {selectedObject?.name || "this object"}. Dates outside price periods are closed for booking.
+                  {blockedPeriods.length > 0 && ` (${blockedPeriods.length} blocked ${blockedPeriods.length === 1 ? "period" : "periods"} override pricing).`}
+                </span>
+              </div>
             </div>
           )}
         </>
@@ -745,7 +826,7 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
               <thead className='bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[10px]'>
                 <tr>
                   <th className='py-3 px-4'>Period / Name</th>
-                  <th className='py-3 px-4 text-center'>Week Span</th>
+                  <th className='py-3 px-4 text-center'>Date Range (Week Span)</th>
                   <th className='py-3 px-4 text-center'>Custom Days</th>
                   <th className='py-3 px-4 text-right'>Daily (SEK)</th>
                   <th className='py-3 px-4 text-right'>Sun–Thu</th>
@@ -770,12 +851,22 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
                       )}
                     </td>
                     <td className='py-3.5 px-4 text-center'>
-                      <span className='inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-[11px]'>
-                        w.{period.start_week}–w.{period.end_week}
-                        {period.start_year !== period.end_year
-                          ? ` (${period.start_year}–${period.end_year})`
-                          : ` (${period.start_year})`}
-                      </span>
+                      <div className='flex flex-col items-center gap-0.5'>
+                        {period.start_date && period.end_date ? (
+                          <>
+                            <span className='font-mono text-white text-[11px] font-medium'>
+                              {new Date(period.start_date).toISOString().split("T")[0]} – {new Date(period.end_date).toISOString().split("T")[0]}
+                            </span>
+                            <span className='inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-[10px]'>
+                              {formatWeekSpan(period.start_week, period.start_year, period.end_week, period.end_year)}
+                            </span>
+                          </>
+                        ) : (
+                          <span className='inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-[11px]'>
+                            {formatWeekSpan(period.start_week, period.start_year, period.end_week, period.end_year)}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className='py-3.5 px-4 text-center'>
                       {period.allow_custom_days ? (
@@ -826,13 +917,13 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
         )}
       </div>
 
-      {/* Blocked Periods (Not for Rent) Section */}
+      {/* Blocked Dates (Private Use & Maintenance) Section */}
       <div className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden'>
         <div className='p-4 border-b border-slate-800 flex items-center justify-between'>
           <div className='flex items-center gap-2'>
             <Ban className='w-4 h-4 text-rose-400' />
             <h2 className='text-sm font-semibold text-white'>
-              Blocked Periods / Not for Rent ({selectedObject?.name || "Object"} – {selectedYear})
+              Blocked Dates / Private & Maintenance ({selectedObject?.name || "Object"} – {selectedYear})
             </h2>
           </div>
           <div className='flex items-center gap-3'>
@@ -853,10 +944,9 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
         {blockedPeriods.length === 0 ? (
           <div className='p-8 text-center text-slate-400 space-y-2'>
             <Ban className='w-7 h-7 mx-auto text-slate-600' />
-            <div className='text-xs font-medium text-slate-300'>No blocked periods registered for {selectedYear}.</div>
-            <p className='text-[11px] text-slate-500'>
-              If the unit is closed for the season, under renovation, or reserved for private use, you can block any
-              date range here.
+            <div className='text-xs font-medium text-slate-300'>No blocked dates registered for {selectedYear}.</div>
+            <p className='text-[11px] text-slate-500 max-w-md mx-auto'>
+              Dates outside price periods are already closed for booking automatically. Blocked dates are only needed for exceptions within an active season, such as owner stays, renovations, or private visits.
             </p>
           </div>
         ) : (
@@ -926,19 +1016,15 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
             <div className='flex flex-wrap items-center gap-3 text-xs'>
               <div className='flex items-center gap-1.5 text-slate-300'>
                 <span className='w-2.5 h-2.5 rounded-sm bg-emerald-500 border border-emerald-400' />
-                <span>Active Pricing</span>
+                <span>Open for Rent (Priced)</span>
               </div>
               <div className='flex items-center gap-1.5 text-slate-300'>
                 <span className='w-2.5 h-2.5 rounded-sm bg-rose-600 border border-rose-500' />
-                <span>Not for Rent</span>
-              </div>
-              <div className='flex items-center gap-1.5 text-slate-300'>
-                <span className='w-2.5 h-2.5 rounded-sm bg-amber-500 border border-amber-400' />
-                <span>Missing Pricing</span>
+                <span>Blocked (Overrides Pricing)</span>
               </div>
               <div className='flex items-center gap-1.5 text-slate-400'>
-                <span className='w-2.5 h-2.5 rounded-sm bg-slate-800 border border-slate-700' />
-                <span>Past Dates</span>
+                <span className='w-2.5 h-2.5 rounded-sm bg-slate-900 border border-slate-700' />
+                <span>Closed / Off-Season</span>
               </div>
               <div className='flex items-center gap-1.5 text-sky-300/90'>
                 <span className='w-3.5 h-3.5 rounded-sm bg-sky-950/30 border border-sky-500/10 text-[9px] font-mono text-sky-400/70 flex items-center justify-center'>
@@ -965,6 +1051,65 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
               </button>
             </div>
           </div>
+
+          {/* Interactive Range Selection Action Bar */}
+          {effectiveRange && (
+            <div className='mx-4 mt-4 p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 backdrop-blur flex flex-wrap items-center justify-between gap-3 animate-in fade-in'>
+              <div className='flex items-center gap-2.5'>
+                <div className='h-8 w-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0'>
+                  <MousePointerClick className='w-4 h-4' />
+                </div>
+                <div>
+                  <div className='text-xs font-bold text-white flex items-center gap-2'>
+                    <span>Selected Range:</span>
+                    <span className='font-mono text-amber-300'>
+                      {effectiveRange.startStr} – {effectiveRange.endStr}
+                    </span>
+                    <span className='text-[11px] font-normal text-slate-400'>
+                      ({effectiveRange.daysCount} {effectiveRange.daysCount === 1 ? "day" : "days"},{" "}
+                      {formatWeekSpan(
+                        effectiveRange.startIso.week,
+                        effectiveRange.startIso.year,
+                        effectiveRange.endIso.week,
+                        effectiveRange.endIso.year
+                      )})
+                    </span>
+                  </div>
+                  <div className='text-[11px] text-amber-200/80 pt-0.5'>
+                    {!effectiveRange.isFinalized
+                      ? "Click any second date in the calendar to finalize range, or click an action button to proceed."
+                      : "Range selected. Create a price period or block the dates:"}
+                  </div>
+                </div>
+              </div>
+
+              <div className='flex items-center gap-2'>
+                <button
+                  type='button'
+                  onClick={() => handleOpenCreateForRange(effectiveRange.startStr, effectiveRange.endStr)}
+                  className='flex items-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-1.5 text-xs font-semibold text-slate-950 shadow-md shadow-amber-500/20 hover:bg-amber-400 transition'>
+                  <Plus className='w-3.5 h-3.5' />
+                  <span>Create Price Period</span>
+                </button>
+
+                <button
+                  type='button'
+                  onClick={() => handleOpenCreateBlockedForRange(effectiveRange.startStr, effectiveRange.endStr)}
+                  className='flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/20 px-3.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/30 transition'>
+                  <Ban className='w-3.5 h-3.5' />
+                  <span>Block Period</span>
+                </button>
+
+                <button
+                  type='button'
+                  onClick={handleClearSelection}
+                  className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'
+                  title='Clear selection'>
+                  <X className='w-4 h-4' />
+                </button>
+              </div>
+            </div>
+          )}
 
           {showYearCalendar && (
             <div className='p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
@@ -994,18 +1139,14 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
                         <div key={wIdx} className='grid grid-cols-8 gap-1 text-center items-center'>
                           {/* Week Number Cell */}
                           <div
-                            title={`Week ${week.weekNumber}`}
+                            title={`Select Week ${week.weekNumber}`}
                             onClick={() => {
-                              const hasMissing = week.days.some((d) => d?.isMissing);
-                              if (hasMissing) {
-                                handleOpenCreateForWeek(week.weekNumber);
-                              }
+                              const mon = getMondayOfISOWeek(selectedYear, week.weekNumber).toISOString().split("T")[0];
+                              const sun = getSundayOfISOWeek(selectedYear, week.weekNumber).toISOString().split("T")[0];
+                              setRangeStart(mon);
+                              setRangeEnd(sun);
                             }}
-                            className={`h-6 flex items-center justify-center rounded text-[9px] font-mono font-medium text-sky-400/50 bg-sky-950/10 border border-sky-500/10 select-none ${
-                              week.days.some((d) => d?.isMissing)
-                                ? "cursor-pointer hover:border-sky-400 hover:bg-sky-900/60"
-                                : ""
-                            }`}>
+                            className='h-6 flex items-center justify-center rounded text-[9px] font-mono font-medium text-sky-400/70 bg-sky-950/20 border border-sky-500/20 select-none cursor-pointer hover:border-sky-400 hover:bg-sky-900/60 hover:text-white transition'>
                             {week.weekNumber}
                           </div>
 
@@ -1015,16 +1156,26 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
                               return <div key={`empty-${dIdx}`} className='h-6 w-full' />;
                             }
 
+                            const isSelected =
+                              effectiveRange &&
+                              dayObj.dateStr >= effectiveRange.startStr &&
+                              dayObj.dateStr <= effectiveRange.endStr;
+
                             let cellClass = "";
                             let title = "";
 
-                            if (dayObj.blocked) {
+                            if (isSelected) {
                               cellClass =
-                                "bg-rose-950/80 border border-rose-600/60 text-rose-300 font-bold hover:bg-rose-900";
-                              title = `${dayObj.dateStr}: Not for Rent (${dayObj.blocked.name})`;
+                                "bg-amber-500/60 border border-amber-400 text-slate-950 font-bold scale-105 z-10 shadow-lg shadow-amber-500/40 cursor-pointer";
+                              title = `${dayObj.dateStr} (Selected)`;
+                            } else if (dayObj.blocked) {
+                              cellClass =
+                                "bg-rose-950/80 border border-rose-600/60 text-rose-300 font-bold hover:bg-rose-900 cursor-pointer";
+                              const overrideText = dayObj.period ? ` [Overrides ${dayObj.period.name || "Price Period"}]` : "";
+                              title = `${dayObj.dateStr}: Blocked (${dayObj.blocked.name})${overrideText}`;
                             } else if (dayObj.period) {
                               cellClass =
-                                "bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 font-bold hover:bg-emerald-900";
+                                "bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 font-bold hover:bg-emerald-900 cursor-pointer";
                               const pName = dayObj.period.name || "Price Period";
                               const pPrice = dayObj.period.price_week
                                 ? `${dayObj.period.price_week} SEK/wk`
@@ -1032,17 +1183,17 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
                                   ? `${dayObj.period.price_day} SEK/day`
                                   : "Priced";
                               title = `${dayObj.dateStr} (w.${dayObj.isoWeek}): ${pName} (${pPrice})`;
-                            } else if (dayObj.isMissing) {
-                              cellClass =
-                                "bg-amber-500/20 border border-amber-500/50 text-amber-300 font-bold hover:bg-amber-500/40 cursor-pointer animate-pulse";
-                              title = `${dayObj.dateStr} (w.${dayObj.isoWeek}): Missing pricing. Click to create period.`;
-                            } else {
-                              // Past dates
-                              cellClass = "bg-slate-900/40 border border-slate-800/30 text-slate-600";
+                            } else if (dayObj.isPast) {
+                              cellClass = "bg-slate-950/40 border border-slate-900 text-slate-600 cursor-pointer";
                               title = `${dayObj.dateStr} (Past)`;
+                            } else {
+                              // Future dates outside configured price periods (Closed / Off-Season)
+                              cellClass =
+                                "bg-slate-900/40 border border-slate-800/60 text-slate-400 hover:border-slate-700 hover:text-slate-200 cursor-pointer";
+                              title = `${dayObj.dateStr} (w.${dayObj.isoWeek}): Closed / Off-season. Click to configure pricing.`;
                             }
 
-                            if (dayObj.isToday) {
+                            if (dayObj.isToday && !isSelected) {
                               cellClass += " ring-2 ring-white/60";
                             }
 
@@ -1050,9 +1201,10 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
                               <div
                                 key={dayObj.dateStr}
                                 title={title}
-                                onClick={() => {
-                                  if (dayObj.isMissing) {
-                                    handleOpenCreateForWeek(dayObj.isoWeek);
+                                onClick={() => handleDayClick(dayObj.dateStr)}
+                                onMouseEnter={() => {
+                                  if (rangeStart && !rangeEnd) {
+                                    setHoverDate(dayObj.dateStr);
                                   }
                                 }}
                                 className={`h-6 flex items-center justify-center rounded text-[10px] transition select-none ${cellClass}`}>
@@ -1125,9 +1277,20 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
                       </option>
                       {allPeriodsForCopy.map((p) => {
                         const objName = p.object?.name || "Unknown object";
+                        const sStr = p.start_date
+                          ? new Date(p.start_date).toISOString().split("T")[0]
+                          : p.start_week
+                          ? `w.${p.start_week}`
+                          : "";
+                        const eStr = p.end_date
+                          ? new Date(p.end_date).toISOString().split("T")[0]
+                          : p.end_week
+                          ? `w.${p.end_week}`
+                          : "";
+                        const dateSpan = sStr && eStr ? ` (${sStr} to ${eStr})` : "";
                         return (
                           <option key={p.id} value={p.id}>
-                            {objName}: {p.name || "Period"} (w.{p.start_week}–w.{p.end_week}, {p.start_year})
+                            {objName}: {p.name || "Period"}{dateSpan}
                           </option>
                         );
                       })}
@@ -1147,57 +1310,40 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
                   />
                 </div>
 
-                {/* Week Span */}
-                <div className='grid grid-cols-2 sm:grid-cols-4 gap-3'>
+                {/* Date Span */}
+                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                   <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>Start Year</label>
+                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>Start Date</label>
                     <input
-                      type='number'
+                      type='date'
                       required
-                      value={formStartYear}
-                      onChange={(e) => setFormStartYear(parseInt(e.target.value, 10))}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none'
+                      value={formStartDate}
+                      onChange={(e) => setFormStartDate(e.target.value)}
+                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                     />
                   </div>
                   <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>
-                      Start Week (1–{getWeeksInYear(formStartYear)})
-                    </label>
+                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>End Date</label>
                     <input
-                      type='number'
+                      type='date'
                       required
-                      min={1}
-                      max={getWeeksInYear(formStartYear)}
-                      value={formStartWeek}
-                      onChange={(e) => setFormStartWeek(parseInt(e.target.value, 10))}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>End Year</label>
-                    <input
-                      type='number'
-                      required
-                      value={formEndYear}
-                      onChange={(e) => setFormEndYear(parseInt(e.target.value, 10))}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none'
-                    />
-                  </div>
-                  <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>
-                      End Week (1–{getWeeksInYear(formEndYear)})
-                    </label>
-                    <input
-                      type='number'
-                      required
-                      min={1}
-                      max={getWeeksInYear(formEndYear)}
-                      value={formEndWeek}
-                      onChange={(e) => setFormEndWeek(parseInt(e.target.value, 10))}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none'
+                      value={formEndDate}
+                      onChange={(e) => setFormEndDate(e.target.value)}
+                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                     />
                   </div>
                 </div>
+
+                {formDateSpanInfo && (
+                  <div className='rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs text-amber-200 flex items-center justify-between'>
+                    <span>
+                      Duration: <strong className='text-amber-100 font-semibold'>{formDateSpanInfo.days} days</strong>
+                    </span>
+                    <span className='font-mono text-[11px] bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30'>
+                      {formDateSpanInfo.weekLabel}
+                    </span>
+                  </div>
+                )}
 
                 {/* Base Prices: Daily & Weekly */}
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800'>
@@ -1351,7 +1497,7 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
         </ModalPortal>
       )}
 
-      {/* Modal Dialog for Blocked Period ("Not for Rent") */}
+      {/* Modal Dialog for Blocked Dates (Private & Maintenance) */}
       {isBlockedModalOpen && (
         <ModalPortal>
           <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200'>
@@ -1362,7 +1508,7 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
                     <Ban className='w-4 h-4' />
                   </div>
                   <div>
-                    <h3 className='text-base font-bold text-white'>Block Period / Not for Rent</h3>
+                    <h3 className='text-base font-bold text-white'>Block Dates / Private & Maintenance</h3>
                     <p className='text-xs text-slate-400'>
                       Object: <span className='text-rose-300 font-semibold'>{selectedObject?.name}</span>
                     </p>
@@ -1390,7 +1536,7 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
                     type='text'
                     value={blockedFormName}
                     onChange={(e) => setBlockedFormName(e.target.value)}
-                    placeholder='e.g. Winter Closure, Renovation, Private Use'
+                    placeholder='e.g. Owner Stay, Renovation, Private Event'
                     className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none'
                   />
                 </div>
@@ -1420,8 +1566,7 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
                 </div>
 
                 <div className='rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-[11px] text-slate-400 leading-relaxed'>
-                  The unit is automatically marked as unavailable in the website booking calendar and exported as
-                  occupied in iCal feeds. No prices need to be specified for this period.
+                  Blocked dates override active price periods and prevent bookings in the calendar. Dates outside configured price periods are already closed automatically.
                 </div>
 
                 <div className='flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800'>
