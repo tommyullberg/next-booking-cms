@@ -41,7 +41,7 @@ export function LullyhillSiteLayout({
         <div
           data-page-id={page.id}
           data-template={page.template_name}
-          className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 selection:bg-sky-100 selection:text-sky-900"
+          className="min-h-screen bg-neutral-200 text-neutral-900 dark:bg-slate-950 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200 selection:bg-sky-100 selection:text-sky-900"
         >
           {/* Extracted Header */}
           <SiteHeader

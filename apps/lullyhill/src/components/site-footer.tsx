@@ -12,7 +12,7 @@ export function SiteFooter({
   pageTitle,
 }: SiteFooterProps) {
   return (
-    <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 py-10 mt-12 text-center text-xs text-slate-500 dark:text-slate-400 transition-colors">
+    <footer className="border-t border-neutral-300 dark:border-slate-800 bg-neutral-100/95 dark:bg-slate-900/90 py-10 mt-12 text-center text-xs text-neutral-600 dark:text-slate-400 transition-colors">
       <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <Link
           href="/"

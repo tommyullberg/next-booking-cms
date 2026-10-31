@@ -40,14 +40,14 @@ export function ThemeToggle() {
   };
 
   if (!mounted) {
-    return <div className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900" />;
+    return <div className="w-9 h-9 rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-900" />;
   }
 
   return (
     <button
       type="button"
       onClick={toggle}
-      className="w-9 h-9 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+      className="w-9 h-9 rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-xs transition"
       title={theme === "dark" ? "Växla till ljust läge" : "Växla till mörkt läge"}
       aria-label="Växla färgtema"
     >

@@ -46,7 +46,7 @@ export function DemoSiteLayout({
         <div
           data-page-id={page.id}
           data-template={page.template_name}
-          className="min-h-screen bg-background text-foreground flex flex-col font-sans transition-colors duration-200"
+          className="min-h-screen bg-neutral-200 dark:bg-background text-foreground flex flex-col font-sans transition-colors duration-200"
         >
           {/* Extracted Header */}
           <SiteHeader

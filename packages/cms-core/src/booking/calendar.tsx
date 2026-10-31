@@ -207,14 +207,14 @@ export function BookingCalendar({
 
   return (
     <div
-      className={`rounded-3xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-800 dark:bg-slate-900 ${className}`}>
-      <div className='flex items-center justify-between mb-6'>
+      className={`rounded-3xl border border-neutral-300 bg-neutral-100 p-6 shadow-xl shadow-black/10 dark:border-slate-800 dark:bg-slate-900 ${className}`}>
+      <div className='flex items-center justify-between mb-6 pb-4 border-b border-neutral-300 dark:border-slate-800'>
         <div>
-          <h3 className='text-lg font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2'>
+          <h3 className='text-lg font-bold tracking-tight text-neutral-900 dark:text-white flex items-center gap-2'>
             <CalendarIcon className='w-5 h-5 text-sky-600 dark:text-sky-400' />
             <span>Tillgänglighet & Bokningskalender</span>
           </h3>
-          <p className='text-xs text-slate-500 dark:text-slate-400 mt-0.5'>
+          <p className='text-xs text-neutral-600 dark:text-slate-400 mt-0.5'>
             Välj in- och utcheckningsdatum för {objectName}.
           </p>
         </div>
@@ -223,23 +223,23 @@ export function BookingCalendar({
           <button
             type='button'
             onClick={handlePrevMonth}
-            className='p-2 rounded-xl border border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition'>
+            className='p-2 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-200/70 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-800 text-neutral-800 dark:text-slate-300 transition shadow-xs'>
             <ChevronLeft className='w-4 h-4' />
           </button>
-          <span className='text-xs font-bold text-slate-800 dark:text-slate-200 min-w-28 text-center'>
+          <span className='text-xs font-bold text-neutral-900 dark:text-slate-200 min-w-28 text-center'>
             {monthNames[month]} {year}
           </span>
           <button
             type='button'
             onClick={handleNextMonth}
-            className='p-2 rounded-xl border border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition'>
+            className='p-2 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-200/70 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-800 text-neutral-800 dark:text-slate-300 transition shadow-xs'>
             <ChevronRight className='w-4 h-4' />
           </button>
         </div>
       </div>
 
       {/* Weekday headers */}
-      <div className='grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-slate-400 mb-2'>
+      <div className='grid grid-cols-7 gap-1 text-center text-[11px] font-bold text-neutral-600 dark:text-slate-400 mb-2'>
         <span>Mån</span>
         <span>Tis</span>
         <span>Ons</span>
@@ -267,31 +267,31 @@ export function BookingCalendar({
           // Left side: ending stay / checkout (always 50% to the left)
           let leftColor: string | null = null;
           if (isEnd) {
-            leftColor = "bg-sky-600 dark:bg-sky-500";
+            leftColor = "bg-sky-500 dark:bg-sky-500";
           } else if (info.morningBlocked) {
-            leftColor = "bg-rose-200/90 dark:bg-rose-950/70";
+            leftColor = "bg-blue-800/75 dark:bg-blue-950/80";
           }
 
           // Right side: starting stay / checkin (always calc(50% - 3px) to the right)
           let rightColor: string | null = null;
           if (isStart) {
-            rightColor = "bg-sky-600 dark:bg-sky-500";
+            rightColor = "bg-sky-500 dark:bg-sky-500";
           } else if (info.afternoonBlocked) {
-            rightColor = "bg-rose-200/90 dark:bg-rose-950/70";
+            rightColor = "bg-blue-800/75 dark:bg-blue-950/80";
           }
 
           // Text styling
-          let textClass = "text-slate-700 dark:text-slate-200";
+          let textClass = "text-neutral-900 dark:text-slate-200 font-semibold";
           if (isStart || isEnd) {
             textClass = "text-white font-bold drop-shadow-[0_1px_2px_rgba(0,0,0,0.85)]";
           } else if (inRange) {
-            textClass = "text-sky-900 dark:text-sky-200 font-bold";
+            textClass = "text-sky-950 dark:text-sky-200 font-bold";
           } else if (info.isStayNight && !info.isCheckOut && !info.isCheckIn) {
-            textClass = "text-rose-600/80 dark:text-rose-400/80 line-through font-medium";
+            textClass = "text-white/95 dark:text-blue-200/85 line-through font-semibold";
           } else if (info.isFullBlocked) {
-            textClass = "text-rose-700 dark:text-rose-300 font-bold drop-shadow-sm";
+            textClass = "text-white dark:text-blue-200 font-bold drop-shadow-sm";
           } else if (info.isHalfDay) {
-            textClass = "text-slate-900 dark:text-white font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]";
+            textClass = "text-neutral-950 dark:text-white font-bold drop-shadow-[0_1px_1px_rgba(255,255,255,0.75)] dark:drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]";
           }
 
           // Tooltip description
@@ -313,17 +313,17 @@ export function BookingCalendar({
               disabled={!isClickable}
               onClick={() => handleDayClick(dayNumber)}
               title={tooltipTitle}
-              className={`relative h-11 rounded-xl overflow-hidden flex items-center justify-center transition border border-slate-200/60 dark:border-slate-800 select-none group bg-slate-50 dark:bg-slate-900 ${
+              className={`relative h-11 rounded-xl overflow-hidden flex items-center justify-center transition border border-neutral-400/80 dark:border-slate-800 select-none group bg-neutral-200/90 dark:bg-slate-900 ${
                 isClickable
-                  ? "hover:ring-2 hover:ring-sky-500/60 hover:ring-offset-1 dark:hover:ring-offset-slate-900 cursor-pointer"
-                  : "cursor-not-allowed opacity-90"
+                  ? "hover:bg-sky-100/80 dark:hover:bg-slate-800 hover:border-sky-500 dark:hover:border-slate-700 hover:ring-2 hover:ring-sky-500/60 hover:ring-offset-1 dark:hover:ring-offset-slate-900 cursor-pointer"
+                  : "cursor-not-allowed opacity-95"
               }`}>
               {/* Case 1: In-stay range (entire day selected in-between) */}
-              {inRange && <div className='absolute inset-0 bg-sky-100 dark:bg-sky-900/40 rounded-xl' />}
+              {inRange && <div className='absolute inset-0 bg-sky-200/90 dark:bg-sky-900/45 rounded-xl' />}
 
               {/* Case 2: Full day blocked within a continuous stay */}
               {!inRange && info.isStayNight && !info.isCheckOut && !info.isCheckIn && (
-                <div className='absolute inset-0 bg-rose-200/90 dark:bg-rose-950/70 rounded-xl' />
+                <div className='absolute inset-0 bg-blue-800/75 dark:bg-blue-950/80 rounded-xl' />
               )}
 
               {/* Case 3: Split vertical representation with rounded corners on each half */}
@@ -338,7 +338,7 @@ export function BookingCalendar({
 
                   {/* Mittre 3px spalt / vertikal linje vid delning */}
                   {(leftColor || rightColor) && (
-                    <div className='absolute top-0 bottom-0 left-[calc(50%-1.5px)] w-[3px] bg-slate-300 dark:bg-slate-950 pointer-events-none z-[1]' />
+                    <div className='absolute top-0 bottom-0 left-[calc(50%-1.5px)] w-[3px] bg-neutral-400 dark:bg-slate-950 pointer-events-none z-[1]' />
                   )}
 
                   {/* Påbörjad tid (höger halva, avrundad på insidan och utsidan) */}
@@ -357,54 +357,54 @@ export function BookingCalendar({
       </div>
 
       {/* Calendar Legend */}
-      <div className='mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2'>
-        <div className='grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px] text-slate-600 dark:text-slate-400'>
+      <div className='mt-4 pt-4 border-t border-neutral-300 dark:border-slate-800 space-y-2'>
+        <div className='grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-[11px] text-neutral-700 dark:text-slate-400 font-medium'>
           <div className='flex items-center gap-2'>
-            <span className='w-4 h-4 rounded-md bg-sky-600 shadow-sm inline-block shrink-0' />
+            <span className='w-4 h-4 rounded-md bg-sky-500 shadow-sm inline-block shrink-0' />
             <span>Valda datum</span>
           </div>
 
           <div className='flex items-center gap-2'>
-            <span className='w-4 h-4 rounded-md bg-rose-200/90 dark:bg-rose-950/70 border border-rose-300/60 dark:border-rose-900 inline-block shrink-0' />
+            <span className='w-4 h-4 rounded-md bg-blue-800/75 dark:bg-blue-950/80 border border-blue-900/60 dark:border-blue-800 inline-block shrink-0' />
             <span>Upptaget (hel dag)</span>
           </div>
 
           <div className='flex items-center gap-2'>
-            <span className='relative w-5 h-4 rounded-md overflow-hidden border border-slate-300 dark:border-slate-700 inline-flex shrink-0 bg-slate-50 dark:bg-slate-900'>
-              <span className='w-1/2 h-full bg-rose-200/90 dark:bg-rose-950/70' />
-              <span className='w-[3px] h-full bg-slate-400 dark:bg-slate-950' />
-              <span className='flex-1 h-full bg-slate-50 dark:bg-slate-900' />
+            <span className='relative w-5 h-4 rounded-md overflow-hidden border border-neutral-400 dark:border-slate-700 inline-flex shrink-0 bg-neutral-200 dark:bg-slate-900'>
+              <span className='w-1/2 h-full bg-blue-800/75 dark:bg-blue-950/80' />
+              <span className='w-[3px] h-full bg-neutral-500 dark:bg-slate-950' />
+              <span className='flex-1 h-full bg-neutral-200 dark:bg-slate-900' />
             </span>
             <span>Halvdag (byte möjlig)</span>
           </div>
 
           <div className='flex items-center gap-2'>
-            <span className='w-4 h-4 rounded-md bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 inline-block shrink-0' />
+            <span className='w-4 h-4 rounded-md bg-neutral-200 dark:bg-slate-800/40 border border-neutral-400 dark:border-slate-700/60 inline-block shrink-0' />
             <span>Helt ledigt</span>
           </div>
         </div>
 
-        <p className='text-[11px] text-slate-500 dark:text-slate-400 leading-normal'>
+        <p className='text-[11px] text-neutral-600 dark:text-slate-400 leading-normal'>
           Dagar för in- och utcheckning visas som halvdagar.
         </p>
       </div>
 
       {/* Selection Summary and Booking Trigger */}
-      <div className='mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800 pt-4'>
+      <div className='mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-neutral-300 dark:border-slate-800 pt-4'>
         <div className='text-xs'>
           {startDate ? (
             <div className='flex items-center gap-2'>
-              <span className='font-semibold text-slate-900 dark:text-white'>
+              <span className='font-semibold text-neutral-900 dark:text-white'>
                 Valt: {startDate} {endDate ? `→ ${endDate} (${nights} nätter)` : "(Välj utcheckning)"}
               </span>
               {nights > 0 && (
-                <span className='text-sky-600 dark:text-sky-400 font-bold'>
+                <span className='text-sky-700 dark:text-sky-400 font-bold'>
                   Ca {estimatedPrice.toLocaleString("sv-SE")} SEK
                 </span>
               )}
             </div>
           ) : (
-            <span className='text-slate-500'>Klicka på kalendern för att välja datum.</span>
+            <span className='text-neutral-600 dark:text-slate-500'>Klicka på kalendern för att välja datum.</span>
           )}
         </div>
 

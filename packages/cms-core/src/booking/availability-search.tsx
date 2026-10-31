@@ -86,10 +86,10 @@ export function AvailabilitySearch({
       {/* Search Input Bar */}
       <form
         onSubmit={handleSearch}
-        className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-2xl grid grid-cols-1 md:grid-cols-5 gap-3 items-end transition-colors"
+        className="rounded-3xl border border-neutral-300 bg-neutral-100 p-5 shadow-xl shadow-black/10 dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-2xl grid grid-cols-1 md:grid-cols-5 gap-3 items-end transition-colors"
       >
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-700 dark:text-slate-400 mb-1 flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
             <span>Incheckning</span>
           </label>
@@ -103,7 +103,7 @@ export function AvailabilitySearch({
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-700 dark:text-slate-400 mb-1 flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
             <span>Utcheckning</span>
           </label>
@@ -117,7 +117,7 @@ export function AvailabilitySearch({
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-700 dark:text-slate-400 mb-1 flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
             <span>Personer / Djur</span>
           </label>
@@ -125,10 +125,10 @@ export function AvailabilitySearch({
             <select
               value={guests}
               onChange={(e) => setGuests(Number(e.target.value))}
-              className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 transition-colors"
+              className="w-full rounded-xl border border-neutral-400/80 dark:border-slate-700 bg-white dark:bg-slate-950/70 p-2.5 text-xs font-medium text-neutral-900 dark:text-white focus:outline-none focus:border-sky-500 transition-colors"
             >
               {[1, 2, 3, 4, 5, 6, 8, 10].map((n) => (
-                <option key={n} value={n} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                <option key={n} value={n} className="bg-white dark:bg-slate-900 text-neutral-900 dark:text-white">
                   {n} pers
                 </option>
               ))}
@@ -136,24 +136,24 @@ export function AvailabilitySearch({
             <select
               value={pets}
               onChange={(e) => setPets(Number(e.target.value))}
-              className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 transition-colors"
+              className="w-full rounded-xl border border-neutral-400/80 dark:border-slate-700 bg-white dark:bg-slate-950/70 p-2.5 text-xs font-medium text-neutral-900 dark:text-white focus:outline-none focus:border-sky-500 transition-colors"
             >
-              <option value={0} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Inga djur</option>
-              <option value={1} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">1 husdjur</option>
-              <option value={2} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">2 husdjur</option>
+              <option value={0} className="bg-white dark:bg-slate-900 text-neutral-900 dark:text-white">Inga djur</option>
+              <option value={1} className="bg-white dark:bg-slate-900 text-neutral-900 dark:text-white">1 husdjur</option>
+              <option value={2} className="bg-white dark:bg-slate-900 text-neutral-900 dark:text-white">2 husdjur</option>
             </select>
           </div>
         </div>
 
         <div>
-          <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+          <label className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-700 dark:text-slate-400 mb-1 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
             <span>Flexibla datum</span>
           </label>
           <select
             value={flexDays}
             onChange={(e) => setFlexDays(Number(e.target.value))}
-            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-500 transition-colors"
+            className="w-full rounded-xl border border-neutral-400/80 dark:border-slate-700 bg-white dark:bg-slate-950/70 p-2.5 text-xs font-medium text-neutral-900 dark:text-white focus:outline-none focus:border-sky-500 transition-colors"
           >
             <option value={0} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Exakta datum (+- 0 dagar)</option>
             <option value={1} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">+- 1 dag</option>
