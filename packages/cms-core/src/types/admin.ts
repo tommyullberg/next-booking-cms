@@ -11,6 +11,7 @@ export type AdminTab =
   | "bookings-dashboard"
   | "bookings"
   | "objects"
+  | "prices-availability"
   | "object-prices"
   | "landlords"
   | "optionals"

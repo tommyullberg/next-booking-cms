@@ -89,11 +89,13 @@ export interface PricePeriodItem {
   };
 }
 
-export interface ObjectPricesViewProps {
+export interface PricesAvailabilityViewProps {
   objects: BookingObjectItem[];
 }
 
-export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
+export type ObjectPricesViewProps = PricesAvailabilityViewProps;
+
+export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewProps) {
   const currentActualYear = useMemo(() => new Date().getFullYear(), []);
   const currentISOWeek = useMemo(() => getISOWeek(new Date()).week, []);
 
@@ -684,9 +686,9 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
               <Coins className='w-5 h-5' />
             </div>
             <div>
-              <h1 className='text-xl font-bold text-white tracking-tight'>Object Prices</h1>
+              <h1 className='text-xl font-bold text-white tracking-tight'>Prices & Availability</h1>
               <p className='text-xs text-slate-400'>
-                Manage seasonal week periods, custom stay rules, and tiered prices per rental object.
+                Manage seasonal pricing, tiered rates, and availability blocks per rental object.
               </p>
             </div>
           </div>
@@ -1592,3 +1594,5 @@ export function ObjectPricesView({ objects = [] }: ObjectPricesViewProps) {
     </div>
   );
 }
+
+export const ObjectPricesView = PricesAvailabilityView;
