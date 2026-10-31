@@ -1,6 +1,12 @@
 import { prisma } from "../db";
 import { revalidatePath } from "next/cache";
-import { getWeeksInYear } from "../utils/weeks";
+import {
+  getWeeksInYear,
+  getISOWeekNumber,
+  getMondayOfISOWeek,
+  getSundayOfISOWeek,
+} from "../utils/weeks";
+import { isFutureYearWarningActive } from "../constants/dates";
 export { getWeeksInYear };
 
 export interface CreatePricePeriodInput {
@@ -27,6 +33,15 @@ export interface UpdatePricePeriodInput extends Partial<CreatePricePeriodInput> 
 export interface MissingWeekRange {
   startWeek: number;
   endWeek: number;
+}
+
+export interface BlockedPeriodItem {
+  id: string;
+  objectId: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  createdAt?: string | Date;
 }
 
 function weekScore(year: number, week: number): number {
@@ -135,15 +150,59 @@ export async function getMissingWeeksAction(objectId: string, year: number): Pro
       return [{ startWeek: 1, endWeek: maxWeeks }];
     }
 
+    const now = new Date();
+    const currentActualYear = now.getFullYear();
+    const currentISOWeek = getISOWeekNumber(now);
+
+    // Rule 1: No warnings for past years
+    if (year < currentActualYear) {
+      return [];
+    }
+
+    // Rule 2: No warnings for distant future years (> currentYear + 1)
+    if (year > currentActualYear + 1) {
+      return [];
+    }
+
+    // Rule 3: For next year (currentYear + 1), only warn starting October 1st of current year
+    if (year === currentActualYear + 1) {
+      if (!isFutureYearWarningActive(now)) {
+        return [];
+      }
+    }
+
+    // Active price periods
     const periods = await prisma.objectPricePeriod.findMany({
       where: {
         object_id: objectId,
         OR: [
           { start_year: year },
           { end_year: year },
+          {
+            AND: [
+              { start_year: { lte: year } },
+              { end_year: { gte: year } },
+            ],
+          },
         ],
       },
       orderBy: { start_week: "asc" },
+    });
+
+    // Active blocked periods ("Ej uthyrning")
+    const blockedBookings = await prisma.booking.findMany({
+      where: {
+        object_id: objectId,
+        status: "APPROVED",
+        OR: [
+          { ical_source_id: "blocked_period" },
+          { customer_email: "internal@blocked" },
+        ],
+      },
+      select: {
+        start_date: true,
+        end_date: true,
+      },
     });
 
     const coveredWeeks = new Set<number>();
@@ -155,10 +214,39 @@ export async function getMissingWeeksAction(objectId: string, year: number): Pro
       }
     }
 
+    // Mark weeks covered by "Ej uthyrning" as covered
+    for (const b of blockedBookings) {
+      const bStart = new Date(b.start_date);
+      const bEnd = new Date(b.end_date);
+      for (let w = 1; w <= maxWeeks; w++) {
+        if (coveredWeeks.has(w)) continue;
+        const mon = getMondayOfISOWeek(year, w);
+        const sun = getSundayOfISOWeek(year, w);
+        // If the blocked period completely spans this week or covers its weekdays
+        if (bStart <= sun && bEnd >= mon) {
+          let allDaysCovered = true;
+          for (let d = 0; d < 7; d++) {
+            const dayDate = new Date(mon);
+            dayDate.setUTCDate(mon.getUTCDate() + d);
+            if (dayDate < bStart || dayDate > bEnd) {
+              allDaysCovered = false;
+              break;
+            }
+          }
+          if (allDaysCovered) {
+            coveredWeeks.add(w);
+          }
+        }
+      }
+    }
+
+    // Rule 4: For current year, do not warn about past weeks!
+    const minEvaluationWeek = year === currentActualYear ? currentISOWeek : 1;
+
     const missingRanges: MissingWeekRange[] = [];
     let currentStart: number | null = null;
 
-    for (let w = 1; w <= maxWeeks; w++) {
+    for (let w = minEvaluationWeek; w <= maxWeeks; w++) {
       if (!coveredWeeks.has(w)) {
         if (currentStart === null) currentStart = w;
       } else {
@@ -176,9 +264,89 @@ export async function getMissingWeeksAction(objectId: string, year: number): Pro
     return missingRanges;
   } catch (error) {
     console.error("[cms-core] Failed to calculate missing weeks:", error);
-    return [{ startWeek: 1, endWeek: maxWeeks }];
+    return [];
   }
 }
+
+export async function getBlockedPeriodsAction(
+  objectId: string,
+  year?: number
+): Promise<BlockedPeriodItem[]> {
+  try {
+    const where: any = {
+      object_id: objectId,
+      status: "APPROVED",
+      OR: [
+        { ical_source_id: "blocked_period" },
+        { customer_email: "internal@blocked" },
+      ],
+    };
+
+    if (year) {
+      const yearStart = new Date(Date.UTC(year, 0, 1));
+      const yearEnd = new Date(Date.UTC(year, 11, 31, 23, 59, 59));
+      where.AND = [
+        { start_date: { lte: yearEnd } },
+        { end_date: { gte: yearStart } },
+      ];
+    }
+
+    const bookings = await prisma.booking.findMany({
+      where,
+      orderBy: { start_date: "asc" },
+    });
+
+    return bookings.map((b) => ({
+      id: b.id,
+      objectId: b.object_id,
+      name: b.customer_name || "Not for rent",
+      startDate: b.start_date.toISOString().split("T")[0],
+      endDate: b.end_date.toISOString().split("T")[0],
+      createdAt: b.created_at,
+    }));
+  } catch (error) {
+    console.error("[cms-core] Failed to fetch blocked periods:", error);
+    return [];
+  }
+}
+
+export async function createBlockedPeriodAction(data: {
+  objectId: string;
+  name?: string;
+  startDate: string;
+  endDate: string;
+}) {
+  const start = new Date(data.startDate + "T12:00:00Z");
+  const end = new Date(data.endDate + "T12:00:00Z");
+
+  if (start > end) {
+    throw new Error("Start date cannot be later than end date.");
+  }
+
+  const created = await prisma.booking.create({
+    data: {
+      object_id: data.objectId,
+      customer_name: data.name?.trim() || "Not for rent",
+      customer_email: "internal@blocked",
+      start_date: start,
+      end_date: end,
+      status: "APPROVED",
+      guests_count: 0,
+      pets_count: 0,
+      price: 0,
+      ical_source_id: "blocked_period",
+    },
+  });
+
+  return created;
+}
+
+export async function deleteBlockedPeriodAction(id: string) {
+  return await prisma.booking.delete({
+    where: { id },
+  });
+}
+
 
 export async function createPricePeriodAction(data: CreatePricePeriodInput) {
   // Validate overlap with existing periods for this object

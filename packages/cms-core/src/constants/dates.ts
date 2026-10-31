@@ -36,6 +36,36 @@ export const WEEKDAY_SHORT_SV: readonly string[] = [
   "Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön",
 ] as const;
 
+export const WEEKDAY_INITIALS_EN: readonly string[] = [
+  "M", "T", "W", "T", "F", "S", "S",
+] as const;
+
+export const WEEKDAY_INITIALS_SV: readonly string[] = [
+  "M", "T", "O", "T", "F", "L", "S",
+] as const;
+
+/**
+ * Cutoff date configuration for future year price warnings.
+ * Next year price warnings activate on October 1st of the current year.
+ */
+export const FUTURE_YEAR_WARNING_THRESHOLD_MONTH = 9; // 0-indexed: 9 = October
+export const FUTURE_YEAR_WARNING_THRESHOLD_DAY = 1;
+export const FUTURE_YEAR_WARNING_THRESHOLD_LABEL_EN = `${MONTH_NAMES_EN[FUTURE_YEAR_WARNING_THRESHOLD_MONTH]} ${FUTURE_YEAR_WARNING_THRESHOLD_DAY}`;
+export const FUTURE_YEAR_WARNING_THRESHOLD_LABEL_SV = `${FUTURE_YEAR_WARNING_THRESHOLD_DAY} ${MONTH_NAMES_SV[FUTURE_YEAR_WARNING_THRESHOLD_MONTH].toLowerCase()}`;
+
+/**
+ * Checks whether the current date has reached the cutoff for future year price warnings (October 1st).
+ */
+export function isFutureYearWarningActive(date: Date = new Date()): boolean {
+  const month = date.getMonth();
+  const day = date.getDate();
+  if (month > FUTURE_YEAR_WARNING_THRESHOLD_MONTH) return true;
+  if (month === FUTURE_YEAR_WARNING_THRESHOLD_MONTH && day >= FUTURE_YEAR_WARNING_THRESHOLD_DAY) {
+    return true;
+  }
+  return false;
+}
+
 export function pad2(n: number): string {
   return n < 10 ? `0${n}` : `${n}`;
 }

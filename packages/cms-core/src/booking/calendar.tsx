@@ -77,14 +77,26 @@ export function BookingCalendar({
     let isStayNight = false; // middle of stay (full night occupied)
 
     for (const b of activeBookings) {
-      if (b.endDate === dateStr) {
-        isCheckOut = true;
-      }
-      if (b.startDate === dateStr) {
-        isCheckIn = true;
-      }
-      if (b.startDate < dateStr && dateStr < b.endDate) {
-        isStayNight = true;
+      const isBlockedPeriod =
+        b.icalSourceId === "blocked_period" || b.customerEmail === "internal@blocked";
+
+      if (isBlockedPeriod) {
+        // Blocked periods (Ej uthyrning) completely shut down the unit across the whole span
+        if (dateStr >= b.startDate && dateStr <= b.endDate) {
+          isStayNight = true;
+          isCheckOut = true;
+          isCheckIn = true;
+        }
+      } else {
+        if (b.endDate === dateStr) {
+          isCheckOut = true;
+        }
+        if (b.startDate === dateStr) {
+          isCheckIn = true;
+        }
+        if (b.startDate < dateStr && dateStr < b.endDate) {
+          isStayNight = true;
+        }
       }
     }
 
@@ -113,6 +125,11 @@ export function BookingCalendar({
     while (curr < target) {
       const checkStr = curr.toISOString().split("T")[0];
       const isNightOccupied = activeBookings.some((b) => {
+        const isBlockedPeriod =
+          b.icalSourceId === "blocked_period" || b.customerEmail === "internal@blocked";
+        if (isBlockedPeriod) {
+          return checkStr >= b.startDate && checkStr <= b.endDate;
+        }
         return checkStr >= b.startDate && checkStr < b.endDate;
       });
       if (isNightOccupied) return false;

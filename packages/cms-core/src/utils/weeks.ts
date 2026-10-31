@@ -49,3 +49,26 @@ export function formatBookingWeekSpan(startDate: string, endDate: string): strin
   }
   return `${startWeek}–${endWeek}`;
 }
+
+/**
+ * Returns the Monday Date (UTC midnight) for a given ISO year and week.
+ */
+export function getMondayOfISOWeek(year: number, week: number): Date {
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const jan4Day = (jan4.getUTCDay() + 6) % 7; // Monday = 0
+  const mondayWeek1 = new Date(Date.UTC(year, 0, 4 - jan4Day));
+  const targetMonday = new Date(mondayWeek1);
+  targetMonday.setUTCDate(mondayWeek1.getUTCDate() + (week - 1) * 7);
+  return targetMonday;
+}
+
+/**
+ * Returns the Sunday Date (UTC midnight) for a given ISO year and week.
+ */
+export function getSundayOfISOWeek(year: number, week: number): Date {
+  const monday = getMondayOfISOWeek(year, week);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+  return sunday;
+}
+

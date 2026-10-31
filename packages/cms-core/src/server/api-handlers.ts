@@ -93,6 +93,9 @@ import {
   updatePricePeriodAction,
   deletePricePeriodAction,
   getMissingWeeksAction,
+  getBlockedPeriodsAction,
+  createBlockedPeriodAction,
+  deleteBlockedPeriodAction,
 } from "../actions/price-periods";
 import {
   getCmsSettingsAction,
@@ -471,6 +474,19 @@ export async function handleCmsApiRoute(
         );
       }
     }
+    if (path === "price-periods/blocked") {
+      try {
+        const body = await req.json();
+        const created = await createBlockedPeriodAction(body);
+        revalidateBookingCaches();
+        return NextResponse.json(created);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to save blocked period" },
+          { status: 400 }
+        );
+      }
+    }
     if (path === "amenities/reorder") {
       try {
         const body = await req.json();
@@ -595,6 +611,17 @@ export async function handleCmsApiRoute(
         const year = parseInt(req.nextUrl.searchParams.get("year") || String(new Date().getFullYear()), 10);
         const missing = await getMissingWeeksAction(objectId, year);
         return NextResponse.json(missing, { headers: NO_CACHE_HEADERS });
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
+    }
+    if (path === "price-periods/blocked") {
+      try {
+        const objectId = req.nextUrl.searchParams.get("objectId") || "";
+        const yearParam = req.nextUrl.searchParams.get("year");
+        const year = yearParam ? parseInt(yearParam, 10) : undefined;
+        const blocked = await getBlockedPeriodsAction(objectId, year);
+        return NextResponse.json(blocked, { headers: NO_CACHE_HEADERS });
       } catch (err: any) {
         return NextResponse.json({ error: err?.message }, { status: 500 });
       }
@@ -812,6 +839,20 @@ export async function handleCmsApiRoute(
       } catch (err: any) {
         return NextResponse.json(
           { error: err?.message || "Failed to delete amenity" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (path.startsWith("price-periods/blocked/")) {
+      try {
+        const blockId = path.replace("price-periods/blocked/", "");
+        await deleteBlockedPeriodAction(blockId);
+        revalidateBookingCaches();
+        return NextResponse.json({ success: true });
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to delete blocked period" },
           { status: 400 }
         );
       }
