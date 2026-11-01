@@ -98,3 +98,28 @@ html {
     display: none;
   }
 }
+
+/* Autofill theming */
+input:autofill,
+input:-webkit-autofill,
+textarea:autofill,
+textarea:-webkit-autofill,
+select:autofill,
+select:-webkit-autofill {
+  box-shadow: 0 0 0 100vmax #ffffff inset;
+  -webkit-box-shadow: 0 0 0 100vmax #ffffff inset;
+  -webkit-text-fill-color: #0f172a;
+  caret-color: #0f172a;
+}
+
+.dark input:autofill,
+.dark input:-webkit-autofill,
+.dark textarea:autofill,
+.dark textarea:-webkit-autofill,
+.dark select:autofill,
+.dark select:-webkit-autofill {
+  box-shadow: 0 0 0 100vmax #020617 inset;
+  -webkit-box-shadow: 0 0 0 100vmax #020617 inset;
+  -webkit-text-fill-color: #f8fafc;
+  caret-color: #f8fafc;
+}

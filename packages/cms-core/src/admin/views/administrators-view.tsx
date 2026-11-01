@@ -385,7 +385,7 @@ export function AdministratorsView({
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
               {/* Role Display (Read-only: Administrator) */}
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1">
@@ -408,6 +408,7 @@ export function AdministratorsView({
                   <input
                     type="text"
                     required
+                    autoComplete="off"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
                     placeholder="Anna"
@@ -421,6 +422,7 @@ export function AdministratorsView({
                   <input
                     type="text"
                     required
+                    autoComplete="off"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
                     placeholder="Andersson"
@@ -436,6 +438,7 @@ export function AdministratorsView({
                 <input
                   type="email"
                   required
+                  autoComplete="off"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="anna@example.com"
@@ -448,7 +451,8 @@ export function AdministratorsView({
                   {t("mobile")}
                 </label>
                 <input
-                  type="text"
+                  type="tel"
+                  autoComplete="off"
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value)}
                   placeholder="+46 70 123 45 67"
@@ -469,6 +473,7 @@ export function AdministratorsView({
                 <input
                   type="password"
                   required={!editingAdmin}
+                  autoComplete="new-password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={
