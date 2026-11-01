@@ -25,7 +25,8 @@ export function CMSTextField({
   const isAdmin = Boolean(session?.user);
   const { page, locale, getField, getLocalizedContent, getLocalizedPageTitle } =
     useCMSPage();
-  const { mode, setSelectedField, openModal } = useEditorStore();
+  const { mode, setSelectedField, openModal, adminLanguage } = useEditorStore();
+  const isSv = adminLanguage === "sv";
 
   const field = getField(nbr, "TEXT");
   const rawContent = getLocalizedContent(field);
@@ -67,7 +68,10 @@ export function CMSTextField({
     }
   };
 
-  const displayContent = content || (isEditing ? `[Empty text field #${nbr}]` : "");
+  const emptyPlaceholder = isSv
+    ? `[Tomt textfält #${nbr}]`
+    : `[Empty text field #${nbr}]`;
+  const displayContent = content || (isEditing ? emptyPlaceholder : "");
 
   if (typeof children === "function" && field) {
     return (

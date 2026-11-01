@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useEditorStore } from "../../state/editor-store";
 import { ModalPortal } from "../ui/modal-portal";
 import {
@@ -36,6 +37,8 @@ export interface ImageEditModalProps {
 }
 
 export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
+  const t = useTranslations("inlineEditor.imageModal");
+  const tCommon = useTranslations("common");
   const { isModalOpen, selectedField, closeModal } = useEditorStore();
   const [imageUrl, setImageUrl] = useState("");
   const [ratio, setRatio] = useState("16/9");
@@ -118,18 +121,14 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
         });
       }
     } catch {
-      setErrorMessage("Could not upload image");
+      setErrorMessage(t("errorUpload"));
     } finally {
       setIsUploading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to clear this image field? The image file will not be deleted from Media & Files."
-      )
-    ) {
+    if (!confirm(t("confirmDelete"))) {
       return;
     }
 
@@ -160,7 +159,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
         window.location.reload();
       }
     } catch {
-      setErrorMessage("Could not clear image field");
+      setErrorMessage(t("errorClear"));
     } finally {
       setIsDeleting(false);
     }
@@ -171,7 +170,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
       if (selectedField.imageUrl) {
         return handleDelete();
       }
-      setErrorMessage("Please enter an image URL or choose an image");
+      setErrorMessage(t("errorUrlRequired"));
       return;
     }
 
@@ -208,7 +207,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
         window.location.reload();
       }
     } catch {
-      setErrorMessage("Could not save image field");
+      setErrorMessage(t("errorSave"));
     } finally {
       setIsSaving(false);
     }
@@ -221,7 +220,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-2">
             <h2 className="text-lg font-semibold">
-              Edit Image Field #{selectedField.nbr}
+              {t("title", { nbr: selectedField.nbr })}
             </h2>
           </div>
           <button
@@ -246,16 +245,16 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                 type="button"
                 onClick={() => setImageUrl("")}
                 className="absolute top-3 right-3 flex items-center gap-1.5 rounded-lg bg-slate-900/90 border border-slate-700/80 px-2.5 py-1 text-xs text-slate-300 hover:border-red-500/60 hover:bg-red-600 hover:text-white transition shadow-lg backdrop-blur-sm"
-                title="Clear selected image"
+                title={t("clearSelectedTooltip")}
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                <span>Clear</span>
+                <span>{t("clearBtn")}</span>
               </button>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-800 bg-slate-950 p-6 text-slate-500">
               <ImageIcon className="w-10 h-10 mb-2 opacity-50" />
-              <span className="text-xs">No image selected</span>
+              <span className="text-xs">{t("noImageSelected")}</span>
             </div>
           )}
 
@@ -263,21 +262,23 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
             <div className="flex items-center justify-between mb-1.5">
               <label className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
                 <FolderOpen className="w-3.5 h-3.5 text-amber-400" />
-                <span>Select from Media & Files</span>
+                <span>{t("selectFromMedia")}</span>
               </label>
               <span className="text-[11px] text-slate-400">
-                {mediaFiles.length} {mediaFiles.length === 1 ? "image" : "images"}
+                {mediaFiles.length === 1
+                  ? t("imageCount", { count: 1 })
+                  : t("imagesCount", { count: mediaFiles.length })}
               </span>
             </div>
 
             {isLoadingMedia ? (
               <div className="flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-950 py-6 text-xs text-slate-400">
                 <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
-                <span>Loading Media & Files...</span>
+                <span>{t("loadingMedia")}</span>
               </div>
             ) : mediaFiles.length === 0 ? (
               <div className="rounded-xl border border-dashed border-slate-800 bg-slate-950/60 py-4 text-center text-xs text-slate-500">
-                No uploaded images found in Media & Files yet.
+                {t("noImagesInMedia")}
               </div>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-44 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950 p-2">
@@ -289,10 +290,10 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                       ? "border-amber-500/80 bg-amber-500/10 text-amber-300 ring-2 ring-amber-500/40"
                       : "border-slate-800 bg-slate-900/40 text-slate-400 hover:border-slate-600 hover:text-slate-200"
                   }`}
-                  title="No image / Clear image field"
+                  title={t("noImageOptionTooltip")}
                 >
                   <Trash2 className="w-5 h-5 mb-1 opacity-70 group-hover:opacity-100" />
-                  <span className="text-[10px] text-center font-medium">No image</span>
+                  <span className="text-[10px] text-center font-medium">{t("noImageOption")}</span>
                   {!imageUrl && (
                     <div className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow">
                       <Check className="h-3 w-3 stroke-[3]" />
@@ -337,25 +338,25 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
 
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Image URL
+              {t("imageUrlLabel")}
             </label>
             <input
               type="text"
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
               className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
-              placeholder="https://... or /uploads/..."
+              placeholder={t("imageUrlPlaceholder")}
             />
             {/^https?:\/\//i.test(imageUrl.trim()) && (
               <p className="mt-1.5 text-[11px] text-amber-300/90">
-                External image URL detected — when you save, the image will be automatically downloaded and stored as a physical file in Media & Files.
+                {t("externalUrlNotice")}
               </p>
             )}
           </div>
 
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Or upload local file
+              {t("orUploadLocal")}
             </label>
             <label className="flex items-center justify-center gap-2 cursor-pointer rounded-xl border border-slate-700 bg-slate-800 p-2.5 text-xs font-medium text-slate-200 hover:bg-slate-700">
               {isUploading ? (
@@ -364,7 +365,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                 <Upload className="w-4 h-4 text-amber-400" />
               )}
               <span>
-                {isUploading ? "Uploading..." : "Choose image file from computer"}
+                {isUploading ? t("uploading") : t("chooseImageFromComputer")}
               </span>
               <input
                 type="file"
@@ -379,24 +380,24 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Aspect Ratio
+                {t("aspectRatio")}
               </label>
               <select
                 value={ratio}
                 onChange={(e) => setRatio(e.target.value)}
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100 focus:border-amber-500 focus:outline-none"
               >
-                <option value="16/9">16:9 (Widescreen)</option>
-                <option value="4/3">4:3 (Classic)</option>
-                <option value="1/1">1:1 (Square)</option>
-                <option value="3/2">3:2 (Photo)</option>
-                <option value="auto">Auto</option>
+                <option value="16/9">{t("aspectRatio169")}</option>
+                <option value="4/3">{t("aspectRatio43")}</option>
+                <option value="1/1">{t("aspectRatio11")}</option>
+                <option value="3/2">{t("aspectRatio32")}</option>
+                <option value="auto">{t("aspectRatioAuto")}</option>
               </select>
             </div>
 
             <div>
               <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                Max Width (px)
+                {t("maxWidth")}
               </label>
               <input
                 type="number"
@@ -404,7 +405,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                 onChange={(e) =>
                   setMaxWidth(e.target.value ? Number(e.target.value) : "")
                 }
-                placeholder="Optional e.g. 800"
+                placeholder={t("maxWidthPlaceholder")}
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100 focus:border-amber-500 focus:outline-none"
               />
             </div>
@@ -423,14 +424,14 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                 onClick={handleDelete}
                 disabled={isDeleting || isSaving || isUploading}
                 className="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-xs font-medium text-red-400 hover:border-red-500/60 hover:bg-red-600 hover:text-white transition disabled:opacity-50"
-                title="Clear this image field without deleting the file from Media & Files"
+                title={t("removeImageTooltip")}
               >
                 {isDeleting ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
                   <Trash2 className="w-3.5 h-3.5" />
                 )}
-                <span>Remove image</span>
+                <span>{t("removeImageBtn")}</span>
               </button>
             ) : null}
           </div>
@@ -441,7 +442,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
               onClick={closeModal}
               className="rounded-lg px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800"
             >
-              Cancel
+              {tCommon("cancel")}
             </button>
             <button
               type="button"
@@ -454,7 +455,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
               ) : (
                 <Check className="w-3.5 h-3.5" />
               )}
-              <span>Save Changes</span>
+              <span>{isSaving ? tCommon("loading") : tCommon("save")}</span>
             </button>
           </div>
         </div>

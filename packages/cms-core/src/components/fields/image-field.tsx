@@ -28,7 +28,8 @@ export function CMSImageField({
   const { data: session } = useSession();
   const isAdmin = Boolean(session?.user);
   const { page, locale, getField } = useCMSPage();
-  const { mode, setSelectedField, openModal } = useEditorStore();
+  const { mode, setSelectedField, openModal, adminLanguage } = useEditorStore();
+  const isSv = adminLanguage === "sv";
 
   const field = getField(nbr, "IMAGE");
   const imageUrl = field?.image?.file_url;
@@ -96,7 +97,9 @@ export function CMSImageField({
           aspectRatio: field?.ratio || "16/9",
         }}
       >
-        Click to select Image #{nbr}
+        {isSv
+          ? `Klicka för att välja Bild #${nbr}`
+          : `Click to select Image #${nbr}`}
       </div>
     );
   }
@@ -110,7 +113,7 @@ export function CMSImageField({
   const imgElement = (
     <img
       src={imageUrl}
-      alt={alt || field?.image?.file_name || `Bild ${nbr}`}
+      alt={alt || field?.image?.file_name || (isSv ? `Bild ${nbr}` : `Image ${nbr}`)}
       width={field?.width || undefined}
       height={field?.height || undefined}
       style={imageStyle}

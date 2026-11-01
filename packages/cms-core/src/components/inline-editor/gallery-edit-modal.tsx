@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useEditorStore } from "../../state/editor-store";
 import { ModalPortal } from "../ui/modal-portal";
 import { FlagIcon } from "../ui/flag-icon";
@@ -61,6 +62,8 @@ export interface GalleryEditModalProps {
 }
 
 export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
+  const t = useTranslations("inlineEditor.galleryModal");
+  const tCommon = useTranslations("common");
   const { isModalOpen, selectedField, closeModal } = useEditorStore();
 
   const [items, setItems] = useState<EditableGalleryItem[]>([]);
@@ -418,7 +421,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
         ]);
       }
     } catch {
-      setErrorMessage("Could not upload one or more files");
+      setErrorMessage(t("errorUpload"));
     } finally {
       setIsUploading(false);
     }
@@ -457,7 +460,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
       closeModal();
       window.location.reload();
     } catch {
-      setErrorMessage("Could not save gallery changes");
+      setErrorMessage(t("errorSave"));
     } finally {
       setIsSaving(false);
     }
@@ -481,10 +484,10 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
               </div>
               <div>
                 <span className="text-[11px] font-mono uppercase tracking-wider text-amber-400">
-                  Gallery Field #{selectedField.nbr}
+                  {t("fieldBadge", { nbr: selectedField.nbr })}
                 </span>
                 <h3 className="text-lg font-semibold text-white">
-                  Manage Gallery Images & Captions ({items.length})
+                  {t("title", { count: items.length })}
                 </h3>
               </div>
             </div>
@@ -494,8 +497,8 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                 type="button"
                 onClick={() => setIsMaximized((prev) => !prev)}
                 className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
-                title={isMaximized ? "Restore modal size" : "Maximize modal"}
-                aria-label={isMaximized ? "Restore modal size" : "Maximize modal"}
+                title={isMaximized ? t("restoreSize") : t("maximize")}
+                aria-label={isMaximized ? t("restoreSize") : t("maximize")}
               >
                 {isMaximized ? (
                   <Minimize2 className="h-4 w-4" />
@@ -507,8 +510,8 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                 type="button"
                 onClick={closeModal}
                 className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
-                title="Close modal"
-                aria-label="Close modal"
+                title={t("close")}
+                aria-label={t("close")}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -527,7 +530,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-3 bg-slate-950/70 border border-slate-800/90 rounded-xl p-2.5 shrink-0">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="text-[11px] font-semibold text-slate-400 mr-1">
-                      Caption Language:
+                      {t("captionLanguage")}
                     </span>
                     {languages.map((loc) => {
                       const meta = LANGUAGE_META[loc];
@@ -556,14 +559,14 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                       disabled={translatingKey !== null}
                       onClick={handleTranslateAllCaptions}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-300 hover:bg-amber-500/20 disabled:opacity-50 transition cursor-pointer"
-                      title="Translate Swedish captions into secondary languages"
+                      title={t("aiTranslateAllTooltip")}
                     >
                       {translatingKey === "ALL" ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
                         <Sparkles className="w-3.5 h-3.5" />
                       )}
-                      <span>AI Translate All</span>
+                      <span>{t("aiTranslateAll")}</span>
                     </button>
                   )}
                 </div>
@@ -584,10 +587,10 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                     <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-800 bg-slate-950/40 p-10 text-center">
                       <Images className="w-10 h-10 text-slate-600 mb-2" />
                       <p className="text-sm font-medium text-slate-300">
-                        This gallery has no images yet
+                        {t("noImagesYet")}
                       </p>
                       <p className="text-xs text-slate-500 mt-1">
-                        Click images in the Media Library on the right or drop files to add photos.
+                        {t("noImagesYetHelp")}
                       </p>
                     </div>
                   ) : (
@@ -621,13 +624,13 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                               onClick={() => handleMoveItem(idx, -1)}
                               disabled={idx === 0}
                               className="p-0.5 hover:text-slate-200 disabled:opacity-25 cursor-pointer"
-                              title="Move up"
+                              title={t("moveUp")}
                             >
                               <ArrowUp className="w-3 h-3" />
                             </button>
                             <div
                               className="cursor-grab active:cursor-grabbing p-0.5 text-slate-400 hover:text-white"
-                              title="Drag to reorder"
+                              title={t("dragToReorder")}
                             >
                               <GripVertical className="w-4 h-4" />
                             </div>
@@ -636,7 +639,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                               onClick={() => handleMoveItem(idx, 1)}
                               disabled={idx === items.length - 1}
                               className="p-0.5 hover:text-slate-200 disabled:opacity-25 cursor-pointer"
-                              title="Move down"
+                              title={t("moveDown")}
                             >
                               <ArrowDown className="w-3 h-3" />
                             </button>
@@ -675,8 +678,10 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                                 }
                                 placeholder={
                                   activeCaptionLocale === "sv"
-                                    ? "Write image caption (optional)..."
-                                    : `Caption in ${activeCaptionLocale.toUpperCase()}...`
+                                    ? t("captionPlaceholderSv")
+                                    : t("captionPlaceholderLang", {
+                                        language: activeCaptionLocale.toUpperCase(),
+                                      })
                                 }
                                 className="w-full rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
                               />
@@ -686,7 +691,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                                   disabled={translatingKey !== null}
                                   onClick={() => handleTranslateSingleItem(item)}
                                   className="rounded-lg border border-slate-700 bg-slate-800 p-1.5 text-amber-400 hover:bg-slate-700 disabled:opacity-50 shrink-0 cursor-pointer"
-                                  title="AI Translate this caption"
+                                  title={t("aiTranslateCaptionTooltip")}
                                 >
                                   {translatingKey === item.uid ? (
                                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -703,7 +708,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                             type="button"
                             onClick={() => handleRemoveItem(item.uid)}
                             className="rounded-lg p-2 text-slate-400 hover:bg-rose-500/15 hover:text-rose-400 transition shrink-0 cursor-pointer"
-                            title="Remove from gallery (does not delete file)"
+                            title={t("removeFromGalleryTooltip")}
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -719,7 +724,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
                     <FolderOpen className="w-4 h-4 text-sky-400" />
-                    <span>Add from Media & Files</span>
+                    <span>{t("addFromMedia")}</span>
                   </div>
                   {filteredMediaFiles.length > 0 && (
                     <button
@@ -728,7 +733,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                       className="inline-flex items-center gap-1 rounded-lg border border-sky-500/30 bg-sky-500/10 px-2.5 py-1 text-[11px] font-semibold text-sky-300 hover:bg-sky-500/20 transition cursor-pointer"
                     >
                       <FolderPlus className="w-3.5 h-3.5" />
-                      <span>Add all in folder</span>
+                      <span>{t("addAllInFolder")}</span>
                     </button>
                   )}
                 </div>
@@ -740,8 +745,12 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                     onChange={(e) => setSelectedFolderFilter(e.target.value)}
                     className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
                   >
-                    <option value="ALL">All Files ({mediaFiles.length})</option>
-                    <option value="UNCATEGORIZED">Mediafolder (Root)</option>
+                    <option value="ALL">
+                      {t("allFiles", { count: mediaFiles.length })}
+                    </option>
+                    <option value="UNCATEGORIZED">
+                      {t("mediafolderRoot")}
+                    </option>
                     {orderedFolders.map((f) => (
                       <option key={f.id} value={f.id}>
                         {getFolderDisplayLabel(f)}
@@ -781,17 +790,17 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                     {isUploading ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Uploading to gallery...</span>
+                        <span>{t("uploadingToGallery")}</span>
                       </>
                     ) : (
                       <>
                         <Upload className="w-4 h-4" />
-                        <span>Drop files here or click to upload</span>
+                        <span>{t("dropFilesHere")}</span>
                       </>
                     )}
                   </div>
                   <span className="text-[11px] text-slate-500 mt-0.5">
-                    Uploaded images are added directly to this gallery
+                    {t("dropFilesSubtext")}
                   </span>
                   <input
                     type="file"
@@ -816,11 +825,11 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                   {isLoadingMedia ? (
                     <div className="flex items-center justify-center py-8 text-xs text-slate-400 gap-2">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Loading images...</span>
+                      <span>{t("loadingImages")}</span>
                     </div>
                   ) : filteredMediaFiles.length === 0 ? (
                     <div className="py-8 text-center text-xs text-slate-500">
-                      No images in this folder.
+                      {t("noImagesInFolder")}
                     </div>
                   ) : (
                     <div
@@ -845,7 +854,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                                 ? "border-emerald-500/70 ring-1 ring-emerald-500/30"
                                 : "border-slate-800 hover:border-sky-400"
                             }`}
-                            title={`Click to add ${file.file_name}`}
+                            title={t("clickToAdd", { name: file.file_name })}
                           >
                             <img
                               src={file.file_url}
@@ -859,7 +868,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                             </div>
                             {countInGallery > 0 && (
                               <span className="absolute top-1 right-1 rounded bg-emerald-600/95 px-1.5 py-0.5 text-[9px] font-bold text-white shadow">
-                                Added
+                                {t("addedBadge")}
                               </span>
                             )}
                           </button>
@@ -884,18 +893,14 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      if (
-                        confirm(
-                          "Remove all images from this gallery? The files will remain in Media & Files."
-                        )
-                      ) {
+                      if (confirm(t("confirmClear"))) {
                         setItems([]);
                       }
                     }}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 cursor-pointer"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
-                    <span>Clear Gallery</span>
+                    <span>{t("clearGallery")}</span>
                   </button>
                 )}
               </div>
@@ -906,7 +911,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                   onClick={closeModal}
                   className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700 cursor-pointer"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   type="submit"
@@ -918,7 +923,7 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                   ) : (
                     <Check className="h-3.5 w-3.5" />
                   )}
-                  <span>Save Gallery</span>
+                  <span>{isSaving ? tCommon("loading") : t("saveGallery")}</span>
                 </button>
               </div>
             </div>

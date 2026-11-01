@@ -37,7 +37,8 @@ export function CMSGalleryField({
   const { data: session } = useSession();
   const isAdmin = Boolean(session?.user);
   const { page, locale, getGalleryItems, gallerySettings } = useCMSPage();
-  const { mode, setSelectedField, openModal } = useEditorStore();
+  const { mode, setSelectedField, openModal, adminLanguage } = useEditorStore();
+  const isSv = adminLanguage === "sv";
 
   const items = getGalleryItems(nbr).filter((item) => item.image?.file_url);
   const isEditing = isAdmin && mode === "image";
@@ -136,10 +137,14 @@ export function CMSGalleryField({
           <Images className="w-5 h-5" />
         </div>
         <span className="text-sm font-semibold tracking-tight text-amber-900 dark:text-amber-300">
-          Click to configure Gallery #{nbr}
+          {isSv
+            ? `Klicka för att konfigurera Galleri #${nbr}`
+            : `Click to configure Gallery #${nbr}`}
         </span>
         <span className="text-xs text-amber-800/80 dark:text-amber-200/75">
-          Add multiple images, sort with drag and drop, and write captions
+          {isSv
+            ? "Lägg till flera bilder, sortera med dra och släpp och skriv bildtexter"
+            : "Add multiple images, sort with drag and drop, and write captions"}
         </span>
       </div>
     );
@@ -172,8 +177,13 @@ export function CMSGalleryField({
           <div className="mb-3 inline-flex items-center gap-2 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-md">
             <Images className="w-3.5 h-3.5" />
             <span>
-              Edit Gallery #{nbr} ({items.length}{" "}
-              {items.length === 1 ? "image" : "images"})
+              {isSv
+                ? `Redigera Galleri #${nbr} (${items.length} ${
+                    items.length === 1 ? "bild" : "bilder"
+                  })`
+                : `Edit Gallery #${nbr} (${items.length} ${
+                    items.length === 1 ? "image" : "images"
+                  })`}
             </span>
           </div>
         )}

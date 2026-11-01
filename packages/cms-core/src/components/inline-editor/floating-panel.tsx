@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { useEditorStore, EditorMode } from "../../state/editor-store";
 import {
   Eye,
@@ -55,6 +56,7 @@ const defaultConfig: ToolbarConfig = {
 };
 
 export function FloatingPanel({ className = "" }: FloatingPanelProps) {
+  const t = useTranslations("inlineEditor.panel");
   const { mode, setMode } = useEditorStore();
   const [config, setConfig] = useState<ToolbarConfig>(defaultConfig);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -197,25 +199,25 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
   }> = [
     {
       mode: "normal",
-      label: "Normal",
+      label: t("normal"),
       icon: <Eye className="w-4 h-4 shrink-0" />,
       onClick: () => setMode("normal"),
     },
     {
       mode: "text",
-      label: "Text",
+      label: t("text"),
       icon: <Type className="w-4 h-4 shrink-0" />,
       onClick: () => setMode("text"),
     },
     {
       mode: "image",
-      label: "Image",
+      label: t("image"),
       icon: <ImageIcon className="w-4 h-4 shrink-0" />,
       onClick: () => setMode("image"),
     },
     {
       mode: "administration",
-      label: "Administration",
+      label: t("administration"),
       icon: <ShieldCheck className="w-4 h-4 shrink-0" />,
       onClick: handleAdminClick,
     },
@@ -304,7 +306,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
         <button
           type="button"
           onClick={() => setIsSettingsOpen((prev) => !prev)}
-          title="Panel placement settings"
+          title={t("settingsTooltip")}
           className={`flex items-center text-xs font-medium transition-all duration-150 ${
             isSettingsOpen
               ? "bg-slate-800 text-sky-400 ring-1 ring-sky-400/50"
@@ -328,14 +330,14 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
           />
           {isVertical ? (
             isFullyExpanded ? (
-              <span className="whitespace-nowrap">Settings</span>
+              <span className="whitespace-nowrap">{t("settings")}</span>
             ) : canHoverExpand ? (
               <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap group-hover:max-w-[120px] group-hover:opacity-100 transition-all duration-200">
-                Settings
+                {t("settings")}
               </span>
             ) : null
           ) : (
-            <span className="hidden sm:inline">Settings</span>
+            <span className="hidden sm:inline">{t("settings")}</span>
           )}
         </button>
 
@@ -343,7 +345,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
         <button
           type="button"
           onClick={handleSignOut}
-          title="Sign out administrator"
+          title={t("signOutTooltip")}
           className={`flex items-center text-xs font-medium text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all duration-150 ${
             isVertical
               ? isFullyExpanded
@@ -359,14 +361,14 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
           <LogOut className="w-3.5 h-3.5 shrink-0" />
           {isVertical ? (
             isFullyExpanded ? (
-              <span className="whitespace-nowrap">Sign out</span>
+              <span className="whitespace-nowrap">{t("signOut")}</span>
             ) : canHoverExpand ? (
               <span className="max-w-0 opacity-0 overflow-hidden whitespace-nowrap group-hover:max-w-[120px] group-hover:opacity-100 transition-all duration-200">
-                Sign out
+                {t("signOut")}
               </span>
             ) : null
           ) : (
-            <span className="hidden sm:inline">Sign out</span>
+            <span className="hidden sm:inline">{t("signOut")}</span>
           )}
         </button>
 
@@ -379,7 +381,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
               <div className="flex items-center gap-2">
                 <Sliders className="w-4 h-4 text-sky-400" />
                 <span className="text-xs font-semibold text-white">
-                  Panelinställningar
+                  {t("popoverTitle")}
                 </span>
               </div>
               <button
@@ -394,7 +396,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
             {/* Orientation choice */}
             <div className="space-y-1.5 mb-3">
               <label className="text-[11px] font-medium text-slate-400">
-                Riktning
+                {t("orientation")}
               </label>
               <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-slate-950/80 border border-slate-800">
                 <button
@@ -407,7 +409,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                   }`}
                 >
                   <span className="w-3.5 h-1.5 rounded-full bg-current opacity-80" />
-                  <span>Horisontell</span>
+                  <span>{t("horizontal")}</span>
                 </button>
                 <button
                   type="button"
@@ -419,7 +421,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                   }`}
                 >
                   <span className="w-1.5 h-3.5 rounded-full bg-current opacity-80" />
-                  <span>Vertikal</span>
+                  <span>{t("vertical")}</span>
                 </button>
               </div>
             </div>
@@ -429,10 +431,10 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
               <div className="flex items-center justify-between py-2 border-t border-slate-800/80 mb-3">
                 <div className="space-y-0.5">
                   <div className="text-[11px] font-medium text-slate-200">
-                    Alltid utfälld
+                    {t("alwaysExpanded")}
                   </div>
                   <div className="text-[10px] text-slate-400">
-                    Visa text permanent utan hover
+                    {t("alwaysExpandedDesc")}
                   </div>
                 </div>
                 <button
@@ -459,7 +461,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-[11px] font-medium text-slate-400">
-                  Placering på skärmen
+                  {t("placementOnScreen")}
                 </label>
                 <span className="text-[10px] text-sky-400">
                   {isVertical ? config.verticalPlacement : config.horizontalPlacement}
@@ -477,7 +479,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                         onClick={() =>
                           updateConfig({ horizontalPlacement: "top-left" })
                         }
-                        title="Top Left"
+                        title={t("posTopLeft")}
                         className={`w-7 h-4 rounded-full border transition flex items-center justify-center text-[8px] ${
                           config.horizontalPlacement === "top-left"
                             ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -492,7 +494,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                         onClick={() =>
                           updateConfig({ horizontalPlacement: "top-center" })
                         }
-                        title="Top Center"
+                        title={t("posTopCenter")}
                         className={`w-9 h-4 rounded-full border transition flex items-center justify-center text-[8px] ${
                           config.horizontalPlacement === "top-center"
                             ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -507,7 +509,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                         onClick={() =>
                           updateConfig({ horizontalPlacement: "top-right" })
                         }
-                        title="Top Right"
+                        title={t("posTopRight")}
                         className={`w-7 h-4 rounded-full border transition flex items-center justify-center text-[8px] ${
                           config.horizontalPlacement === "top-right"
                             ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -519,7 +521,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                     </div>
 
                     <div className="text-center text-[9px] text-slate-600 font-mono select-none">
-                      Horisontell panel
+                      {t("horizontalPanel")}
                     </div>
 
                     {/* Bottom Row Targets */}
@@ -529,7 +531,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                         onClick={() =>
                           updateConfig({ horizontalPlacement: "bottom-left" })
                         }
-                        title="Bottom Left"
+                        title={t("posBottomLeft")}
                         className={`w-7 h-4 rounded-full border transition flex items-center justify-center text-[8px] ${
                           config.horizontalPlacement === "bottom-left"
                             ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -544,7 +546,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                         onClick={() =>
                           updateConfig({ horizontalPlacement: "bottom-center" })
                         }
-                        title="Bottom Center"
+                        title={t("posBottomCenter")}
                         className={`w-9 h-4 rounded-full border transition flex items-center justify-center text-[8px] ${
                           config.horizontalPlacement === "bottom-center"
                             ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -559,7 +561,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                         onClick={() =>
                           updateConfig({ horizontalPlacement: "bottom-right" })
                         }
-                        title="Bottom Right"
+                        title={t("posBottomRight")}
                         className={`w-7 h-4 rounded-full border transition flex items-center justify-center text-[8px] ${
                           config.horizontalPlacement === "bottom-right"
                             ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -581,7 +583,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                           onClick={() =>
                             updateConfig({ verticalPlacement: "left-top" })
                           }
-                          title="Left Top"
+                          title={t("posLeftTop")}
                           className={`w-4 h-6 rounded-full border transition flex items-center justify-center text-[7px] ${
                             config.verticalPlacement === "left-top"
                               ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -595,7 +597,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                           onClick={() =>
                             updateConfig({ verticalPlacement: "left-middle" })
                           }
-                          title="Left Middle"
+                          title={t("posLeftMiddle")}
                           className={`w-4 h-7 rounded-full border transition flex items-center justify-center text-[7px] ${
                             config.verticalPlacement === "left-middle"
                               ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -609,7 +611,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                           onClick={() =>
                             updateConfig({ verticalPlacement: "left-bottom" })
                           }
-                          title="Left Bottom"
+                          title={t("posLeftBottom")}
                           className={`w-4 h-6 rounded-full border transition flex items-center justify-center text-[7px] ${
                             config.verticalPlacement === "left-bottom"
                               ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -621,7 +623,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                       </div>
 
                       <div className="flex items-center justify-center text-[9px] text-slate-600 font-mono select-none">
-                        Vertikal panel
+                        {t("verticalPanel")}
                       </div>
 
                       {/* Right Edge */}
@@ -631,7 +633,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                           onClick={() =>
                             updateConfig({ verticalPlacement: "right-top" })
                           }
-                          title="Right Top"
+                          title={t("posRightTop")}
                           className={`w-4 h-6 rounded-full border transition flex items-center justify-center text-[7px] ${
                             config.verticalPlacement === "right-top"
                               ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -645,7 +647,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                           onClick={() =>
                             updateConfig({ verticalPlacement: "right-middle" })
                           }
-                          title="Right Middle"
+                          title={t("posRightMiddle")}
                           className={`w-4 h-7 rounded-full border transition flex items-center justify-center text-[7px] ${
                             config.verticalPlacement === "right-middle"
                               ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -659,7 +661,7 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                           onClick={() =>
                             updateConfig({ verticalPlacement: "right-bottom" })
                           }
-                          title="Right Bottom"
+                          title={t("posRightBottom")}
                           className={`w-4 h-6 rounded-full border transition flex items-center justify-center text-[7px] ${
                             config.verticalPlacement === "right-bottom"
                               ? "bg-sky-500 border-sky-400 shadow-md shadow-sky-500/40 text-white"
@@ -676,14 +678,14 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
             </div>
 
             <div className="mt-3.5 pt-2.5 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
-              <span>Sparas i webbläsaren</span>
+              <span>{t("savedInBrowser")}</span>
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(false)}
                 className="flex items-center gap-1 rounded-lg bg-sky-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-sky-500 shadow"
               >
                 <Check className="w-3.5 h-3.5" />
-                <span>Klar</span>
+                <span>{t("done")}</span>
               </button>
             </div>
           </div>

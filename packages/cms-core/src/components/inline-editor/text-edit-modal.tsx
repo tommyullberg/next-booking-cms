@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useEditorStore } from "../../state/editor-store";
 import { Sparkles, X, Check, Loader2 } from "lucide-react";
 import { FlagIcon } from "../ui/flag-icon";
@@ -22,6 +23,8 @@ export function TextEditModal({
   activeLanguages: propLanguages,
   onSave,
 }: TextEditModalProps) {
+  const t = useTranslations("inlineEditor.textModal");
+  const tCommon = useTranslations("common");
   const { isModalOpen, selectedField, closeModal } = useEditorStore();
   const [languages, setLanguages] = useState<string[]>(
     propLanguages || ["sv", "en", "de"]
@@ -96,11 +99,14 @@ export function TextEditModal({
           [targetLocale]: data.translatedText,
         }));
         setStatusMessage(
-          `Translated ${targetLocale.toUpperCase()} via ${data.provider || "AI"}`
+          t("translatedSingle", {
+            locale: targetLocale.toUpperCase(),
+            provider: data.provider || "AI",
+          })
         );
       }
     } catch {
-      setStatusMessage("Automatic translation failed");
+      setStatusMessage(t("translationFailed"));
     } finally {
       setTranslatingLocale(null);
     }
@@ -135,9 +141,9 @@ export function TextEditModal({
           }
         }
       }
-      setStatusMessage("Translated all secondary languages");
+      setStatusMessage(t("translatedAll"));
     } catch {
-      setStatusMessage("Automatic translation failed");
+      setStatusMessage(t("translationFailed"));
     } finally {
       setTranslatingLocale(null);
     }
@@ -187,7 +193,7 @@ export function TextEditModal({
         window.location.reload();
       }
     } catch {
-      setStatusMessage("Could not save text field");
+      setStatusMessage(t("saveFailed"));
     } finally {
       setIsSaving(false);
     }
@@ -208,11 +214,12 @@ export function TextEditModal({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">
             <h2 className="text-lg font-semibold text-white">
-              Edit Text Field #{selectedField.nbr}
+              {t("title", { nbr: selectedField.nbr })}
             </h2>
             <span className="rounded-md border border-sky-500/30 bg-sky-500/15 px-2.5 py-0.5 text-[11px] font-medium text-sky-300">
-              {languages.length} Active{" "}
-              {languages.length === 1 ? "Language" : "Languages"}
+              {languages.length === 1
+                ? t("activeLanguage", { count: 1 })
+                : t("activeLanguages", { count: languages.length })}
             </span>
           </div>
 
@@ -231,7 +238,11 @@ export function TextEditModal({
                 ) : (
                   <Sparkles className="w-3.5 h-3.5 text-sky-400" />
                 )}
-                <span>Translate All from Swedish</span>
+                <span>
+                  {translatingLocale === "all"
+                    ? t("translatingAll")
+                    : t("translateAll")}
+                </span>
               </button>
             )}
 
@@ -284,14 +295,14 @@ export function TextEditModal({
                         !(valuesByLocale.sv || "").trim()
                       }
                       className="inline-flex items-center gap-1 rounded-md border border-slate-700/80 bg-slate-800/80 px-2 py-1 text-[10px] font-medium text-sky-300 hover:bg-slate-800 hover:text-sky-200 disabled:opacity-40 transition"
-                      title={`Translate from Swedish to ${meta.label}`}
+                      title={t("translateSingleTooltip", { language: meta.label })}
                     >
                       {isThisTranslating ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
                       ) : (
                         <Sparkles className="w-3 h-3 text-sky-400" />
                       )}
-                      <span>AI Translate</span>
+                      <span>{t("aiTranslate")}</span>
                     </button>
                   )}
                 </div>
@@ -305,7 +316,7 @@ export function TextEditModal({
                       [loc]: e.target.value,
                     }))
                   }
-                  placeholder={`Enter ${meta.label} text...`}
+                  placeholder={t("enterTextPlaceholder", { language: meta.label })}
                   className="w-full flex-1 rounded-lg border border-slate-800 bg-slate-900/90 p-3 text-xs leading-relaxed text-slate-100 placeholder-slate-500 focus:border-sky-500 focus:outline-none"
                 />
               </div>
@@ -316,8 +327,7 @@ export function TextEditModal({
         {/* Footer */}
         <div className="mt-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-slate-800 pt-4">
           <div className="text-xs text-slate-400">
-            {statusMessage ||
-              "Edit active languages side-by-side for fast comparison and translation."}
+            {statusMessage || t("subtitle")}
           </div>
 
           <div className="flex items-center justify-end gap-2">
@@ -326,7 +336,7 @@ export function TextEditModal({
               onClick={closeModal}
               className="rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition"
             >
-              Cancel
+              {tCommon("cancel")}
             </button>
             <button
               type="button"
@@ -339,7 +349,7 @@ export function TextEditModal({
               ) : (
                 <Check className="w-3.5 h-3.5" />
               )}
-              <span>{isSaving ? "Saving..." : "Save Changes"}</span>
+              <span>{isSaving ? tCommon("loading") : tCommon("save")}</span>
             </button>
           </div>
         </div>
