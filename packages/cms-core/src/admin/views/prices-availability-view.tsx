@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Plus,
   Edit3,
@@ -30,9 +31,12 @@ import {
 } from "../../utils/weeks";
 import {
   MONTH_NAMES_EN,
+  MONTH_NAMES_SV,
   WEEKDAY_INITIALS_EN,
+  WEEKDAY_INITIALS_SV,
   isFutureYearWarningActive,
   FUTURE_YEAR_WARNING_THRESHOLD_LABEL_EN,
+  FUTURE_YEAR_WARNING_THRESHOLD_LABEL_SV,
 } from "../../constants/dates";
 import type { MissingWeekRange, BlockedPeriodItem } from "../../actions/price-periods";
 import { ModalPortal } from "../../components/ui/modal-portal";
@@ -96,6 +100,11 @@ export interface PricesAvailabilityViewProps {
 export type ObjectPricesViewProps = PricesAvailabilityViewProps;
 
 export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewProps) {
+  const t = useTranslations("pricesAvailability");
+  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const isSv = locale === "sv";
+
   const currentActualYear = useMemo(() => new Date().getFullYear(), []);
   const currentISOWeek = useMemo(() => getISOWeek(new Date()).week, []);
 
@@ -487,13 +496,13 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data?.error || "Could not save price period.");
+        throw new Error(data?.error || t("errorSaveSeason"));
       }
 
       setIsModalOpen(false);
       await loadData();
     } catch (err: any) {
-      setErrorMessage(err.message || "An unexpected error occurred.");
+      setErrorMessage(err.message || t("errorUnexpected"));
     } finally {
       setIsSaving(false);
     }
@@ -501,8 +510,8 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
   // Delete handler for Price Period
   const handleDelete = async (id: string, name: string | null) => {
-    const displayName = name ? `"${name}"` : "this price period";
-    if (!confirm(`Are you sure you want to delete ${displayName}?`)) return;
+    const displayName = name ? `"${name}"` : t("modal.periodName");
+    if (!confirm(t("confirmDeleteSeason", { name: displayName }))) return;
 
     try {
       const res = await fetch(`/api/cms/price-periods/${id}`, {
@@ -510,7 +519,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(data?.error || "Could not delete price period.");
+        alert(data?.error || t("errorDeleteSeason"));
         return;
       }
       await loadData();
@@ -543,7 +552,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           objectId: selectedObjectId,
-          name: blockedFormName.trim() || "Not for rent",
+          name: blockedFormName.trim() || t("defaultBlockedReason"),
           startDate: blockedFormStartDate,
           endDate: blockedFormEndDate,
         }),
@@ -551,13 +560,13 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data?.error || "Could not save blocked period.");
+        throw new Error(data?.error || t("errorSaveBlocked"));
       }
 
       setIsBlockedModalOpen(false);
       await loadData();
     } catch (err: any) {
-      setBlockedErrorMessage(err.message || "An unexpected error occurred.");
+      setBlockedErrorMessage(err.message || t("errorUnexpected"));
     } finally {
       setIsSavingBlocked(false);
     }
@@ -565,7 +574,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
   // Delete handler for Blocked Period
   const handleDeleteBlocked = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete blocked period "${name}"?`)) return;
+    if (!confirm(t("confirmDeleteBlocked", { name }))) return;
 
     try {
       const res = await fetch(`/api/cms/price-periods/blocked/${id}`, {
@@ -573,7 +582,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(data?.error || "Could not delete blocked period.");
+        alert(data?.error || t("errorDeleteBlocked"));
         return;
       }
       await loadData();
@@ -666,7 +675,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
       months.push({
         monthIndex: m,
-        name: MONTH_NAMES_EN[m],
+        name: (isSv ? MONTH_NAMES_SV : MONTH_NAMES_EN)[m],
         firstDayWeekday,
         days,
         weeks,
@@ -674,7 +683,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
     }
 
     return months;
-  }, [selectedYear, currentActualYear, blockedPeriods, periods]);
+  }, [selectedYear, currentActualYear, blockedPeriods, periods, isSv]);
 
   return (
     <div className='space-y-6'>
@@ -686,9 +695,9 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               <Coins className='w-5 h-5' />
             </div>
             <div>
-              <h1 className='text-xl font-bold text-white tracking-tight'>Prices & Availability</h1>
+              <h1 className='text-xl font-bold text-white tracking-tight'>{t("title")}</h1>
               <p className='text-xs text-slate-400'>
-                Manage seasonal pricing, tiered rates, and availability blocks per rental object.
+                {t("subtitle")}
               </p>
             </div>
           </div>
@@ -696,7 +705,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
           <div className='flex flex-wrap items-center gap-3'>
             {/* Object selector */}
             <div className='flex items-center gap-2 bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-1.5'>
-              <span className='text-xs text-slate-400'>Object:</span>
+              <span className='text-xs text-slate-400'>{t("object")}</span>
               <select
                 value={selectedObjectId}
                 onChange={(e) => setSelectedObjectId(e.target.value)}
@@ -712,7 +721,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             {/* Year selector */}
             <div className='flex items-center gap-2 bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-1.5'>
               <Calendar className='w-3.5 h-3.5 text-amber-400' />
-              <span className='text-xs text-slate-400'>Year:</span>
+              <span className='text-xs text-slate-400'>{t("year")}</span>
               <select
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
@@ -732,7 +741,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               disabled={!selectedObjectId}
               className='flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-2 text-xs font-semibold text-rose-300 shadow-sm hover:bg-rose-500/20 transition disabled:opacity-50'>
               <Plus className='w-4 h-4 text-rose-400' />
-              <span>Block Period</span>
+              <span>{t("blockPeriod")}</span>
             </button>
 
             {/* New Price Period Button */}
@@ -742,7 +751,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               disabled={!selectedObjectId}
               className='flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50'>
               <Plus className='w-4 h-4' />
-              <span>New Price Period</span>
+              <span>{t("newPricePeriod")}</span>
             </button>
           </div>
         </div>
@@ -756,10 +765,10 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               <Info className='w-5 h-5 text-slate-400 shrink-0 mt-0.5' />
               <div className='text-xs space-y-1'>
                 <div className='font-semibold text-white'>
-                  No rental season configured for {selectedObject?.name || "this object"} in {selectedYear}.
+                  {t("noSeasonConfigured", { name: selectedObject?.name || "this object", year: selectedYear })}
                 </div>
                 <div className='text-slate-400 leading-relaxed'>
-                  Dates outside configured price periods are automatically closed for booking. Click &quot;New Price Period&quot; or select dates in the calendar to open for rental.
+                  {t("outsideDatesClosed")}
                 </div>
               </div>
             </div>
@@ -768,8 +777,17 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               <div className='flex items-center gap-2.5'>
                 <CheckCircle2 className='w-4 h-4 text-emerald-400 shrink-0' />
                 <span>
-                  Rental Season {selectedYear}: {periods.length} {periods.length === 1 ? "price period" : "price periods"} active for {selectedObject?.name || "this object"}. Dates outside price periods are closed for booking.
-                  {blockedPeriods.length > 0 && ` (${blockedPeriods.length} blocked ${blockedPeriods.length === 1 ? "period" : "periods"} override pricing).`}
+                  {t("rentalSeasonActive", {
+                    year: selectedYear,
+                    count: periods.length,
+                    plural: periods.length === 1 ? t("period") : t("periods"),
+                    name: selectedObject?.name || "this object",
+                  })}
+                  {blockedPeriods.length > 0 &&
+                    t("blockedOverrideNotice", {
+                      count: blockedPeriods.length,
+                      plural: blockedPeriods.length === 1 ? t("blockedPeriod") : t("blockedPeriods"),
+                    })}
                 </span>
               </div>
             </div>
@@ -783,12 +801,15 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
           <div className='flex items-center gap-2'>
             <CalendarDays className='w-4 h-4 text-slate-400' />
             <h2 className='text-sm font-semibold text-white'>
-              Price Periods ({selectedObject?.name || "Object"} – {selectedYear})
+              {t("periodsTitle", { name: selectedObject?.name || "Object", year: selectedYear })}
             </h2>
           </div>
           <div className='flex items-center gap-3'>
             <span className='text-xs text-slate-400'>
-              {periods.length} {periods.length === 1 ? "period" : "periods"} configured
+              {t("periodsConfigured", {
+                count: periods.length,
+                plural: periods.length === 1 ? t("period") : t("periods"),
+              })}
             </span>
             <button
               type='button'
@@ -796,7 +817,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               disabled={!selectedObjectId}
               className='flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-md shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50'>
               <Plus className='w-3.5 h-3.5' />
-              <span>New Price Period</span>
+              <span>{t("newPricePeriod")}</span>
             </button>
           </div>
         </div>
@@ -804,22 +825,21 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
         {isLoading ? (
           <div className='p-12 text-center text-slate-400 flex items-center justify-center gap-2'>
             <Loader2 className='w-5 h-5 animate-spin text-amber-400' />
-            <span className='text-xs'>Loading price periods...</span>
+            <span className='text-xs'>{t("loading")}</span>
           </div>
         ) : periods.length === 0 ? (
           <div className='p-12 text-center text-slate-400 space-y-3'>
             <Coins className='w-8 h-8 mx-auto text-slate-600' />
-            <div className='text-sm font-medium text-slate-300'>No price periods configured yet</div>
+            <div className='text-sm font-medium text-slate-300'>{t("noPeriodsConfigured")}</div>
             <p className='text-xs text-slate-500 max-w-sm mx-auto'>
-              Configure tiered pricing and seasonal periods for {selectedObject?.name || "this object"} in{" "}
-              {selectedYear}.
+              {t("noPeriodsDesc", { name: selectedObject?.name || "this object", year: selectedYear })}
             </p>
             <button
               type='button'
               onClick={handleOpenCreate}
               className='inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition'>
               <Plus className='w-4 h-4' />
-              <span>New Price Period</span>
+              <span>{t("newPricePeriod")}</span>
             </button>
           </div>
         ) : (
@@ -827,14 +847,14 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             <table className='w-full text-left text-xs'>
               <thead className='bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[10px]'>
                 <tr>
-                  <th className='py-3 px-4'>Period / Name</th>
-                  <th className='py-3 px-4 text-center'>Date Range (Week Span)</th>
-                  <th className='py-3 px-4 text-center'>Custom Days</th>
-                  <th className='py-3 px-4 text-right'>Daily (SEK)</th>
-                  <th className='py-3 px-4 text-right'>Sun–Thu</th>
-                  <th className='py-3 px-4 text-right'>Thu–Sun</th>
-                  <th className='py-3 px-4 text-right font-bold text-slate-300'>Full Week</th>
-                  <th className='py-3 px-4 text-center'>Actions</th>
+                  <th className='py-3 px-4'>{t("colPeriodName")}</th>
+                  <th className='py-3 px-4 text-center'>{t("colDateRange")}</th>
+                  <th className='py-3 px-4 text-center'>{t("colCustomDays")}</th>
+                  <th className='py-3 px-4 text-right'>{t("colDaily")}</th>
+                  <th className='py-3 px-4 text-right'>{t("colSunThu")}</th>
+                  <th className='py-3 px-4 text-right'>{t("colThuSun")}</th>
+                  <th className='py-3 px-4 text-right font-bold text-slate-300'>{t("colFullWeek")}</th>
+                  <th className='py-3 px-4 text-center'>{t("colActions")}</th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-slate-800/60 text-slate-200'>
@@ -842,7 +862,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   <tr key={period.id} className='hover:bg-slate-800/30 transition'>
                     <td className='py-3.5 px-4'>
                       <div className='font-semibold text-white'>
-                        {period.name || <span className='text-slate-500 italic'>Unnamed Period</span>}
+                        {period.name || <span className='text-slate-500 italic'>{t("unnamedPeriod")}</span>}
                       </div>
                       {period.allow_custom_days && (
                         <div className='text-[10px] text-slate-400 pt-0.5'>
@@ -874,11 +894,11 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       {period.allow_custom_days ? (
                         <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 text-[11px] font-medium border border-emerald-500/30'>
                           <CheckCircle2 className='w-3 h-3' />
-                          <span>Allowed</span>
+                          <span>{t("allowed")}</span>
                         </span>
                       ) : (
                         <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[11px] font-medium border border-slate-700'>
-                          <span>Full Week Only</span>
+                          <span>{t("fullWeekOnly")}</span>
                         </span>
                       )}
                     </td>
@@ -891,21 +911,21 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         <button
                           type='button'
                           onClick={() => handleOpenDuplicate(period)}
-                          title='Duplicate / copy to new period'
+                          title={t("modal.duplicate")}
                           className='p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition'>
                           <Copy className='w-3.5 h-3.5' />
                         </button>
                         <button
                           type='button'
                           onClick={() => handleOpenEdit(period)}
-                          title='Edit period'
+                          title={t("modal.editSeasonTitle")}
                           className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'>
                           <Edit3 className='w-3.5 h-3.5' />
                         </button>
                         <button
                           type='button'
                           onClick={() => handleDelete(period.id, period.name)}
-                          title='Delete period'
+                          title={tCommon("delete")}
                           className='p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition'>
                           <Trash2 className='w-3.5 h-3.5' />
                         </button>
@@ -925,12 +945,12 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
           <div className='flex items-center gap-2'>
             <Ban className='w-4 h-4 text-rose-400' />
             <h2 className='text-sm font-semibold text-white'>
-              Blocked Dates / Private & Maintenance ({selectedObject?.name || "Object"} – {selectedYear})
+              {t("blockedTab")} ({selectedObject?.name || "Object"} – {selectedYear})
             </h2>
           </div>
           <div className='flex items-center gap-3'>
             <span className='text-xs text-slate-400'>
-              {blockedPeriods.length} {blockedPeriods.length === 1 ? "period" : "periods"} blocked
+              {blockedPeriods.length} {blockedPeriods.length === 1 ? t("period") : t("periods")}
             </span>
             <button
               type='button'
@@ -938,7 +958,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               disabled={!selectedObjectId}
               className='flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 transition disabled:opacity-50'>
               <Plus className='w-3.5 h-3.5' />
-              <span>Block Period</span>
+              <span>{t("newBlocked")}</span>
             </button>
           </div>
         </div>
@@ -946,9 +966,9 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
         {blockedPeriods.length === 0 ? (
           <div className='p-8 text-center text-slate-400 space-y-2'>
             <Ban className='w-7 h-7 mx-auto text-slate-600' />
-            <div className='text-xs font-medium text-slate-300'>No blocked dates registered for {selectedYear}.</div>
+            <div className='text-xs font-medium text-slate-300'>{t("noBlockedRegistered", { year: selectedYear })}</div>
             <p className='text-[11px] text-slate-500 max-w-md mx-auto'>
-              Dates outside price periods are already closed for booking automatically. Blocked dates are only needed for exceptions within an active season, such as owner stays, renovations, or private visits.
+              {t("blockedHelpDesc")}
             </p>
           </div>
         ) : (
@@ -956,11 +976,11 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             <table className='w-full text-left text-xs'>
               <thead className='bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[10px]'>
                 <tr>
-                  <th className='py-3 px-4'>Reason / Name</th>
-                  <th className='py-3 px-4'>Date Range</th>
-                  <th className='py-3 px-4 text-center'>Duration</th>
-                  <th className='py-3 px-4'>Status</th>
-                  <th className='py-3 px-4 text-center'>Actions</th>
+                  <th className='py-3 px-4'>{t("blockedTable.reason")}</th>
+                  <th className='py-3 px-4'>{t("blockedTable.dates")}</th>
+                  <th className='py-3 px-4 text-center'>{t("blockedTable.duration")}</th>
+                  <th className='py-3 px-4'>{tCommon("status")}</th>
+                  <th className='py-3 px-4 text-center'>{t("blockedTable.actions")}</th>
                 </tr>
               </thead>
               <tbody className='divide-y divide-slate-800/60 text-slate-200'>
@@ -979,17 +999,17 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       </td>
                       <td className='py-3.5 px-4 text-center'>
                         <span className='inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-mono'>
-                          {days} {days === 1 ? "day" : "days"}
+                          {days} {days === 1 ? t("daySingle") : t("dayPlural")}
                         </span>
                       </td>
                       <td className='py-3.5 px-4 text-slate-400 text-[11px]'>
-                        Blocked from booking in calendar & iCal
+                        {t("blockedStatusHelp")}
                       </td>
                       <td className='py-3.5 px-4 text-center'>
                         <button
                           type='button'
                           onClick={() => handleDeleteBlocked(bp.id, bp.name)}
-                          title='Delete blocked period'
+                          title={tCommon("delete")}
                           className='p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition'>
                           <Trash2 className='w-3.5 h-3.5' />
                         </button>
@@ -1010,7 +1030,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             <div className='flex items-center gap-2'>
               <Calendar className='w-4 h-4 text-amber-400' />
               <h2 className='text-sm font-semibold text-white'>
-                Year Calendar ({selectedObject?.name || "Object"} – {selectedYear})
+                {t("yearCalendarTitle", { name: selectedObject?.name || "Object", year: selectedYear })}
               </h2>
             </div>
 
@@ -1018,21 +1038,21 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             <div className='flex flex-wrap items-center gap-3 text-xs'>
               <div className='flex items-center gap-1.5 text-slate-300'>
                 <span className='w-2.5 h-2.5 rounded-sm bg-emerald-500 border border-emerald-400' />
-                <span>Open for Rent (Priced)</span>
+                <span>{t("legend.activePricing")}</span>
               </div>
               <div className='flex items-center gap-1.5 text-slate-300'>
                 <span className='w-2.5 h-2.5 rounded-sm bg-rose-600 border border-rose-500' />
-                <span>Blocked (Overrides Pricing)</span>
+                <span>{t("legend.blocked")}</span>
               </div>
               <div className='flex items-center gap-1.5 text-slate-400'>
                 <span className='w-2.5 h-2.5 rounded-sm bg-slate-900 border border-slate-700' />
-                <span>Closed / Off-Season</span>
+                <span>{t("legend.closed")}</span>
               </div>
               <div className='flex items-center gap-1.5 text-sky-300/90'>
                 <span className='w-3.5 h-3.5 rounded-sm bg-sky-950/30 border border-sky-500/10 text-[9px] font-mono text-sky-400/70 flex items-center justify-center'>
                   w
                 </span>
-                <span>Week Number</span>
+                <span>{t("weekNumberLabel")}</span>
               </div>
 
               <button
@@ -1041,12 +1061,12 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 className='ml-2 flex items-center gap-1 text-slate-400 hover:text-white transition'>
                 {showYearCalendar ? (
                   <>
-                    <span>Hide</span>
+                    <span>{t("hideCalendar")}</span>
                     <ChevronUp className='w-4 h-4' />
                   </>
                 ) : (
                   <>
-                    <span>Show</span>
+                    <span>{t("showCalendar")}</span>
                     <ChevronDown className='w-4 h-4' />
                   </>
                 )}
@@ -1063,12 +1083,12 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 </div>
                 <div>
                   <div className='text-xs font-bold text-white flex items-center gap-2'>
-                    <span>Selected Range:</span>
+                    <span>{t("selectedRangeLabel")}</span>
                     <span className='font-mono text-amber-300'>
                       {effectiveRange.startStr} – {effectiveRange.endStr}
                     </span>
                     <span className='text-[11px] font-normal text-slate-400'>
-                      ({effectiveRange.daysCount} {effectiveRange.daysCount === 1 ? "day" : "days"},{" "}
+                      ({effectiveRange.daysCount} {effectiveRange.daysCount === 1 ? t("daySingle") : t("dayPlural")},{" "}
                       {formatWeekSpan(
                         effectiveRange.startIso.week,
                         effectiveRange.startIso.year,
@@ -1079,8 +1099,8 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   </div>
                   <div className='text-[11px] text-amber-200/80 pt-0.5'>
                     {!effectiveRange.isFinalized
-                      ? "Click any second date in the calendar to finalize range, or click an action button to proceed."
-                      : "Range selected. Create a price period or block the dates:"}
+                      ? t("rangeSelectHelpClick")
+                      : t("rangeSelectedHelpAction")}
                   </div>
                 </div>
               </div>
@@ -1091,7 +1111,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   onClick={() => handleOpenCreateForRange(effectiveRange.startStr, effectiveRange.endStr)}
                   className='flex items-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-1.5 text-xs font-semibold text-slate-950 shadow-md shadow-amber-500/20 hover:bg-amber-400 transition'>
                   <Plus className='w-3.5 h-3.5' />
-                  <span>Create Price Period</span>
+                  <span>{t("newSeason")}</span>
                 </button>
 
                 <button
@@ -1099,14 +1119,14 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   onClick={() => handleOpenCreateBlockedForRange(effectiveRange.startStr, effectiveRange.endStr)}
                   className='flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/20 px-3.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/30 transition'>
                   <Ban className='w-3.5 h-3.5' />
-                  <span>Block Period</span>
+                  <span>{t("newBlocked")}</span>
                 </button>
 
                 <button
                   type='button'
                   onClick={handleClearSelection}
                   className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'
-                  title='Clear selection'>
+                  title={tCommon("cancel")}>
                   <X className='w-4 h-4' />
                 </button>
               </div>
@@ -1127,9 +1147,9 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
                     <div className='grid grid-cols-8 gap-1 text-[10px] text-center font-medium pt-2 pb-1.5 border-b border-slate-800/40 mb-1'>
                       <div className='text-sky-400/70 font-mono font-bold text-[9px] flex items-center justify-center'>
-                        Wk
+                        {isSv ? "V." : "Wk"}
                       </div>
-                      {WEEKDAY_INITIALS_EN.map((w, idx) => (
+                      {(isSv ? WEEKDAY_INITIALS_SV : WEEKDAY_INITIALS_EN).map((w, idx) => (
                         <div key={idx} className='text-slate-500'>
                           {w}
                         </div>
@@ -1141,7 +1161,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         <div key={wIdx} className='grid grid-cols-8 gap-1 text-center items-center'>
                           {/* Week Number Cell */}
                           <div
-                            title={`Select Week ${week.weekNumber}`}
+                            title={t("selectWeekTooltip", { week: week.weekNumber })}
                             onClick={() => {
                               const mon = getMondayOfISOWeek(selectedYear, week.weekNumber).toISOString().split("T")[0];
                               const sun = getSundayOfISOWeek(selectedYear, week.weekNumber).toISOString().split("T")[0];
@@ -1169,30 +1189,41 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                             if (isSelected) {
                               cellClass =
                                 "bg-amber-500/60 border border-amber-400 text-slate-950 font-bold scale-105 z-10 shadow-lg shadow-amber-500/40 cursor-pointer";
-                              title = `${dayObj.dateStr} (Selected)`;
+                              title = t("calendarDaySelected", { date: dayObj.dateStr });
                             } else if (dayObj.blocked) {
                               cellClass =
                                 "bg-rose-950/80 border border-rose-600/60 text-rose-300 font-bold hover:bg-rose-900 cursor-pointer";
-                              const overrideText = dayObj.period ? ` [Overrides ${dayObj.period.name || "Price Period"}]` : "";
-                              title = `${dayObj.dateStr}: Blocked (${dayObj.blocked.name})${overrideText}`;
+                              const overrideText = dayObj.period
+                                ? t("overridesPricePeriod", { name: dayObj.period.name || "Price Period" })
+                                : "";
+                              title = t("calendarDayBlocked", {
+                                date: dayObj.dateStr,
+                                name: dayObj.blocked.name,
+                                overrideText,
+                              });
                             } else if (dayObj.period) {
                               cellClass =
                                 "bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 font-bold hover:bg-emerald-900 cursor-pointer";
                               const pName = dayObj.period.name || "Price Period";
                               const pPrice = dayObj.period.price_week
-                                ? `${dayObj.period.price_week} SEK/wk`
+                                ? `${dayObj.period.price_week} SEK/${isSv ? "v" : "wk"}`
                                 : dayObj.period.price_day
-                                  ? `${dayObj.period.price_day} SEK/day`
+                                  ? `${dayObj.period.price_day} SEK/${isSv ? "dag" : "day"}`
                                   : "Priced";
-                              title = `${dayObj.dateStr} (w.${dayObj.isoWeek}): ${pName} (${pPrice})`;
+                              title = t("calendarDayPriced", {
+                                date: dayObj.dateStr,
+                                week: dayObj.isoWeek,
+                                name: pName,
+                                price: pPrice,
+                              });
                             } else if (dayObj.isPast) {
                               cellClass = "bg-slate-950/40 border border-slate-900 text-slate-600 cursor-pointer";
-                              title = `${dayObj.dateStr} (Past)`;
+                              title = t("calendarDayPast", { date: dayObj.dateStr });
                             } else {
                               // Future dates outside configured price periods (Closed / Off-Season)
                               cellClass =
                                 "bg-slate-900/40 border border-slate-800/60 text-slate-400 hover:border-slate-700 hover:text-slate-200 cursor-pointer";
-                              title = `${dayObj.dateStr} (w.${dayObj.isoWeek}): Closed / Off-season. Click to configure pricing.`;
+                              title = t("calendarDayClosed", { date: dayObj.dateStr, week: dayObj.isoWeek });
                             }
 
                             if (dayObj.isToday && !isSelected) {
@@ -1237,10 +1268,10 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   </div>
                   <div>
                     <h3 className='text-base font-bold text-white'>
-                      {editingPeriod ? "Edit Price Period" : "New Price Period"}
+                      {editingPeriod ? t("modal.editSeasonTitle") : t("modal.createSeasonTitle")}
                     </h3>
                     <p className='text-xs text-slate-400'>
-                      Object: <span className='text-amber-300 font-semibold'>{selectedObject?.name}</span>
+                      {t("modalObjectLabel")} <span className='text-amber-300 font-semibold'>{selectedObject?.name}</span>
                     </p>
                   </div>
                 </div>
@@ -1266,7 +1297,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   <div className='p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-1.5'>
                     <label className='block text-xs font-semibold text-slate-300 flex items-center gap-1.5'>
                       <Sparkles className='w-3.5 h-3.5 text-amber-400' />
-                      <span>Copy prices from existing period</span>
+                      <span>{t("modal.copyFromExisting")}</span>
                     </label>
                     <select
                       defaultValue=''
@@ -1275,7 +1306,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       }}
                       className='w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200 focus:border-amber-400 focus:outline-none'>
                       <option value='' disabled>
-                        Select period to copy values from...
+                        {t("modal.copyPlaceholder")}
                       </option>
                       {allPeriodsForCopy.map((p) => {
                         const objName = p.object?.name || "Unknown object";
@@ -1302,12 +1333,12 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
                 {/* Name */}
                 <div>
-                  <label className='block text-xs font-semibold text-slate-300 mb-1.5'>Period Name / Season</label>
+                  <label className='block text-xs font-semibold text-slate-300 mb-1.5'>{t("modal.periodName")}</label>
                   <input
                     type='text'
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    placeholder='e.g. High Season, Mid Season, Christmas & New Year'
+                    placeholder={t("modal.periodNamePlaceholder")}
                     className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none'
                   />
                 </div>
@@ -1315,7 +1346,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 {/* Date Span */}
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                   <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>Start Date</label>
+                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>{t("modal.startDate")}</label>
                     <input
                       type='date'
                       required
@@ -1325,7 +1356,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                     />
                   </div>
                   <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>End Date</label>
+                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>{t("modal.endDate")}</label>
                     <input
                       type='date'
                       required
@@ -1339,7 +1370,10 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 {formDateSpanInfo && (
                   <div className='rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs text-amber-200 flex items-center justify-between'>
                     <span>
-                      Duration: <strong className='text-amber-100 font-semibold'>{formDateSpanInfo.days} days</strong>
+                      {t("modal.duration")}{" "}
+                      <strong className='text-amber-100 font-semibold'>
+                        {t("modal.durationDays", { days: formDateSpanInfo.days })}
+                      </strong>
                     </span>
                     <span className='font-mono text-[11px] bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30'>
                       {formDateSpanInfo.weekLabel}
@@ -1350,18 +1384,18 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 {/* Base Prices: Daily & Weekly */}
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800'>
                   <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>Daily Base Price (SEK)</label>
+                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>{t("modal.dailyBasePrice")}</label>
                     <input
                       type='number'
                       step='any'
-                      placeholder='e.g. 1500'
+                      placeholder={t("modal.priceOptionalPlaceholder", { amount: "1500" })}
                       value={formPriceDay}
                       onChange={(e) => setFormPriceDay(e.target.value)}
                       className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
                     />
                   </div>
                   <div>
-                    <label className='block text-xs font-semibold text-amber-300 mb-1.5'>Full Week Price (SEK)</label>
+                    <label className='block text-xs font-semibold text-amber-300 mb-1.5'>{t("modal.priceWeek")}</label>
                     <input
                       type='number'
                       step='any'
@@ -1377,12 +1411,12 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                   <div>
                     <label className='block text-xs font-semibold text-slate-300 mb-1.5'>
-                      Sun–Thu Midweek Package (SEK)
+                      {t("modal.priceSunThu")}
                     </label>
                     <input
                       type='number'
                       step='any'
-                      placeholder='Optional, e.g. 4500'
+                      placeholder={t("modal.priceOptionalPlaceholder", { amount: "4500" })}
                       value={formPriceSunThu}
                       onChange={(e) => setFormPriceSunThu(e.target.value)}
                       className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
@@ -1390,12 +1424,12 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   </div>
                   <div>
                     <label className='block text-xs font-semibold text-slate-300 mb-1.5'>
-                      Thu–Sun Weekend Package (SEK)
+                      {t("modal.priceThuSun")}
                     </label>
                     <input
                       type='number'
                       step='any'
-                      placeholder='Optional, e.g. 4900'
+                      placeholder={t("modal.priceOptionalPlaceholder", { amount: "4900" })}
                       value={formPriceThuSun}
                       onChange={(e) => setFormPriceThuSun(e.target.value)}
                       className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
@@ -1413,7 +1447,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       className='h-4 w-4 rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900'
                     />
                     <span className='text-xs font-semibold text-slate-200'>
-                      Allow Custom Day Stays (Tiered Stays: 2, 3, 4, 5, 6 days)
+                      {t("modal.allowCustomDays")}
                     </span>
                   </label>
                 </div>
@@ -1421,10 +1455,10 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 {/* Tiered Custom Day Prices */}
                 {formAllowCustomDays && (
                   <div className='p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-3'>
-                    <div className='text-[11px] font-semibold text-slate-300'>Tiered Stay Prices (SEK)</div>
+                    <div className='text-[11px] font-semibold text-slate-300'>{t("modal.tieredPricesTitle")}</div>
                     <div className='grid grid-cols-2 sm:grid-cols-5 gap-2.5'>
                       <div>
-                        <label className='block text-[10px] text-slate-400 mb-1'>2 Days</label>
+                        <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 2 })}</label>
                         <input
                           type='number'
                           step='any'
@@ -1434,7 +1468,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         />
                       </div>
                       <div>
-                        <label className='block text-[10px] text-slate-400 mb-1'>3 Days</label>
+                        <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 3 })}</label>
                         <input
                           type='number'
                           step='any'
@@ -1444,7 +1478,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         />
                       </div>
                       <div>
-                        <label className='block text-[10px] text-slate-400 mb-1'>4 Days</label>
+                        <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 4 })}</label>
                         <input
                           type='number'
                           step='any'
@@ -1454,7 +1488,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         />
                       </div>
                       <div>
-                        <label className='block text-[10px] text-slate-400 mb-1'>5 Days</label>
+                        <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 5 })}</label>
                         <input
                           type='number'
                           step='any'
@@ -1464,7 +1498,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         />
                       </div>
                       <div>
-                        <label className='block text-[10px] text-slate-400 mb-1'>6 Days</label>
+                        <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 6 })}</label>
                         <input
                           type='number'
                           step='any'
@@ -1483,14 +1517,14 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                     type='button'
                     onClick={() => setIsModalOpen(false)}
                     className='rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition'>
-                    Cancel
+                    {tCommon("cancel")}
                   </button>
                   <button
                     type='submit'
                     disabled={isSaving}
                     className='flex items-center gap-1.5 rounded-xl bg-amber-500 px-5 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50'>
                     {isSaving && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
-                    <span>{editingPeriod ? "Save Changes" : "Create Price Period"}</span>
+                    <span>{editingPeriod ? tCommon("save") : t("newSeason")}</span>
                   </button>
                 </div>
               </form>
@@ -1510,9 +1544,9 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                     <Ban className='w-4 h-4' />
                   </div>
                   <div>
-                    <h3 className='text-base font-bold text-white'>Block Dates / Private & Maintenance</h3>
+                    <h3 className='text-base font-bold text-white'>{t("modal.createBlockedTitle")}</h3>
                     <p className='text-xs text-slate-400'>
-                      Object: <span className='text-rose-300 font-semibold'>{selectedObject?.name}</span>
+                      {t("modalObjectLabel")} <span className='text-rose-300 font-semibold'>{selectedObject?.name}</span>
                     </p>
                   </div>
                 </div>
@@ -1533,19 +1567,19 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
               <form onSubmit={handleSaveBlocked} className='space-y-4'>
                 <div>
-                  <label className='block text-xs font-semibold text-slate-300 mb-1'>Reason / Name</label>
+                  <label className='block text-xs font-semibold text-slate-300 mb-1'>{t("modal.reason")}</label>
                   <input
                     type='text'
                     value={blockedFormName}
                     onChange={(e) => setBlockedFormName(e.target.value)}
-                    placeholder='e.g. Owner Stay, Renovation, Private Event'
+                    placeholder={t("modal.reasonPlaceholder")}
                     className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none'
                   />
                 </div>
 
                 <div className='grid grid-cols-2 gap-3'>
                   <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1'>Start Date</label>
+                    <label className='block text-xs font-semibold text-slate-300 mb-1'>{t("modal.startDate")}</label>
                     <input
                       type='date'
                       required
@@ -1556,7 +1590,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   </div>
 
                   <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1'>End Date</label>
+                    <label className='block text-xs font-semibold text-slate-300 mb-1'>{t("modal.endDate")}</label>
                     <input
                       type='date'
                       required
@@ -1568,7 +1602,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 </div>
 
                 <div className='rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-[11px] text-slate-400 leading-relaxed'>
-                  Blocked dates override active price periods and prevent bookings in the calendar. Dates outside configured price periods are already closed automatically.
+                  {t("modal.blockedHelpP1")}
                 </div>
 
                 <div className='flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800'>
@@ -1576,14 +1610,14 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                     type='button'
                     onClick={() => setIsBlockedModalOpen(false)}
                     className='rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition'>
-                    Cancel
+                    {tCommon("cancel")}
                   </button>
                   <button
                     type='submit'
                     disabled={isSavingBlocked}
                     className='flex items-center gap-1.5 rounded-xl bg-rose-600 px-5 py-2 text-xs font-semibold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 transition disabled:opacity-50'>
                     {isSavingBlocked && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
-                    <span>Save Blocked Period</span>
+                    <span>{tCommon("save")}</span>
                   </button>
                 </div>
               </form>

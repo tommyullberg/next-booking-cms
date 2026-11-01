@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Plus,
   Edit3,
@@ -56,6 +57,9 @@ export function OptionalsView({
   onDeleteOptional,
   onReorderOptionals,
 }: OptionalsViewProps) {
+  const t = useTranslations("optionals");
+  const tCommon = useTranslations("common");
+
   const [optionals, setOptionals] = useState<OptionalItem[]>(initialOptionals);
 
   useEffect(() => {
@@ -215,7 +219,7 @@ export function OptionalsView({
     setErrorMsg(null);
 
     if (!name.trim()) {
-      setErrorMsg("Name is required.");
+      setErrorMsg(t("nameRequired"));
       return;
     }
 
@@ -242,14 +246,14 @@ export function OptionalsView({
       }
       setIsModalOpen(false);
     } catch (err: any) {
-      setErrorMsg(err?.message || "Could not save optional.");
+      setErrorMsg(err?.message || t("saveError"));
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async (item: OptionalItem) => {
-    if (!confirm(`Are you sure you want to remove optional "${item.name}"?`)) {
+    if (!confirm(t("deleteConfirm", { name: item.name }))) {
       return;
     }
 
@@ -308,10 +312,10 @@ export function OptionalsView({
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
             <Sparkles className="w-6 h-6 text-sky-400" />
-            <span>Optionals (Tillval)</span>
+            <span>{t("title")}</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Manage rentable add-ons, extra services, cleaning options, and object locks for customer bookings. Drag and drop to sort order.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -321,7 +325,7 @@ export function OptionalsView({
           className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition"
         >
           <Plus className="w-4 h-4" />
-          <span>Create Optional</span>
+          <span>{t("createBtn")}</span>
         </button>
       </div>
 
@@ -335,7 +339,7 @@ export function OptionalsView({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search optionals by name, description..."
+              placeholder={t("searchPlaceholder")}
               className="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
             />
           </div>
@@ -348,11 +352,11 @@ export function OptionalsView({
               onChange={(e) => setSelectedObjectFilter(e.target.value)}
               className="bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 transition"
             >
-              <option value="ALL">All Optionals (No filter)</option>
-              <option value="ONLY_ALL">All Objects only (General add-ons)</option>
+              <option value="ALL">{t("filterAll")}</option>
+              <option value="ONLY_ALL">{t("filterOnlyAll")}</option>
               {objects.map((obj) => (
                 <option key={obj.id} value={obj.id}>
-                  Locked to: {obj.name}
+                  {t("filterLocked", { name: obj.name })}
                 </option>
               ))}
             </select>
@@ -360,8 +364,10 @@ export function OptionalsView({
         </div>
 
         <div className="text-xs text-slate-400">
-          Showing <span className="font-semibold text-white">{filteredOptionals.length}</span>{" "}
-          {filteredOptionals.length === 1 ? "optional" : "optionals"}
+          {t("showing", {
+            count: filteredOptionals.length,
+            plural: filteredOptionals.length === 1 ? t("optional") : t("optionals"),
+          })}
         </div>
       </div>
 
@@ -372,15 +378,15 @@ export function OptionalsView({
             <thead>
               <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                 <th className="py-3.5 px-3 w-10"></th>
-                <th className="py-3.5 px-3 w-16 text-center">Active</th>
-                <th className="py-3.5 px-5">Optional</th>
-                <th className="py-3.5 px-4">Locked to Object</th>
-                <th className="py-3.5 px-3 text-right">Kr/Hour</th>
-                <th className="py-3.5 px-3 text-right">Kr/Day</th>
-                <th className="py-3.5 px-3 text-right">Kr/Sun-Thu</th>
-                <th className="py-3.5 px-3 text-right">Kr/Thu-Sun</th>
-                <th className="py-3.5 px-3 text-right">Kr/Week</th>
-                <th className="py-3.5 px-5 text-right">Actions</th>
+                <th className="py-3.5 px-3 w-16 text-center">{t("colActive")}</th>
+                <th className="py-3.5 px-5">{t("colOptional")}</th>
+                <th className="py-3.5 px-4">{t("colLocked")}</th>
+                <th className="py-3.5 px-3 text-right">{t("colHour")}</th>
+                <th className="py-3.5 px-3 text-right">{t("colDay")}</th>
+                <th className="py-3.5 px-3 text-right">{t("colSunThu")}</th>
+                <th className="py-3.5 px-3 text-right">{t("colThuSun")}</th>
+                <th className="py-3.5 px-3 text-right">{t("colWeek")}</th>
+                <th className="py-3.5 px-5 text-right">{t("colActions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -416,7 +422,7 @@ export function OptionalsView({
                       {isDraggable ? (
                         <span
                           className="cursor-grab active:cursor-grabbing inline-flex p-1 rounded hover:text-slate-300 hover:bg-slate-800/60 transition"
-                          title="Dra för att ändra ordning"
+                          title={t("dragToReorder")}
                         >
                           <GripVertical className="w-4 h-4" />
                         </span>
@@ -433,7 +439,7 @@ export function OptionalsView({
                         className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                           opt.is_active ? "bg-emerald-500" : "bg-slate-700"
                         }`}
-                        title={opt.is_active ? "Active (click to hide)" : "Hidden (click to activate)"}
+                        title={opt.is_active ? t("statusActiveTooltip") : t("statusHiddenTooltip")}
                       >
                         <span
                           className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
@@ -479,7 +485,7 @@ export function OptionalsView({
                         </div>
                       ) : (
                         <span className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/80 px-2 py-0.5 text-[10px] font-semibold text-slate-300">
-                          All Objects
+                          {t("allObjects")}
                         </span>
                       )}
                     </td>
@@ -507,10 +513,10 @@ export function OptionalsView({
                         type="button"
                         onClick={() => openEditModal(opt)}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition shadow-sm"
-                        title="Edit optional"
+                        title={t("editOptionalTooltip")}
                       >
                         <Edit3 className="w-3 h-3 text-sky-400" />
-                        <span>Edit</span>
+                        <span>{tCommon("edit")}</span>
                       </button>
                     </td>
                   </tr>
@@ -523,7 +529,7 @@ export function OptionalsView({
                     colSpan={10}
                     className="py-12 text-center text-slate-500 text-xs"
                   >
-                    No optionals found. Click "+ Create Optional" to add one.
+                    {t("noOptionalsFound")}
                   </td>
                 </tr>
               )}
@@ -545,10 +551,10 @@ export function OptionalsView({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">
-                    {editingOptional ? `Edit Optional "${editingOptional.name}"` : "Create Optional (Tillval)"}
+                    {editingOptional ? t("modalEditTitle", { name: editingOptional.name }) : t("modalCreateTitle")}
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Configure optional details, object lock, active status, and price tiers.
+                    {t("modalSubtitle")}
                   </p>
                 </div>
               </div>
@@ -573,14 +579,14 @@ export function OptionalsView({
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Name (Namn) <span className="text-rose-400">*</span>
+                    {t("name")} <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Barnstol, Resesäng, Slutstäd..."
+                    placeholder={t("namePlaceholder")}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
@@ -588,13 +594,13 @@ export function OptionalsView({
                 {/* Description */}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Description (Beskrivning)
+                    {t("description")}
                   </label>
                   <textarea
                     rows={3}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Enter description shown to customer when selecting this optional..."
+                    placeholder={t("descriptionPlaceholder")}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
@@ -602,17 +608,17 @@ export function OptionalsView({
 
               {/* Locked to Object & Active Switch */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Låst till objekt */}
+                {/* Locked to Object */}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-                    <span>Locked to Object (Låst till objekt)</span>
+                    <span>{t("colLocked")}</span>
                   </label>
                   <select
                     value={objectId}
                     onChange={(e) => setObjectId(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
                   >
-                    <option value="">-- All Objects (Till alla stugor) --</option>
+                    <option value="">-- {t("allObjects")} --</option>
                     {objects.map((obj) => (
                       <option key={obj.id} value={obj.id}>
                         {obj.name}
@@ -624,11 +630,11 @@ export function OptionalsView({
                 {/* Active / Hidden Switch */}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Status (Aktiv / Dold)
+                    {t("status")}
                   </label>
                   <div className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 flex items-center justify-between h-[38px]">
                     <span className="text-[11px] text-slate-300">
-                      {isActive ? "Active (visible to customers)" : "Hidden (temporarily disabled)"}
+                      {isActive ? t("statusActive") : t("statusHidden")}
                     </span>
                     <button
                       type="button"
@@ -649,19 +655,19 @@ export function OptionalsView({
                 </div>
               </div>
 
-              {/* Image (Bild) */}
+              {/* Image */}
               <div className="space-y-2 pt-1 border-t border-slate-800/80">
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
                     <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Image (Bild)</span>
+                    <span>{t("image")}</span>
                   </label>
                   <button
                     type="button"
                     onClick={() => setShowManualUrl(!showManualUrl)}
                     className="text-[10px] text-sky-400 hover:text-sky-300 transition underline underline-offset-2"
                   >
-                    {showManualUrl ? "Hide manual URL" : "Enter manual URL / Sökväg"}
+                    {showManualUrl ? t("hideManualUrl") : t("enterManualUrl")}
                   </button>
                 </div>
 
@@ -692,7 +698,7 @@ export function OptionalsView({
                       type="button"
                       onClick={() => setImageUrl("")}
                       className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition shrink-0"
-                      title="Remove image"
+                      title={t("removeImage")}
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -700,7 +706,7 @@ export function OptionalsView({
                 ) : (
                   <div className="p-2.5 rounded-xl border border-dashed border-slate-800 bg-slate-900/40 text-center">
                     <span className="text-[11px] text-slate-400">
-                      No image selected (Ingen bild vald)
+                      {t("noImageSelected")}
                     </span>
                   </div>
                 )}
@@ -715,7 +721,7 @@ export function OptionalsView({
                     <span className="flex items-center gap-2 text-slate-300">
                       <ImageIcon className="w-4 h-4 text-sky-400" />
                       <span>
-                        {imageUrl ? "Change image from Media & Files" : "Choose image from Media & Files"}
+                        {imageUrl ? t("changeImage") : t("chooseImage")}
                       </span>
                     </span>
                     <ChevronDown
@@ -735,7 +741,7 @@ export function OptionalsView({
                           type="text"
                           value={mediaSearchQuery}
                           onChange={(e) => setMediaSearchQuery(e.target.value)}
-                          placeholder="Search images in Media & Files..."
+                          placeholder={t("searchImages")}
                           className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
                         />
                       </div>
@@ -752,15 +758,15 @@ export function OptionalsView({
                             className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-lg text-rose-300 hover:bg-rose-500/10 text-xs transition"
                           >
                             <X className="w-4 h-4 text-rose-400 shrink-0" />
-                            <span>Remove image / Ingen bild</span>
+                            <span>{t("removeImage")}</span>
                           </button>
                         )}
 
                         {filteredMedia.length === 0 ? (
                           <div className="p-3 text-center text-[11px] text-slate-400">
                             {imageMedia.length === 0
-                              ? "No images found in Media & Files."
-                              : "No matching images found."}
+                              ? t("noImages")
+                              : t("noMatchingImages")}
                           </div>
                         ) : (
                           filteredMedia.map((m) => {
@@ -802,7 +808,7 @@ export function OptionalsView({
                 {/* Optional manual URL input */}
                 {showManualUrl && (
                   <div className="space-y-1 pt-1">
-                    <span className="text-[10px] text-slate-400">Manual URL or path</span>
+                    <span className="text-[10px] text-slate-400">{t("manualUrlLabel")}</span>
                     <input
                       type="text"
                       value={imageUrl}
@@ -812,21 +818,21 @@ export function OptionalsView({
                     />
                     {/^https?:\/\//i.test(imageUrl.trim()) && (
                       <p className="text-[11px] text-sky-400/90 pt-0.5">
-                        External image URL detected — when you save, the image will be automatically downloaded and stored as a physical file in Media & Files.
+                        {t("externalImageNotice")}
                       </p>
                     )}
                   </div>
                 )}
               </div>
 
-              {/* Pricing Breakdown (Kr/Tim, Kr/Dag, Kr/sön-tor, Kr/tor-sön, Kr/vecka) */}
+              {/* Pricing Breakdown */}
               <div className="space-y-2 pt-2 border-t border-slate-800">
                 <label className="text-[11px] font-semibold text-slate-300 block">
-                  Pricing (Prissättning i SEK)
+                  {t("pricingTitle")}
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">Pris timme</span>
+                    <span className="text-[10px] text-slate-400">{t("hourlyRate")}</span>
                     <input
                       type="number"
                       min={0}
@@ -837,7 +843,7 @@ export function OptionalsView({
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">Pris dag</span>
+                    <span className="text-[10px] text-slate-400">{t("dailyRate")}</span>
                     <input
                       type="number"
                       min={0}
@@ -848,7 +854,7 @@ export function OptionalsView({
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">Pris sön-tor</span>
+                    <span className="text-[10px] text-slate-400">{t("sunThuRate")}</span>
                     <input
                       type="number"
                       min={0}
@@ -859,7 +865,7 @@ export function OptionalsView({
                   </div>
 
                   <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">Pris tor-sön</span>
+                    <span className="text-[10px] text-slate-400">{t("thuSunRate")}</span>
                     <input
                       type="number"
                       min={0}
@@ -870,7 +876,7 @@ export function OptionalsView({
                   </div>
 
                   <div className="space-y-1 sm:col-span-1 col-span-2">
-                    <span className="text-[10px] text-sky-400 font-semibold">Pris vecka</span>
+                    <span className="text-[10px] text-sky-400 font-semibold">{t("weeklyRate")}</span>
                     <input
                       type="number"
                       min={0}
@@ -891,7 +897,7 @@ export function OptionalsView({
                     className="inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 transition"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete Optional</span>
+                    <span>{t("deleteBtn")}</span>
                   </button>
                 ) : (
                   <div />
@@ -903,7 +909,7 @@ export function OptionalsView({
                     onClick={() => setIsModalOpen(false)}
                     className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
                   >
-                    Cancel
+                    {tCommon("cancel")}
                   </button>
                   <button
                     type="submit"
@@ -911,7 +917,7 @@ export function OptionalsView({
                     className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
                   >
                     {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>{editingOptional ? "Update Optional" : "Save Optional"}</span>
+                    <span>{editingOptional ? t("updateBtn") : t("saveBtn")}</span>
                   </button>
                 </div>
               </div>

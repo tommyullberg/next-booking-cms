@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Globe, Languages, Check, Save, Lock, Images, LayoutGrid } from "lucide-react";
 import { FlagIcon } from "../../components/ui/flag-icon";
 import {
@@ -30,6 +31,9 @@ export function SettingsView({
   gallerySettings = DEFAULT_GALLERY_SETTINGS,
   onSaveSettings,
 }: SettingsViewProps) {
+  const t = useTranslations("settings");
+  const tCommon = useTranslations("common");
+
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
     Array.from(new Set(["sv", ...activeLanguages]))
   );
@@ -95,10 +99,10 @@ export function SettingsView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            Settings
+            {t("title")}
           </h1>
           <p className="mt-1 text-xs text-slate-400">
-            Configure active site languages and admin interface preferences.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -110,12 +114,12 @@ export function SettingsView({
           {savedSuccess ? (
             <>
               <Check className="w-4 h-4" />
-              <span>Saved!</span>
+              <span>{tCommon("saved")}</span>
             </>
           ) : (
             <>
               <Save className="w-4 h-4" />
-              <span>{isSaving ? "Saving..." : "Save Settings"}</span>
+              <span>{isSaving ? tCommon("loading") : t("saveSettings")}</span>
             </>
           )}
         </button>
@@ -129,12 +133,10 @@ export function SettingsView({
           </div>
           <div>
             <h2 className="text-base font-semibold text-white">
-              Site Language Configuration
+              {t("siteLanguageTitle")}
             </h2>
             <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">
-              Select which languages are active across public pages. Active languages
-              automatically appear in Page Editor, Sections, and Inline Text
-              Translation modals.
+              {t("siteLanguageDesc")}
             </p>
           </div>
         </div>
@@ -186,7 +188,7 @@ export function SettingsView({
                 {lang.locked && (
                   <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-300 shrink-0">
                     <Lock className="w-2.5 h-2.5" />
-                    <span>Default</span>
+                    <span>{t("defaultBadge")}</span>
                   </span>
                 )}
               </label>
@@ -203,10 +205,10 @@ export function SettingsView({
           </div>
           <div>
             <h2 className="text-base font-semibold text-white">
-              Admin Language Configuration
+              {t("adminLanguageTitle")}
             </h2>
             <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">
-              Select the preferred interface language for the administration dashboard and management tools. Defaults to English.
+              {t("adminLanguageDesc")}
             </p>
           </div>
         </div>
@@ -269,13 +271,13 @@ export function SettingsView({
                 <div className="flex items-center gap-1.5 shrink-0">
                   {lang.isDefault && (
                     <span className="inline-flex items-center gap-1 rounded-md border border-slate-700/80 bg-slate-800/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-                      Default
+                      {t("defaultBadge")}
                     </span>
                   )}
                   {isSelected && (
                     <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-300">
                       <Check className="w-2.5 h-2.5" />
-                      <span>Active</span>
+                      <span>{tCommon("active")}</span>
                     </span>
                   )}
                 </div>
@@ -293,10 +295,10 @@ export function SettingsView({
           </div>
           <div>
             <h2 className="text-base font-semibold text-white">
-              Gallery Configuration
+              {t("galleryConfigTitle")}
             </h2>
             <p className="mt-0.5 text-xs text-slate-400 leading-relaxed">
-              Configure default visual layout, thumbnail proportions, and lightbox behavior for all CMSField.Gallery components across the site.
+              {t("galleryConfigDesc")}
             </p>
           </div>
         </div>
@@ -305,24 +307,24 @@ export function SettingsView({
           {/* Default Gallery Layout */}
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-2">
-              Default Gallery Layout
+              {t("defaultGalleryLayout")}
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
                 {
                   id: "grid" as const,
                   title: "Grid",
-                  desc: "Uniform multi-column image grid",
+                  desc: t("layoutGridDesc"),
                 },
                 {
                   id: "bento" as const,
                   title: "Hero + Grid (Bento)",
-                  desc: "1 large featured photo + up to 4 smaller photos",
+                  desc: t("layoutBentoDesc"),
                 },
                 {
                   id: "carousel" as const,
                   title: "Carousel / Slider",
-                  desc: "Horizontal interactive photo slider",
+                  desc: t("layoutCarouselDesc"),
                 },
               ].map((opt) => {
                 const isSelected = selectedGallerySettings.layout === opt.id;
@@ -372,7 +374,7 @@ export function SettingsView({
                   }`}
                 >
                   <label className="block text-xs font-semibold text-slate-300 mb-2">
-                    Grid Columns
+                    {t("gridColumns")}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     {([2, 3, 4] as const).map((cols) => {
@@ -397,15 +399,15 @@ export function SettingsView({
                               : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200 cursor-pointer"
                           }`}
                         >
-                          {cols} Cols
+                          {t("colsCount", { count: cols })}
                         </button>
                       );
                     })}
                   </div>
                   <p className="mt-1.5 text-[11px] text-slate-500">
                     {isColumnsDisabled
-                      ? "Not active for Hero + Grid or Carousel layouts."
-                      : "Applies when layout is set to Grid."}
+                      ? t("columnsDisabledHelp")
+                      : t("columnsActiveHelp")}
                   </p>
                 </div>
               );
@@ -422,7 +424,7 @@ export function SettingsView({
                   }`}
                 >
                   <label className="block text-xs font-semibold text-slate-300 mb-2">
-                    Thumbnail Aspect Ratio
+                    {t("thumbnailAspectRatio")}
                   </label>
                   <div className="grid grid-cols-4 gap-1.5">
                     {(["16/9", "4/3", "3/2", "1/1"] as const).map((ratio) => {
@@ -454,8 +456,8 @@ export function SettingsView({
                   </div>
                   <p className="mt-1.5 text-[11px] text-slate-500">
                     {isAspectRatioDisabled
-                      ? "Not active for Hero + Grid (uses mosaic proportions)."
-                      : "Proportions for Grid and Carousel cards."}
+                      ? t("aspectRatioDisabledHelp")
+                      : t("aspectRatioActiveHelp")}
                   </p>
                 </div>
               );
@@ -464,7 +466,7 @@ export function SettingsView({
             {/* Caption Position */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2">
-                Caption Visibility
+                {t("captionVisibility")}
               </label>
               <select
                 value={selectedGallerySettings.captionPosition}
@@ -479,12 +481,12 @@ export function SettingsView({
                 }
                 className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
               >
-                <option value="both">Show on Thumbnails & in Lightbox</option>
-                <option value="lightbox">Show only in Lightbox</option>
-                <option value="hidden">Hide Captions</option>
+                <option value="both">{t("captionBoth")}</option>
+                <option value="lightbox">{t("captionLightbox")}</option>
+                <option value="hidden">{t("captionHidden")}</option>
               </select>
               <p className="mt-1.5 text-[11px] text-slate-500">
-                Where image descriptions are displayed.
+                {t("captionHelp")}
               </p>
             </div>
           </div>
@@ -502,10 +504,10 @@ export function SettingsView({
             >
               <div>
                 <div className="text-xs font-semibold text-white">
-                  Show Thumbnail Strip in Lightbox
+                  {t("showThumbnailStrip")}
                 </div>
                 <div className="text-[11px] text-slate-400 mt-0.5">
-                  Display a clickable row of preview thumbnails at the bottom of the fullscreen Fancybox lightbox.
+                  {t("showThumbnailStripHelp")}
                 </div>
               </div>
               <div
@@ -532,12 +534,12 @@ export function SettingsView({
           {savedSuccess ? (
             <>
               <Check className="w-4 h-4" />
-              <span>Saved!</span>
+              <span>{tCommon("saved")}</span>
             </>
           ) : (
             <>
               <Save className="w-4 h-4" />
-              <span>{isSaving ? "Saving..." : "Save Settings"}</span>
+              <span>{isSaving ? tCommon("saving") : t("saveSettings")}</span>
             </>
           )}
         </button>

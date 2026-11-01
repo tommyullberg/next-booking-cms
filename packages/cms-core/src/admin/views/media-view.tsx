@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Upload,
   Trash2,
@@ -134,6 +135,9 @@ export function MediaView({
   onDeleteFolder,
   onMoveFile,
 }: MediaViewProps) {
+  const t = useTranslations("media");
+  const tCommon = useTranslations("common");
+
   // Navigation: "ALL" | null (Root) | folder.id
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>("ALL");
   const [search, setSearch] = useState("");
@@ -243,16 +247,16 @@ export function MediaView({
   }, [effectiveFolders, selectedFolderId]);
 
   const activeFolderBreadcrumb = useMemo(() => {
-    if (selectedFolderId === "ALL") return "All Files";
-    if (selectedFolderId === null || !activeFolder) return "Mediafolder";
+    if (selectedFolderId === "ALL") return t("allFiles");
+    if (selectedFolderId === null || !activeFolder) return t("mediafolder");
     if (activeFolder.parent_id) {
       const parent = effectiveFolders.find((f) => f.id === activeFolder.parent_id);
       if (parent) {
-        return `Mediafolder / ${parent.name} / ${activeFolder.name}`;
+        return `${t("mediafolder")} / ${parent.name} / ${activeFolder.name}`;
       }
     }
-    return `Mediafolder / ${activeFolder.name}`;
-  }, [selectedFolderId, activeFolder, effectiveFolders]);
+    return `${t("mediafolder")} / ${activeFolder.name}`;
+  }, [selectedFolderId, activeFolder, effectiveFolders, t]);
 
   const uploadFiles = async (fileList: FileList | File[]) => {
     const files = Array.from(fileList);
@@ -269,7 +273,7 @@ export function MediaView({
         await onUpload(files[i], uploadFolderId);
       }
     } catch (err: any) {
-      setActionError(err?.message || "Failed to upload file(s)");
+      setActionError(err?.message || t("errorUploadFailed"));
     } finally {
       setIsUploading(false);
       setUploadProgress(null);
@@ -319,16 +323,16 @@ export function MediaView({
 
   const handleDeleteFile = async (item: MediaItem) => {
     if (item.is_used) {
-      alert("This file is currently in use on the website and cannot be deleted.");
+      alert(t("inUseCannotDeleteAlert"));
       return;
     }
-    if (!confirm(`Delete "${item.file_name}"?`)) return;
+    if (!confirm(t("deleteConfirm"))) return;
 
     setActionError(null);
     try {
       await onDelete(item.id);
     } catch (err: any) {
-      setActionError(err?.message || "Failed to delete file");
+      setActionError(err?.message || t("errorDeleteFileFailed"));
     }
   };
 
@@ -362,7 +366,7 @@ export function MediaView({
       setNewFolderName("");
       setNewFolderParentId(null);
     } catch (err: any) {
-      setActionError(err?.message || "Failed to create folder");
+      setActionError(err?.message || t("errorCreateFolderFailed"));
     } finally {
       setIsCreatingFolder(false);
     }
@@ -371,15 +375,15 @@ export function MediaView({
   const handleDeleteFolder = async (folder: MediaFolderItem) => {
     const childCount = childrenByParentId.get(folder.id)?.length || 0;
     if (childCount > 0) {
-      alert(`The folder "${folder.name}" contains ${childCount} subfolder(s). Delete the subfolders first.`);
+      alert(t("folderHasSubfoldersAlert", { name: folder.name, count: childCount }));
       return;
     }
     const count = folderCounts[folder.id] || 0;
     if (count > 0) {
-      alert(`The folder "${folder.name}" contains ${count} file(s). Move or delete the files first.`);
+      alert(t("folderHasFilesAlert", { name: folder.name, count }));
       return;
     }
-    if (!confirm(`Are you sure you want to delete the empty folder "${folder.name}"?`)) {
+    if (!confirm(t("confirmDeleteFolder", { name: folder.name }))) {
       return;
     }
 
@@ -392,7 +396,7 @@ export function MediaView({
         }
       }
     } catch (err: any) {
-      setActionError(err?.message || "Failed to delete folder");
+      setActionError(err?.message || t("errorDeleteFolderFailed"));
     }
   };
 
@@ -410,7 +414,7 @@ export function MediaView({
       await onMoveFile(movingFile.id, targetFolderChoice);
       setMovingFile(null);
     } catch (err: any) {
-      setActionError(err?.message || "Failed to move file");
+      setActionError(err?.message || t("errorMoveFileFailed"));
     } finally {
       setIsMoving(false);
     }
@@ -445,7 +449,7 @@ export function MediaView({
     try {
       await onMoveFile(fileId, targetFolderId);
     } catch (err: any) {
-      setActionError(err?.message || "Failed to move file");
+      setActionError(err?.message || t("errorMoveFileFailed"));
     }
   };
 
@@ -454,9 +458,9 @@ export function MediaView({
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Media & Files</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white">{t("title")}</h1>
           <p className="mt-1 text-xs text-slate-400">
-            Organize files into folders, manage uploads, and inspect asset usage.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -468,7 +472,7 @@ export function MediaView({
               className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:text-white hover:border-slate-700 transition"
             >
               <FolderPlus className="w-4 h-4 text-sky-400" />
-              <span>New Folder</span>
+              <span>{t("createFolder")}</span>
             </button>
           )}
 
@@ -481,11 +485,11 @@ export function MediaView({
             <span>
               {isUploading
                 ? uploadProgress && uploadProgress.total > 1
-                  ? `Uploading (${uploadProgress.current}/${uploadProgress.total})...`
-                  : "Uploading..."
+                  ? t("uploadingCount", { current: uploadProgress.current, total: uploadProgress.total })
+                  : tCommon("loading")
                 : activeFolder
-                ? `Upload to ${activeFolder.name}`
-                : "Upload File"}
+                ? t("uploadToFolder", { folder: activeFolder.name })
+                : t("uploadFile")}
             </span>
             <input
               type="file"
@@ -519,14 +523,14 @@ export function MediaView({
           <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3 shadow-sm">
             <div className="flex items-center justify-between px-2 py-1 mb-2">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                Folders
+                {t("folders")}
               </span>
               {onCreateFolder && (
                 <button
                   type="button"
                   onClick={() => handleOpenCreateFolder(null)}
                   className="p-1 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition"
-                  title="Create new folder"
+                  title={t("createNewFolderTooltip")}
                 >
                   <FolderPlus className="w-3.5 h-3.5" />
                 </button>
@@ -546,7 +550,7 @@ export function MediaView({
               >
                 <div className="flex items-center gap-2.5 truncate">
                   <Layers className="w-4 h-4 text-sky-400 shrink-0" />
-                  <span className="truncate">All Files</span>
+                  <span className="truncate">{t("allFiles")}</span>
                 </div>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 shrink-0">
                   {folderCounts.ALL || 0}
@@ -579,7 +583,7 @@ export function MediaView({
                   ) : (
                     <Folder className="w-4 h-4 text-slate-400 shrink-0" />
                   )}
-                  <span className="truncate">Mediafolder</span>
+                  <span className="truncate">{t("mediafolder")}</span>
                 </div>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 shrink-0">
                   {folderCounts.ROOT || 0}
@@ -634,7 +638,7 @@ export function MediaView({
                             type="button"
                             onClick={() => handleOpenCreateFolder(folder.id)}
                             className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-sky-400 hover:bg-slate-800 rounded transition"
-                            title={`Create subfolder in ${folder.name}`}
+                            title={t("createSubfolderTooltip", { name: folder.name })}
                           >
                             <FolderPlus className="w-3.5 h-3.5" />
                           </button>
@@ -644,7 +648,7 @@ export function MediaView({
                             type="button"
                             onClick={() => handleDeleteFolder(folder)}
                             className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded transition"
-                            title="Delete empty folder"
+                            title={t("deleteEmptyFolderTooltip")}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -702,7 +706,7 @@ export function MediaView({
                                 type="button"
                                 onClick={() => handleDeleteFolder(child)}
                                 className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded transition"
-                                title="Delete empty folder"
+                                title={t("deleteEmptyFolderTooltip")}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                               </button>
@@ -731,12 +735,12 @@ export function MediaView({
           {/* Top Filter and Breadcrumb Bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 border border-slate-800 p-3 rounded-2xl">
             <div className="flex items-center gap-2 text-xs">
-              <span className="text-slate-400">Path:</span>
+              <span className="text-slate-400">{t("pathLabel")}</span>
               <span className="font-semibold text-white">
                 {activeFolderBreadcrumb}
               </span>
               <span className="text-slate-600 font-mono">
-                ({displayedFiles.length} {displayedFiles.length === 1 ? "file" : "files"})
+                ({displayedFiles.length} {displayedFiles.length === 1 ? t("file") : t("files")})
               </span>
             </div>
 
@@ -744,7 +748,7 @@ export function MediaView({
               <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-500" />
               <input
                 type="text"
-                placeholder="Search files..."
+                placeholder={t("searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full rounded-xl border border-slate-800 bg-slate-950/80 pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
@@ -779,8 +783,8 @@ export function MediaView({
                   <Loader2 className="w-6 h-6 text-sky-400 animate-spin" />
                   <div className="text-xs font-medium text-sky-300">
                     {uploadProgress && uploadProgress.total > 1
-                      ? `Uploading file ${uploadProgress.current} of ${uploadProgress.total}...`
-                      : "Uploading file..."}
+                      ? t("uploadingFileCount", { current: uploadProgress.current, total: uploadProgress.total })
+                      : t("uploadingFile")}
                   </div>
                 </>
               ) : (
@@ -792,11 +796,11 @@ export function MediaView({
                   />
                   {displayedFiles.length === 0 && (
                     <div className="text-xs font-medium text-slate-400">
-                      No files in this folder.
+                      {t("noFilesInFolder")}
                     </div>
                   )}
                   <div className="text-[11px] text-slate-500">
-                    Drag and drop files here or click Upload File to add items.
+                    {t("dragAndDropHelp")}
                   </div>
                 </>
               )}
@@ -826,7 +830,7 @@ export function MediaView({
                         <div className="flex flex-col items-center justify-center text-slate-400 gap-1.5">
                           <FileText className="w-8 h-8 text-rose-400" />
                           <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
-                            PDF Document
+                            {t("pdfDocument")}
                           </span>
                         </div>
                       ) : (
@@ -841,10 +845,10 @@ export function MediaView({
                       {item.is_used && (
                         <div
                           className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-slate-950/80 backdrop-blur border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-300 shadow"
-                          title={`Used on pages/galleries (${item.usage_count || 1})`}
+                          title={t("usedOnPagesTooltip", { count: item.usage_count || 1 })}
                         >
                           <Lock className="w-2.5 h-2.5" />
-                          <span>In use</span>
+                          <span>{t("inUse")}</span>
                         </div>
                       )}
 
@@ -869,7 +873,7 @@ export function MediaView({
                           type="button"
                           onClick={() => copyUrl(item.id, item.file_url)}
                           className="p-1 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition"
-                          title="Copy file URL"
+                          title={t("copyUrlTooltip")}
                         >
                           {copiedId === item.id ? (
                             <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -884,7 +888,7 @@ export function MediaView({
                             type="button"
                             onClick={() => handleOpenMoveModal(item)}
                             className="p-1 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition"
-                            title="Move file to another folder"
+                            title={t("moveFileTooltip")}
                           >
                             <FolderInput className="w-3.5 h-3.5" />
                           </button>
@@ -902,8 +906,8 @@ export function MediaView({
                           }`}
                           title={
                             item.is_used
-                              ? "This file is in use on the website and cannot be deleted"
-                              : "Delete file"
+                              ? t("inUseCannotDeleteTooltip")
+                              : t("deleteFileTooltip")
                           }
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -926,7 +930,7 @@ export function MediaView({
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div className="flex items-center gap-2">
                   <FolderPlus className="w-5 h-5 text-sky-400" />
-                  <h3 className="text-base font-bold text-white">Create New Folder</h3>
+                  <h3 className="text-base font-bold text-white">{t("createNewFolderModalTitle")}</h3>
                 </div>
                 <button
                   type="button"
@@ -940,17 +944,17 @@ export function MediaView({
               <form onSubmit={handleCreateFolder} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-300">
-                    Parent Folder
+                    {t("parentFolderLabel")}
                   </label>
                   <select
                     value={newFolderParentId || ""}
                     onChange={(e) => setNewFolderParentId(e.target.value || null)}
                     className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
                   >
-                    <option value="">Mediafolder (Root level)</option>
+                    <option value="">{t("mediafolderRoot")}</option>
                     {rootLevelFolders.map((f) => (
                       <option key={f.id} value={f.id}>
-                        Mediafolder / {f.name}
+                        {t("mediafolder")} / {f.name}
                       </option>
                     ))}
                   </select>
@@ -958,19 +962,19 @@ export function MediaView({
 
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-300">
-                    Folder Name *
+                    {t("folderNameLabel")} <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="e.g. cabins, activities"
+                    placeholder={t("folderNamePlaceholder")}
                     value={newFolderName}
                     onChange={(e) => setNewFolderName(sanitizeFolderInput(e.target.value))}
                     className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
                     autoFocus
                   />
                   <p className="text-[11px] text-slate-500">
-                    Allowed characters: a-z, 0-9, hyphen (-) and underscore (_).
+                    {t("folderNameHelp")}
                   </p>
                 </div>
 
@@ -980,7 +984,7 @@ export function MediaView({
                     onClick={() => setIsCreateFolderOpen(false)}
                     className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white transition"
                   >
-                    Cancel
+                    {tCommon("cancel")}
                   </button>
                   <button
                     type="submit"
@@ -988,7 +992,7 @@ export function MediaView({
                     className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
                   >
                     {isCreatingFolder && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>Create Folder</span>
+                    <span>{t("createFolderBtn")}</span>
                   </button>
                 </div>
               </form>
@@ -1005,7 +1009,7 @@ export function MediaView({
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div className="flex items-center gap-2">
                   <FolderInput className="w-5 h-5 text-sky-400" />
-                  <h3 className="text-base font-bold text-white">Move File to Folder</h3>
+                  <h3 className="text-base font-bold text-white">{t("moveFileModalTitle")}</h3>
                 </div>
                 <button
                   type="button"
@@ -1018,7 +1022,7 @@ export function MediaView({
 
               <div className="space-y-3">
                 <div className="text-xs text-slate-300">
-                  Move <span className="font-semibold text-white">"{movingFile.file_name}"</span> to:
+                  {t("moveFilePrompt", { fileName: movingFile.file_name })}
                 </div>
 
                 <div className="max-h-60 overflow-y-auto space-y-1 border border-slate-800 rounded-xl p-2 bg-slate-900/60">
@@ -1036,7 +1040,7 @@ export function MediaView({
                       ) : (
                         <Folder className="w-4 h-4 text-slate-400" />
                       )}
-                      <span>Mediafolder</span>
+                      <span>{t("mediafolder")}</span>
                     </div>
                     <input
                       type="radio"
@@ -1082,7 +1086,7 @@ export function MediaView({
                               key={child.id}
                               className={`flex items-center justify-between p-2 rounded-lg text-xs cursor-pointer transition ${
                                 targetFolderChoice === child.id
-                                  ? "bg-sky-600/20 border border-sky-500/40 text-white font-semibold"
+                                    ? "bg-sky-600/20 border border-sky-500/40 text-white font-semibold"
                                   : "text-slate-300 hover:bg-slate-800"
                               }`}
                             >
@@ -1108,7 +1112,7 @@ export function MediaView({
                 </div>
 
                 <p className="text-[11px] text-slate-500">
-                  The physical file path and database URL will be updated, and the Next.js cache will be cleared automatically.
+                  {t("moveFileHelp")}
                 </p>
 
                 <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
@@ -1117,7 +1121,7 @@ export function MediaView({
                     onClick={() => setMovingFile(null)}
                     className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white transition"
                   >
-                    Cancel
+                    {tCommon("cancel")}
                   </button>
                   <button
                     type="button"
@@ -1126,7 +1130,7 @@ export function MediaView({
                     className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
                   >
                     {isMoving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>Move File</span>
+                    <span>{t("moveFileBtn")}</span>
                   </button>
                 </div>
               </div>

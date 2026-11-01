@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, GripVertical, Trash2, ChevronDown } from "lucide-react";
 import { SectionItem } from "./sections-view";
 import { PageListItem } from "./pages-view";
@@ -33,6 +34,10 @@ export function NavigationMenusView({
   onUpdateMenuItem,
   onReorderMenuItems,
 }: NavigationMenusViewProps) {
+  const t = useTranslations("menus");
+  const tCommon = useTranslations("common");
+  const tSections = useTranslations("sections");
+
   const [editingItemKey, setEditingItemKey] = useState<string | null>(null);
   const [addingToSectionId, setAddingToSectionId] = useState<string | null>(
     null
@@ -241,12 +246,10 @@ export function NavigationMenusView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            Navigation Menus
+            {t("title")}
           </h1>
           <p className="mt-1 text-xs text-slate-400 max-w-2xl leading-relaxed">
-            Manage your multi-level navigation submenus based on active Sections.
-            3rd-level menu items (pages) can be dragged and sorted between
-            sections, or edited.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -257,7 +260,7 @@ export function NavigationMenusView({
             className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/25 hover:bg-sky-500 transition shrink-0"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Section</span>
+            <span>{tSections("addSection")}</span>
           </button>
         )}
       </div>
@@ -310,7 +313,7 @@ export function NavigationMenusView({
                       className="inline-flex items-center gap-1 rounded-lg border border-slate-700/80 bg-slate-800/70 px-2.5 py-1 text-[11px] font-medium text-sky-400 hover:bg-slate-800 hover:text-sky-300 transition"
                     >
                       <Plus className="w-3 h-3" />
-                      <span>Add Item</span>
+                      <span>{t("addItem")}</span>
                     </button>
                   </div>
 
@@ -378,14 +381,14 @@ export function NavigationMenusView({
                                 onClick={() => handleSaveItem(sec.id, item.id)}
                                 className="rounded-lg bg-sky-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-md shadow-sky-600/25 hover:bg-sky-500 disabled:opacity-50 transition"
                               >
-                                {isSaving ? "Saving..." : "Save Changes"}
+                                {isSaving ? tCommon("loading") : tCommon("save")}
                               </button>
 
                               <button
                                 type="button"
                                 disabled={isSaving}
                                 onClick={() => handleRemoveFromMenu(item.id)}
-                                title="Remove item from navigation menu"
+                                title={tCommon("delete")}
                                 className="rounded-lg bg-red-600/90 p-1.5 text-white hover:bg-red-500 transition"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -439,7 +442,7 @@ export function NavigationMenusView({
                               onClick={() => handleStartEditItem(item)}
                               className="rounded-lg border border-slate-700/80 bg-slate-800/75 px-4 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white transition"
                             >
-                              Edit
+                              {tCommon("edit")}
                             </button>
                           </div>
                         </div>
@@ -459,7 +462,7 @@ export function NavigationMenusView({
                             type="text"
                             value={editMenuTitle}
                             onChange={(e) => setEditMenuTitle(e.target.value)}
-                            placeholder="Menyvalets namn (valfritt)"
+                            placeholder="Menu title (optional)"
                             className="w-60 rounded-lg border border-sky-500/60 bg-slate-950/90 px-3.5 py-1.5 text-xs font-medium text-white focus:outline-none"
                           />
                         </div>
@@ -483,7 +486,7 @@ export function NavigationMenusView({
                               }}
                               className="w-full appearance-none rounded-lg border border-sky-500/50 bg-slate-900/95 pl-3 pr-8 py-1.5 text-xs text-slate-200 focus:border-sky-400 focus:outline-none"
                             >
-                              <option value="">-- Välj sida... --</option>
+                              <option value="">{tCommon("select")}</option>
                               {subPages
                                 .filter((p) => Number(p.id) !== Number(sec.start_page_id))
                                 .map((p) => (
@@ -501,13 +504,13 @@ export function NavigationMenusView({
                             onClick={() => handleSaveItem(sec.id, null)}
                             className="rounded-lg bg-sky-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-md shadow-sky-600/25 hover:bg-sky-500 disabled:opacity-50 transition"
                           >
-                            {isSaving ? "Saving..." : "Save Changes"}
+                            {isSaving ? tCommon("loading") : tCommon("save")}
                           </button>
 
                           <button
                             type="button"
                             onClick={() => setAddingToSectionId(null)}
-                            title="Cancel"
+                            title={tCommon("cancel")}
                             className="rounded-lg bg-red-600/90 p-1.5 text-white hover:bg-red-500 transition"
                           >
                             <Trash2 className="w-4 h-4" />

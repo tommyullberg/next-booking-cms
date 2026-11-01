@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, Edit3, Trash2, Search, Lock, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { HOMEPAGE_ID, cleanSlugInput, validateSlugInput } from "../../utils/slug";
 import { CMSTemplateOption, DEFAULT_CMS_TEMPLATES, formatTemplateLabel } from "../../templates/types";
@@ -50,6 +51,9 @@ export function PagesView({
   onCreatePage,
   onDeletePage,
 }: PagesViewProps) {
+  const t = useTranslations("pages");
+  const tCommon = useTranslations("common");
+
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTitleSv, setNewTitleSv] = useState("");
@@ -198,10 +202,8 @@ export function PagesView({
     <div className='space-y-6'>
       <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
         <div>
-          <h1 className='text-2xl font-bold tracking-tight text-white'>Pages</h1>
-          <p className='mt-1 text-xs text-slate-400'>
-            Create and organize site pages, document metadata, and multi-language titles.
-          </p>
+          <h1 className='text-2xl font-bold tracking-tight text-white'>{t("title")}</h1>
+          <p className='mt-1 text-xs text-slate-400'>{t("subtitle")}</p>
         </div>
 
         <button
@@ -209,7 +211,7 @@ export function PagesView({
           onClick={() => setIsModalOpen(true)}
           className='flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition'>
           <Plus className='w-4 h-4' />
-          <span>Create Page</span>
+          <span>{t("createPage")}</span>
         </button>
       </div>
 
@@ -218,7 +220,7 @@ export function PagesView({
           <Search className='w-4 h-4 absolute left-3.5 top-2.5 text-slate-500' />
           <input
             type='text'
-            placeholder='Search pages by title, ID, or slug...'
+            placeholder={t("searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className='w-full rounded-xl border border-slate-800 bg-slate-900/60 pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none'
@@ -250,7 +252,7 @@ export function PagesView({
                       sortField === "title" ? "text-white font-semibold" : "text-slate-400 hover:text-white"
                     }`}
                     title='Sort by Title'>
-                    <span>Title</span>
+                    <span>{t("table.title")}</span>
                     {renderSortIcon("title")}
                   </button>
                   <span className='text-slate-600 font-normal'>/</span>
@@ -261,7 +263,7 @@ export function PagesView({
                       sortField === "slug" ? "text-white font-semibold" : "text-slate-400 hover:text-white"
                     }`}
                     title='Sort by URL / Slug'>
-                    <span>URL</span>
+                    <span>{t("table.slug")}</span>
                     {renderSortIcon("slug")}
                   </button>
                 </div>
@@ -272,7 +274,7 @@ export function PagesView({
                   sortField === "section" ? "text-white font-semibold" : "hover:text-white"
                 }`}>
                 <div className='flex items-center gap-1.5'>
-                  <span>Section</span>
+                  <span>{t("table.section")}</span>
                   {renderSortIcon("section")}
                 </div>
               </th>
@@ -282,7 +284,7 @@ export function PagesView({
                   sortField === "template" ? "text-white font-semibold" : "hover:text-white"
                 }`}>
                 <div className='flex items-center gap-1.5'>
-                  <span>Template</span>
+                  <span>{t("table.template")}</span>
                   {renderSortIcon("template")}
                 </div>
               </th>
@@ -292,19 +294,19 @@ export function PagesView({
                   sortField === "status" ? "text-white font-semibold" : "hover:text-white"
                 }`}>
                 <div className='flex items-center gap-1.5'>
-                  <span>Status</span>
+                  <span>{t("table.status")}</span>
                   {renderSortIcon("status")}
                 </div>
               </th>
-              <th className='py-3 px-4'>Languages</th>
-              <th className='py-3 px-4 text-right'>Actions</th>
+              <th className='py-3 px-4'>{t("table.languages")}</th>
+              <th className='py-3 px-4 text-right'>{t("table.actions")}</th>
             </tr>
           </thead>
           <tbody className='divide-y divide-slate-800/60'>
             {sortedAndFilteredPages.length === 0 ? (
               <tr>
                 <td colSpan={7} className='py-8 text-center text-slate-500'>
-                  No pages found.
+                  {tCommon("noResults")}
                 </td>
               </tr>
             ) : (
@@ -366,20 +368,20 @@ export function PagesView({
                           type='button'
                           onClick={() => onEditPage(page.id)}
                           className='px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-700 transition inline-flex items-center gap-1.5 text-xs'
-                          title='Edit page metadata'>
+                          title={tCommon("edit")}>
                           <Edit3 className='w-3.5 h-3.5' />
-                          <span>Edit</span>
+                          <span>{tCommon("edit")}</span>
                         </button>
                         {!isHomepage && (
                           <button
                             type='button'
                             onClick={() => {
-                              if (confirm(`Delete page "${page.page_title}"?`)) {
+                              if (confirm(t("modal.deleteConfirm", { title: page.page_title }))) {
                                 onDeletePage(page.id);
                               }
                             }}
                             className='p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition'
-                            title='Delete page'>
+                            title={tCommon("delete")}>
                             <Trash2 className='w-4 h-4' />
                           </button>
                         )}
@@ -398,10 +400,10 @@ export function PagesView({
         <ModalPortal>
           <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4'>
           <div className='w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 text-white shadow-2xl'>
-            <h2 className='text-base font-semibold mb-4'>Create New Page</h2>
+            <h2 className='text-base font-semibold mb-4'>{t("modal.createTitle")}</h2>
             <form onSubmit={handleCreate} className='space-y-4'>
               <div>
-                <label className='block text-xs font-medium text-slate-300 mb-1.5'>Page Title</label>
+                <label className='block text-xs font-medium text-slate-300 mb-1.5'>{t("modal.titleLabel")}</label>
                 <div className='space-y-2'>
                   {/* Primary Language (SE) */}
                   <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
@@ -412,7 +414,7 @@ export function PagesView({
                     <input
                       type='text'
                       required
-                      placeholder='Sidrubrik på svenska...'
+                      placeholder='Sidrubrik...'
                       value={newTitleSv}
                       onChange={(e) => setNewTitleSv(e.target.value)}
                       className='w-full bg-transparent px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
@@ -454,7 +456,7 @@ export function PagesView({
 
               <div>
                 <label className='block text-xs font-medium text-slate-300 mb-1'>
-                  URL Slug (Optional — defaults to numeric Page ID)
+                  {t("modal.slugLabel")}
                 </label>
                 <div
                   className={`flex items-center rounded-xl border bg-slate-950 overflow-hidden transition ${
@@ -480,12 +482,12 @@ export function PagesView({
               </div>
 
               <div>
-                <label className='block text-xs font-medium text-slate-300 mb-1'>Section</label>
+                <label className='block text-xs font-medium text-slate-300 mb-1'>{t("modal.sectionLabel")}</label>
                 <select
                   value={newSectionId}
                   onChange={(e) => setNewSectionId(e.target.value)}
                   className='w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none'>
-                  <option value=''>No section (standalone page)</option>
+                  <option value=''>{t("modal.noSectionOption")}</option>
                   {sections
                     .filter((s) => Number(s.start_page_id) !== HOMEPAGE_ID)
                     .map((s) => (
@@ -497,7 +499,7 @@ export function PagesView({
               </div>
 
               <div>
-                <label className='block text-xs font-medium text-slate-300 mb-1'>Page Template</label>
+                <label className='block text-xs font-medium text-slate-300 mb-1'>{t("modal.templateLabel")}</label>
                 <select
                   value={newTemplate}
                   onChange={(e) => setNewTemplate(e.target.value)}
@@ -517,13 +519,13 @@ export function PagesView({
                   type='button'
                   onClick={() => setIsModalOpen(false)}
                   className='px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-lg'>
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   type='submit'
                   disabled={isSubmitting || !newSlugValidation.isValid}
                   className='px-4 py-2 text-xs font-semibold rounded-lg bg-sky-600 text-white hover:bg-sky-500 disabled:opacity-50'>
-                  {isSubmitting ? "Creating..." : "Create Page"}
+                  {isSubmitting ? tCommon("loading") : t("createPage")}
                 </button>
               </div>
             </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Plus,
   Edit3,
@@ -57,6 +58,9 @@ export function LandlordsView({
   onSaveLandlord,
   onDeleteLandlord,
 }: LandlordsViewProps) {
+  const t = useTranslations("landlords");
+  const tCommon = useTranslations("common");
+
   const [landlords, setLandlords] = useState<LandlordItem[]>(initialLandlords);
 
   useEffect(() => {
@@ -135,7 +139,7 @@ export function LandlordsView({
     setErrorMsg(null);
 
     if (!firstName.trim() || !lastName.trim()) {
-      setErrorMsg("First name and last name are required.");
+      setErrorMsg(t("namesRequired"));
       return;
     }
 
@@ -168,7 +172,7 @@ export function LandlordsView({
       }
       setIsModalOpen(false);
     } catch (err: any) {
-      setErrorMsg(err?.message || "Could not save landlord.");
+      setErrorMsg(err?.message || t("saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -176,7 +180,7 @@ export function LandlordsView({
 
   const handleDelete = async (item: LandlordItem) => {
     const fullName = `${item.first_name} ${item.last_name}`.trim();
-    if (!confirm(`Are you sure you want to remove landlord "${fullName}"?`)) {
+    if (!confirm(t("deleteConfirm", { name: fullName }))) {
       return;
     }
 
@@ -218,10 +222,10 @@ export function LandlordsView({
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
             <Building className="w-6 h-6 text-sky-400" />
-            <span>Landlords</span>
+            <span>{t("title")}</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Manage property owners, payout details, and mobile Swish payment methods for bookings.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -231,7 +235,7 @@ export function LandlordsView({
           className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition"
         >
           <Plus className="w-4 h-4" />
-          <span>Create Landlord</span>
+          <span>{t("createBtn")}</span>
         </button>
       </div>
 
@@ -243,14 +247,16 @@ export function LandlordsView({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search landlords by name, city, email..."
+            placeholder={t("searchPlaceholder")}
             className="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
           />
         </div>
 
         <div className="text-xs text-slate-400">
-          Showing <span className="font-semibold text-white">{filteredLandlords.length}</span>{" "}
-          {filteredLandlords.length === 1 ? "landlord" : "landlords"}
+          {t("showing", {
+            count: filteredLandlords.length,
+            plural: filteredLandlords.length === 1 ? t("landlord") : t("landlords"),
+          })}
         </div>
       </div>
 
@@ -260,19 +266,19 @@ export function LandlordsView({
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-                <th className="py-3.5 px-5">Landlord</th>
-                <th className="py-3.5 px-4">Address</th>
-                <th className="py-3.5 px-4">Postal Code / City</th>
-                <th className="py-3.5 px-4">Email</th>
-                <th className="py-3.5 px-4">Phone / Mobile</th>
-                <th className="py-3.5 px-4">Payout Account</th>
-                <th className="py-3.5 px-5 text-right">Actions</th>
+                <th className="py-3.5 px-5">{t("colLandlord")}</th>
+                <th className="py-3.5 px-4">{t("colAddress")}</th>
+                <th className="py-3.5 px-4">{t("colPostalCity")}</th>
+                <th className="py-3.5 px-4">{t("colEmail")}</th>
+                <th className="py-3.5 px-4">{t("colPhone")}</th>
+                <th className="py-3.5 px-4">{t("colPayout")}</th>
+                <th className="py-3.5 px-5 text-right">{t("colActions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
               {filteredLandlords.map((landlord) => {
                 const fullName =
-                  `${landlord.first_name} ${landlord.last_name}`.trim() || "Unnamed Landlord";
+                  `${landlord.first_name} ${landlord.last_name}`.trim() || t("unnamed");
                 const initials =
                   fullName
                     .split(" ")
@@ -389,7 +395,7 @@ export function LandlordsView({
                         title="Edit landlord"
                       >
                         <Edit3 className="w-3 h-3 text-sky-400" />
-                        <span>Edit</span>
+                        <span>{tCommon("edit")}</span>
                       </button>
                     </td>
                   </tr>
@@ -402,7 +408,7 @@ export function LandlordsView({
                     colSpan={7}
                     className="py-12 text-center text-slate-500 text-xs"
                   >
-                    No landlords found. Click "+ Create Landlord" to add one.
+                    {t("noLandlordsFound")}
                   </td>
                 </tr>
               )}
@@ -424,10 +430,10 @@ export function LandlordsView({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">
-                    {editingLandlord ? "Edit Landlord" : "Create New Landlord"}
+                    {editingLandlord ? t("modalEditTitle") : t("modalCreateTitle")}
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Configure contact, address, and payout information.
+                    {t("modalSubtitle")}
                   </p>
                 </div>
               </div>
@@ -452,7 +458,7 @@ export function LandlordsView({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    First Name <span className="text-rose-400">*</span>
+                    {t("firstName")} <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -465,7 +471,7 @@ export function LandlordsView({
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Last Name <span className="text-rose-400">*</span>
+                    {t("lastName")} <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -481,7 +487,7 @@ export function LandlordsView({
               {/* Address */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-slate-300">
-                  Address
+                  {t("address")}
                 </label>
                 <input
                   type="text"
@@ -496,7 +502,7 @@ export function LandlordsView({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Postal Code
+                    {t("postalCode")}
                   </label>
                   <input
                     type="text"
@@ -508,7 +514,7 @@ export function LandlordsView({
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    City
+                    {t("city")}
                   </label>
                   <input
                     type="text"
@@ -523,7 +529,7 @@ export function LandlordsView({
               {/* Email (moved up after postal code / city) */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-slate-300">
-                  Email
+                  {t("email")}
                 </label>
                 <div className="relative">
                   <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -541,7 +547,7 @@ export function LandlordsView({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Phone (Tel)
+                    {t("phone")}
                   </label>
                   <div className="relative">
                     <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -557,7 +563,7 @@ export function LandlordsView({
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Mobile
+                    {t("mobile")}
                   </label>
                   <div className="relative">
                     <Smartphone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -577,16 +583,16 @@ export function LandlordsView({
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
                     <span className="text-[11px] font-semibold text-white">
-                      Swish Payment Support
+                      {t("swishSupport")}
                     </span>
                     {hasSwish && (
                       <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded">
-                        Active
+                        {t("swishActive")}
                       </span>
                     )}
                   </div>
                   <p className="text-[10px] text-slate-400">
-                    Enable Swish as a payment method for booking guests using this mobile number.
+                    {t("swishDesc")}
                   </p>
                 </div>
 
@@ -612,16 +618,16 @@ export function LandlordsView({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold text-slate-300">
-                      Account Type
+                      {t("accountType")}
                     </label>
                     <select
                       value={selectedAccountType}
                       onChange={(e) => setSelectedAccountType(e.target.value)}
                       className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
                     >
-                      {COMMON_ACCOUNT_TYPES.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
+                      {COMMON_ACCOUNT_TYPES.map((tItem) => (
+                        <option key={tItem} value={tItem}>
+                          {tItem}
                         </option>
                       ))}
                     </select>
@@ -630,7 +636,7 @@ export function LandlordsView({
                   {selectedAccountType === "Other" ? (
                     <div className="space-y-1.5">
                       <label className="text-[11px] font-semibold text-slate-300">
-                        Specify Account Type
+                        {t("specifyAccountType")}
                       </label>
                       <input
                         type="text"
@@ -644,7 +650,7 @@ export function LandlordsView({
 
                   <div className={`space-y-1.5 ${selectedAccountType !== "Other" ? "" : "sm:col-span-2"}`}>
                     <label className="text-[11px] font-semibold text-slate-300">
-                      Account Number
+                      {t("accountNumber")}
                     </label>
                     <input
                       type="text"
@@ -666,7 +672,7 @@ export function LandlordsView({
                     className="inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 transition"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete Landlord</span>
+                    <span>{t("deleteBtn")}</span>
                   </button>
                 ) : (
                   <div />
@@ -678,7 +684,7 @@ export function LandlordsView({
                     onClick={() => setIsModalOpen(false)}
                     className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
                   >
-                    Cancel
+                    {tCommon("cancel")}
                   </button>
                   <button
                     type="submit"
@@ -686,7 +692,7 @@ export function LandlordsView({
                     className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
                   >
                     {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>{editingLandlord ? "Update Landlord" : "Save Landlord"}</span>
+                    <span>{editingLandlord ? t("updateBtn") : t("saveBtn")}</span>
                   </button>
                 </div>
               </div>

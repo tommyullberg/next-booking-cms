@@ -5,6 +5,7 @@ import { ConsoleEmailAdapter } from "./adapters/console-adapter";
 import { renderMailTemplate } from "./template-engine";
 import { prisma } from "../db";
 import { MailTemplateType } from "@prisma/client";
+import { getDefaultMailTemplate } from "../constants/mail-templates";
 
 export * from "./types";
 export * from "./template-engine";
@@ -59,23 +60,9 @@ export async function sendBookingEmail(
 
   const adapter = getEmailAdapter();
 
-  const defaultSubjects: Record<MailTemplateType, string> = {
-    ADMIN_NEW_BOOKING_REQUEST: "Ny bokningsförfrågan mottagen - {{object_name}}",
-    USER_NEW_BOOKING_REQUEST_COPY: "Tack för din bokningsförfrågan för {{object_name}}",
-    USER_BOOKING_CONFIRMED: "Bokningsbekräftelse för {{object_name}}",
-  };
-
-  const defaultBodies: Record<MailTemplateType, string> = {
-    ADMIN_NEW_BOOKING_REQUEST:
-      "<h1>Ny bokningsförfrågan</h1><p>Gäst: {{customer_name}} ({{customer_email}}, {{customer_phone}})</p><p>Period: {{start_date}} till {{end_date}}</p><p>Gäster: {{guests_count}}, Husdjur: {{pets_count}}</p><p><a href='{{deeplink}}'>Klicka här för att hantera bokningen</a></p>",
-    USER_NEW_BOOKING_REQUEST_COPY:
-      "<h1>Tack för din förfrågan, {{customer_name}}!</h1><p>Vi har tagit emot din förfrågan för {{object_name}} mellan {{start_date}} och {{end_date}}.</p><p>Vi återkommer inom kort med bekräftelse.</p>",
-    USER_BOOKING_CONFIRMED:
-      "<h1>Din bokning är bekräftad!</h1><p>Hej {{customer_name}}, din bokning av {{object_name}} mellan {{start_date}} och {{end_date}} är nu godkänd.</p><p>Totalpris: {{price}}.</p><p>Varmt välkommen!</p>",
-  };
-
-  const rawSubject = template?.subject || defaultSubjects[templateType];
-  const rawBody = template?.body || defaultBodies[templateType];
+  const fallback = getDefaultMailTemplate(templateType, "sv");
+  const rawSubject = template?.subject || fallback.subject;
+  const rawBody = template?.body || fallback.body;
 
   const subject = renderMailTemplate(rawSubject, variables);
   const html = renderMailTemplate(rawBody, variables);

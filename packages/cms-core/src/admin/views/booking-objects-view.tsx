@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Plus,
   Edit3,
@@ -77,6 +78,9 @@ export function BookingObjectsView({
   onDeleteObject,
   onReorderObjects,
 }: BookingObjectsViewProps) {
+  const t = useTranslations("bookingObjects");
+  const tCommon = useTranslations("common");
+
   const [objects, setObjects] = useState<BookingObjectItem[]>(initialObjects);
 
   useEffect(() => {
@@ -161,7 +165,7 @@ export function BookingObjectsView({
     setErrorMsg(null);
 
     if (!name.trim()) {
-      setErrorMsg("Object name is required.");
+      setErrorMsg(t("nameRequired"));
       return;
     }
 
@@ -193,14 +197,14 @@ export function BookingObjectsView({
       }
       setIsModalOpen(false);
     } catch (err: any) {
-      setErrorMsg(err?.message || "Could not save booking object.");
+      setErrorMsg(err?.message || t("saveError"));
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDelete = async (item: BookingObjectItem) => {
-    if (!confirm(`Are you sure you want to remove booking object "${item.name}"?`)) {
+    if (!confirm(t("deleteConfirm", { name: item.name }))) {
       return;
     }
 
@@ -287,10 +291,10 @@ export function BookingObjectsView({
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
             <Box className="w-6 h-6 text-sky-400" />
-            <span>Booking Objects</span>
+            <span>{t("title")}</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Manage rentable units, assign landlords, and connect booking units to CMS pages.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -300,7 +304,7 @@ export function BookingObjectsView({
           className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition"
         >
           <Plus className="w-4 h-4" />
-          <span>Create Booking Object</span>
+          <span>{t("createBtn")}</span>
         </button>
       </div>
 
@@ -312,14 +316,16 @@ export function BookingObjectsView({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search booking objects by name, type, landlord..."
+            placeholder={t("searchPlaceholder")}
             className="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
           />
         </div>
 
         <div className="text-xs text-slate-400">
-          Showing <span className="font-semibold text-white">{filteredObjects.length}</span>{" "}
-          {filteredObjects.length === 1 ? "object" : "objects"}
+          {t("showing", {
+            count: filteredObjects.length,
+            plural: filteredObjects.length === 1 ? t("object") : t("objects"),
+          })}
         </div>
       </div>
 
@@ -330,12 +336,12 @@ export function BookingObjectsView({
             <thead>
               <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                 <th className="py-3.5 px-3 w-10 text-center" />
-                <th className="py-3.5 px-3 w-16 text-center">Status</th>
-                <th className="py-3.5 px-5">Object</th>
-                <th className="py-3.5 px-4">Linked CMS Page</th>
-                <th className="py-3.5 px-4">Type & Capacity</th>
-                <th className="py-3.5 px-4">Landlord</th>
-                <th className="py-3.5 px-5 text-right">Actions</th>
+                <th className="py-3.5 px-3 w-16 text-center">{t("colStatus")}</th>
+                <th className="py-3.5 px-5">{t("colObject")}</th>
+                <th className="py-3.5 px-4">{t("colLinkedPage")}</th>
+                <th className="py-3.5 px-4">{t("colTypeCapacity")}</th>
+                <th className="py-3.5 px-4">{t("colLandlord")}</th>
+                <th className="py-3.5 px-5 text-right">{t("colActions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -344,7 +350,7 @@ export function BookingObjectsView({
                 const isDragOver = dragOverId === obj.id;
                 const landlordName = obj.landlord
                   ? `${obj.landlord.first_name} ${obj.landlord.last_name}`.trim()
-                  : "None assigned";
+                  : t("noneAssigned");
 
                 // Resolve linked page title
                 const linkedPage =
@@ -420,7 +426,7 @@ export function BookingObjectsView({
                         </div>
                       ) : (
                         <span className="text-slate-600 italic text-[11px]">
-                          Not connected
+                          {t("notConnected")}
                         </span>
                       )}
                     </td>
@@ -437,8 +443,8 @@ export function BookingObjectsView({
                         <div className="text-slate-400 text-[10px] flex items-center gap-2 flex-wrap">
                           <span>
                             {obj.room_count ? `${obj.room_count} ${formatBookingRoomTypeShort(obj.room_type)}, ` : ""}
-                            {obj.bed_count} {obj.extra_bed_count ? `+ ${obj.extra_bed_count}` : ""} beds
-                            {obj.pets_allowed ? " · Pets allowed" : ""}
+                            {obj.bed_count} {obj.extra_bed_count ? `+ ${obj.extra_bed_count}` : ""} {t("beds")}
+                            {obj.pets_allowed ? ` · ${t("petsAllowed")}` : ""}
                           </span>
                           {obj.amenities && obj.amenities.length > 0 && (
                             <span className="inline-flex items-center gap-1 text-sky-400 font-medium" title={`${obj.amenities.length} active amenities`}>
@@ -477,7 +483,7 @@ export function BookingObjectsView({
                         title="Edit booking object"
                       >
                         <Edit3 className="w-3 h-3 text-sky-400" />
-                        <span>Edit</span>
+                        <span>{tCommon("edit")}</span>
                       </button>
                     </td>
                   </tr>
@@ -490,7 +496,7 @@ export function BookingObjectsView({
                     colSpan={7}
                     className="py-12 text-center text-slate-500 text-xs"
                   >
-                    No booking objects found. Click "+ Create Booking Object" to add one.
+                    {t("noObjectsFound")}
                   </td>
                 </tr>
               )}
@@ -512,10 +518,12 @@ export function BookingObjectsView({
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-white">
-                    {editingObject ? `Edit Object "${editingObject.name}"` : "Create Booking Object"}
+                    {editingObject
+                      ? t("modalEditTitle", { name: editingObject.name })
+                      : t("modalCreateTitle")}
                   </h3>
                   <p className="text-[11px] text-slate-400">
-                    Configure unit details, active landlord, and linked CMS page.
+                    {t("modalSubtitle")}
                   </p>
                 </div>
               </div>
@@ -541,14 +549,14 @@ export function BookingObjectsView({
                 <div className="space-y-1.5 sm:col-span-2">
                   <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
                     <UserCheck className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Active Landlord</span>
+                    <span>{t("activeLandlord")}</span>
                   </label>
                   <select
                     value={landlordId}
                     onChange={(e) => setLandlordId(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
                   >
-                    <option value="">-- No landlord selected --</option>
+                    <option value="">{t("noLandlordSelected")}</option>
                     {landlords.map((l) => (
                       <option key={l.id} value={l.id}>
                         {l.first_name} {l.last_name} ({l.city || l.address || l.email || "Landlord"})
@@ -559,7 +567,7 @@ export function BookingObjectsView({
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Visible
+                    {t("visible")}
                   </label>
                   <div className="flex items-center gap-3 pt-1.5">
                     <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-300">
@@ -570,7 +578,7 @@ export function BookingObjectsView({
                         onChange={() => setIsVisible(true)}
                         className="text-sky-500 focus:ring-0"
                       />
-                      <span>Yes</span>
+                      <span>{tCommon("yes")}</span>
                     </label>
                     <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-300">
                       <input
@@ -580,7 +588,7 @@ export function BookingObjectsView({
                         onChange={() => setIsVisible(false)}
                         className="text-sky-500 focus:ring-0"
                       />
-                      <span>No</span>
+                      <span>{tCommon("no")}</span>
                     </label>
                   </div>
                 </div>
@@ -590,7 +598,7 @@ export function BookingObjectsView({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Object Name <span className="text-rose-400">*</span>
+                    {t("objectName")} <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -606,10 +614,10 @@ export function BookingObjectsView({
                   <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <FileText className="w-3.5 h-3.5 text-sky-400" />
-                      <span>Page in CMS</span>
+                      <span>{t("pageInCms")}</span>
                     </span>
                     <span className="text-[10px] text-slate-500">
-                      Connects unit data to template page
+                      {t("pageInCmsDesc")}
                     </span>
                   </label>
                   <select
@@ -617,7 +625,7 @@ export function BookingObjectsView({
                     onChange={(e) => setPageId(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
                   >
-                    <option value="">-- No page connected --</option>
+                    <option value="">{t("noPageConnected")}</option>
                     {pages.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.page_title} (ID: {p.id})
@@ -630,13 +638,13 @@ export function BookingObjectsView({
               {/* Short Description */}
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-slate-300">
-                  Short Description
+                  {t("shortDescription")}
                 </label>
                 <textarea
                   rows={4}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter short description shown in booking calendar and preview cards..."
+                  placeholder={t("shortDescriptionPlaceholder")}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                 />
               </div>
@@ -645,16 +653,16 @@ export function BookingObjectsView({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Type
+                    {t("type")}
                   </label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value)}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
                   >
-                    {BOOKING_OBJECT_TYPES.map((t) => (
-                      <option key={t.id} value={t.label}>
-                        {t.label}
+                    {BOOKING_OBJECT_TYPES.map((tItem) => (
+                      <option key={tItem.id} value={tItem.label}>
+                        {tItem.label}
                       </option>
                     ))}
                   </select>
@@ -662,7 +670,7 @@ export function BookingObjectsView({
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Size (m²)
+                    {t("size")}
                   </label>
                   <input
                     type="number"
@@ -679,7 +687,7 @@ export function BookingObjectsView({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Rooms
+                    {t("rooms")}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
                     <input
@@ -705,7 +713,7 @@ export function BookingObjectsView({
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold text-slate-300">
-                    Beds & Extra Beds
+                    {t("bedsAndExtraBeds")}
                   </label>
                   <div className="flex items-center gap-2">
                     <div className="flex-1 flex items-center gap-1.5">
@@ -716,7 +724,7 @@ export function BookingObjectsView({
                         onChange={(e) => setBedCount(Number(e.target.value))}
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition font-mono text-center"
                       />
-                      <span className="text-[11px] text-slate-400">beds</span>
+                      <span className="text-[11px] text-slate-400">{t("beds")}</span>
                     </div>
                     <span className="text-slate-500">+</span>
                     <div className="flex-1 flex items-center gap-1.5">
@@ -727,7 +735,7 @@ export function BookingObjectsView({
                         onChange={(e) => setExtraBedCount(Number(e.target.value))}
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition font-mono text-center"
                       />
-                      <span className="text-[11px] text-slate-400">extra</span>
+                      <span className="text-[11px] text-slate-400">{t("extra")}</span>
                     </div>
                   </div>
                 </div>
@@ -737,10 +745,10 @@ export function BookingObjectsView({
               <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-semibold text-white block">
-                    Pets Allowed
+                    {t("petsAllowed")}
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    Allows guests with pets to filter and book this unit
+                    {t("petsAllowedDesc")}
                   </span>
                 </div>
                 <button
@@ -765,15 +773,18 @@ export function BookingObjectsView({
                 <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <Tag className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Amenities</span>
+                    <span>{t("amenities")}</span>
                   </span>
                   <span className="text-[10px] text-slate-400">
-                    {selectedAmenityIds.length} of {amenities.length} active
+                    {t("activeAmenitiesCount", {
+                      count: selectedAmenityIds.length,
+                      total: amenities.length,
+                    })}
                   </span>
                 </label>
                 {amenities.length === 0 ? (
                   <p className="text-[11px] text-slate-500">
-                    No amenities registered yet. Create them under Bookings → Amenities.
+                    {t("noAmenities")}
                   </p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto p-2 rounded-xl border border-slate-800 bg-slate-900/60">
@@ -818,7 +829,7 @@ export function BookingObjectsView({
                 <div className="flex items-center justify-between">
                   <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-sky-400" />
-                    <span>iCal Import URL</span>
+                    <span>{t("icalUrl")}</span>
                     <button
                       type="button"
                       onClick={() => setShowIcalHelp(!showIcalHelp)}
@@ -831,7 +842,7 @@ export function BookingObjectsView({
                   {icalUrl && (
                     <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Active iCal sync
+                      {t("activeIcalSync")}
                     </span>
                   )}
                 </div>
@@ -841,16 +852,16 @@ export function BookingObjectsView({
                   <div className="p-3.5 rounded-xl border border-sky-500/30 bg-sky-950/30 text-sky-200 text-xs space-y-2 animate-in fade-in duration-150">
                     <div className="font-semibold text-sky-100 flex items-center gap-1.5">
                       <Info className="w-4 h-4 text-sky-400 shrink-0" />
-                      <span>Hur fungerar iCal-synkronisering med Booking.com?</span>
+                      <span>{t("icalHelpTitle")}</span>
                     </div>
                     <p className="text-[11px] leading-relaxed text-slate-300">
-                      I Booking.com Extranet hanteras varje stuga eller enhet separat. Under 'Priser & Tillgänglighet' → 'Synkronisera kalendrar' hittar du alternativet 'Exportera kalender' för just denna stuga.
+                      In the Booking.com Extranet, each unit is managed individually. Under 'Prices & Availability' → 'Sync calendars', you will find the 'Export calendar' link for this specific unit.
                     </p>
                     <p className="text-[11px] leading-relaxed text-slate-300">
-                      Klistra in länken här. Systemet hämtar och cachar upptagna datum automatiskt (minst 60 minuter) och blockerar perioderna i kalendern så att dubbelbokningar undviks.
+                      Paste the URL here. The system automatically fetches and caches busy dates (at least every 60 minutes) and blocks those dates in the calendar to prevent double bookings.
                     </p>
                     <p className="text-[11px] leading-relaxed text-slate-300">
-                      Om Booking.com tillfälligt inte skulle svara behålls alltid de senaste sparade datumen persistent så att ni aldrig står utan skydd. En utcheckningsdag är tillgänglig för en ny gäst att checka in samma dag.
+                      If Booking.com is temporarily unavailable, previous dates are kept persistent so reservations stay protected. Checkout dates remain available for same-day check-in.
                     </p>
                   </div>
                 )}
@@ -875,7 +886,7 @@ export function BookingObjectsView({
                     className="inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 transition"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete Object</span>
+                    <span>{t("deleteBtn")}</span>
                   </button>
                 ) : (
                   <div />
@@ -887,7 +898,7 @@ export function BookingObjectsView({
                     onClick={() => setIsModalOpen(false)}
                     className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
                   >
-                    Cancel
+                    {tCommon("cancel")}
                   </button>
                   <button
                     type="submit"
@@ -895,7 +906,7 @@ export function BookingObjectsView({
                     className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
                   >
                     {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>{editingObject ? "Update Object" : "Save Object"}</span>
+                    <span>{editingObject ? t("updateBtn") : t("saveBtn")}</span>
                   </button>
                 </div>
               </div>

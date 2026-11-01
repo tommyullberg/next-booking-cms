@@ -21,3 +21,4 @@ export * from "./ical";
 export * from "./mail";
 export * from "./ai";
 export * from "./seed";
+export * from "./i18n";

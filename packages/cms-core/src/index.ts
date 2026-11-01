@@ -19,3 +19,4 @@ export * from "./ical/parser";
 export * from "./ical/generator";
 export * from "./ical/types";
 export * from "./templates/types";
+export * from "./i18n";

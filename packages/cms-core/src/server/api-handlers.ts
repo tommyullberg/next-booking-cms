@@ -60,6 +60,8 @@ import {
   createAdministratorAction,
   updateAdministratorAction,
   deleteAdministratorAction,
+  updateCurrentAdminLocaleAction,
+  getCurrentAdminLocaleAction,
 } from "../actions/administrators";
 import {
   getLandlordsAction,
@@ -351,6 +353,18 @@ export async function handleCmsApiRoute(
       const result = await reorderCategoriesAction(body.items || []);
       return NextResponse.json(result);
     }
+    if (path === "administrators/locale") {
+      try {
+        const body = await req.json();
+        const result = await updateCurrentAdminLocaleAction(body.locale);
+        return NextResponse.json(result);
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to update administrator locale" },
+          { status: 400 }
+        );
+      }
+    }
     if (path === "administrators") {
       try {
         const body = await req.json();
@@ -596,6 +610,10 @@ export async function handleCmsApiRoute(
     if (path === "landlords") {
       const landlords = await getLandlordsAction();
       return NextResponse.json(landlords, { headers: NO_CACHE_HEADERS });
+    }
+    if (path === "administrators/locale") {
+      const locale = await getCurrentAdminLocaleAction();
+      return NextResponse.json({ locale }, { headers: NO_CACHE_HEADERS });
     }
     if (path === "administrators") {
       const admins = await getAdministratorsAction();

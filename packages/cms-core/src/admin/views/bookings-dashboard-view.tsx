@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Calendar,
   RefreshCw,
@@ -43,6 +44,10 @@ export function BookingsDashboardView({
   onNavigateTab,
   onNavigateToCalendar,
 }: BookingsDashboardViewProps) {
+  const t = useTranslations("bookingsDashboard");
+  const tNav = useTranslations("navigation");
+  const tCommon = useTranslations("common");
+
   const [syncData, setSyncData] = useState<SyncSummaryResult | null>(initialSyncData || null);
   const [pricePeriods, setPricePeriods] = useState<PricePeriodItem[]>([]);
   const [bookingsCount, setBookingsCount] = useState<number>(0);
@@ -102,10 +107,10 @@ export function BookingsDashboardView({
   };
 
   const formatDateTime = (iso?: string | null) => {
-    if (!iso) return "Never";
+    if (!iso) return t("never");
     try {
       const d = new Date(iso);
-      return d.toLocaleString("en-GB", {
+      return d.toLocaleString(undefined, {
         year: "numeric",
         month: "short",
         day: "numeric",
@@ -139,12 +144,12 @@ export function BookingsDashboardView({
 
   // Quick navigation tabs for the booking subsystem
   const navTabs: Array<{ id: AdminTab; label: string; icon: React.ReactNode }> = [
-    { id: "bookings-dashboard", label: "Dashboard", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: "bookings", label: "Bookings Calendar", icon: <Calendar className="w-4 h-4" /> },
-    { id: "prices-availability", label: "Prices & Availability", icon: <Coins className="w-4 h-4" /> },
-    { id: "objects", label: "Booking Objects", icon: <Box className="w-4 h-4" /> },
-    { id: "optionals", label: "Optionals", icon: <Sparkles className="w-4 h-4" /> },
-    { id: "amenities", label: "Amenities", icon: <Tag className="w-4 h-4" /> },
+    { id: "bookings-dashboard", label: tNav("bookingsDashboard"), icon: <LayoutDashboard className="w-4 h-4" /> },
+    { id: "bookings", label: tNav("bookings"), icon: <Calendar className="w-4 h-4" /> },
+    { id: "prices-availability", label: tNav("pricesAvailability"), icon: <Coins className="w-4 h-4" /> },
+    { id: "objects", label: tNav("bookingObjects"), icon: <Box className="w-4 h-4" /> },
+    { id: "optionals", label: tNav("optionals"), icon: <Sparkles className="w-4 h-4" /> },
+    { id: "amenities", label: tNav("amenities"), icon: <Tag className="w-4 h-4" /> },
   ];
 
   const totalUnitsCount = bookingObjects.length || syncData?.totalObjects || 0;
@@ -178,10 +183,10 @@ export function BookingsDashboardView({
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
             <LayoutDashboard className="w-6 h-6 text-sky-400" />
-            <span>Bookings Dashboard</span>
+            <span>{t("title")}</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Unified overview of rental units, seasonal pricing, direct bookings, and external calendar synchronization.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -192,7 +197,7 @@ export function BookingsDashboardView({
             className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition shadow-sm"
           >
             <Coins className="w-4 h-4 text-amber-400" />
-            <span>Prices & Availability</span>
+            <span>{t("pricesAvailabilityBtn")}</span>
           </button>
 
           <button
@@ -201,7 +206,7 @@ export function BookingsDashboardView({
             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition shadow-sm"
           >
             <Calendar className="w-4 h-4 text-slate-300" />
-            <span>Bookings Calendar</span>
+            <span>{t("calendarBtn")}</span>
           </button>
 
           <button
@@ -211,7 +216,7 @@ export function BookingsDashboardView({
             className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            <span>{isRefreshing ? "Syncing..." : "Sync Channels"}</span>
+            <span>{isRefreshing ? t("syncing") : t("syncChannels")}</span>
           </button>
         </div>
       </div>
@@ -226,40 +231,40 @@ export function BookingsDashboardView({
       {/* Primary KPI Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
-          <span className="text-[11px] font-medium text-slate-400">Rental Units</span>
+          <span className="text-[11px] font-medium text-slate-400">{t("rentalUnits")}</span>
           <p className="text-2xl font-bold text-white font-mono">{totalUnitsCount}</p>
-          <span className="text-[10px] text-slate-500 block">Managed accommodations</span>
+          <span className="text-[10px] text-slate-500 block">{t("managedAccommodations")}</span>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
-          <span className="text-[11px] font-medium text-slate-400">Configured Seasons</span>
+          <span className="text-[11px] font-medium text-slate-400">{t("configuredSeasons")}</span>
           <p className="text-2xl font-bold text-amber-400 font-mono">{pricePeriods.length}</p>
-          <span className="text-[10px] text-slate-500 block">Active pricing periods</span>
+          <span className="text-[10px] text-slate-500 block">{t("activePricingPeriods")}</span>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
-          <span className="text-[11px] font-medium text-slate-400">Reservations & Stays</span>
+          <span className="text-[11px] font-medium text-slate-400">{t("reservationsAndStays")}</span>
           <p className="text-2xl font-bold text-emerald-400 font-mono">
             {bookingsCount + (syncData?.totalImportedBookings || 0)}
           </p>
           <span className="text-[10px] text-slate-500 block">
-            {bookingsCount} direct • {syncData?.totalImportedBookings || 0} external
+            {t("directAndExternal", { direct: bookingsCount, external: syncData?.totalImportedBookings || 0 })}
           </span>
         </div>
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-400">Channel Feeds</span>
+            <span className="text-[11px] font-medium text-slate-400">{t("channelFeeds")}</span>
             <span className="inline-flex items-center gap-1 text-[10px] text-sky-400">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
-              <span>Healthy</span>
+              <span>{t("healthy")}</span>
             </span>
           </div>
           <p className="text-2xl font-bold text-sky-400 font-mono">
             {syncData ? syncData.activeFeedsCount : "—"}
           </p>
           <span className="text-[10px] text-slate-500 block truncate" title={syncData?.lastSynced ? formatDateTime(syncData.lastSynced) : undefined}>
-            Synced: {syncData?.lastSynced ? formatDateTime(syncData.lastSynced) : "Never"}
+            {t("synced", { time: syncData?.lastSynced ? formatDateTime(syncData.lastSynced) : t("never") })}
           </span>
         </div>
       </div>
@@ -269,14 +274,14 @@ export function BookingsDashboardView({
         <div className="p-4 border-b border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Box className="w-4 h-4 text-sky-400" />
-            <h2 className="text-sm font-semibold text-white">Rental Units Overview</h2>
+            <h2 className="text-sm font-semibold text-white">{t("unitsOverview")}</h2>
           </div>
           <button
             type="button"
             onClick={() => onNavigateTab?.("objects")}
             className="text-xs text-sky-400 hover:text-sky-300 transition flex items-center gap-1"
           >
-            <span>Manage All Units</span>
+            <span>{t("manageAllUnits")}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -284,7 +289,7 @@ export function BookingsDashboardView({
         <div className="divide-y divide-slate-800/60">
           {bookingObjects.length === 0 ? (
             <div className="p-8 text-center text-slate-500 text-xs">
-              No booking objects found. Add your first rental object under Booking Objects.
+              {t("noObjectsFound")}
             </div>
           ) : (
             bookingObjects.map((obj) => {
@@ -321,7 +326,7 @@ export function BookingsDashboardView({
                       )}
                       {obj.is_visible === false && (
                         <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-800/40">
-                          Hidden
+                          {t("hidden")}
                         </span>
                       )}
                     </div>
@@ -330,11 +335,11 @@ export function BookingsDashboardView({
                       {obj.bed_count > 0 && (
                         <span className="flex items-center gap-1">
                           <Bed className="w-3.5 h-3.5 text-slate-500" />
-                          <span>{obj.bed_count} {obj.bed_count === 1 ? "bed" : "beds"}</span>
+                          <span>{obj.bed_count} {obj.bed_count === 1 ? t("bed") : t("beds")}</span>
                         </span>
                       )}
                       {obj.room_count && (
-                        <span>{obj.room_count} {obj.room_count === 1 ? "room" : "rooms"}</span>
+                        <span>{obj.room_count} {obj.room_count === 1 ? t("room") : t("rooms")}</span>
                       )}
                       {obj.size_sqm && (
                         <span>{obj.size_sqm} m²</span>
@@ -350,36 +355,40 @@ export function BookingsDashboardView({
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium">
                           <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                           <span>
-                            Season Active: {activePeriod.name || "Priced Period"} (until{" "}
-                            {new Date(activePeriod.end_date!).toISOString().split("T")[0]})
+                            {t("seasonActive", {
+                              name: activePeriod.name || "Season",
+                              date: new Date(activePeriod.end_date!).toISOString().split("T")[0]
+                            })}
                           </span>
                         </span>
                       ) : nextPeriod ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sky-500/15 border border-sky-500/30 text-sky-300 text-[11px] font-medium">
                           <Clock className="w-3 h-3 text-sky-400" />
                           <span>
-                            Upcoming Season: {nextPeriod.name || "Season"} (starts{" "}
-                            {new Date(nextPeriod.start_date!).toISOString().split("T")[0]})
+                            {t("upcomingSeason", {
+                              name: nextPeriod.name || "Season",
+                              date: new Date(nextPeriod.start_date!).toISOString().split("T")[0]
+                            })}
                           </span>
                         </span>
                       ) : objectPeriods.length > 0 ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-medium">
-                          <span>{objectPeriods.length} price periods configured</span>
+                          <span>{t("configuredPeriods", { count: objectPeriods.length })}</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[11px]">
-                          <span>Closed / No active seasonal pricing</span>
+                          <span>{t("closedNoSeason")}</span>
                         </span>
                       )}
 
                       {obj.ical_url ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-sky-950/40 border border-sky-500/20 text-sky-300 text-[10px]">
                           <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
-                          <span>Booking.com Connected</span>
+                          <span>{t("connected")}</span>
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-500 text-[10px]">
-                          <span>No iCal Feed</span>
+                          <span>{t("noFeed")}</span>
                         </span>
                       )}
                     </div>
@@ -393,7 +402,7 @@ export function BookingsDashboardView({
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-semibold transition"
                     >
                       <Coins className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Prices & Availability</span>
+                      <span>{t("pricesAvailabilityBtn")}</span>
                     </button>
 
                     <button
@@ -402,7 +411,7 @@ export function BookingsDashboardView({
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
                     >
                       <Calendar className="w-3.5 h-3.5" />
-                      <span>Calendar</span>
+                      <span>{t("calendarBtn")}</span>
                     </button>
                   </div>
                 </div>
@@ -419,10 +428,10 @@ export function BookingsDashboardView({
             <RefreshCw className="w-4 h-4 text-sky-400" />
             <div>
               <h2 className="text-sm font-semibold text-white">
-                Channel Synchronization & iCal Feeds
+                {t("syncSectionTitle")}
               </h2>
               <p className="text-[11px] text-slate-400">
-                Automatic 60-minute background caching with RFC 5545 half-open intervals.
+                {t("syncSectionDesc")}
               </p>
             </div>
           </div>
@@ -435,7 +444,7 @@ export function BookingsDashboardView({
               className="px-3 py-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 text-xs font-semibold flex items-center gap-1.5 transition"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
-              <span>Sync Now</span>
+              <span>{t("syncNow")}</span>
             </button>
 
             <button
@@ -454,14 +463,14 @@ export function BookingsDashboardView({
             <div className="p-3.5 rounded-xl border border-sky-500/20 bg-sky-950/20 text-xs text-slate-300 flex items-start gap-2.5">
               <ShieldCheck className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
               <div className="text-[11px] text-slate-400 leading-relaxed">
-                iCal feeds synchronize occupied dates automatically. Check-out dates are exclusive: when a guest departs on a given date, the unit becomes available for a new check-in the same afternoon.
+                {t("syncHelpText")}
               </div>
             </div>
 
             {isLoading && !syncData ? (
               <div className="py-12 text-center text-slate-400 space-y-2">
                 <RefreshCw className="w-5 h-5 animate-spin mx-auto text-sky-400" />
-                <p className="text-xs">Loading channel data...</p>
+                <p className="text-xs">{t("loadingChannelData")}</p>
               </div>
             ) : (
               syncData?.results?.map((res) => {
@@ -480,7 +489,7 @@ export function BookingsDashboardView({
                         <div className="min-w-0">
                           <h4 className="text-xs font-bold text-white truncate">{res.objectName}</h4>
                           <span className="font-mono text-[10px] text-slate-400 truncate max-w-xs sm:max-w-md block">
-                            {res.icalUrl || "No iCal feed registered"}
+                            {res.icalUrl || t("noFeedRegistered")}
                           </span>
                         </div>
                       </div>
@@ -488,18 +497,18 @@ export function BookingsDashboardView({
                       <div className="flex items-center gap-2 shrink-0">
                         {res.persistentFallback && (
                           <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-medium text-amber-300">
-                            Persistent cache
+                            {t("persistentCache")}
                           </span>
                         )}
 
                         {res.icalUrl ? (
                           <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                            <span>{res.bookings.length} periods</span>
+                            <span>{t("periodsCount", { count: res.bookings.length })}</span>
                           </span>
                         ) : (
                           <span className="rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
-                            Not connected
+                            {t("notConnected")}
                           </span>
                         )}
 
@@ -521,19 +530,19 @@ export function BookingsDashboardView({
                         {res.bookings.length === 0 ? (
                           <div className="py-4 text-center text-xs text-slate-500">
                             {res.icalUrl
-                              ? "No occupied dates found in the calendar feed."
-                              : "No external calendar feed configured."}
+                              ? t("noOccupiedDates")
+                              : t("noExternalFeed")}
                           </div>
                         ) : (
                           <div className="overflow-x-auto rounded-lg border border-slate-800">
                             <table className="w-full text-left border-collapse text-xs">
                               <thead>
                                 <tr className="border-b border-slate-800 bg-slate-900/90 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                                  <th className="py-2 px-3">Check-in</th>
-                                  <th className="py-2 px-3">Check-out</th>
-                                  <th className="py-2 px-3 text-center">Nights</th>
-                                  <th className="py-2 px-3">Description</th>
-                                  <th className="py-2 px-3 font-mono">iCal UID</th>
+                                  <th className="py-2 px-3">{t("colCheckIn")}</th>
+                                  <th className="py-2 px-3">{t("colCheckOut")}</th>
+                                  <th className="py-2 px-3 text-center">{t("colNights")}</th>
+                                  <th className="py-2 px-3">{t("colDescription")}</th>
+                                  <th className="py-2 px-3 font-mono">{t("colUid")}</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
@@ -543,7 +552,7 @@ export function BookingsDashboardView({
                                     <td className="py-2 px-3 font-semibold text-white">{b.endDate}</td>
                                     <td className="py-2 px-3 text-center">
                                       <span className="inline-block px-1.5 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-sky-300 font-bold text-[10px]">
-                                        {b.nightsCount} {b.nightsCount === 1 ? "night" : "nights"}
+                                        {b.nightsCount} {b.nightsCount === 1 ? t("night") : t("nights")}
                                       </span>
                                     </td>
                                     <td className="py-2 px-3 font-sans text-xs">

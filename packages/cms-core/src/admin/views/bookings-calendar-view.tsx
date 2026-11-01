@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
@@ -172,6 +173,9 @@ export function BookingsCalendarView({
   objects = [],
   initialFilterObjectId = null,
 }: BookingsCalendarViewProps) {
+  const t = useTranslations("bookingsCalendar");
+  const locale = useLocale();
+
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -257,20 +261,13 @@ export function BookingsCalendarView({
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
+  const currentMonthName = useMemo(() => {
+    try {
+      return currentDate.toLocaleString(locale === "sv" ? "sv-SE" : "en-US", { month: "long" });
+    } catch {
+      return currentDate.toLocaleString(undefined, { month: "long" });
+    }
+  }, [currentDate, locale]);
 
   const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
@@ -544,9 +541,9 @@ export function BookingsCalendarView({
               <CalendarIcon className='w-5 h-5' />
             </div>
             <div>
-              <h1 className='text-xl font-bold text-white tracking-tight'>Bookings Calendar</h1>
+              <h1 className='text-xl font-bold text-white tracking-tight'>{t("title")}</h1>
               <p className='text-xs text-slate-400'>
-                Visual reservation calendar across all rental units with changeovers and channel synchronization.
+                {t("subtitle")}
               </p>
             </div>
           </div>
@@ -562,7 +559,7 @@ export function BookingsCalendarView({
                   viewMode === "calendar" ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-white"
                 }`}>
                 <CalendarIcon className='w-3.5 h-3.5' />
-                <span>Calendar view</span>
+                <span>{t("calendarView")}</span>
               </button>
               <button
                 type='button'
@@ -571,7 +568,7 @@ export function BookingsCalendarView({
                   viewMode === "list" ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-white"
                 }`}>
                 <List className='w-3.5 h-3.5' />
-                <span>List view</span>
+                <span>{t("listView")}</span>
               </button>
             </div>
 
@@ -582,23 +579,23 @@ export function BookingsCalendarView({
                   type='button'
                   onClick={handlePrevMonth}
                   className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer'
-                  title='Previous month'>
+                  title={t("prevMonth")}>
                   <ChevronLeft className='w-4 h-4' />
                 </button>
                 <button
                   type='button'
                   onClick={handleToday}
                   className='px-2 py-0.5 text-[11px] font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded transition cursor-pointer'>
-                  Today
+                  {t("today")}
                 </button>
-                <span className='text-xs font-bold text-white min-w-32 text-center'>
-                  {monthNames[month]} {year}
+                <span className='text-xs font-bold text-white min-w-32 text-center capitalize'>
+                  {currentMonthName} {year}
                 </span>
                 <button
                   type='button'
                   onClick={handleNextMonth}
                   className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer'
-                  title='Next month'>
+                  title={t("nextMonth")}>
                   <ChevronRight className='w-4 h-4' />
                 </button>
               </div>
@@ -610,7 +607,7 @@ export function BookingsCalendarView({
         <div className='mt-5 pt-4 border-t border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs'>
           {/* Source toggles (Local vs Booking.com) */}
           <div className='flex flex-wrap items-center gap-2'>
-            <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1'>Source:</span>
+            <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1'>{t("source")}</span>
 
             {/* Local bookings toggle */}
             <button
@@ -622,7 +619,7 @@ export function BookingsCalendarView({
                   : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300"
               }`}>
               <span className={`w-2 h-2 rounded-full ${showLocalBookings ? "bg-sky-400" : "bg-slate-600"}`} />
-              <span>Local Bookings</span>
+              <span>{t("localBookings")}</span>
               <span className='ml-1 px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-slate-300'>
                 {localCount}
               </span>
@@ -638,7 +635,7 @@ export function BookingsCalendarView({
                   : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300"
               }`}>
               <Globe className={`w-3.5 h-3.5 ${showImportedBookings ? "text-indigo-400" : "text-slate-600"}`} />
-              <span>Booking.com (iCal)</span>
+              <span>{t("bookingComIcal")}</span>
               <span className='ml-1 px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-slate-300'>
                 {importedCount}
               </span>
@@ -651,14 +648,14 @@ export function BookingsCalendarView({
               type='button'
               onClick={handleSelectAllObjects}
               className='text-[11px] text-slate-400 hover:text-white underline decoration-slate-600 cursor-pointer'>
-              Show all units
+              {t("showAllUnits")}
             </button>
             <span className='text-slate-700'>•</span>
             <button
               type='button'
               onClick={handleDeselectAllObjects}
               className='text-[11px] text-slate-400 hover:text-white underline decoration-slate-600 cursor-pointer'>
-              Hide all units
+              {t("hideAllUnits")}
             </button>
           </div>
         </div>
@@ -667,7 +664,7 @@ export function BookingsCalendarView({
         <div className='mt-3 flex flex-wrap items-center gap-2'>
           <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1'>
             <Box className='w-3.5 h-3.5 text-slate-500' />
-            <span>Units:</span>
+            <span>{t("units")}</span>
           </span>
 
           {objects.map((obj) => {
@@ -702,14 +699,14 @@ export function BookingsCalendarView({
         <div className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-2xl'>
           {/* Weekday headers with Wk column */}
           <div className='grid grid-cols-[44px_repeat(7,1fr)] border-b border-slate-800 bg-slate-950/80 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-2.5'>
-            <span className='text-slate-500 font-mono text-[10px]'>Wk</span>
-            <span>Monday</span>
-            <span>Tuesday</span>
-            <span>Wednesday</span>
-            <span>Thursday</span>
-            <span>Friday</span>
-            <span>Saturday</span>
-            <span>Sunday</span>
+            <span className='text-slate-500 font-mono text-[10px]'>{t("colWk")}</span>
+            <span>{t("monday")}</span>
+            <span>{t("tuesday")}</span>
+            <span>{t("wednesday")}</span>
+            <span>{t("thursday")}</span>
+            <span>{t("friday")}</span>
+            <span>{t("saturday")}</span>
+            <span>{t("sunday")}</span>
           </div>
 
           {/* Week Rows */}
@@ -833,15 +830,15 @@ export function BookingsCalendarView({
           <div className='p-4 border-b border-slate-800 flex items-center justify-between'>
             <h2 className='text-sm font-semibold text-white flex items-center gap-2'>
               <List className='w-4 h-4 text-slate-400' />
-              <span>Chronological Bookings Stream</span>
+              <span>{t("streamTitle")}</span>
             </h2>
-            <span className='text-xs text-slate-400'>{sortedListBookings.length} bookings match current filters</span>
+            <span className='text-xs text-slate-400'>{t("streamSubtitle", { count: sortedListBookings.length })}</span>
           </div>
 
           {isLoading ? (
-            <div className='p-12 text-center text-slate-400 text-xs'>Loading reservations...</div>
+            <div className='p-12 text-center text-slate-400 text-xs'>{t("loading")}</div>
           ) : sortedListBookings.length === 0 ? (
-            <div className='p-12 text-center text-slate-400 text-xs'>No bookings match the active filters.</div>
+            <div className='p-12 text-center text-slate-400 text-xs'>{t("noBookings")}</div>
           ) : (
             <div className='overflow-x-auto'>
               <table className='w-full text-left text-xs'>
@@ -852,7 +849,7 @@ export function BookingsCalendarView({
                       onClick={() => handleToggleSort("object")}
                       className='py-3 px-4 cursor-pointer hover:text-white transition select-none'>
                       <div className='flex items-center gap-1.5'>
-                        <span>Unit / Object</span>
+                        <span>{t("colUnit")}</span>
                         {renderSortIcon("object")}
                       </div>
                     </th>
@@ -862,7 +859,7 @@ export function BookingsCalendarView({
                       onClick={() => handleToggleSort("stayDates")}
                       className='py-3 px-3 cursor-pointer hover:text-white transition select-none'>
                       <div className='flex items-center gap-1.5'>
-                        <span>Stay Dates</span>
+                        <span>{t("colStayDates")}</span>
                         {renderSortIcon("stayDates")}
                       </div>
                     </th>
@@ -872,28 +869,28 @@ export function BookingsCalendarView({
                       onClick={() => handleToggleSort("week")}
                       className='py-3 px-3 cursor-pointer hover:text-white transition select-none'>
                       <div className='flex items-center gap-1.5'>
-                        <span>Week</span>
+                        <span>{t("colWeek")}</span>
                         {renderSortIcon("week")}
                       </div>
                     </th>
 
                     {/* Nights */}
-                    <th className='py-3 px-3 text-center'>Nights</th>
+                    <th className='py-3 px-3 text-center'>{t("colNights")}</th>
 
                     {/* Guest / Channel */}
-                    <th className='py-3 px-4'>Guest / Channel</th>
+                    <th className='py-3 px-4'>{t("colGuestChannel")}</th>
 
                     {/* Guests & Pets */}
-                    <th className='py-3 px-3'>Guests & Pets</th>
+                    <th className='py-3 px-3'>{t("colGuestsPets")}</th>
 
                     {/* Price */}
-                    <th className='py-3 px-3 text-right'>Price</th>
+                    <th className='py-3 px-3 text-right'>{t("colPrice")}</th>
 
                     {/* Status */}
-                    <th className='py-3 px-3 text-center'>Status</th>
+                    <th className='py-3 px-3 text-center'>{t("colStatus")}</th>
 
                     {/* Action */}
-                    <th className='py-3 px-4 text-center'>Action</th>
+                    <th className='py-3 px-4 text-center'>{t("colAction")}</th>
                   </tr>
                 </thead>
                 <tbody className='divide-y divide-slate-800/60 text-slate-200'>
@@ -919,7 +916,7 @@ export function BookingsCalendarView({
                           <div className='font-mono text-xs text-white'>
                             {b.startDate} → {b.endDate}
                           </div>
-                          <div className='text-[10px] text-slate-500 mt-0.5'>Check-in 15:00 • Check-out 11:00</div>
+                          <div className='text-[10px] text-slate-500 mt-0.5'>{t("checkInOutTimes")}</div>
                         </td>
 
                         {/* Week column (between Stay dates and Nights) */}
@@ -932,7 +929,7 @@ export function BookingsCalendarView({
                         {/* Nights */}
                         <td className='py-3.5 px-3 text-center'>
                           <span className='inline-block px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold font-mono'>
-                            {nights} {nights === 1 ? "night" : "nights"}
+                            {nights} nights
                           </span>
                         </td>
 
@@ -993,7 +990,7 @@ export function BookingsCalendarView({
                             type='button'
                             onClick={() => setSelectedBooking(b)}
                             className='rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-1 text-[11px] font-medium text-slate-200 transition cursor-pointer'>
-                            Details
+                            {t("detailsBtn")}
                           </button>
                         </td>
                       </tr>
@@ -1028,11 +1025,11 @@ export function BookingsCalendarView({
                 </div>
                 <div>
                   <h3 className='text-base font-bold text-white'>
-                    {selectedBooking.customerName || "Reservation Details"}
+                    {selectedBooking.customerName || t("modalReservationDetails")}
                   </h3>
                   <div className='flex items-center gap-2 mt-0.5'>
                     <span className='text-xs text-slate-400'>
-                      Unit: <span className='font-semibold text-white'>{selectedBooking.objectName}</span>
+                      {t("unitLabel")} <span className='font-semibold text-white'>{selectedBooking.objectName}</span>
                     </span>
                     <span className='text-slate-600'>•</span>
                     <span
@@ -1064,17 +1061,17 @@ export function BookingsCalendarView({
               {/* Dates & Times Card */}
               <div className='p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 grid grid-cols-3 gap-3 text-xs'>
                 <div>
-                  <span className='text-slate-400 block text-[11px] mb-0.5'>Check-in</span>
+                  <span className='text-slate-400 block text-[11px] mb-0.5'>{t("checkIn")}</span>
                   <div className='font-bold text-white font-mono text-sm'>{selectedBooking.startDate}</div>
-                  <span className='text-[10px] text-sky-400'>From 15:00</span>
+                  <span className='text-[10px] text-sky-400'>{t("fromTime")}</span>
                 </div>
                 <div>
-                  <span className='text-slate-400 block text-[11px] mb-0.5'>Check-out</span>
+                  <span className='text-slate-400 block text-[11px] mb-0.5'>{t("checkOut")}</span>
                   <div className='font-bold text-white font-mono text-sm'>{selectedBooking.endDate}</div>
-                  <span className='text-[10px] text-amber-400'>Until 11:00</span>
+                  <span className='text-[10px] text-amber-400'>{t("untilTime")}</span>
                 </div>
                 <div>
-                  <span className='text-slate-400 block text-[11px] mb-0.5'>Week & Duration</span>
+                  <span className='text-slate-400 block text-[11px] mb-0.5'>{t("weekDuration")}</span>
                   <div className='font-bold text-amber-300 font-mono text-sm'>
                     w.{formatBookingWeekSpan(selectedBooking.startDate, selectedBooking.endDate)}
                   </div>
@@ -1087,17 +1084,17 @@ export function BookingsCalendarView({
               {/* Guest / Customer Details */}
               <div className='p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-2.5 text-xs'>
                 <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider block'>
-                  Guest & Reservation
+                  {t("guestReservation")}
                 </span>
 
                 <div className='grid grid-cols-2 gap-2 pt-1'>
                   <div>
-                    <span className='text-slate-500 text-[11px] block'>Customer Name</span>
+                    <span className='text-slate-500 text-[11px] block'>{t("customerName")}</span>
                     <span className='font-semibold text-white'>{selectedBooking.customerName || "—"}</span>
                   </div>
 
                   <div>
-                    <span className='text-slate-500 text-[11px] block'>Total Duration</span>
+                    <span className='text-slate-500 text-[11px] block'>{t("totalDuration")}</span>
                     <span className='font-semibold text-white'>
                       {calculateNights(selectedBooking.startDate, selectedBooking.endDate)} nights
                     </span>
@@ -1124,21 +1121,21 @@ export function BookingsCalendarView({
                   )}
 
                   <div className='pt-1'>
-                    <span className='text-slate-500 text-[11px] block'>Number of Guests</span>
+                    <span className='text-slate-500 text-[11px] block'>{t("numberOfGuests")}</span>
                     <span className='font-medium text-slate-200'>{selectedBooking.guestsCount || 2} persons</span>
                   </div>
 
                   <div className='pt-1'>
-                    <span className='text-slate-500 text-[11px] block'>Pets</span>
+                    <span className='text-slate-500 text-[11px] block'>{t("pets")}</span>
                     <span className='font-medium text-slate-200'>
-                      {selectedBooking.petsCount ? `${selectedBooking.petsCount} pets` : "No pets"}
+                      {selectedBooking.petsCount ? `${selectedBooking.petsCount} pets` : t("noPets")}
                     </span>
                   </div>
                 </div>
 
                 {selectedBooking.price !== null && selectedBooking.price !== undefined && (
                   <div className='pt-2 border-t border-slate-800/80 flex items-center justify-between'>
-                    <span className='text-slate-400'>Total Price:</span>
+                    <span className='text-slate-400'>{t("totalPrice")}</span>
                     <span className='text-base font-bold text-amber-400 font-mono'>
                       {selectedBooking.price.toLocaleString("sv-SE")} SEK
                     </span>
@@ -1151,7 +1148,7 @@ export function BookingsCalendarView({
                 <div className='p-3.5 rounded-xl border border-indigo-500/20 bg-indigo-950/20 text-xs space-y-1.5'>
                   <span className='text-[11px] font-semibold text-indigo-300 flex items-center gap-1.5'>
                     <Globe className='w-3.5 h-3.5' />
-                    <span>Booking.com / iCal Source</span>
+                    <span>{t("sourceSection")}</span>
                   </span>
                   <div className='flex items-center justify-between gap-2 pt-0.5'>
                     <span
@@ -1163,7 +1160,7 @@ export function BookingsCalendarView({
                       type='button'
                       onClick={() => handleCopyUid(selectedBooking.icalSourceId)}
                       className='p-1 rounded text-slate-400 hover:text-white transition shrink-0 cursor-pointer'
-                      title='Copy UID'>
+                      title={t("copyUid")}>
                       {copiedId ? <Check className='w-3.5 h-3.5 text-emerald-400' /> : <Copy className='w-3.5 h-3.5' />}
                     </button>
                   </div>
@@ -1177,7 +1174,7 @@ export function BookingsCalendarView({
                 type='button'
                 onClick={() => setSelectedBooking(null)}
                 className='rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition cursor-pointer'>
-                Close
+                {t("close")}
               </button>
 
               <div className='flex items-center gap-2'>
@@ -1190,7 +1187,7 @@ export function BookingsCalendarView({
                         window.location.href = `/admin/bookings/${selectedBooking.id}`;
                       }}
                       className='rounded-xl bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer'>
-                      Open booking
+                      {t("openBooking")}
                     </button>
                     <button
                       type='button'
@@ -1199,7 +1196,7 @@ export function BookingsCalendarView({
                       }}
                       className='flex items-center gap-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 transition cursor-pointer'>
                       <ExternalLink className='w-3.5 h-3.5' />
-                      <span>Open in new tab</span>
+                      <span>{t("openInNewTab")}</span>
                     </button>
                   </>
                 ) : (
@@ -1208,7 +1205,7 @@ export function BookingsCalendarView({
                     onClick={() => handleCopyUid(selectedBooking.icalSourceId)}
                     className='flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-indigo-600/20 transition cursor-pointer'>
                     <Copy className='w-3.5 h-3.5' />
-                    <span>{copiedId ? "Copied UID!" : "Copy Booking UID"}</span>
+                    <span>{copiedId ? t("copied") : t("copyBookingUid")}</span>
                   </button>
                 )}
               </div>

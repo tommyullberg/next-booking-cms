@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Save,
@@ -121,6 +122,9 @@ export function PageEditorView({
   onBack,
   onSave,
 }: PageEditorViewProps) {
+  const t = useTranslations("pageEditor");
+  const tCommon = useTranslations("common");
+
   const effectiveLocales = activeLanguages || activeLocales;
   const secondaryLocales = effectiveLocales.filter((loc) => loc !== "sv");
 
@@ -218,7 +222,33 @@ export function PageEditorView({
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-  const [lastSavedText, setLastSavedText] = useState("2 minutes ago by Super Admin (SU)");
+  const [lastSavedText, setLastSavedText] = useState(() =>
+    t("minutesAgoBy", { author: "Super Admin (SU)" })
+  );
+
+  const getTemplateLabel = (optId: string, fallbackLabel: string) => {
+    switch (optId.toLowerCase()) {
+      case "startpage":
+        return t("templateStartpage");
+      case "booking-unit":
+      case "booking":
+        return t("templateBookingUnit");
+      case "booking-overview":
+        return t("templateBookingOverview");
+      case "article":
+        return t("templateArticle");
+      case "contact":
+        return t("templateContact");
+      default:
+        return fallbackLabel;
+    }
+  };
+
+  const getStatusLabel = (st: "NEW" | "PUBLISHED" | "ARCHIVED") => {
+    if (st === "PUBLISHED") return t("published");
+    if (st === "NEW") return t("new");
+    return t("archived");
+  };
 
   const updateTranslation = (
     locale: string,
@@ -297,7 +327,7 @@ export function PageEditorView({
 
       setSavedStatus(status);
       setSaveSuccess(true);
-      setLastSavedText("Just now by Super Admin (SU)");
+      setLastSavedText(t("justNowBy", { author: "Super Admin (SU)" }));
       setTimeout(() => setSaveSuccess(false), 3000);
     } finally {
       setIsSaving(false);
@@ -323,7 +353,7 @@ export function PageEditorView({
       {/* Top Bar */}
       <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
         <h1 className='text-2xl font-bold tracking-tight text-white'>
-          Edit Page: {translations.en?.pageTitle || svTitle || "Untitled"}
+          {t("editPageTitle", { title: translations.en?.pageTitle || svTitle || "Untitled" })}
         </h1>
 
         <div className='flex items-center gap-2.5'>
@@ -332,7 +362,7 @@ export function PageEditorView({
             onClick={onBack}
             className='flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition'>
             <ArrowLeft className='w-3.5 h-3.5' />
-            <span>Back</span>
+            <span>{tCommon("back")}</span>
           </button>
 
           <div
@@ -349,7 +379,7 @@ export function PageEditorView({
                 savedStatus === "PUBLISHED" ? "bg-emerald-400" : savedStatus === "NEW" ? "bg-amber-400" : "bg-red-400"
               }`}
             />
-            <span>{savedStatus}</span>
+            <span>{getStatusLabel(savedStatus)}</span>
           </div>
         </div>
       </div>
@@ -358,12 +388,12 @@ export function PageEditorView({
       <div className='grid grid-cols-1 lg:grid-cols-3 gap-6 items-start'>
         {/* Left Column: Document Info & Metadata */}
         <div className='lg:col-span-2 space-y-3'>
-          <h2 className='text-sm font-semibold text-slate-200'>Document Info & Metadata</h2>
+          <h2 className='text-sm font-semibold text-slate-200'>{t("docInfoTitle")}</h2>
 
           <form onSubmit={handleSave} className='rounded-2xl border border-slate-800/90 bg-slate-900/40 p-6 space-y-6'>
             {/* 1. Page Title (Multi-language stacked) */}
             <div className='space-y-2.5'>
-              <label className='block text-xs font-medium text-slate-200'>Page Title</label>
+              <label className='block text-xs font-medium text-slate-200'>{t("pageTitle")}</label>
 
               {/* Primary Language (SE) */}
               <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
@@ -376,7 +406,7 @@ export function PageEditorView({
                   required
                   value={svTitle}
                   onChange={(e) => setSvTitle(e.target.value)}
-                  placeholder='Sidrubrik på svenska...'
+                  placeholder={t("svTitlePlaceholder")}
                   className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none'
                 />
               </div>
@@ -401,7 +431,7 @@ export function PageEditorView({
                         type='text'
                         value={translations[loc]?.pageTitle || ""}
                         onChange={(e) => updateTranslation(loc, "pageTitle", e.target.value)}
-                        placeholder={`Page title in ${meta.label}...`}
+                        placeholder={t("translationsTitlePlaceholder", { language: meta.label })}
                         className='w-full bg-transparent px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
                       />
                     </div>
@@ -417,12 +447,12 @@ export function PageEditorView({
                     onChange={(e) => setUseSamePageTitle(e.target.checked)}
                     className='h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-950'
                   />
-                  <span>Use same title for all languages (Hide translations)</span>
+                  <span>{t("useSameTitle")}</span>
                 </label>
 
                 {useSamePageTitle && (
                   <span className='text-[11px] text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-md px-2 py-0.5'>
-                    Fallback: SE used for all languages
+                    {t("sameTitleFallback")}
                   </span>
                 )}
               </div>
@@ -430,7 +460,7 @@ export function PageEditorView({
 
             {/* 2. Link text (if other) */}
             <div className='space-y-2.5'>
-              <label className='block text-xs font-medium text-slate-200'>Link text (if other)</label>
+              <label className='block text-xs font-medium text-slate-200'>{t("linkText")}</label>
 
               {/* Primary Language (SE) */}
               <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
@@ -442,7 +472,7 @@ export function PageEditorView({
                   type='text'
                   value={svLinkTitle}
                   onChange={(e) => setSvLinkTitle(e.target.value)}
-                  placeholder={svTitle.trim() || 'Link text in Swedish...'}
+                  placeholder={svTitle.trim() || t("svLinkPlaceholder")}
                   className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none'
                 />
               </div>
@@ -458,7 +488,7 @@ export function PageEditorView({
                   const locPageTitle =
                     translations[loc]?.pageTitle?.trim() ||
                     (useSamePageTitle ? svTitle.trim() : "");
-                  const locPlaceholder = locPageTitle || `Link text in ${meta.label}...`;
+                  const locPlaceholder = locPageTitle || t("translationsLinkPlaceholder", { language: meta.label });
 
                   return (
                     <div
@@ -488,12 +518,12 @@ export function PageEditorView({
                     onChange={(e) => setUseSameLinkTitle(e.target.checked)}
                     className='h-3.5 w-3.5 rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-950'
                   />
-                  <span>Use same link text for all languages (Hide translations)</span>
+                  <span>{t("useSameLinkText")}</span>
                 </label>
 
                 {useSameLinkTitle && (
                   <span className='text-[11px] text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-md px-2 py-0.5'>
-                    Fallback: SE used for all languages
+                    {t("sameLinkFallback")}
                   </span>
                 )}
               </div>
@@ -501,7 +531,7 @@ export function PageEditorView({
 
             {/* 3. URL Slug */}
             <div className='space-y-1.5'>
-              <label className='block text-xs font-medium text-slate-200'>URL Slug</label>
+              <label className='block text-xs font-medium text-slate-200'>{t("urlSlug")}</label>
               <div
                 className={`flex items-center rounded-xl border bg-slate-950/90 overflow-hidden transition ${
                   !slugValidation.isValid
@@ -536,15 +566,15 @@ export function PageEditorView({
               ) : (
                 <p className='text-[11px] text-slate-500'>
                   {isHomepage
-                    ? "Startpage (#1001) is always served at the root path (/)."
-                    : `The URL path for this page, eg: my-readable-link or my-readable/link (defaults to /${page.id}).`}
+                    ? t("startpageSlugHelp")
+                    : t("slugHelp", { id: String(page.id) })}
                 </p>
               )}
             </div>
 
             {/* 4. Page Template (Styled Select Dropdown) */}
             <div className='space-y-1.5 relative'>
-              <label className='block text-xs font-medium text-slate-200'>Page Template</label>
+              <label className='block text-xs font-medium text-slate-200'>{t("pageTemplate")}</label>
 
               <button
                 type='button'
@@ -559,7 +589,7 @@ export function PageEditorView({
                 }`}>
                 <span className='flex items-center gap-2.5'>
                   <SelectedTemplateIcon className='w-4 h-4 text-slate-400' />
-                  <span>{currentTemplateOption.label}</span>
+                  <span>{getTemplateLabel(currentTemplateOption.id, currentTemplateOption.label)}</span>
                 </span>
                 {!isHomepage && (
                   <ChevronDown
@@ -590,7 +620,7 @@ export function PageEditorView({
                           }`}>
                           <Icon className='w-4 h-4 text-slate-400 shrink-0' />
                           <div className='flex flex-col'>
-                            <span className='font-medium'>{opt.label}</span>
+                            <span className='font-medium'>{getTemplateLabel(opt.id, opt.label)}</span>
                             {opt.description && (
                               <span className='text-[10px] text-slate-400'>{opt.description}</span>
                             )}
@@ -620,19 +650,19 @@ export function PageEditorView({
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-white">
                           {linkedBookingObject
-                            ? `Connected Booking Object: ${linkedBookingObject.name}`
-                            : "No Booking Object connected yet"}
+                            ? t("connectedBookingObjectPrefix", { name: linkedBookingObject.name })
+                            : t("noBookingObjectConnected")}
                         </span>
                         {linkedBookingObject && (
                           <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-300">
-                            Active
+                            {tCommon("active")}
                           </span>
                         )}
                       </div>
                       <p className="text-[11px] opacity-90">
                         {linkedBookingObject
-                          ? `${formatBookingObjectType(linkedBookingObject.type)} · ${linkedBookingObject.size_sqm ? `${linkedBookingObject.size_sqm} m² · ` : ""}${linkedBookingObject.bed_count} beds · Landlord: ${linkedBookingObject.landlord ? `${linkedBookingObject.landlord.first_name} ${linkedBookingObject.landlord.last_name}` : "None"}`
-                          : "This page uses the 'Booking unit' template. To connect live rental calendar, capacity, and pricing data, select this page in Bookings -> Booking Objects under 'Page in CMS'."}
+                          ? `${formatBookingObjectType(linkedBookingObject.type)} · ${linkedBookingObject.size_sqm ? `${linkedBookingObject.size_sqm} m² · ` : ""}${linkedBookingObject.bed_count} ${t("beds")} · ${t("landlord")}: ${linkedBookingObject.landlord ? `${linkedBookingObject.landlord.first_name} ${linkedBookingObject.landlord.last_name}` : tCommon("none")}`
+                          : t("bookingUnitHelp")}
                       </p>
                     </div>
                   </div>
@@ -642,7 +672,7 @@ export function PageEditorView({
 
             {/* 5. Section Assignment */}
             <div className='space-y-1.5'>
-              <label className='block text-xs font-medium text-slate-200'>Section</label>
+              <label className='block text-xs font-medium text-slate-200'>{t("section")}</label>
               <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
                 <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
                   <FolderTree className='w-4 h-4' />
@@ -651,7 +681,7 @@ export function PageEditorView({
                   value={sectionId}
                   onChange={(e) => setSectionId(e.target.value)}
                   className='w-full bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:outline-none'>
-                  <option value=''>No section (standalone page)</option>
+                  <option value=''>{t("noSection")}</option>
                   {sections.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
@@ -667,7 +697,7 @@ export function PageEditorView({
                 <div className='flex items-center gap-2'>
                   <Layers className='w-4 h-4 text-sky-400' />
                   <label className='block text-xs font-medium text-slate-200'>
-                    Categories &amp; Types
+                    {t("categoriesAndTypes")}
                   </label>
                 </div>
 
@@ -712,12 +742,12 @@ export function PageEditorView({
                             {isMulti ? (
                               <>
                                 <CheckSquare className='w-2.5 h-2.5 text-sky-400' />
-                                <span>Multi</span>
+                                <span>{t("multi")}</span>
                               </>
                             ) : (
                               <>
                                 <CircleDot className='w-2.5 h-2.5 text-sky-400' />
-                                <span>Single</span>
+                                <span>{t("single")}</span>
                               </>
                             )}
                           </span>
@@ -725,7 +755,7 @@ export function PageEditorView({
 
                         {cats.length === 0 ? (
                           <div className='text-[11px] text-slate-500 italic'>
-                            No categories in this group.
+                            {t("noCategoriesInGroup")}
                           </div>
                         ) : isMulti ? (
                           <div className='space-y-1.5'>
@@ -769,7 +799,7 @@ export function PageEditorView({
                                 onChange={() => handleSelectSingle(null)}
                                 className='h-3.5 w-3.5 border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500 focus:ring-offset-slate-950'
                               />
-                              <span>None</span>
+                              <span>{tCommon("none")}</span>
                             </label>
                             {cats.map((cat) => {
                               const checked = selectedCategoryIds.includes(
@@ -807,7 +837,7 @@ export function PageEditorView({
             {/* 7. Published At (Scheduled Publication Start) */}
             <div className='space-y-1.5'>
               <div className='flex items-center gap-1.5'>
-                <label className='block text-xs font-medium text-slate-200'>Published At</label>
+                <label className='block text-xs font-medium text-slate-200'>{t("publishedAt")}</label>
                 <button
                   type='button'
                   onClick={() => setActiveTooltip((prev) => (prev === "pubStart" ? null : "pubStart"))}
@@ -819,8 +849,7 @@ export function PageEditorView({
 
               {activeTooltip === "pubStart" && (
                 <div className='rounded-lg border border-sky-500/20 bg-sky-950/30 px-3 py-2 text-[11px] text-sky-200'>
-                  Setting a future date schedules automatic publication when that date is reached. Leave empty to
-                  publish immediately when status is PUBLISHED.
+                  {t("pubStartHelp")}
                 </div>
               )}
 
@@ -830,15 +859,15 @@ export function PageEditorView({
                 locale={adminLanguage}
                 openDirection="up"
                 showWeekNumbers={true}
-                placeholder={adminLanguage === "sv" ? "Omedelbart (lämna tomt)" : "Immediately (leave empty)"}
-                clearLabel={adminLanguage === "sv" ? "Rensa" : "Clear"}
+                placeholder={t("immediatelyLeaveEmpty")}
+                clearLabel={t("clear")}
               />
             </div>
 
             {/* 7. Unpublish Date */}
             <div className='space-y-1.5'>
               <div className='flex items-center gap-1.5'>
-                <label className='block text-xs font-medium text-slate-200'>Unpublish Date</label>
+                <label className='block text-xs font-medium text-slate-200'>{t("unpublishDate")}</label>
                 <button
                   type='button'
                   onClick={() => setActiveTooltip((prev) => (prev === "pubEnd" ? null : "pubEnd"))}
@@ -850,9 +879,7 @@ export function PageEditorView({
 
               {activeTooltip === "pubEnd" && (
                 <div className='rounded-lg border border-sky-500/20 bg-sky-950/30 px-3 py-2 text-[11px] text-sky-200'>
-                  When an unpublish date is reached, the page automatically change to{" "}
-                  <span className='text-red-400 font-semibold'>ARCHIVED</span> status and is hidden from public
-                  navigation. Leave empty for Never.
+                  {t("pubEndHelp")}
                 </div>
               )}
 
@@ -864,8 +891,8 @@ export function PageEditorView({
                     locale={adminLanguage}
                     openDirection="up"
                     showWeekNumbers={true}
-                    placeholder={adminLanguage === "sv" ? "Aldrig (lämna tomt)" : "Never (leave empty)"}
-                    clearLabel={adminLanguage === "sv" ? "Aldrig" : "Never"}
+                    placeholder={t("neverLeaveEmpty")}
+                    clearLabel={t("clear")}
                   />
                 </div>
                 <button
@@ -882,12 +909,12 @@ export function PageEditorView({
 
         {/* Right Column: Document Status & Activity */}
         <div className='lg:col-span-1 space-y-3'>
-          <h2 className='text-sm font-semibold text-slate-200'>Document Status & Activity</h2>
+          <h2 className='text-sm font-semibold text-slate-200'>{t("docStatusTitle")}</h2>
 
           <div className='rounded-2xl border border-slate-800/90 bg-slate-900/40 p-6 space-y-5'>
             {/* Status */}
             <div className='space-y-2'>
-              <div className='text-xs font-medium text-slate-400'>Status</div>
+              <div className='text-xs font-medium text-slate-400'>{tCommon("status")}</div>
               <div className='grid grid-cols-3 gap-1.5 bg-slate-950/90 border border-slate-800 rounded-xl p-1'>
                 {(["NEW", "PUBLISHED", "ARCHIVED"] as const).map((st) => {
                   const active = status === st;
@@ -906,27 +933,27 @@ export function PageEditorView({
                           : "text-slate-500 hover:text-slate-300 border border-transparent"
                       }`}
                     >
-                      {st}
+                      {getStatusLabel(st)}
                     </button>
                   );
                 })}
               </div>
               <p className='text-[11px] text-slate-500'>
                 {status === "PUBLISHED"
-                  ? "Visible publicly to all visitors."
-                  : "Visible only to administrators (hidden from public visitors)."}
+                  ? t("visiblePublicly")
+                  : t("visibleAdminsOnly")}
               </p>
             </div>
 
             {/* Page ID & Page Template */}
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-1'>
-                <div className='text-xs font-medium text-slate-400'>Page-ID</div>
+                <div className='text-xs font-medium text-slate-400'>{t("pageId")}</div>
                 <div className='text-xs text-slate-200 font-medium font-mono'>{page.id}</div>
               </div>
               <div className='space-y-1'>
-                <div className='text-xs font-medium text-slate-400'>Page Template</div>
-                <div className='text-xs text-slate-200 font-medium'>{currentTemplateOption.label}</div>
+                <div className='text-xs font-medium text-slate-400'>{t("pageTemplate")}</div>
+                <div className='text-xs text-slate-200 font-medium'>{getTemplateLabel(currentTemplateOption.id, currentTemplateOption.label)}</div>
               </div>
             </div>
 
@@ -934,20 +961,20 @@ export function PageEditorView({
             <div className='space-y-1.5 pt-1 border-t border-slate-800/80'>
               <div className='text-xs font-medium text-slate-400 flex items-center gap-1.5'>
                 <Box className='w-3.5 h-3.5 text-sky-400' />
-                <span>Connected Booking Object</span>
+                <span>{t("connectedBookingObject")}</span>
               </div>
               {linkedBookingObject ? (
                 <div className='rounded-xl border border-slate-800 bg-slate-950/80 p-2.5 space-y-1 text-xs'>
                   <div className='font-semibold text-white flex items-center justify-between'>
                     <span>{linkedBookingObject.name}</span>
                     <span className='text-[10px] text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.2 rounded'>
-                      Active
+                      {tCommon("active")}
                     </span>
                   </div>
                   <div className='text-[11px] text-slate-400'>
                     {formatBookingObjectType(linkedBookingObject.type)}
                     {linkedBookingObject.size_sqm ? ` · ${linkedBookingObject.size_sqm} m²` : ""}
-                    {` · ${linkedBookingObject.bed_count} beds`}
+                    {` · ${linkedBookingObject.bed_count} ${t("beds")}`}
                   </div>
                   {linkedBookingObject.landlord && (
                     <div className='text-[10px] text-slate-400 flex items-center gap-1 pt-0.5'>
@@ -960,10 +987,10 @@ export function PageEditorView({
                 <div className='rounded-xl border border-slate-800/80 bg-slate-950/40 p-2.5 text-[11px] text-slate-500'>
                   {templateName === "booking-unit" ? (
                     <span className='text-amber-400/90 font-medium'>
-                      No object connected. Connect this page under Bookings → Booking Objects.
+                      {t("noObjectConnectedHelp")}
                     </span>
                   ) : (
-                    <span>Not connected (optional for this template)</span>
+                    <span>{t("notConnectedOptional")}</span>
                   )}
                 </div>
               )}
@@ -971,7 +998,7 @@ export function PageEditorView({
 
             {/* Public Link */}
             <div className='space-y-1'>
-              <div className='text-xs font-medium text-slate-400'>Public Link</div>
+              <div className='text-xs font-medium text-slate-400'>{t("publicLink")}</div>
               <a
                 href={publicUrlPath}
                 target='_blank'
@@ -988,7 +1015,7 @@ export function PageEditorView({
 
             {/* System Link */}
             <div className='space-y-1'>
-              <div className='text-xs font-medium text-slate-400'>System Link</div>
+              <div className='text-xs font-medium text-slate-400'>{t("systemLink")}</div>
               <a
                 href={systemUrlPath}
                 target='_blank'
@@ -1005,26 +1032,26 @@ export function PageEditorView({
 
             {/* Last Saved */}
             <div className='space-y-1'>
-              <div className='text-xs font-medium text-slate-400'>Last Saved</div>
+              <div className='text-xs font-medium text-slate-400'>{t("lastSaved")}</div>
               <div className='text-xs text-slate-300'>{lastSavedText}</div>
             </div>
 
             {/* Original Author */}
             <div className='space-y-1'>
-              <div className='text-xs font-medium text-slate-400'>Original Author</div>
-              <div className='text-xs text-slate-300'>Super Admin (SU) on {createdDateFormatted}</div>
+              <div className='text-xs font-medium text-slate-400'>{t("originalAuthor")}</div>
+              <div className='text-xs text-slate-300'>{t("originalAuthorBy", { author: "Super Admin (SU)", date: createdDateFormatted })}</div>
             </div>
 
             {/* Revisions */}
             <div className='space-y-1'>
-              <div className='text-xs font-medium text-slate-400'>Revisions</div>
-              <div className='text-xs text-slate-300'>4 versions</div>
+              <div className='text-xs font-medium text-slate-400'>{t("revisions")}</div>
+              <div className='text-xs text-slate-300'>{t("revisionsCount", { count: 4 })}</div>
             </div>
 
             {/* Activity timestamps */}
             <div className='border-t border-slate-800/80 pt-4 space-y-1 text-[11px] text-slate-500'>
-              <div>Published on {createdDateFormatted} by SU</div>
-              <div>Metadata updated {todayFormatted} by SU</div>
+              <div>{t("publishedOnBy", { date: createdDateFormatted, author: "SU" })}</div>
+              <div>{t("metadataUpdatedOnBy", { date: todayFormatted, author: "SU" })}</div>
             </div>
 
             {/* Save Button */}
@@ -1041,7 +1068,7 @@ export function PageEditorView({
                 ) : (
                   <Save className='w-4 h-4' />
                 )}
-                <span>{saveSuccess ? "Changes Saved" : "Save Changes"}</span>
+                <span>{saveSuccess ? tCommon("saved") : t("saveChanges")}</span>
               </button>
             </div>
           </div>

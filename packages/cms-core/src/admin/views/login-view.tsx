@@ -1,19 +1,46 @@
 "use client";
 
-import React, { useState } from "react";
-import { signIn } from "next-auth/react";
+import React, { useState, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { Lock, Mail, Loader2 } from "lucide-react";
 import { CmsBrandLogo } from "../../components/ui/cms-brand-logo";
+import { FlagIcon } from "../../components/ui/flag-icon";
+import { AdminIntlProvider, useAdminIntl } from "../../i18n";
 
 export interface LoginViewProps {
   callbackUrl?: string;
 }
 
-export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
+function LoginContent({ callbackUrl = "/admin" }: LoginViewProps) {
+  const t = useTranslations("login");
+  const { locale, setLocale, isPending: isLocalePending } = useAdminIntl();
+  const { status } = useSession();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      window.location.href = callbackUrl;
+    }
+  }, [status, callbackUrl]);
+
+  if (status === "authenticated") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
+        <div className="w-full max-w-sm rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl backdrop-blur text-center space-y-4">
+          <CmsBrandLogo variant="dark" heightClassName="h-9" />
+          <Loader2 className="w-6 h-6 animate-spin text-sky-400 mx-auto" />
+          <p className="text-xs text-slate-300">
+            {t("alreadyLoggedIn")}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,12 +56,12 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
       });
 
       if (result?.error) {
-        setError("Invalid email address or password.");
+        setError(t("invalidCredentials"));
       } else if (result?.ok) {
         window.location.href = callbackUrl;
       }
     } catch {
-      setError("An unexpected error occurred during sign in.");
+      setError(t("unexpectedError"));
     } finally {
       setIsLoading(false);
     }
@@ -42,13 +69,47 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-950 p-4">
-      <div className="w-full max-w-sm rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl backdrop-blur">
+      <div className="w-full max-w-sm rounded-3xl border border-slate-800 bg-slate-900/80 p-8 shadow-2xl backdrop-blur relative">
+        {/* Language switcher */}
+        <div className="flex justify-end mb-4">
+          <div className="flex items-center gap-0.5 rounded-xl border border-slate-800 bg-slate-950/80 p-0.5 text-xs">
+            <button
+              type="button"
+              disabled={isLocalePending}
+              onClick={() => setLocale("en")}
+              title="English"
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition ${
+                locale === "en"
+                  ? "bg-sky-600 text-white shadow-sm font-semibold"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <FlagIcon code="en" size="xs" />
+              <span>EN</span>
+            </button>
+            <button
+              type="button"
+              disabled={isLocalePending}
+              onClick={() => setLocale("sv")}
+              title="Svenska"
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition ${
+                locale === "sv"
+                  ? "bg-sky-600 text-white shadow-sm font-semibold"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              <FlagIcon code="sv" size="xs" />
+              <span>SV</span>
+            </button>
+          </div>
+        </div>
+
         <div className="flex flex-col items-center text-center mb-8">
           <div className="mb-3">
             <CmsBrandLogo variant="dark" heightClassName="h-9" />
           </div>
           <p className="mt-1 text-xs text-slate-400">
-            Sign in to the administration panel
+            {t("title")}
           </p>
         </div>
 
@@ -61,7 +122,7 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Email Address
+              {t("email")}
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
@@ -78,7 +139,7 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
 
           <div>
             <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              Password
+              {t("password")}
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
@@ -101,11 +162,19 @@ export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
             {isLoading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <span>Sign In</span>
+              <span>{t("signIn")}</span>
             )}
           </button>
         </form>
       </div>
     </div>
+  );
+}
+
+export function LoginView({ callbackUrl = "/admin" }: LoginViewProps) {
+  return (
+    <AdminIntlProvider>
+      <LoginContent callbackUrl={callbackUrl} />
+    </AdminIntlProvider>
   );
 }

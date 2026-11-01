@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, Trash2, Pencil, Check, GripVertical, ChevronDown, Lock } from "lucide-react";
 import { FlagIcon } from "../../components/ui/flag-icon";
 import { HOMEPAGE_ID } from "../../utils/slug";
@@ -55,6 +56,9 @@ export function SectionsView({
   onDeleteSection,
   onReorderSections,
 }: SectionsViewProps) {
+  const t = useTranslations("sections");
+  const tCommon = useTranslations("common");
+
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [editNameSv, setEditNameSv] = useState("");
@@ -219,7 +223,7 @@ export function SectionsView({
         sec.pages?.find((p) => Number(p.id) === Number(sec.start_page_id));
       if (found) return `${found.page_title} (#${found.id})`;
     }
-    return "No start page assigned";
+    return t("noStartPageAssigned");
   };
 
   const getDisplayHeading = (
@@ -243,12 +247,10 @@ export function SectionsView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            Sections
+            {t("title")}
           </h1>
           <p className="mt-1 text-xs text-slate-400 max-w-2xl leading-relaxed">
-            Define the top-level categories and section start pages. These form
-            the primary branches of your mobile menu and map to dedicated
-            navigation submenus.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -258,7 +260,7 @@ export function SectionsView({
           className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/25 hover:bg-sky-500 transition shrink-0"
         >
           <Plus className="w-4 h-4" />
-          <span>Add Section</span>
+          <span>{t("addSection")}</span>
         </button>
       </div>
 
@@ -351,7 +353,7 @@ export function SectionsView({
                     {/* Column 3: Section start page dropdown (Locked for Root Section 1001) */}
                     <div className="lg:col-span-3">
                       <label className="block text-[11px] font-medium text-slate-400 mb-1.5">
-                        Section start page
+                        {t("sectionStartPage")}
                       </label>
                       {isRootSection ? (
                         <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
@@ -367,7 +369,7 @@ export function SectionsView({
                             onChange={(e) => setEditStartPageId(e.target.value)}
                             className="w-full appearance-none rounded-lg border border-slate-700 bg-slate-950/90 pl-3 pr-8 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
                           >
-                            <option value="">No start page assigned</option>
+                            <option value="">{t("noStartPageAssigned")}</option>
                             {nonHomepagePages.map((p) => (
                               <option key={p.id} value={String(p.id)}>
                                 {p.page_title} (#{p.id})
@@ -385,7 +387,7 @@ export function SectionsView({
                         <button
                           type="button"
                           onClick={() => {
-                            if (confirm(`Delete section "${sec.name}"?`)) {
+                            if (confirm(t("deleteConfirm"))) {
                               onDeleteSection(sec.id);
                               setEditingId(null);
                             }
@@ -393,7 +395,7 @@ export function SectionsView({
                           className="flex items-center gap-1.5 rounded-lg bg-red-600/90 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-500 transition"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                          <span>Delete Section</span>
+                          <span>{tCommon("delete")}</span>
                         </button>
                       )}
 
@@ -405,14 +407,14 @@ export function SectionsView({
                           className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-2 text-xs font-semibold text-white shadow-md shadow-sky-600/20 hover:bg-sky-500 disabled:opacity-50 transition"
                         >
                           <Check className="w-3.5 h-3.5" />
-                          <span>{isSaving ? "Saving..." : "Save Changes"}</span>
+                          <span>{isSaving ? tCommon("loading") : tCommon("save")}</span>
                         </button>
                         <button
                           type="button"
                           onClick={handleCancelEdit}
                           className="rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition"
                         >
-                          Cancel
+                          {tCommon("cancel")}
                         </button>
                       </div>
                     </div>
@@ -490,7 +492,7 @@ export function SectionsView({
                   {/* Column 3: Start Page */}
                   <div className="lg:col-span-4">
                     <span className="block text-[11px] font-medium text-slate-400 mb-1">
-                      Start Page:
+                      {t("startPage")}:
                     </span>
                     <span className="text-xs text-slate-200">
                       {getStartPageLabel(sec)}
@@ -505,7 +507,7 @@ export function SectionsView({
                       className="flex items-center gap-1.5 rounded-lg border border-slate-700/80 bg-slate-800/70 px-3.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white transition"
                     >
                       <Pencil className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Edit</span>
+                      <span>{tCommon("edit")}</span>
                     </button>
                   </div>
                 </div>
@@ -575,7 +577,7 @@ export function SectionsView({
 
               <div className="lg:col-span-3">
                 <label className="block text-[11px] font-medium text-slate-400 mb-1.5">
-                  Section start page
+                  {t("sectionStartPage")}
                 </label>
                 <div className="relative">
                   <select
@@ -583,7 +585,7 @@ export function SectionsView({
                     onChange={(e) => setEditStartPageId(e.target.value)}
                     className="w-full appearance-none rounded-lg border border-slate-700 bg-slate-950/90 pl-3 pr-8 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
                   >
-                    <option value="">No start page assigned</option>
+                    <option value="">{t("noStartPageAssigned")}</option>
                     {nonHomepagePages.map((p) => (
                       <option key={p.id} value={String(p.id)}>
                         {p.page_title} (#{p.id})
@@ -603,14 +605,14 @@ export function SectionsView({
                     className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-2 text-xs font-semibold text-white shadow-md shadow-sky-600/20 hover:bg-sky-500 disabled:opacity-50 transition"
                   >
                     <Check className="w-3.5 h-3.5" />
-                    <span>{isSaving ? "Saving..." : "Save Changes"}</span>
+                    <span>{isSaving ? tCommon("loading") : tCommon("save")}</span>
                   </button>
                   <button
                     type="button"
                     onClick={handleCancelEdit}
                     className="rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition"
                   >
-                    Cancel
+                    {tCommon("cancel")}
                   </button>
                 </div>
               </div>

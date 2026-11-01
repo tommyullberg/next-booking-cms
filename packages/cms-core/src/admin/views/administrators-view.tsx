@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   Plus,
   Shield,
@@ -53,6 +54,9 @@ export function AdministratorsView({
   onSaveAdministrator,
   onDeleteAdministrator,
 }: AdministratorsViewProps) {
+  const t = useTranslations("administrators");
+  const tCommon = useTranslations("common");
+
   const [admins, setAdmins] = useState<AdministratorItem[]>(initialAdmins);
 
   useEffect(() => {
@@ -111,12 +115,12 @@ export function AdministratorsView({
     setErrorMsg(null);
 
     if (!firstName.trim() || !lastName.trim() || !email.trim()) {
-      setErrorMsg("First name, last name, and email are required.");
+      setErrorMsg(t("namesRequired"));
       return;
     }
 
     if (!editingAdmin && password.trim().length < 6) {
-      setErrorMsg("Password must be at least 6 characters.");
+      setErrorMsg(t("passwordMin"));
       return;
     }
 
@@ -137,7 +141,7 @@ export function AdministratorsView({
       }
       setIsModalOpen(false);
     } catch (err: any) {
-      setErrorMsg(err?.message || "Could not save administrator.");
+      setErrorMsg(err?.message || t("saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -147,7 +151,10 @@ export function AdministratorsView({
     if (admin.role === "SUPERADMIN") return;
     if (
       !confirm(
-        `Remove administrator "${admin.first_name} ${admin.last_name}" (${admin.email})?`
+        t("deleteConfirm", {
+          name: `${admin.first_name} ${admin.last_name}`,
+          email: admin.email,
+        })
       )
     ) {
       return;
@@ -168,10 +175,10 @@ export function AdministratorsView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            Administrators
+            {t("title")}
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            View the locked default Super Admin account and add or manage Administrator accounts.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -181,7 +188,7 @@ export function AdministratorsView({
           className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition"
         >
           <Plus className="w-4 h-4" />
-          <span>Add Administrator</span>
+          <span>{t("addBtn")}</span>
         </button>
       </div>
 
@@ -193,14 +200,14 @@ export function AdministratorsView({
           </div>
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-white">SuperAdmin</span>
+              <span className="text-xs font-bold text-white">{t("superAdminTitle")}</span>
               <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
                 <Lock className="w-2.5 h-2.5" />
-                <span>System Role</span>
+                <span>{t("systemRole")}</span>
               </span>
             </div>
             <p className="text-[11px] text-slate-400">
-              Primary system owner account with full unrestricted access. Protected and locked from deletion.
+              {t("superAdminDesc")}
             </p>
           </div>
         </div>
@@ -211,14 +218,14 @@ export function AdministratorsView({
           </div>
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold text-white">Administrator</span>
+              <span className="text-xs font-bold text-white">{t("adminTitle")}</span>
               <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold text-sky-300">
                 <UserCheck className="w-2.5 h-2.5" />
-                <span>Assignable Role</span>
+                <span>{t("assignableRole")}</span>
               </span>
             </div>
             <p className="text-[11px] text-slate-400">
-              Standard administrator role assigned to all added administrators for managing CMS content and bookings.
+              {t("adminDesc")}
             </p>
           </div>
         </div>
@@ -229,11 +236,11 @@ export function AdministratorsView({
         <table className="w-full text-left border-collapse text-xs">
           <thead>
             <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
-              <th className="py-3.5 px-5">Administrator</th>
-              <th className="py-3.5 px-4">Email</th>
-              <th className="py-3.5 px-4">Mobile</th>
-              <th className="py-3.5 px-4">Role</th>
-              <th className="py-3.5 px-5 text-right">Actions</th>
+              <th className="py-3.5 px-5">{t("colAdmin")}</th>
+              <th className="py-3.5 px-4">{t("colEmail")}</th>
+              <th className="py-3.5 px-4">{t("colMobile")}</th>
+              <th className="py-3.5 px-4">{t("colRole")}</th>
+              <th className="py-3.5 px-5 text-right">{t("colActions")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/60">
@@ -278,7 +285,7 @@ export function AdministratorsView({
                           {isSuperAdmin && (
                             <span className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/90 px-2 py-0.5 text-[10px] font-medium text-slate-300">
                               <Lock className="w-2.5 h-2.5 text-amber-400" />
-                              <span>Default</span>
+                              <span>{t("defaultBadge")}</span>
                             </span>
                           )}
                         </div>
@@ -313,7 +320,7 @@ export function AdministratorsView({
                     ) : (
                       <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/30 bg-sky-500/15 px-2.5 py-0.5 text-[10px] font-bold text-sky-300">
                         <Shield className="w-3 h-3" />
-                        <span>Administrator</span>
+                        <span>{t("adminTitle")}</span>
                       </span>
                     )}
                   </td>
@@ -322,7 +329,7 @@ export function AdministratorsView({
                     {isSuperAdmin ? (
                       <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-500 select-none">
                         <Lock className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Locked</span>
+                        <span>{t("locked")}</span>
                       </span>
                     ) : (
                       <div className="flex items-center justify-end gap-1.5">
@@ -330,16 +337,16 @@ export function AdministratorsView({
                           type="button"
                           onClick={() => openEditModal(admin)}
                           className="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-700 transition inline-flex items-center gap-1.5 text-xs"
-                          title="Edit administrator"
+                          title={t("editAdminTooltip")}
                         >
                           <Edit3 className="w-3.5 h-3.5" />
-                          <span>Edit</span>
+                          <span>{tCommon("edit")}</span>
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDelete(admin)}
                           className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition"
-                          title="Remove administrator"
+                          title={t("deleteAdminTooltip")}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -360,12 +367,13 @@ export function AdministratorsView({
           <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 text-white shadow-2xl space-y-5">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">
-                {editingAdmin ? "Edit Administrator" : "Add New Administrator"}
+                {editingAdmin ? t("modalEditTitle") : t("modalCreateTitle")}
               </h2>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
                 className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                title={tCommon("close")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -381,21 +389,21 @@ export function AdministratorsView({
               {/* Role Display (Read-only: Administrator) */}
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Assigned Role
+                  {t("assignedRole")}
                 </label>
                 <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2.5 text-xs">
                   <span className="inline-flex items-center gap-2 font-semibold text-sky-400">
                     <Shield className="w-4 h-4" />
-                    <span>Administrator</span>
+                    <span>{t("adminTitle")}</span>
                   </span>
-                  <span className="text-[11px] text-slate-500">Default role</span>
+                  <span className="text-[11px] text-slate-500">{t("defaultRole")}</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1">
-                    First Name
+                    {t("firstName")} <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -408,7 +416,7 @@ export function AdministratorsView({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Last Name
+                    {t("lastName")} <span className="text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -423,7 +431,7 @@ export function AdministratorsView({
 
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Email Address
+                  {t("email")} <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="email"
@@ -437,7 +445,7 @@ export function AdministratorsView({
 
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1">
-                  Mobile Phone (Optional)
+                  {t("mobile")}
                 </label>
                 <input
                   type="text"
@@ -450,9 +458,13 @@ export function AdministratorsView({
 
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1">
-                  {editingAdmin
-                    ? "New Password (leave empty to keep current)"
-                    : "Password"}
+                  {editingAdmin ? (
+                    t("newPassword")
+                  ) : (
+                    <>
+                      {t("password")} <span className="text-rose-400">*</span>
+                    </>
+                  )}
                 </label>
                 <input
                   type="password"
@@ -460,7 +472,7 @@ export function AdministratorsView({
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={
-                    editingAdmin ? "••••••••" : "Minimum 6 characters"
+                    editingAdmin ? "••••••••" : t("passwordMinPlaceholder")
                   }
                   className="w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
                 />
@@ -472,7 +484,7 @@ export function AdministratorsView({
                   onClick={() => setIsModalOpen(false)}
                   className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 transition"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   type="submit"
@@ -481,7 +493,7 @@ export function AdministratorsView({
                 >
                   {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>
-                    {editingAdmin ? "Save Changes" : "Create Administrator"}
+                    {editingAdmin ? t("saveChanges") : t("createAdmin")}
                   </span>
                 </button>
               </div>

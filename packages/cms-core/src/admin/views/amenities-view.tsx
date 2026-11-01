@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Plus,
   Edit3,
@@ -34,6 +35,9 @@ export function AmenitiesView({
   onDeleteAmenity,
   onReorderAmenities,
 }: AmenitiesViewProps) {
+  const t = useTranslations("amenities");
+  const tCommon = useTranslations("common");
+
   const [amenities, setAmenities] = useState<AmenityItem[]>(initialAmenities);
 
   useEffect(() => {
@@ -84,7 +88,7 @@ export function AmenitiesView({
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setErrorMsg("Amenity name is required.");
+      setErrorMsg(t("nameRequired"));
       return;
     }
 
@@ -108,7 +112,7 @@ export function AmenitiesView({
       }
       closeModal();
     } catch (err: any) {
-      setErrorMsg(err?.message || "Failed to save amenity.");
+      setErrorMsg(err?.message || t("saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -132,7 +136,7 @@ export function AmenitiesView({
       }
       closeModal();
     } catch (err: any) {
-      setErrorMsg(err?.message || "Failed to delete amenity.");
+      setErrorMsg(err?.message || t("deleteError"));
     } finally {
       setIsDeleting(false);
     }
@@ -202,10 +206,10 @@ export function AmenitiesView({
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
             <Tag className="w-6 h-6 text-sky-400" />
-            <span>Amenities (Förnödenheter)</span>
+            <span>{t("title")}</span>
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Manage features and appliances. Drag and drop to sort order.
+            {t("subtitle")}
           </p>
         </div>
 
@@ -215,7 +219,7 @@ export function AmenitiesView({
           className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition"
         >
           <Plus className="w-4 h-4" />
-          <span>New Amenity</span>
+          <span>{t("newAmenity")}</span>
         </button>
       </div>
 
@@ -227,13 +231,13 @@ export function AmenitiesView({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search amenities..."
+            placeholder={t("searchPlaceholder")}
             className="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
           />
         </div>
 
         <div className="text-xs font-medium text-slate-400">
-          Showing {filteredAmenities.length} of {amenities.length} amenities
+          {t("showing", { count: filteredAmenities.length, total: amenities.length })}
         </div>
       </div>
 
@@ -244,9 +248,9 @@ export function AmenitiesView({
             <thead>
               <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-medium">
                 <th className="py-3 px-3 w-10"></th>
-                <th className="py-3 px-4">Amenity Name</th>
-                <th className="py-3 px-4">Connected Objects</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+                <th className="py-3 px-4">{t("colName")}</th>
+                <th className="py-3 px-4">{t("colConnected")}</th>
+                <th className="py-3 px-4 text-right">{t("colActions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60">
@@ -254,7 +258,7 @@ export function AmenitiesView({
                 <tr>
                   <td colSpan={4} className="py-12 text-center text-slate-500">
                     <Tag className="w-8 h-8 mx-auto mb-2 text-slate-600" />
-                    No amenities found matching your criteria.
+                    {t("noAmenitiesFound")}
                   </td>
                 </tr>
               ) : (
@@ -283,7 +287,7 @@ export function AmenitiesView({
                         {!searchQuery && (
                           <span
                             className="cursor-grab active:cursor-grabbing inline-flex p-1 rounded hover:text-slate-300 hover:bg-slate-800/60 transition"
-                            title="Drag to reorder amenity"
+                            title={t("dragToReorder")}
                           >
                             <GripVertical className="w-4 h-4" />
                           </span>
@@ -302,14 +306,15 @@ export function AmenitiesView({
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                             <Box className="w-3 h-3" />
                             <span>
-                              {item.object_count}{" "}
-                              {item.object_count === 1 ? "object" : "objects"}{" "}
-                              connected
+                              {t("connectedCount", {
+                                count: item.object_count,
+                                plural: item.object_count === 1 ? "object" : "objects",
+                              })}
                             </span>
                           </span>
                         ) : (
                           <span className="text-slate-500 text-[11px]">
-                            Not active on any object
+                            {t("notActive")}
                           </span>
                         )}
                       </td>
@@ -321,7 +326,7 @@ export function AmenitiesView({
                           className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:border-slate-600 hover:bg-slate-700 hover:text-white transition"
                         >
                           <Edit3 className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Edit</span>
+                          <span>{tCommon("edit")}</span>
                         </button>
                       </td>
                     </tr>
@@ -342,7 +347,7 @@ export function AmenitiesView({
               <div className="flex items-center gap-2">
                 <Tag className="w-5 h-5 text-sky-400" />
                 <h2 className="text-sm font-semibold text-white">
-                  {editingAmenity ? "Edit Amenity" : "New Amenity"}
+                  {editingAmenity ? t("modalEditTitle") : t("modalCreateTitle")}
                 </h2>
               </div>
               <button
@@ -364,14 +369,14 @@ export function AmenitiesView({
 
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-slate-200">
-                  Amenity Name <span className="text-red-400">*</span>
+                  {t("name")} <span className="text-rose-400">*</span>
                 </label>
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Havsutsikt, Diskmaskin, Kolgrill"
+                  placeholder={t("namePlaceholder")}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                 />
               </div>
@@ -390,14 +395,14 @@ export function AmenitiesView({
                         {isDeleting && (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         )}
-                        <span>Yes, Delete</span>
+                        <span>{t("yesDelete")}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setConfirmDelete(false)}
                         className="rounded-xl border border-slate-800 bg-slate-800/60 px-2.5 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition"
                       >
-                        Cancel
+                        {tCommon("cancel")}
                       </button>
                     </div>
                   ) : (
@@ -407,7 +412,7 @@ export function AmenitiesView({
                       className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/20 hover:text-red-300 transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete</span>
+                      <span>{t("delete")}</span>
                     </button>
                   )
                 ) : (
@@ -420,7 +425,7 @@ export function AmenitiesView({
                     onClick={closeModal}
                     className="rounded-xl border border-slate-800 bg-slate-800/60 px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition"
                   >
-                    Cancel
+                    {tCommon("cancel")}
                   </button>
                   <button
                     type="submit"
@@ -430,7 +435,7 @@ export function AmenitiesView({
                     {isSaving && (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     )}
-                    <span>Save Amenity</span>
+                    <span>{t("save")}</span>
                   </button>
                 </div>
               </div>

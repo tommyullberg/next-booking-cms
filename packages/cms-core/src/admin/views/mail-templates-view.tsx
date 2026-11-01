@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Mail, HelpCircle, Copy, Check, Save, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { MAIL_PLACEHOLDERS } from "../../mail/types";
+import { useAdminIntl } from "../../i18n";
+import { getDefaultMailTemplate, DEFAULT_MAIL_TEMPLATES_EN, DEFAULT_MAIL_TEMPLATES_SV } from "../../constants/mail-templates";
 
 export interface MailTemplateItem {
   id: string;
@@ -20,52 +23,111 @@ export interface MailTemplatesViewProps {
   ) => Promise<void>;
 }
 
-export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesViewProps) {
+function cleanLegacyHtml(html?: string): string {
+  if (!html) return "";
+  // If it contains legacy HTML boilerplate like <h1> or <p>, convert to clean Markdown
+  if (/<(h[1-6]|p|strong|a)[\s>]/i.test(html)) {
+    return html
+      .replace(/<h[1-6][^>]*>(.*?)<\/h[1-6]>/gi, "# $1\n\n")
+      .replace(/<p[^>]*><strong[^>]*>(.*?):?<\/strong>\s*(.*?)<\/p>/gi, "$1: $2\n")
+      .replace(/<p[^>]*><a\s+href=['"](.*?)['"][^>]*>(.*?)<\/a><\/p>/gi, "[$2]($1)\n")
+      .replace(/<p[^>]*>(.*?)<\/p>/gi, "$1\n\n")
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/?(strong|b)>/gi, "**")
+      .replace(/<[^>]+>/g, "")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+  return html;
+}
+
+export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTemplatesViewProps) {
+  const t = useTranslations("mailTemplates");
+  const tCommon = useTranslations("common");
+  const { locale } = useAdminIntl();
+
   const [showHelp, setShowHelp] = useState(true);
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
   const [savingType, setSavingType] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
 
-  const templateConfigs = [
-    {
-      type: "ADMIN_NEW_BOOKING_REQUEST" as const,
-      title: "New Booking Request (Admin Notification)",
-      description: "Automatically dispatched to administrators when a guest submits a new booking request.",
-      defaultSubject: "New booking request received - {{object_name}}",
-      defaultBody:
-        "<h1>New booking request received</h1>\n<p><strong>Guest:</strong> {{customer_name}} ({{customer_email}}, {{customer_phone}})</p>\n<p><strong>Dates:</strong> {{start_date}} to {{end_date}}</p>\n<p><strong>Guests:</strong> {{guests_count}} adults, {{pets_count}} pets</p>\n<p><a href='{{deeplink}}'>Click here to review and manage this booking in Admin</a></p>",
-    },
-    {
-      type: "USER_NEW_BOOKING_REQUEST_COPY" as const,
-      title: "Booking Request Received Copy (Guest)",
-      description: "Sent as a confirmation receipt to the guest while their request is pending review.",
-      defaultSubject: "Thank you for your booking request for {{object_name}}",
-      defaultBody:
-        "<h1>Thank you for your booking request, {{customer_name}}!</h1>\n<p>We have received your request for <strong>{{object_name}}</strong> from <strong>{{start_date}}</strong> to <strong>{{end_date}}</strong>.</p>\n<p>We will get back to you shortly once we have reviewed availability.</p>",
-    },
-    {
-      type: "USER_BOOKING_CONFIRMED" as const,
-      title: "Booking Confirmed (Guest)",
-      description: "Dispatched to the guest when an administrator approves the booking request.",
-      defaultSubject: "Booking Confirmation for {{object_name}}",
-      defaultBody:
-        "<h1>Your booking is confirmed!</h1>\n<p>Hello {{customer_name}},</p>\n<p>Your reservation for <strong>{{object_name}}</strong> is now confirmed for <strong>{{start_date}}</strong> to <strong>{{end_date}}</strong>.</p>\n<p><strong>Total Price:</strong> {{price}}</p>\n<p>We look forward to welcoming you!</p>",
-    },
-  ];
+  const templateConfigs = useMemo(
+    () => [
+      {
+        type: "ADMIN_NEW_BOOKING_REQUEST" as const,
+        title: t("adminNewBookingTitle"),
+        description: t("adminNewBookingDesc"),
+        defaultSubject: getDefaultMailTemplate("ADMIN_NEW_BOOKING_REQUEST", locale).subject,
+        defaultBody: getDefaultMailTemplate("ADMIN_NEW_BOOKING_REQUEST", locale).body,
+      },
+      {
+        type: "USER_NEW_BOOKING_REQUEST_COPY" as const,
+        title: t("userNewBookingTitle"),
+        description: t("userNewBookingDesc"),
+        defaultSubject: getDefaultMailTemplate("USER_NEW_BOOKING_REQUEST_COPY", locale).subject,
+        defaultBody: getDefaultMailTemplate("USER_NEW_BOOKING_REQUEST_COPY", locale).body,
+      },
+      {
+        type: "USER_BOOKING_CONFIRMED" as const,
+        title: t("userConfirmedTitle"),
+        description: t("userConfirmedDesc"),
+        defaultSubject: getDefaultMailTemplate("USER_BOOKING_CONFIRMED", locale).subject,
+        defaultBody: getDefaultMailTemplate("USER_BOOKING_CONFIRMED", locale).body,
+      },
+    ],
+    [t, locale]
+  );
 
-  const [formState, setFormState] = useState<
-    Record<string, { subject: string; body: string }>
-  >(() => {
+  const isDefaultTemplate = (type: any, subject?: string, body?: string) => {
+    if (!subject) return true;
+    const sv = DEFAULT_MAIL_TEMPLATES_SV[type as keyof typeof DEFAULT_MAIL_TEMPLATES_SV];
+    const en = DEFAULT_MAIL_TEMPLATES_EN[type as keyof typeof DEFAULT_MAIL_TEMPLATES_EN];
+    const cleanBody = cleanLegacyHtml(body);
+    const isSubjectDefault = subject === sv?.subject || subject === en?.subject;
+    const isBodyDefault = !body || cleanBody === sv?.body || cleanBody === en?.body;
+    return isSubjectDefault && isBodyDefault;
+  };
+
+  const [formState, setFormState] = useState<Record<string, { subject: string; body: string }>>(() => {
     const initial: Record<string, { subject: string; body: string }> = {};
     for (const c of templateConfigs) {
       const existing = templates.find((t) => t.template_type === c.type);
-      initial[c.type] = {
-        subject: existing?.subject || c.defaultSubject,
-        body: existing?.body || c.defaultBody,
-      };
+      if (!existing || isDefaultTemplate(c.type, existing.subject, existing.body)) {
+        initial[c.type] = {
+          subject: c.defaultSubject,
+          body: c.defaultBody,
+        };
+      } else {
+        initial[c.type] = {
+          subject: existing.subject,
+          body: cleanLegacyHtml(existing.body),
+        };
+      }
     }
     return initial;
   });
+
+  // Keep formState in sync when switching language if templates were not customized in DB
+  useEffect(() => {
+    setFormState((prev) => {
+      const updated = { ...prev };
+      for (const c of templateConfigs) {
+        const existing = templates.find((item) => item.template_type === c.type);
+        if (!existing || isDefaultTemplate(c.type, existing.subject, existing.body)) {
+          updated[c.type] = {
+            subject: c.defaultSubject,
+            body: c.defaultBody,
+          };
+        } else {
+          updated[c.type] = {
+            subject: existing.subject,
+            body: cleanLegacyHtml(existing.body),
+          };
+        }
+      }
+      return updated;
+    });
+  }, [locale, templates, templateConfigs]);
 
   const handleCopyTag = (tag: string) => {
     navigator.clipboard.writeText(tag);
@@ -92,10 +154,8 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
     <div className="space-y-8 max-w-5xl">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">Mail Templates</h1>
-          <p className="mt-1 text-xs text-slate-400">
-            Configure automated transactional email templates for booking requests and confirmations.
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-white">{t("title")}</h1>
+          <p className="mt-1 text-xs text-slate-400">{t("subtitle")}</p>
         </div>
 
         <button
@@ -109,7 +169,7 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
           title="Toggle dynamic placeholder tags"
         >
           <HelpCircle className="w-4 h-4 text-sky-400" />
-          <span>Placeholders</span>
+          <span>{t("placeholdersBtn")}</span>
           {showHelp ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
       </div>
@@ -122,17 +182,20 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
                 <HelpCircle className="w-4 h-4" />
               </span>
               <h2 className="text-xs font-bold uppercase tracking-wider text-sky-300">
-                Dynamic Placeholders (Click to copy)
+                {t("dynamicPlaceholdersTitle")}
               </h2>
             </div>
             <span className="text-[11px] text-slate-400">
-              Replaced automatically with live booking values on dispatch.
+              {t("dynamicPlaceholdersDesc")}
             </span>
           </div>
 
           <div className="flex flex-wrap gap-2">
             {MAIL_PLACEHOLDERS.map((p) => {
               const isCopied = copiedTag === p.tag;
+              const tooltipLabel = locale === "sv" ? p.label : p.tag.replace(/[{}]/g, "").replace(/_/g, " ");
+              const examplePrefix = locale === "sv" ? "t.ex." : "e.g.";
+
               return (
                 <button
                   key={p.tag}
@@ -143,7 +206,7 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
                       ? "border-emerald-500 bg-emerald-950/40 text-emerald-300"
                       : "border-slate-700 bg-slate-900/80 text-sky-300 hover:border-sky-500 hover:bg-slate-800"
                   }`}
-                  title={`${p.label} (e.g. ${p.example})`}
+                  title={`${tooltipLabel} (${examplePrefix} ${p.example})`}
                 >
                   <span>{p.tag}</span>
                   {isCopied ? (
@@ -160,7 +223,7 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
 
       <div className="space-y-6">
         {templateConfigs.map((cfg) => {
-          const state = formState[cfg.type];
+          const state = formState[cfg.type] || { subject: cfg.defaultSubject, body: cfg.defaultBody };
           const isSaving = savingType === cfg.type;
           const isSuccess = saveSuccess === cfg.type;
 
@@ -193,13 +256,13 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
                   ) : (
                     <Save className="w-3.5 h-3.5" />
                   )}
-                  <span>{isSuccess ? "Saved!" : "Save Template"}</span>
+                  <span>{isSuccess ? tCommon("saved") : t("saveTemplate")}</span>
                 </button>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Subject Line
+                  {t("subject")}
                 </label>
                 <input
                   type="text"
@@ -216,10 +279,10 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
 
               <div>
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                  Message Body (HTML & Text)
+                  {t("body")}
                 </label>
                 <textarea
-                  rows={6}
+                  rows={7}
                   value={state.body}
                   onChange={(e) =>
                     setFormState((prev) => ({
@@ -227,7 +290,7 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
                       [cfg.type]: { ...state, body: e.target.value },
                     }))
                   }
-                  className="w-full font-mono rounded-xl border border-slate-700 bg-slate-950 p-3 text-xs text-slate-200 focus:outline-none focus:border-sky-500 leading-relaxed"
+                  className="w-full font-sans rounded-xl border border-slate-700 bg-slate-950 p-3 text-xs text-slate-200 focus:outline-none focus:border-sky-500 leading-relaxed"
                 />
               </div>
             </div>
@@ -237,3 +300,4 @@ export function MailTemplatesView({ templates, onSaveTemplate }: MailTemplatesVi
     </div>
   );
 }
+
