@@ -453,7 +453,7 @@ export function LandlordsView({
             )}
 
             {/* Modal Form */}
-            <form onSubmit={handleSave} className="space-y-4 text-xs">
+            <form onSubmit={handleSave} autoComplete="off" className="space-y-4 text-xs">
               {/* Names */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -463,9 +463,10 @@ export function LandlordsView({
                   <input
                     type="text"
                     required
+                    autoComplete="off"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="e.g. Jan"
+                    placeholder={t("firstNamePlaceholder")}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
@@ -476,9 +477,10 @@ export function LandlordsView({
                   <input
                     type="text"
                     required
+                    autoComplete="off"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    placeholder="e.g. Ullberg"
+                    placeholder={t("lastNamePlaceholder")}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
@@ -491,9 +493,10 @@ export function LandlordsView({
                 </label>
                 <input
                   type="text"
+                  autoComplete="off"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Street address or property name (e.g. Lullyhill)"
+                  placeholder={t("addressPlaceholder")}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                 />
               </div>
@@ -506,9 +509,10 @@ export function LandlordsView({
                   </label>
                   <input
                     type="text"
+                    autoComplete="off"
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder="e.g. 621 41"
+                    placeholder={t("postalCodePlaceholder")}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
@@ -518,9 +522,10 @@ export function LandlordsView({
                   </label>
                   <input
                     type="text"
+                    autoComplete="off"
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
-                    placeholder="e.g. VISBY"
+                    placeholder={t("cityPlaceholder")}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
@@ -535,9 +540,10 @@ export function LandlordsView({
                   <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="email"
+                    autoComplete="off"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. jan.ullberg@lullyhill.se"
+                    placeholder={t("emailPlaceholder")}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                   />
                 </div>
@@ -552,10 +558,11 @@ export function LandlordsView({
                   <div className="relative">
                     <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
-                      type="text"
+                      type="tel"
+                      autoComplete="off"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="e.g. 0498-21 10 87"
+                      placeholder={t("phonePlaceholder")}
                       className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                     />
                   </div>
@@ -568,10 +575,11 @@ export function LandlordsView({
                   <div className="relative">
                     <Smartphone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
-                      type="text"
+                      type="tel"
+                      autoComplete="off"
                       value={mobile}
                       onChange={(e) => setMobile(e.target.value)}
-                      placeholder="e.g. 070-620 96 11"
+                      placeholder={t("mobilePlaceholder")}
                       className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                     />
                   </div>
@@ -640,9 +648,10 @@ export function LandlordsView({
                       </label>
                       <input
                         type="text"
+                        autoComplete="off"
                         value={customAccountType}
                         onChange={(e) => setCustomAccountType(e.target.value)}
-                        placeholder="e.g. Länsförsäkringar"
+                        placeholder={t("bankNamePlaceholder")}
                         className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
                       />
                     </div>
@@ -654,9 +663,10 @@ export function LandlordsView({
                     </label>
                     <input
                       type="text"
+                      autoComplete="off"
                       value={accountNumber}
                       onChange={(e) => setAccountNumber(e.target.value)}
-                      placeholder="e.g. 8480-6, 123.654.789-0 or 5402-6018"
+                      placeholder={t("accountNumberPlaceholder")}
                       className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono"
                     />
                   </div>
