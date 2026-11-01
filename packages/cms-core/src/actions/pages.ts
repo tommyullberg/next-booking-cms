@@ -522,6 +522,7 @@ export async function loadAdminInitialData() {
   const { getBookingObjectsAction } = await import("./booking-objects");
   const { getBookingOptionalsAction } = await import("./optionals");
   const { getAmenitiesAction } = await import("./amenities");
+  const { getCurrentAdminLocaleAction } = await import("./administrators");
 
   const [
     pages,
@@ -536,6 +537,7 @@ export async function loadAdminInitialData() {
     bookingObjects,
     optionals,
     amenities,
+    adminLocale,
   ] = await Promise.all([
     getPagesAction().catch((err) => {
       console.error("[cms-core] getPagesAction failed:", err);
@@ -588,6 +590,7 @@ export async function loadAdminInitialData() {
       console.error("[cms-core] getAmenitiesAction failed:", err);
       return [];
     }),
+    getCurrentAdminLocaleAction().catch(() => "en" as const),
   ]);
 
   return {
@@ -603,5 +606,6 @@ export async function loadAdminInitialData() {
     bookingObjects,
     optionals,
     amenities,
+    adminLocale,
   };
 }

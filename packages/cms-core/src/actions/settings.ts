@@ -1,3 +1,5 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/auth-options";
 import { prisma } from "../db";
 import { DEFAULT_ACTIVE_LANGUAGES } from "../constants/languages";
 import {
@@ -116,6 +118,42 @@ export async function saveCmsSettingsAction(
         setting_value: adminLangValue,
       },
     });
+
+    try {
+      const session = await getServerSession(authOptions);
+      if (session?.user) {
+        const userEmail = session.user.email ? session.user.email.toLowerCase().trim() : undefined;
+        const userId = session.user.id;
+        const existing = await prisma.administrator.findFirst({
+          where: {
+            OR: [
+              ...(userId ? [{ id: userId }] : []),
+              ...(userEmail ? [{ email: userEmail }] : []),
+            ],
+          },
+        });
+        if (existing) {
+          await prisma.administrator.update({
+            where: { id: existing.id },
+            data: { locale: adminLangValue },
+          });
+        }
+      }
+    } catch {
+      // Ignore session errors
+    }
+
+    try {
+      const { cookies } = await import("next/headers");
+      const cookieStore = await cookies();
+      cookieStore.set("cms_admin_locale", adminLangValue, {
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+        sameSite: "lax",
+      });
+    } catch {
+      // Ignore outside request context
+    }
   }
 
   if (data.gallerySettings) {

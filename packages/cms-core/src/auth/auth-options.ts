@@ -13,6 +13,7 @@ declare module "next-auth" {
       mobile?: string | null;
       firstName?: string | null;
       lastName?: string | null;
+      locale: string;
     } & DefaultSession["user"];
   }
 
@@ -24,6 +25,7 @@ declare module "next-auth" {
     mobile?: string | null;
     firstName?: string | null;
     lastName?: string | null;
+    locale?: string;
   }
 }
 
@@ -34,6 +36,7 @@ declare module "next-auth/jwt" {
     mobile?: string | null;
     firstName?: string | null;
     lastName?: string | null;
+    locale?: string;
   }
 }
 
@@ -78,6 +81,7 @@ export const authOptions: AuthOptions = {
                 firstName: admin.first_name,
                 lastName: admin.last_name,
                 mobile: admin.mobile,
+                locale: admin.locale || "en",
               };
             }
           }
@@ -99,6 +103,7 @@ export const authOptions: AuthOptions = {
             firstName: "Super",
             lastName: "Admin",
             mobile: "+46700000000",
+            locale: "en",
           };
         }
 
@@ -107,13 +112,17 @@ export const authOptions: AuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
         token.firstName = user.firstName;
         token.lastName = user.lastName;
         token.mobile = user.mobile;
+        token.locale = (user as any).locale || "en";
+      }
+      if (trigger === "update" && session?.locale) {
+        token.locale = session.locale;
       }
       return token;
     },
@@ -124,6 +133,7 @@ export const authOptions: AuthOptions = {
         session.user.firstName = token.firstName as string | null;
         session.user.lastName = token.lastName as string | null;
         session.user.mobile = token.mobile as string | null;
+        session.user.locale = (token.locale as string) || "en";
       }
       return session;
     },

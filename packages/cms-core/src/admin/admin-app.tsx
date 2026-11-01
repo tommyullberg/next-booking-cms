@@ -30,6 +30,8 @@ import {
   GallerySettings,
 } from "../types/settings";
 import { AdminLanguage, DEFAULT_ACTIVE_LANGUAGES, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
+import { AdminIntlProvider } from "../i18n";
+import { useEditorStore } from "../state/editor-store";
 
 export interface AdminAppProps {
   initialPages?: PageListItem[];
@@ -44,6 +46,7 @@ export interface AdminAppProps {
   initialMediaFolders?: MediaFolderItem[];
   initialMailTemplates?: MailTemplateItem[];
   initialSettings?: Partial<CmsSettingsData>;
+  initialAdminLanguage?: AdminLanguage;
   availableTemplates?: CMSTemplateOption[];
   adminName?: string;
   frontendUrl?: string;
@@ -80,6 +83,7 @@ export function AdminApp({
   initialMediaFolders = [],
   initialMailTemplates = [],
   initialSettings,
+  initialAdminLanguage,
   availableTemplates,
   adminName = "Super Admin",
   frontendUrl = "/",
@@ -120,9 +124,28 @@ export function AdminApp({
   const [activeLanguages, setActiveLanguages] = useState<string[]>(
     initialSettings?.activeLanguages || [...DEFAULT_ACTIVE_LANGUAGES]
   );
-  const [adminLanguage, setAdminLanguage] = useState<AdminLanguage>(
-    initialSettings?.adminLanguage || DEFAULT_ADMIN_LANGUAGE
-  );
+  const [adminLanguage, setAdminLanguage] = useState<AdminLanguage>(() => {
+    if (initialAdminLanguage === "sv" || initialAdminLanguage === "en") {
+      return initialAdminLanguage;
+    }
+    if (initialSettings?.adminLanguage === "sv" || initialSettings?.adminLanguage === "en") {
+      return initialSettings.adminLanguage;
+    }
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("cms_admin_locale");
+      if (stored === "sv" || stored === "en") return stored as AdminLanguage;
+      const match = document.cookie.match(/(?:^|;\s*)cms_admin_locale=(sv|en)(?:;|$)/);
+      if (match && (match[1] === "sv" || match[1] === "en")) return match[1] as AdminLanguage;
+    }
+    return DEFAULT_ADMIN_LANGUAGE;
+  });
+
+  useEffect(() => {
+    if (initialAdminLanguage && (initialAdminLanguage === "sv" || initialAdminLanguage === "en")) {
+      setAdminLanguage(initialAdminLanguage);
+      useEditorStore.getState().setAdminLanguage(initialAdminLanguage);
+    }
+  }, [initialAdminLanguage]);
   const [gallerySettings, setGallerySettings] = useState<GallerySettings>(
     initialSettings?.gallerySettings || { ...DEFAULT_GALLERY_SETTINGS }
   );
@@ -161,8 +184,12 @@ export function AdminApp({
               if (Array.isArray(data.settings.activeLanguages)) {
                 setActiveLanguages(data.settings.activeLanguages);
               }
-              if (data.settings.adminLanguage === "sv" || data.settings.adminLanguage === "en") {
+              if (data.adminLocale === "sv" || data.adminLocale === "en") {
+                setAdminLanguage(data.adminLocale);
+                useEditorStore.getState().setAdminLanguage(data.adminLocale);
+              } else if (data.settings.adminLanguage === "sv" || data.settings.adminLanguage === "en") {
                 setAdminLanguage(data.settings.adminLanguage);
+                useEditorStore.getState().setAdminLanguage(data.settings.adminLanguage);
               }
               if (data.settings.gallerySettings) {
                 setGallerySettings(data.settings.gallerySettings);
@@ -183,6 +210,7 @@ export function AdminApp({
             }
             if (data.adminLanguage === "sv" || data.adminLanguage === "en") {
               setAdminLanguage(data.adminLanguage);
+              useEditorStore.getState().setAdminLanguage(data.adminLanguage);
             }
             if (data.gallerySettings) {
               setGallerySettings(data.gallerySettings);
@@ -753,17 +781,24 @@ export function AdminApp({
   };
 
   return (
-    <AdminThemeProvider>
-      <AdminLayout
-        adminLanguage={adminLanguage}
-        currentTab={currentTab}
-        onTabChange={setCurrentTab}
-        adminName={adminName}
-        frontendUrl={frontendUrl}
-        isOverlay={isOverlay}
-        onHideAdmin={onHideAdmin}
-        onLogout={() => signOut({ callbackUrl: "/admin/login" })}
-      >
+    <AdminIntlProvider
+      initialLocale={adminLanguage}
+      onLocaleChange={(newLoc) => {
+        setAdminLanguage(newLoc);
+        useEditorStore.getState().setAdminLanguage(newLoc);
+      }}
+    >
+      <AdminThemeProvider>
+        <AdminLayout
+          adminLanguage={adminLanguage}
+          currentTab={currentTab}
+          onTabChange={setCurrentTab}
+          adminName={adminName}
+          frontendUrl={frontendUrl}
+          isOverlay={isOverlay}
+          onHideAdmin={onHideAdmin}
+          onLogout={() => signOut({ callbackUrl: "/admin/login" })}
+        >
         {currentTab === "dashboard" && (
           <DashboardView
             totalPages={pages.length}
@@ -969,6 +1004,11 @@ export function AdminApp({
               setActiveLanguages(newSettings.activeLanguages);
               if (newSettings.adminLanguage) {
                 setAdminLanguage(newSettings.adminLanguage);
+                useEditorStore.getState().setAdminLanguage(newSettings.adminLanguage);
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("cms_admin_locale", newSettings.adminLanguage);
+                  document.cookie = `cms_admin_locale=${newSettings.adminLanguage}; path=/; max-age=31536000; SameSite=Lax`;
+                }
               }
               if (newSettings.gallerySettings) {
                 setGallerySettings(newSettings.gallerySettings);
@@ -986,10 +1026,18 @@ export function AdminApp({
                   }
                   if (saved.adminLanguage === "sv" || saved.adminLanguage === "en") {
                     setAdminLanguage(saved.adminLanguage);
+                    useEditorStore.getState().setAdminLanguage(saved.adminLanguage);
                   }
                   if (saved.gallerySettings) {
                     setGallerySettings(saved.gallerySettings);
                   }
+                }
+                if (newSettings.adminLanguage) {
+                  await fetch("/api/cms/administrators/locale", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ locale: newSettings.adminLanguage }),
+                  });
                 }
               } catch {
                 // Optimistic state kept
@@ -1224,5 +1272,6 @@ export function AdminApp({
         )}
       </AdminLayout>
     </AdminThemeProvider>
+  </AdminIntlProvider>
   );
 }

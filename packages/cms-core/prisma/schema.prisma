@@ -46,6 +46,7 @@ model Administrator {
   mobile        String?   @map("mobile")
   password_hash String    @map("password_hash")
   role          AdminRole @default(ADMIN) @map("role")
+  locale        String    @default("en") @map("locale")
   created_at    DateTime  @default(now()) @map("created_at")
   updated_at    DateTime  @updatedAt @map("updated_at")
 

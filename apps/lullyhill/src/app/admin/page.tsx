@@ -26,7 +26,15 @@ export default async function AdminPage() {
     bookingObjects,
     optionals,
     amenities,
+    adminLocale,
   } = await loadAdminInitialData();
+
+  const effectiveLocale =
+    adminLocale === "sv" || adminLocale === "en"
+      ? adminLocale
+      : (session.user as any)?.locale === "sv" || (session.user as any)?.locale === "en"
+      ? (session.user as any).locale
+      : settings?.adminLanguage || "en";
 
   return (
     <AdminApp
@@ -42,6 +50,7 @@ export default async function AdminPage() {
       initialMediaFolders={mediaFolders}
       initialMailTemplates={mailTemplates as any}
       initialSettings={settings}
+      initialAdminLanguage={effectiveLocale}
       availableTemplates={CMS_PAGE_TEMPLATE_OPTIONS}
       adminName={session.user.name || session.user.email || "Admin"}
       frontendUrl="/"
