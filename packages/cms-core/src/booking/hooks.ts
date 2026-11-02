@@ -17,6 +17,20 @@ export function useBookingsQuery(objectId?: string) {
   });
 }
 
+export function usePricePeriodsQuery(objectId?: string) {
+  return useQuery<any[]>({
+    queryKey: ["price-periods", objectId || "all"],
+    queryFn: async () => {
+      const url = objectId
+        ? `/api/cms/price-periods?objectId=${objectId}`
+        : `/api/cms/price-periods`;
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      return res.json();
+    },
+  });
+}
+
 export function useAvailabilitySearchQuery(params: {
   startDate: string;
   endDate: string;
