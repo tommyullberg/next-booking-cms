@@ -16,10 +16,25 @@ export const DEFAULT_GALLERY_SETTINGS: GallerySettings = {
   showThumbnails: true,
 };
 
+export type DefaultTurnoverDay = "SUNDAY" | "SATURDAY";
+
+export interface BookingSettings {
+  defaultTurnoverDay: DefaultTurnoverDay;
+  checkInTime: string;
+  checkOutTime: string;
+}
+
+export const DEFAULT_BOOKING_SETTINGS: BookingSettings = {
+  defaultTurnoverDay: "SUNDAY",
+  checkInTime: "15:00",
+  checkOutTime: "11:00",
+};
+
 export interface CmsSettingsData {
   activeLanguages: string[];
   adminLanguage: AdminLanguage;
   gallerySettings: GallerySettings;
+  bookingSettings?: BookingSettings;
 }
 
 export type { AdminLanguage, SupportedLocale };

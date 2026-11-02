@@ -21,6 +21,7 @@ import { NavigationMenusView } from "./views/navigation-menus-view";
 import { MediaView, MediaItem, MediaFolderItem } from "./views/media-view";
 import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view";
 import { SettingsView } from "./views/settings-view";
+import { BookingSettingsView } from "./views/booking-settings-view";
 import { CMSTemplateOption } from "../templates/types";
 import { AmenityItem } from "../booking/types";
 import { AdminTab } from "../types/admin";
@@ -28,6 +29,8 @@ import {
   CmsSettingsData,
   DEFAULT_GALLERY_SETTINGS,
   GallerySettings,
+  BookingSettings,
+  DEFAULT_BOOKING_SETTINGS,
 } from "../types/settings";
 import { AdminLanguage, DEFAULT_ACTIVE_LANGUAGES, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
 import { AdminIntlProvider } from "../i18n";
@@ -149,6 +152,9 @@ export function AdminApp({
   const [gallerySettings, setGallerySettings] = useState<GallerySettings>(
     initialSettings?.gallerySettings || { ...DEFAULT_GALLERY_SETTINGS }
   );
+  const [bookingSettings, setBookingSettings] = useState<BookingSettings>(
+    initialSettings?.bookingSettings || { ...DEFAULT_BOOKING_SETTINGS }
+  );
   const [editingPage, setEditingPage] = useState<PageEditorData | null>(null);
 
   useEffect(() => {
@@ -194,6 +200,9 @@ export function AdminApp({
               if (data.settings.gallerySettings) {
                 setGallerySettings(data.settings.gallerySettings);
               }
+              if (data.settings.bookingSettings) {
+                setBookingSettings(data.settings.bookingSettings);
+              }
             }
           }
         })
@@ -214,6 +223,9 @@ export function AdminApp({
             }
             if (data.gallerySettings) {
               setGallerySettings(data.gallerySettings);
+            }
+            if (data.bookingSettings) {
+              setBookingSettings(data.bookingSettings);
             }
           }
         })
@@ -1266,6 +1278,28 @@ export function AdminApp({
                   if (Array.isArray(objData)) setBookingObjects(objData);
                 }
                 return payload;
+              }
+            }}
+          />
+        )}
+
+        {currentTab === "booking-settings" && (
+          <BookingSettingsView
+            bookingSettings={bookingSettings}
+            onSaveSettings={async (newSettings) => {
+              setBookingSettings(newSettings.bookingSettings);
+              const res = await fetch("/api/cms/settings", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(newSettings),
+              });
+              if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err?.error || "Kunde inte spara inställningar");
+              }
+              const saved = await res.json();
+              if (saved?.bookingSettings) {
+                setBookingSettings(saved.bookingSettings);
               }
             }}
           />

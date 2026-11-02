@@ -2,6 +2,24 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BookingItem, AvailabilitySearchResult, CreateBookingRequest } from "./types";
+import { BookingSettings, DEFAULT_BOOKING_SETTINGS } from "../types/settings";
+
+export function useBookingSettingsQuery() {
+  return useQuery<BookingSettings>({
+    queryKey: ["booking-settings"],
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/cms/settings");
+        if (!res.ok) return DEFAULT_BOOKING_SETTINGS;
+        const data = await res.json();
+        return data?.bookingSettings || DEFAULT_BOOKING_SETTINGS;
+      } catch {
+        return DEFAULT_BOOKING_SETTINGS;
+      }
+    },
+    staleTime: 60 * 1000,
+  });
+}
 
 export function useBookingsQuery(objectId?: string) {
   return useQuery<BookingItem[]>({

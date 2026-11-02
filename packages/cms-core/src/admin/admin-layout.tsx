@@ -24,6 +24,7 @@ import {
   UserCheck,
   Sparkles,
   Coins,
+  Sliders,
 } from "lucide-react";
 
 import { AdminTab } from "../types/admin";
@@ -83,6 +84,7 @@ export function AdminLayout({
     { id: "optionals", label: tNav("optionals"), icon: <Sparkles className='w-4 h-4' /> },
     { id: "amenities", label: tNav("amenities"), icon: <Tag className='w-4 h-4' /> },
     { id: "mail-templates", label: tNav("mailTemplates"), icon: <Mail className='w-4 h-4' /> },
+    { id: "booking-settings", label: tNav("bookingSettings"), icon: <Sliders className='w-4 h-4' /> },
   ];
 
   const initials =

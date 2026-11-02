@@ -16,7 +16,8 @@ export type AdminTab =
   | "landlords"
   | "optionals"
   | "amenities"
-  | "mail-templates";
+  | "mail-templates"
+  | "booking-settings";
 
 export type PageStatus = "NEW" | "PUBLISHED" | "ARCHIVED";
 

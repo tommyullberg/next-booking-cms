@@ -6,16 +6,23 @@ import {
   CmsSettingsData,
   DEFAULT_GALLERY_SETTINGS,
   GallerySettings,
+  BookingSettings,
+  DEFAULT_BOOKING_SETTINGS,
 } from "../types/settings";
 
-export type { CmsSettingsData, GallerySettings };
+export type { CmsSettingsData, GallerySettings, BookingSettings };
 
 export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
   try {
     const rows = await prisma.setting.findMany({
       where: {
         setting_key: {
-          in: ["active_languages", "admin_language", "gallery_settings"],
+          in: [
+            "active_languages",
+            "admin_language",
+            "gallery_settings",
+            "booking_settings",
+          ],
         },
       },
     });
@@ -23,6 +30,7 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
     const langRow = rows.find((r) => r.setting_key === "active_languages");
     const adminLangRow = rows.find((r) => r.setting_key === "admin_language");
     const galleryRow = rows.find((r) => r.setting_key === "gallery_settings");
+    const bookingRow = rows.find((r) => r.setting_key === "booking_settings");
 
     let activeLanguages: string[] = [...DEFAULT_ACTIVE_LANGUAGES];
     if (langRow?.setting_value) {
@@ -77,16 +85,41 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
       }
     }
 
+    let bookingSettings: BookingSettings = { ...DEFAULT_BOOKING_SETTINGS };
+    if (bookingRow?.setting_value) {
+      try {
+        const parsed = JSON.parse(bookingRow.setting_value);
+        if (parsed && typeof parsed === "object") {
+          bookingSettings = {
+            defaultTurnoverDay:
+              parsed.defaultTurnoverDay === "SATURDAY" ? "SATURDAY" : "SUNDAY",
+            checkInTime:
+              typeof parsed.checkInTime === "string" && parsed.checkInTime.trim()
+                ? parsed.checkInTime.trim()
+                : "15:00",
+            checkOutTime:
+              typeof parsed.checkOutTime === "string" && parsed.checkOutTime.trim()
+                ? parsed.checkOutTime.trim()
+                : "11:00",
+          };
+        }
+      } catch {
+        // Fallback to default
+      }
+    }
+
     return {
       activeLanguages,
       adminLanguage,
       gallerySettings,
+      bookingSettings,
     };
   } catch {
     return {
       activeLanguages: [...DEFAULT_ACTIVE_LANGUAGES],
       adminLanguage: "en",
       gallerySettings: { ...DEFAULT_GALLERY_SETTINGS },
+      bookingSettings: { ...DEFAULT_BOOKING_SETTINGS },
     };
   }
 }
@@ -163,6 +196,17 @@ export async function saveCmsSettingsAction(
       create: {
         setting_key: "gallery_settings",
         setting_value: JSON.stringify(data.gallerySettings),
+      },
+    });
+  }
+
+  if (data.bookingSettings) {
+    await prisma.setting.upsert({
+      where: { setting_key: "booking_settings" },
+      update: { setting_value: JSON.stringify(data.bookingSettings) },
+      create: {
+        setting_key: "booking_settings",
+        setting_value: JSON.stringify(data.bookingSettings),
       },
     });
   }

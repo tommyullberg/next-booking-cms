@@ -73,6 +73,7 @@
     "menus": "Navigationsmenyer",
     "media": "Media & Filer",
     "mailTemplates": "E-postmallar",
+    "bookingSettings": "Inställningar",
     "settings": "Inställningar",
     "bookingManagement": "Bokningshantering",
     "cmsManagement": "Webbplatsinnehåll",
@@ -213,7 +214,7 @@
     "colPrice": "Totalpris",
     "colStatus": "Status",
     "colAction": "Åtgärd",
-    "checkInOutTimes": "Incheckning från 15:00 • Utcheckning senast 11:00",
+    "checkInOutTimes": "Incheckning från {checkIn} • Utcheckning senast {checkOut}",
     "detailsBtn": "Detaljer",
     "modalReservationDetails": "Bokningsdetaljer",
     "unitLabel": "Boendeenhet",
@@ -1184,5 +1185,27 @@
       "image": "bild",
       "images": "bilder"
     }
+  },
+  "bookingSettings": {
+    "title": "Bokningsinställningar",
+    "subtitle": "Konfigurera default bytesdag för veckouthyrning samt generella in- och utcheckningstider.",
+    "turnoverDaySectionTitle": "Default bytesdag för veckouthyrning",
+    "turnoverDaySectionDesc": "Styr vilken veckodag som föreslås och tillämpas som standard vid veckouthyrning (helveckor).",
+    "sundayTitle": "Söndag",
+    "sundayBadge": "Rekommenderat",
+    "sundayDesc": "Standardbytesdag som är fullt kompatibel med delveckor (torsdag–söndag och söndag–torsdag).",
+    "saturdayTitle": "Lördag",
+    "saturdayBadge": "Klassisk",
+    "saturdayDesc": "Traditionell lördag-till-lördag veckouthyrning (används ofta under högsäsonger).",
+    "checkTimesSectionTitle": "In- & Utcheckningstider",
+    "checkTimesSectionDesc": "Dessa tider visas på hela webbplatsen, i bokningskalendern, bokningsbekräftelser och i gästinformation.",
+    "checkInTimeLabel": "Incheckningstid",
+    "checkInTimeHelp": "Tidpunkt från vilken gästen har tillgång till boendet på ankomstdagen (standard 15:00).",
+    "checkOutTimeLabel": "Utcheckningstid",
+    "checkOutTimeHelp": "Senaste tidpunkt gästen måste lämna boendet på avresedagen (standard 11:00).",
+    "saveBtn": "Spara inställningar",
+    "saving": "Sparar...",
+    "saveSuccess": "Inställningarna har sparats!",
+    "saveError": "Kunde inte spara inställningarna."
   }
 }

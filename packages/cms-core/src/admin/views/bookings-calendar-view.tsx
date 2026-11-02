@@ -42,6 +42,7 @@ import {
 } from "lucide-react";
 import { BookingItem, BookingObjectDetails, BOOKING_STATUSES, BookingStatusType } from "../../booking/types";
 import { BookingDetailsModal } from "../../booking/booking-details-modal";
+import { useBookingSettingsQuery } from "../../booking/hooks";
 import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "../../utils/weeks";
 import { ModalPortal } from "../../components/ui/modal-portal";
 
@@ -181,6 +182,9 @@ type SortDirection = "asc" | "desc";
 export function BookingsCalendarView({ objects = [], initialFilterObjectId = null }: BookingsCalendarViewProps) {
   const t = useTranslations("bookingsCalendar");
   const locale = useLocale();
+  const { data: bookingSettings } = useBookingSettingsQuery();
+  const checkInTime = bookingSettings?.checkInTime || "15:00";
+  const checkOutTime = bookingSettings?.checkOutTime || "11:00";
 
   const [bookings, setBookings] = useState<BookingItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -977,7 +981,9 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                           <div className='font-mono text-xs text-white'>
                             {b.startDate} → {b.endDate}
                           </div>
-                          <div className='text-[10px] text-slate-500 mt-0.5'>{t("checkInOutTimes")}</div>
+                          <div className='text-[10px] text-slate-500 mt-0.5'>
+                            {t("checkInOutTimes", { checkIn: checkInTime, checkOut: checkOutTime })}
+                          </div>
                         </td>
 
                         {/* Week column (between Stay dates and Nights) */}

@@ -3,7 +3,12 @@
 import React, { useState, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useBookingsQuery, useCreateBookingMutation, usePricePeriodsQuery } from "./hooks";
+import {
+  useBookingsQuery,
+  useCreateBookingMutation,
+  usePricePeriodsQuery,
+  useBookingSettingsQuery,
+} from "./hooks";
 import { BookingDetailsModal } from "./booking-details-modal";
 import { BookingItem } from "./types";
 import { getISOWeekNumber, getMondayOfISOWeek, getSundayOfISOWeek } from "../utils/weeks";
@@ -78,6 +83,9 @@ export function BookingCalendar({
 
   const { data: bookings = [], isLoading: isBookingsLoading } = useBookingsQuery(objectId);
   const { data: pricePeriods = [], isLoading: isPricePeriodsLoading } = usePricePeriodsQuery(objectId);
+  const { data: bookingSettings } = useBookingSettingsQuery();
+  const checkInTime = bookingSettings?.checkInTime || "15:00";
+  const checkOutTime = bookingSettings?.checkOutTime || "11:00";
   const isCalendarLoading = isBookingsLoading || isPricePeriodsLoading;
   const createMutation = useCreateBookingMutation();
 
@@ -800,7 +808,7 @@ export function BookingCalendar({
         )}
 
         <p className='text-[11px] text-neutral-600 dark:text-slate-400 leading-normal'>
-          Incheckning sker kl 15:00 och utcheckning kl 11:00. Bytesdagar visas som delade dagar där båda sällskapen kan anlända och avresa samma dag. Perioder utanför aktiv prissäsong samt spärrade datum visas som Ej uthyrning och går ej att boka.
+          Incheckning sker kl {checkInTime} och utcheckning kl {checkOutTime}. Bytesdagar visas som delade dagar där båda sällskapen kan anlända och avresa samma dag. Perioder utanför aktiv prissäsong samt spärrade datum visas som Ej uthyrning och går ej att boka.
         </p>
       </div>
 

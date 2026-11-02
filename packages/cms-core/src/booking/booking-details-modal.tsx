@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { BookingItem, BOOKING_STATUSES, BookingStatusType } from "./types";
 import { ModalPortal } from "../components/ui/modal-portal";
+import { useBookingSettingsQuery } from "./hooks";
 
 export interface BookingDetailsModalProps {
   booking: BookingItem | null;
@@ -63,6 +64,10 @@ export function BookingDetailsModal({
   const [mode, setMode] = useState<"view" | "edit">(
     isImported ? "view" : initialMode
   );
+
+  const { data: bookingSettings } = useBookingSettingsQuery();
+  const checkInTime = bookingSettings?.checkInTime || "15:00";
+  const checkOutTime = bookingSettings?.checkOutTime || "11:00";
   const [editForm, setEditForm] = useState<Partial<BookingItem>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -478,11 +483,11 @@ export function BookingDetailsModal({
                         </div>
                         <div className='flex items-center justify-between py-1 border-b border-slate-800/60'>
                           <span className='text-slate-400'>Ankomst (incheckning):</span>
-                          <span className='font-semibold text-slate-200'>{booking.startDate} (kl 15:00)</span>
+                          <span className='font-semibold text-slate-200'>{booking.startDate} (kl {checkInTime})</span>
                         </div>
                         <div className='flex items-center justify-between py-1 border-b border-slate-800/60'>
                           <span className='text-slate-400'>Avresa (utcheckning):</span>
-                          <span className='font-semibold text-slate-200'>{booking.endDate} (kl 11:00)</span>
+                          <span className='font-semibold text-slate-200'>{booking.endDate} (kl {checkOutTime})</span>
                         </div>
                         <div className='flex items-center justify-between py-1 border-b border-slate-800/60'>
                           <span className='text-slate-400'>Vistelselängd:</span>

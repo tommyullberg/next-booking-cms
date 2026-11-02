@@ -73,6 +73,7 @@
     "menus": "Navigation Menus",
     "media": "Media & Files",
     "mailTemplates": "Mail Templates",
+    "bookingSettings": "Settings",
     "settings": "Settings",
     "bookingManagement": "Booking Management",
     "cmsManagement": "CMS Content",
@@ -213,7 +214,7 @@
     "colPrice": "Total Price",
     "colStatus": "Status",
     "colAction": "Action",
-    "checkInOutTimes": "Check-in from 15:00 • Check-out until 11:00",
+    "checkInOutTimes": "Check-in from {checkIn} • Check-out until {checkOut}",
     "detailsBtn": "Details",
     "modalReservationDetails": "Reservation Details",
     "unitLabel": "Accommodation Unit",
@@ -1184,5 +1185,27 @@
       "image": "image",
       "images": "images"
     }
+  },
+  "bookingSettings": {
+    "title": "Booking Settings",
+    "subtitle": "Configure default turnover day for weekly rentals and general check-in and check-out times.",
+    "turnoverDaySectionTitle": "Default Weekly Turnover Day",
+    "turnoverDaySectionDesc": "Controls which day of the week is suggested and used as default for full week rentals.",
+    "sundayTitle": "Sunday",
+    "sundayBadge": "Recommended",
+    "sundayDesc": "Standard turnover day fully compatible with mid-week / weekend splits (Thu–Sun and Sun–Thu).",
+    "saturdayTitle": "Saturday",
+    "saturdayBadge": "Classic",
+    "saturdayDesc": "Traditional Saturday-to-Saturday weekly rental (frequently used during peak summer seasons).",
+    "checkTimesSectionTitle": "Check-in & Check-out Times",
+    "checkTimesSectionDesc": "These times are displayed across the entire site, including booking calendars, confirmations, and guest details.",
+    "checkInTimeLabel": "Check-in Time",
+    "checkInTimeHelp": "Earliest time the guest can arrive on arrival day (default 15:00).",
+    "checkOutTimeLabel": "Check-out Time",
+    "checkOutTimeHelp": "Latest time the guest must depart on departure day (default 11:00).",
+    "saveBtn": "Save Settings",
+    "saving": "Saving...",
+    "saveSuccess": "Settings saved successfully!",
+    "saveError": "Could not save settings."
   }
 }
