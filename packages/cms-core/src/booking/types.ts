@@ -1,18 +1,197 @@
+export type BookingStatusType =
+  | "PENDING"
+  | "APPROVED"
+  | "BOOKED"
+  | "CONFIRMED"
+  | "COMPLETED"
+  | "CANCELLED"
+  | "REJECTED"
+  | "IMPORTED";
+
+export interface BookingStatusOption {
+  id: BookingStatusType;
+  label: {
+    sv: string;
+    en: string;
+  };
+  description: {
+    sv: string;
+    en: string;
+  };
+  color: {
+    badge: string;
+    bg: string;
+    border: string;
+    text: string;
+    active: string;
+  };
+}
+
+export const BOOKING_STATUSES: BookingStatusOption[] = [
+  {
+    id: "PENDING",
+    label: {
+      sv: "Förfrågan",
+      en: "Inquiry",
+    },
+    description: {
+      sv: "Preliminär eller öppen förfrågan som väntar på hantering",
+      en: "Preliminary or open inquiry awaiting review",
+    },
+    color: {
+      badge: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+      bg: "bg-amber-950/20",
+      border: "border-amber-600/40",
+      text: "text-amber-300",
+      active: "bg-amber-600 text-white border-amber-500 shadow-md shadow-amber-600/30",
+    },
+  },
+  {
+    id: "APPROVED",
+    label: {
+      sv: "Godkänd",
+      en: "Approved",
+    },
+    description: {
+      sv: "Godkänd av hyresvärden, väntar på avtal",
+      en: "Approved by host, awaiting agreement",
+    },
+    color: {
+      badge: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+      bg: "bg-sky-950/20",
+      border: "border-sky-600/40",
+      text: "text-sky-300",
+      active: "bg-sky-600 text-white border-sky-500 shadow-md shadow-sky-600/30",
+    },
+  },
+  {
+    id: "BOOKED",
+    label: {
+      sv: "Bokad",
+      en: "Booked",
+    },
+    description: {
+      sv: "Bekräftad bokning med överenskomna villkor",
+      en: "Confirmed booking with agreed terms",
+    },
+    color: {
+      badge: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+      bg: "bg-emerald-950/20",
+      border: "border-emerald-600/40",
+      text: "text-emerald-300",
+      active: "bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30",
+    },
+  },
+  {
+    id: "COMPLETED",
+    label: {
+      sv: "Genomförd",
+      en: "Completed",
+    },
+    description: {
+      sv: "Vistelsen är genomförd och avslutad",
+      en: "Stay completed and finished",
+    },
+    color: {
+      badge: "bg-teal-500/15 text-teal-300 border-teal-500/30",
+      bg: "bg-teal-950/20",
+      border: "border-teal-600/40",
+      text: "text-teal-300",
+      active: "bg-teal-600 text-white border-teal-500 shadow-md shadow-teal-600/30",
+    },
+  },
+  {
+    id: "CANCELLED",
+    label: {
+      sv: "Avbokad",
+      en: "Cancelled",
+    },
+    description: {
+      sv: "Avbokad av gäst eller värd",
+      en: "Cancelled by guest or host",
+    },
+    color: {
+      badge: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+      bg: "bg-rose-950/20",
+      border: "border-rose-600/40",
+      text: "text-rose-300",
+      active: "bg-rose-600 text-white border-rose-500 shadow-md shadow-rose-600/30",
+    },
+  },
+  {
+    id: "REJECTED",
+    label: {
+      sv: "Avvisad",
+      en: "Rejected",
+    },
+    description: {
+      sv: "Förfrågan avböjd",
+      en: "Inquiry rejected",
+    },
+    color: {
+      badge: "bg-slate-700 text-slate-300 border-slate-600",
+      bg: "bg-slate-900",
+      border: "border-slate-700",
+      text: "text-slate-300",
+      active: "bg-slate-700 text-white border-slate-500",
+    },
+  },
+  {
+    id: "IMPORTED",
+    label: {
+      sv: "Importerad (Booking.com)",
+      en: "Imported (Booking.com)",
+    },
+    description: {
+      sv: "Synkad från extern Booking.com/iCal-kalender",
+      en: "Synced from external Booking.com/iCal feed",
+    },
+    color: {
+      badge: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+      bg: "bg-indigo-950/20",
+      border: "border-indigo-600/40",
+      text: "text-indigo-300",
+      active: "bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30",
+    },
+  },
+];
+
 export interface BookingItem {
   id: string;
   objectId: string;
   objectName?: string;
   startDate: string;
   endDate: string;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "IMPORTED";
+  status: BookingStatusType;
   customerName?: string;
   customerEmail?: string;
   customerPhone?: string | null;
+  customerMobile?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  postalCode?: string | null;
+  city?: string | null;
+  country?: string | null;
   guestsCount?: number;
+  adultsCount?: number;
+  childrenCount?: number;
   petsCount?: number;
   price?: number | null;
+  depositAmount?: number | null;
+  depositDueDate?: string | null;
+  depositPaidAt?: string | null;
+  finalPaymentAmount?: number | null;
+  finalPaymentDueDate?: string | null;
+  finalPaymentPaidAt?: string | null;
+  contractNumber?: string | null;
+  contractSentAt?: string | null;
+  contractReceivedAt?: string | null;
+  customerNotes?: string | null;
+  adminNotes?: string | null;
+  isPreliminary?: boolean;
   icalSourceId?: string | null;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface BookingObjectDetails {
@@ -85,8 +264,18 @@ export interface CreateBookingRequest {
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
-  guestsCount: number;
-  petsCount: number;
+  customerMobile?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  postalCode?: string;
+  city?: string;
+  country?: string;
+  guestsCount?: number;
+  adultsCount?: number;
+  childrenCount?: number;
+  petsCount?: number;
+  customerNotes?: string;
+  isPreliminary?: boolean;
 }
 
 export interface BookingObjectTypeOption {

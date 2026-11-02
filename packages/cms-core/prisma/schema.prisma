@@ -15,6 +15,10 @@ enum PageStatus {
 enum BookingStatus {
   PENDING
   APPROVED
+  BOOKED
+  CONFIRMED
+  COMPLETED
+  CANCELLED
   REJECTED
   IMPORTED
 }
@@ -371,20 +375,40 @@ model PageFieldTranslation {
 }
 
 model Booking {
-  id             String        @id @default(cuid()) @map("id")
-  object_id      String        @map("object_id")
-  start_date     DateTime      @map("start_date")
-  end_date       DateTime      @map("end_date")
-  customer_name  String        @map("customer_name")
-  customer_email String        @map("customer_email")
-  customer_phone String?       @map("customer_phone")
-  guests_count   Int           @default(1) @map("guests_count")
-  pets_count     Int           @default(0) @map("pets_count")
-  price          Float?        @map("price")
-  status         BookingStatus @default(PENDING) @map("status")
-  ical_source_id String?       @map("ical_source_id")
-  created_at     DateTime      @default(now()) @map("created_at")
-  updated_at     DateTime      @updatedAt @map("updated_at")
+  id                    String        @id @default(cuid()) @map("id")
+  object_id             String        @map("object_id")
+  start_date            DateTime      @map("start_date")
+  end_date              DateTime      @map("end_date")
+  customer_name         String        @map("customer_name")
+  customer_email        String        @map("customer_email")
+  customer_phone        String?       @map("customer_phone")
+  customer_mobile       String?       @map("customer_mobile")
+  address_line1         String?       @map("address_line1")
+  address_line2         String?       @map("address_line2")
+  postal_code           String?       @map("postal_code")
+  city                  String?       @map("city")
+  country               String?       @default("Sverige") @map("country")
+  guests_count          Int           @default(1) @map("guests_count")
+  adults_count          Int           @default(1) @map("adults_count")
+  children_count        Int           @default(0) @map("children_count")
+  pets_count            Int           @default(0) @map("pets_count")
+  price                 Float?        @map("price")
+  deposit_amount        Float?        @map("deposit_amount")
+  deposit_due_date      DateTime?     @map("deposit_due_date")
+  deposit_paid_at       DateTime?     @map("deposit_paid_at")
+  final_payment_amount  Float?        @map("final_payment_amount")
+  final_payment_due_date DateTime?    @map("final_payment_due_date")
+  final_payment_paid_at DateTime?     @map("final_payment_paid_at")
+  contract_number       String?       @map("contract_number")
+  contract_sent_at      DateTime?     @map("contract_sent_at")
+  contract_received_at  DateTime?     @map("contract_received_at")
+  customer_notes        String?       @map("customer_notes")
+  admin_notes           String?       @map("admin_notes")
+  is_preliminary        Boolean       @default(false) @map("is_preliminary")
+  status                BookingStatus @default(PENDING) @map("status")
+  ical_source_id        String?       @map("ical_source_id")
+  created_at            DateTime      @default(now()) @map("created_at")
+  updated_at            DateTime      @updatedAt @map("updated_at")
 
   object BookingObject @relation(fields: [object_id], references: [id], onDelete: Cascade)
 

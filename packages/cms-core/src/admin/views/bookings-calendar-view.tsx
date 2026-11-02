@@ -31,8 +31,17 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  FileText,
+  Printer,
+  Save,
+  Smartphone,
+  MapPin,
+  CreditCard,
+  Loader2,
+  Lock,
 } from "lucide-react";
-import { BookingItem, BookingObjectDetails } from "../../booking/types";
+import { BookingItem, BookingObjectDetails, BOOKING_STATUSES, BookingStatusType } from "../../booking/types";
+import { BookingDetailsModal } from "../../booking/booking-details-modal";
 import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "../../utils/weeks";
 import { ModalPortal } from "../../components/ui/modal-portal";
 
@@ -169,10 +178,7 @@ interface WeekRowData {
 type SortField = "stayDates" | "object" | "week";
 type SortDirection = "asc" | "desc";
 
-export function BookingsCalendarView({
-  objects = [],
-  initialFilterObjectId = null,
-}: BookingsCalendarViewProps) {
+export function BookingsCalendarView({ objects = [], initialFilterObjectId = null }: BookingsCalendarViewProps) {
   const t = useTranslations("bookingsCalendar");
   const locale = useLocale();
 
@@ -202,9 +208,52 @@ export function BookingsCalendarView({
     return new Set(objects.map((o) => o.id));
   });
 
-  // Modal inspection state
+  // Modal inspection & editing state
   const [selectedBooking, setSelectedBooking] = useState<BookingItem | null>(null);
+  const [editForm, setEditForm] = useState<Partial<BookingItem>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [contractNotice, setContractNotice] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (selectedBooking) {
+      setEditForm({ ...selectedBooking });
+      setSaveError(null);
+      setSaveSuccess(false);
+      setContractNotice(null);
+    }
+  }, [selectedBooking]);
+
+  const handleSaveBooking = async (closeAfter: boolean = false) => {
+    if (!editForm.id) return;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch("/api/cms/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Misslyckades att spara bokningsuppgifter");
+      }
+      setSaveSuccess(true);
+      setBookings((prev) => prev.map((b) => (b.id === editForm.id ? ({ ...b, ...editForm } as BookingItem) : b)));
+      setSelectedBooking((prev) => (prev ? ({ ...prev, ...editForm } as BookingItem) : null));
+      if (closeAfter) {
+        setTimeout(() => setSelectedBooking(null), 300);
+      } else {
+        setTimeout(() => setSaveSuccess(false), 2500);
+      }
+    } catch (err: any) {
+      setSaveError(err.message || "Ett fel uppstod vid sparande");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // Sync activeObjectIds when objects list loads or updates
   useEffect(() => {
@@ -304,10 +353,19 @@ export function BookingsCalendarView({
     }
   };
 
+  const isBlockedBooking = (b: BookingItem): boolean =>
+    b.icalSourceId === "blocked_period" ||
+    b.customerEmail === "internal@blocked" ||
+    (b.status as string) === "BLOCKED" ||
+    (b.customerName ? b.customerName.toLowerCase().includes("blockad") : false);
+
+  const isImportedBooking = (b: BookingItem): boolean =>
+    !isBlockedBooking(b) && (b.status === "IMPORTED" || (!!b.icalSourceId && b.icalSourceId !== "blocked_period"));
+
   // Filter bookings based on active source toggles and active objects
   const filteredBookings = useMemo(() => {
     return bookings.filter((b) => {
-      const isImported = b.status === "IMPORTED" || !!b.icalSourceId;
+      const isImported = isImportedBooking(b);
       if (isImported && !showImportedBookings) return false;
       if (!isImported && !showLocalBookings) return false;
       if (!activeObjectIds.has(b.objectId)) return false;
@@ -317,11 +375,11 @@ export function BookingsCalendarView({
 
   // Count totals for display badges
   const localCount = useMemo(
-    () => bookings.filter((b) => b.status !== "IMPORTED" && !b.icalSourceId).length,
+    () => bookings.filter((b) => !isImportedBooking(b) && !isBlockedBooking(b)).length,
     [bookings],
   );
   const importedCount = useMemo(
-    () => bookings.filter((b) => b.status === "IMPORTED" || !!b.icalSourceId).length,
+    () => bookings.filter((b) => isImportedBooking(b)).length,
     [bookings],
   );
 
@@ -542,9 +600,7 @@ export function BookingsCalendarView({
             </div>
             <div>
               <h1 className='text-xl font-bold text-white tracking-tight'>{t("title")}</h1>
-              <p className='text-xs text-slate-400'>
-                {t("subtitle")}
-              </p>
+              <p className='text-xs text-slate-400'>{t("subtitle")}</p>
             </div>
           </div>
 
@@ -607,7 +663,9 @@ export function BookingsCalendarView({
         <div className='mt-5 pt-4 border-t border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs'>
           {/* Source toggles (Local vs Booking.com) */}
           <div className='flex flex-wrap items-center gap-2'>
-            <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1'>{t("source")}</span>
+            <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1'>
+              {t("source")}
+            </span>
 
             {/* Local bookings toggle */}
             <button
@@ -758,7 +816,8 @@ export function BookingsCalendarView({
                     <div className='relative pt-8 pb-2 px-1 z-10' style={{ height: `${rowMinHeight}px` }}>
                       {week.segments.map((seg, sIdx) => {
                         const theme = objectColorMap[seg.booking.objectId] || OBJECT_COLOR_PALETTES[0];
-                        const isImported = seg.booking.status === "IMPORTED" || !!seg.booking.icalSourceId;
+                        const isBlocked = isBlockedBooking(seg.booking);
+                        const isImported = isImportedBooking(seg.booking);
                         const nights = calculateNights(seg.booking.startDate, seg.booking.endDate);
 
                         // Calculate horizontal position across the 7-day grid (0% to 100%)
@@ -786,7 +845,7 @@ export function BookingsCalendarView({
                         } (${seg.booking.startDate} → ${seg.booking.endDate}, w.${formatBookingWeekSpan(
                           seg.booking.startDate,
                           seg.booking.endDate,
-                        )}, ${nights} nights)${isImported ? " [Booking.com]" : ""}`;
+                        )}, ${nights} nights)${isBlocked ? " [Blockad]" : isImported ? " [Booking.com]" : ""}`;
 
                         return (
                           <div
@@ -800,11 +859,13 @@ export function BookingsCalendarView({
                               height: `${laneHeight - 3}px`,
                             }}
                             className={`absolute flex items-center px-2 text-[11px] font-medium transition cursor-pointer select-none shadow-sm hover:z-20 hover:brightness-125 hover:shadow-lg ${roundedClass} ${
-                              isImported ? theme.barImported : theme.bar
+                              isBlocked ? "bg-purple-950/80 text-purple-200 border border-purple-500/70 border-dashed" : isImported ? theme.barImported : theme.bar
                             }`}>
                             {/* Inner bar content */}
                             <div className='flex items-center gap-1.5 truncate min-w-0 w-full'>
-                              {isImported ? (
+                              {isBlocked ? (
+                                <Lock className='w-3 h-3 shrink-0 opacity-80 text-purple-300' />
+                              ) : isImported ? (
                                 <Globe className='w-3 h-3 shrink-0 opacity-80' />
                               ) : (
                                 <span className='w-1.5 h-1.5 rounded-full bg-white shrink-0' />
@@ -896,7 +957,7 @@ export function BookingsCalendarView({
                 <tbody className='divide-y divide-slate-800/60 text-slate-200'>
                   {sortedListBookings.map((b) => {
                     const theme = objectColorMap[b.objectId] || OBJECT_COLOR_PALETTES[0];
-                    const isImported = b.status === "IMPORTED" || !!b.icalSourceId;
+                    const isImported = isImportedBooking(b);
                     const nights = calculateNights(b.startDate, b.endDate);
                     const weekSpan = formatBookingWeekSpan(b.startDate, b.endDate);
 
@@ -970,18 +1031,22 @@ export function BookingsCalendarView({
 
                         {/* Status */}
                         <td className='py-3.5 px-3 text-center'>
-                          <span
-                            className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                              b.status === "APPROVED"
-                                ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30"
-                                : b.status === "PENDING"
-                                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                                  : b.status === "IMPORTED"
-                                    ? "bg-indigo-500/10 text-indigo-300 border border-indigo-500/30"
-                                    : "bg-slate-800 text-slate-400"
-                            }`}>
-                            {b.status}
-                          </span>
+                          {(() => {
+                            const statusCfg = BOOKING_STATUSES.find(
+                              (s) => s.id === (b.status === "CONFIRMED" ? "BOOKED" : b.status)
+                            );
+                            const badgeClass =
+                              statusCfg?.color.badge || "bg-slate-800 text-slate-300 border border-slate-700";
+                            const label = statusCfg
+                              ? statusCfg.label[locale === "en" ? "en" : "sv"]
+                              : b.status;
+                            return (
+                              <span
+                                className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badgeClass}`}>
+                                {label}
+                              </span>
+                            );
+                          })()}
                         </td>
 
                         {/* Action */}
@@ -1003,217 +1068,29 @@ export function BookingsCalendarView({
         </div>
       )}
 
-      {/* Booking Details Modal Dialog */}
+      {/* Booking Details & Administration Modal Dialog */}
       {selectedBooking && (
-        <ModalPortal>
-          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-150'>
-          <div className='w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl p-6 text-white my-8'>
-            {/* Modal Header */}
-            <div className='flex items-start justify-between border-b border-slate-800 pb-4 mb-4'>
-              <div className='flex items-center gap-3'>
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    selectedBooking.status === "IMPORTED"
-                      ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                      : "bg-sky-500/20 text-sky-400 border border-sky-500/30"
-                  }`}>
-                  {selectedBooking.status === "IMPORTED" ? (
-                    <Globe className='w-5 h-5' />
-                  ) : (
-                    <CalendarIcon className='w-5 h-5' />
-                  )}
-                </div>
-                <div>
-                  <h3 className='text-base font-bold text-white'>
-                    {selectedBooking.customerName || t("modalReservationDetails")}
-                  </h3>
-                  <div className='flex items-center gap-2 mt-0.5'>
-                    <span className='text-xs text-slate-400'>
-                      {t("unitLabel")} <span className='font-semibold text-white'>{selectedBooking.objectName}</span>
-                    </span>
-                    <span className='text-slate-600'>•</span>
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.2 rounded-full ${
-                        selectedBooking.status === "APPROVED"
-                          ? "bg-emerald-500/15 text-emerald-400"
-                          : selectedBooking.status === "PENDING"
-                            ? "bg-amber-500/15 text-amber-400"
-                            : selectedBooking.status === "IMPORTED"
-                              ? "bg-indigo-500/15 text-indigo-300"
-                              : "bg-slate-800 text-slate-400"
-                      }`}>
-                      {selectedBooking.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type='button'
-                onClick={() => setSelectedBooking(null)}
-                className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer'>
-                <X className='w-5 h-5' />
-              </button>
-            </div>
-
-            {/* Modal Body Info Cards */}
-            <div className='space-y-4'>
-              {/* Dates & Times Card */}
-              <div className='p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 grid grid-cols-3 gap-3 text-xs'>
-                <div>
-                  <span className='text-slate-400 block text-[11px] mb-0.5'>{t("checkIn")}</span>
-                  <div className='font-bold text-white font-mono text-sm'>{selectedBooking.startDate}</div>
-                  <span className='text-[10px] text-sky-400'>{t("fromTime")}</span>
-                </div>
-                <div>
-                  <span className='text-slate-400 block text-[11px] mb-0.5'>{t("checkOut")}</span>
-                  <div className='font-bold text-white font-mono text-sm'>{selectedBooking.endDate}</div>
-                  <span className='text-[10px] text-amber-400'>{t("untilTime")}</span>
-                </div>
-                <div>
-                  <span className='text-slate-400 block text-[11px] mb-0.5'>{t("weekDuration")}</span>
-                  <div className='font-bold text-amber-300 font-mono text-sm'>
-                    w.{formatBookingWeekSpan(selectedBooking.startDate, selectedBooking.endDate)}
-                  </div>
-                  <span className='text-[10px] text-slate-400'>
-                    {calculateNights(selectedBooking.startDate, selectedBooking.endDate)} nights
-                  </span>
-                </div>
-              </div>
-
-              {/* Guest / Customer Details */}
-              <div className='p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-2.5 text-xs'>
-                <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider block'>
-                  {t("guestReservation")}
-                </span>
-
-                <div className='grid grid-cols-2 gap-2 pt-1'>
-                  <div>
-                    <span className='text-slate-500 text-[11px] block'>{t("customerName")}</span>
-                    <span className='font-semibold text-white'>{selectedBooking.customerName || "—"}</span>
-                  </div>
-
-                  <div>
-                    <span className='text-slate-500 text-[11px] block'>{t("totalDuration")}</span>
-                    <span className='font-semibold text-white'>
-                      {calculateNights(selectedBooking.startDate, selectedBooking.endDate)} nights
-                    </span>
-                  </div>
-
-                  {selectedBooking.customerEmail && (
-                    <div className='col-span-2 flex items-center gap-2 pt-1'>
-                      <Mail className='w-3.5 h-3.5 text-slate-400 shrink-0' />
-                      <a
-                        href={`mailto:${selectedBooking.customerEmail}`}
-                        className='text-sky-400 hover:underline truncate'>
-                        {selectedBooking.customerEmail}
-                      </a>
-                    </div>
-                  )}
-
-                  {selectedBooking.customerPhone && (
-                    <div className='col-span-2 flex items-center gap-2'>
-                      <Phone className='w-3.5 h-3.5 text-slate-400 shrink-0' />
-                      <a href={`tel:${selectedBooking.customerPhone}`} className='text-sky-400 hover:underline'>
-                        {selectedBooking.customerPhone}
-                      </a>
-                    </div>
-                  )}
-
-                  <div className='pt-1'>
-                    <span className='text-slate-500 text-[11px] block'>{t("numberOfGuests")}</span>
-                    <span className='font-medium text-slate-200'>{selectedBooking.guestsCount || 2} persons</span>
-                  </div>
-
-                  <div className='pt-1'>
-                    <span className='text-slate-500 text-[11px] block'>{t("pets")}</span>
-                    <span className='font-medium text-slate-200'>
-                      {selectedBooking.petsCount ? `${selectedBooking.petsCount} pets` : t("noPets")}
-                    </span>
-                  </div>
-                </div>
-
-                {selectedBooking.price !== null && selectedBooking.price !== undefined && (
-                  <div className='pt-2 border-t border-slate-800/80 flex items-center justify-between'>
-                    <span className='text-slate-400'>{t("totalPrice")}</span>
-                    <span className='text-base font-bold text-amber-400 font-mono'>
-                      {selectedBooking.price.toLocaleString("sv-SE")} SEK
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Source Details (Booking.com / iCal UID) */}
-              {selectedBooking.icalSourceId && (
-                <div className='p-3.5 rounded-xl border border-indigo-500/20 bg-indigo-950/20 text-xs space-y-1.5'>
-                  <span className='text-[11px] font-semibold text-indigo-300 flex items-center gap-1.5'>
-                    <Globe className='w-3.5 h-3.5' />
-                    <span>{t("sourceSection")}</span>
-                  </span>
-                  <div className='flex items-center justify-between gap-2 pt-0.5'>
-                    <span
-                      className='font-mono text-[11px] text-slate-300 truncate max-w-xs'
-                      title={selectedBooking.icalSourceId}>
-                      {selectedBooking.icalSourceId}
-                    </span>
-                    <button
-                      type='button'
-                      onClick={() => handleCopyUid(selectedBooking.icalSourceId)}
-                      className='p-1 rounded text-slate-400 hover:text-white transition shrink-0 cursor-pointer'
-                      title={t("copyUid")}>
-                      {copiedId ? <Check className='w-3.5 h-3.5 text-emerald-400' /> : <Copy className='w-3.5 h-3.5' />}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Modal Actions */}
-            <div className='mt-6 pt-4 border-t border-slate-800 flex items-center justify-between gap-2'>
-              <button
-                type='button'
-                onClick={() => setSelectedBooking(null)}
-                className='rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition cursor-pointer'>
-                {t("close")}
-              </button>
-
-              <div className='flex items-center gap-2'>
-                {/* Local booking actions: open in same window or open in new tab */}
-                {selectedBooking.status !== "IMPORTED" && !selectedBooking.icalSourceId ? (
-                  <>
-                    <button
-                      type='button'
-                      onClick={() => {
-                        window.location.href = `/admin/bookings/${selectedBooking.id}`;
-                      }}
-                      className='rounded-xl bg-slate-800 hover:bg-slate-700 px-3.5 py-2 text-xs font-semibold text-slate-200 transition cursor-pointer'>
-                      {t("openBooking")}
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() => {
-                        window.open(`/admin/bookings/${selectedBooking.id}`, "_blank");
-                      }}
-                      className='flex items-center gap-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 transition cursor-pointer'>
-                      <ExternalLink className='w-3.5 h-3.5' />
-                      <span>{t("openInNewTab")}</span>
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    type='button'
-                    onClick={() => handleCopyUid(selectedBooking.icalSourceId)}
-                    className='flex items-center gap-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-indigo-600/20 transition cursor-pointer'>
-                    <Copy className='w-3.5 h-3.5' />
-                    <span>{copiedId ? t("copied") : t("copyBookingUid")}</span>
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </ModalPortal>
-    )}
-  </div>
-);
+        <BookingDetailsModal
+          booking={selectedBooking}
+          isOpen={Boolean(selectedBooking)}
+          onClose={() => setSelectedBooking(null)}
+          onSave={async (updated) => {
+            const res = await fetch("/api/cms/bookings", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(updated),
+            });
+            if (!res.ok) {
+              const err = await res.json();
+              throw new Error(err.error || "Misslyckades att spara bokningsuppgifter");
+            }
+            setBookings((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+            setSelectedBooking(updated);
+          }}
+          initialMode='view'
+          locale={locale === "en" ? "en" : "sv"}
+        />
+      )}
+    </div>
+  );
 }
