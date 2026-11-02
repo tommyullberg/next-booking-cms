@@ -25,6 +25,11 @@ import {
   HelpCircle,
   Info,
   GripVertical,
+  Sliders,
+  Globe,
+  Lock,
+  Clock,
+  CalendarDays,
 } from "lucide-react";
 import {
   BookingObjectDetails,
@@ -38,6 +43,7 @@ import {
 import { LandlordItem } from "./landlords-view";
 import { PageListItem } from "./pages-view";
 import { ModalPortal } from "../../components/ui/modal-portal";
+import { useBookingSettingsQuery } from "../../booking/hooks";
 
 export type BookingObjectItem = BookingObjectDetails;
 
@@ -62,6 +68,7 @@ export interface BookingObjectsViewProps {
     extra_bed_count?: number;
     pets_allowed?: boolean;
     ical_url?: string | null;
+    price_matrix?: Record<string, any> | null;
     amenity_ids?: string[];
   }) => Promise<BookingObjectItem[] | void>;
   onDeleteObject?: (id: string) => Promise<BookingObjectItem[] | void>;
@@ -113,6 +120,33 @@ export function BookingObjectsView({
   const [icalUrl, setIcalUrl] = useState<string>("");
   const [showIcalHelp, setShowIcalHelp] = useState(false);
 
+  // Per-object booking settings overrides
+  const { data: bookingSettings } = useBookingSettingsQuery();
+  const [objTurnoverDay, setObjTurnoverDay] = useState<string>("");
+  const [objCheckInTime, setObjCheckInTime] = useState<string>("");
+  const [objCheckOutTime, setObjCheckOutTime] = useState<string>("");
+  const [objAllowedPeriods, setObjAllowedPeriods] = useState<string>("");
+
+  const hasAnyCustomizableSettings = Boolean(
+    bookingSettings?.turnoverDayScope === "PER_OBJECT" ||
+    bookingSettings?.checkTimesScope === "PER_OBJECT" ||
+    bookingSettings?.customDaysScope === "PER_OBJECT"
+  );
+  const globalTurnoverLabel =
+    bookingSettings?.defaultTurnoverDay === "SATURDAY" ? "Lördag" : "Söndag";
+  const globalAllowedPeriods =
+    bookingSettings?.allowedBookingPeriods ||
+    (bookingSettings?.allowCustomDays === false
+      ? "PERIODS_AND_WEEKS"
+      : "ALL");
+
+  const globalCustomDaysLabel =
+    globalAllowedPeriods === "ALL"
+      ? "Valfritt antal dygn (1-6 dgr)"
+      : globalAllowedPeriods === "PERIODS_AND_WEEKS"
+      ? "Endast 3/4d eller helveckor"
+      : "Endast hela veckor (från bytesdag)";
+
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -134,6 +168,10 @@ export function BookingObjectsView({
     setSelectedAmenityIds([]);
     setIcalUrl("");
     setShowIcalHelp(false);
+    setObjTurnoverDay("");
+    setObjCheckInTime("");
+    setObjCheckOutTime("");
+    setObjAllowedPeriods("");
     setErrorMsg(null);
     setIsModalOpen(true);
   };
@@ -156,6 +194,18 @@ export function BookingObjectsView({
     setSelectedAmenityIds((item.amenities || []).map((a) => a.id));
     setIcalUrl(item.ical_url || "");
     setShowIcalHelp(false);
+    const objSettings = (item.price_matrix as any)?.booking_settings || {};
+    setObjTurnoverDay(objSettings.defaultTurnoverDay || "");
+    setObjCheckInTime(objSettings.checkInTime || "");
+    setObjCheckOutTime(objSettings.checkOutTime || "");
+    setObjAllowedPeriods(
+      objSettings.allowedBookingPeriods ||
+        (objSettings.allowCustomDays === true
+          ? "ALL"
+          : objSettings.allowCustomDays === false
+          ? "PERIODS_AND_WEEKS"
+          : "")
+    );
     setErrorMsg(null);
     setIsModalOpen(true);
   };
@@ -172,6 +222,48 @@ export function BookingObjectsView({
     setIsSaving(true);
     try {
       if (onSaveObject) {
+        const customObjSettings: Record<string, any> = {
+          ...((editingObject?.price_matrix as any)?.booking_settings || {}),
+        };
+        if (bookingSettings?.turnoverDayScope === "PER_OBJECT") {
+          if (objTurnoverDay) {
+            customObjSettings.defaultTurnoverDay = objTurnoverDay;
+          } else {
+            delete customObjSettings.defaultTurnoverDay;
+          }
+        }
+        if (bookingSettings?.checkTimesScope === "PER_OBJECT") {
+          if (objCheckInTime) {
+            customObjSettings.checkInTime = objCheckInTime;
+          } else {
+            delete customObjSettings.checkInTime;
+          }
+          if (objCheckOutTime) {
+            customObjSettings.checkOutTime = objCheckOutTime;
+          } else {
+            delete customObjSettings.checkOutTime;
+          }
+        }
+        if (bookingSettings?.customDaysScope === "PER_OBJECT") {
+          if (objAllowedPeriods !== "") {
+            customObjSettings.allowedBookingPeriods = objAllowedPeriods;
+            customObjSettings.allowCustomDays = objAllowedPeriods === "ALL";
+          } else {
+            delete customObjSettings.allowedBookingPeriods;
+            delete customObjSettings.allowCustomDays;
+          }
+        }
+
+        const updatedPriceMatrix = {
+          ...((editingObject?.price_matrix as any) || {}),
+          ...(Object.keys(customObjSettings).length > 0
+            ? { booking_settings: customObjSettings }
+            : {}),
+        };
+        if (Object.keys(customObjSettings).length === 0 && updatedPriceMatrix.booking_settings) {
+          delete updatedPriceMatrix.booking_settings;
+        }
+
         const res = await onSaveObject({
           ...(editingObject ? { id: editingObject.id } : {}),
           name: name.trim(),
@@ -188,6 +280,7 @@ export function BookingObjectsView({
           extra_bed_count: Number(extraBedCount) || 0,
           pets_allowed: petsAllowed,
           ical_url: icalUrl.trim() || null,
+          price_matrix: updatedPriceMatrix,
           amenity_ids: selectedAmenityIds,
         });
 
@@ -875,6 +968,129 @@ export function BookingObjectsView({
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono text-xs"
                   />
                 </div>
+              </div>
+
+              {/* Per-Object Booking Settings (Compressed Format) */}
+              <div className="space-y-2.5 pt-3 border-t border-slate-800">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Bokningsinställningar för detta objekt</span>
+                  </label>
+                  <span className="text-[10px] text-slate-500 font-mono">
+                    {hasAnyCustomizableSettings ? "Objektanpassning möjlig" : "Följer centrala inställningar"}
+                  </span>
+                </div>
+
+                {/* If all groups are locked globally */}
+                {!hasAnyCustomizableSettings && (
+                  <div className="p-3 rounded-xl border border-slate-800 bg-slate-950/40 text-[11px] text-slate-400 space-y-1">
+                    <div className="flex items-center gap-1.5 text-slate-300 font-medium">
+                      <Lock className="w-3 h-3 text-slate-400" />
+                      <span>Alla bokningsinställningar styrs centralt</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 leading-relaxed">
+                      Bytesdag: {globalTurnoverLabel} • Tider: In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"} • Enstaka dygn: {globalCustomDaysLabel}. Dessa kan låsas upp under Bokning → Inställningar om de ska tillåtas per objekt.
+                    </div>
+                  </div>
+                )}
+
+                {/* If at least one group can be customized per object */}
+                {hasAnyCustomizableSettings && (
+                  <div className="p-3 rounded-xl border border-slate-800 bg-slate-950/40 space-y-2.5">
+                    {/* Turnover day row */}
+                    {bookingSettings?.turnoverDayScope === "PER_OBJECT" ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
+                        <div>
+                          <label className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                            <Calendar className="w-3 h-3 text-sky-400" />
+                            <span>Default bytesdag</span>
+                          </label>
+                          <span className="text-[9px] text-slate-500">Gäller för veckouthyrning</span>
+                        </div>
+                        <select
+                          value={objTurnoverDay}
+                          onChange={(e) => setObjTurnoverDay(e.target.value)}
+                          className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-sky-500"
+                        >
+                          <option value="">Följ global standard ({globalTurnoverLabel})</option>
+                          <option value="SUNDAY">Söndag</option>
+                          <option value="SATURDAY">Lördag</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between py-1 border-b border-slate-800/50 text-[10px] text-slate-500">
+                        <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Bytesdag (låst centralt):</span>
+                        <span className="font-medium text-slate-400">{globalTurnoverLabel}</span>
+                      </div>
+                    )}
+
+                    {/* Check-in / check-out times row */}
+                    {bookingSettings?.checkTimesScope === "PER_OBJECT" ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center pt-1 border-t border-slate-800/50">
+                        <div>
+                          <label className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-emerald-400" />
+                            <span>In- / Utcheckningstider</span>
+                          </label>
+                          <span className="text-[9px] text-slate-500">Globalt: In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="time"
+                            value={objCheckInTime}
+                            onChange={(e) => setObjCheckInTime(e.target.value)}
+                            placeholder={bookingSettings?.checkInTime || "15:00"}
+                            className="w-1/2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs font-mono focus:outline-none focus:border-sky-500"
+                            title="Incheckningstid (lämna tomt för global standard)"
+                          />
+                          <span className="text-slate-600 text-xs">/</span>
+                          <input
+                            type="time"
+                            value={objCheckOutTime}
+                            onChange={(e) => setObjCheckOutTime(e.target.value)}
+                            placeholder={bookingSettings?.checkOutTime || "11:00"}
+                            className="w-1/2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs font-mono focus:outline-none focus:border-sky-500"
+                            title="Utcheckningstid (lämna tomt för global standard)"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between py-1 border-b border-slate-800/50 text-[10px] text-slate-500">
+                        <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Tider (låst centralt):</span>
+                        <span className="font-medium text-slate-400">In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"}</span>
+                      </div>
+                    )}
+
+                    {/* Allowed booking periods row */}
+                    {bookingSettings?.customDaysScope === "PER_OBJECT" ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center pt-1 border-t border-slate-800/50">
+                        <div>
+                          <label className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                            <CalendarDays className="w-3 h-3 text-purple-400" />
+                            <span>Tillåtna bokningsperioder</span>
+                          </label>
+                          <span className="text-[9px] text-slate-500">Valfria dygn, 3/4-delveckor eller endast helveckor</span>
+                        </div>
+                        <select
+                          value={objAllowedPeriods}
+                          onChange={(e) => setObjAllowedPeriods(e.target.value)}
+                          className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-sky-500"
+                        >
+                          <option value="">Följ global standard ({globalCustomDaysLabel})</option>
+                          <option value="ALL">Valfritt antal dygn (1-6 dgr & helvecka)</option>
+                          <option value="PERIODS_AND_WEEKS">Endast 3/4d perioder eller hela veckor</option>
+                          <option value="FULL_WEEKS_ONLY">Endast hela veckor (från bytesdag)</option>
+                        </select>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between py-1 text-[10px] text-slate-500">
+                        <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Bokningsperioder (låst centralt):</span>
+                        <span className="font-medium text-slate-400">{globalCustomDaysLabel}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Modal Actions */}

@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { Prisma } from "@prisma/client";
 import {
   BookingObjectDetails,
   formatBookingObjectType,
@@ -91,6 +92,7 @@ export async function createBookingObjectAction(data: {
   extra_bed_count?: number;
   pets_allowed?: boolean;
   ical_url?: string | null;
+  price_matrix?: Record<string, any> | null;
   amenity_ids?: string[];
 }): Promise<BookingObjectDetails> {
   const normalized = {
@@ -108,6 +110,7 @@ export async function createBookingObjectAction(data: {
     extra_bed_count: Number(data.extra_bed_count ?? 0),
     pets_allowed: Boolean(data.pets_allowed),
     ical_url: data.ical_url?.trim() || null,
+    price_matrix: data.price_matrix ? (data.price_matrix as Prisma.InputJsonValue) : Prisma.JsonNull,
     amenities: data.amenity_ids?.length
       ? {
           connect: data.amenity_ids.map((id) => ({ id })),
@@ -153,6 +156,7 @@ export async function createBookingObjectAction(data: {
     pets_allowed: created.pets_allowed,
     ical_url: created.ical_url,
     ical_last_synced: created.ical_last_synced,
+    price_matrix: created.price_matrix as any,
     landlord: created.landlord
       ? {
           id: created.landlord.id,
@@ -196,6 +200,7 @@ export async function updateBookingObjectAction(data: {
   extra_bed_count?: number;
   pets_allowed?: boolean;
   ical_url?: string | null;
+  price_matrix?: Record<string, any> | null;
   amenity_ids?: string[];
 }): Promise<BookingObjectDetails> {
   const normalized = {
@@ -213,6 +218,7 @@ export async function updateBookingObjectAction(data: {
     extra_bed_count: Number(data.extra_bed_count ?? 0),
     pets_allowed: Boolean(data.pets_allowed),
     ical_url: data.ical_url !== undefined ? (data.ical_url?.trim() || null) : undefined,
+    price_matrix: data.price_matrix ? (data.price_matrix as Prisma.InputJsonValue) : Prisma.JsonNull,
     amenities: data.amenity_ids !== undefined
       ? {
           set: data.amenity_ids.map((id) => ({ id })),
@@ -259,6 +265,7 @@ export async function updateBookingObjectAction(data: {
     pets_allowed: updated.pets_allowed,
     ical_url: updated.ical_url,
     ical_last_synced: updated.ical_last_synced,
+    price_matrix: updated.price_matrix as any,
     landlord: updated.landlord
       ? {
           id: updated.landlord.id,

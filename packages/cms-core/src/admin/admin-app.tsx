@@ -35,6 +35,7 @@ import {
 import { AdminLanguage, DEFAULT_ACTIVE_LANGUAGES, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
 import { AdminIntlProvider } from "../i18n";
 import { useEditorStore } from "../state/editor-store";
+import { CMSQueryProvider } from "../booking/query-provider";
 
 export interface AdminAppProps {
   initialPages?: PageListItem[];
@@ -793,7 +794,8 @@ export function AdminApp({
   };
 
   return (
-    <AdminIntlProvider
+    <CMSQueryProvider>
+      <AdminIntlProvider
       initialLocale={adminLanguage}
       onLocaleChange={(newLoc) => {
         setAdminLanguage(newLoc);
@@ -1307,5 +1309,6 @@ export function AdminApp({
       </AdminLayout>
     </AdminThemeProvider>
   </AdminIntlProvider>
+</CMSQueryProvider>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CMSField, BookingCalendar, CMSPageData } from "@next-booking/cms-core";
+import { CMSField, UnitCalendar, CMSPageData } from "@next-booking/cms-core";
 import { LullyhillSiteLayout } from "../components/site-layout";
 
 export function BookingUnitTemplate({ page }: { page: CMSPageData }) {
@@ -58,7 +58,7 @@ export function BookingUnitTemplate({ page }: { page: CMSPageData }) {
       </CMSField.Group>
 
       <section className="space-y-4">
-        <BookingCalendar
+        <UnitCalendar
           objectId={objectId}
           objectName={objectName}
           basePrice={basePrice}

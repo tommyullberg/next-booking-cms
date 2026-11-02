@@ -8,14 +8,14 @@
  * 2. CMSField.Image (with ratio & maxWidth constraints)
  * 3. CMSField.Gallery (multi-image gallery with drag-and-drop sorting, localized captions & Fancybox lightbox)
  * 4. CMSField.Navigation (render-prop navigation links)
- * 5. BookingCalendar (interactive unit calendar with seasonal pricing & iCal sync)
+ * 5. UnitCalendar (smart unit calendar with dynamic view/interact modes, seasonal pricing & iCal sync)
  * 6. AvailabilitySearch (flexible +- days search engine with guest & pet filters)
  */
 
 import React from "react";
 import {
   CMSField,
-  BookingCalendar,
+  UnitCalendar,
   AvailabilitySearch,
   CMSPageData,
 } from "@next-booking/cms-core";
@@ -77,7 +77,7 @@ export function CompleteExampleTemplate({ page }: { page: CMSPageData }) {
       {/* 4. Interactive Booking Calendar */}
       <section className="space-y-4">
         <CMSField.Text nbr={3} as="h2" className="text-2xl font-bold" />
-        <BookingCalendar
+        <UnitCalendar
           objectId="example-object-1"
           objectName="Exempelboende"
           basePrice={2500}

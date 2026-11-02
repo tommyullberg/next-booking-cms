@@ -90,6 +90,14 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
       try {
         const parsed = JSON.parse(bookingRow.setting_value);
         if (parsed && typeof parsed === "object") {
+          const allowedPeriods =
+            parsed.allowedBookingPeriods === "PERIODS_AND_WEEKS" ||
+            parsed.allowedBookingPeriods === "FULL_WEEKS_ONLY"
+              ? parsed.allowedBookingPeriods
+              : parsed.allowCustomDays === false
+              ? "PERIODS_AND_WEEKS"
+              : "ALL";
+
           bookingSettings = {
             defaultTurnoverDay:
               parsed.defaultTurnoverDay === "SATURDAY" ? "SATURDAY" : "SUNDAY",
@@ -101,6 +109,14 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
               typeof parsed.checkOutTime === "string" && parsed.checkOutTime.trim()
                 ? parsed.checkOutTime.trim()
                 : "11:00",
+            allowedBookingPeriods: allowedPeriods,
+            allowCustomDays: allowedPeriods === "ALL",
+            turnoverDayScope:
+              parsed.turnoverDayScope === "PER_OBJECT" ? "PER_OBJECT" : "GLOBAL",
+            checkTimesScope:
+              parsed.checkTimesScope === "PER_OBJECT" ? "PER_OBJECT" : "GLOBAL",
+            customDaysScope:
+              parsed.customDaysScope === "PER_OBJECT" ? "PER_OBJECT" : "GLOBAL",
           };
         }
       } catch {

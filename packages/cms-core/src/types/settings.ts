@@ -17,18 +17,38 @@ export const DEFAULT_GALLERY_SETTINGS: GallerySettings = {
 };
 
 export type DefaultTurnoverDay = "SUNDAY" | "SATURDAY";
+export type BookingSettingScope = "GLOBAL" | "PER_OBJECT";
+export type AllowedBookingPeriods = "ALL" | "PERIODS_AND_WEEKS" | "FULL_WEEKS_ONLY";
 
 export interface BookingSettings {
   defaultTurnoverDay: DefaultTurnoverDay;
   checkInTime: string;
   checkOutTime: string;
+  allowedBookingPeriods: AllowedBookingPeriods;
+  allowCustomDays: boolean;
+  turnoverDayScope: BookingSettingScope;
+  checkTimesScope: BookingSettingScope;
+  customDaysScope: BookingSettingScope;
 }
 
 export const DEFAULT_BOOKING_SETTINGS: BookingSettings = {
   defaultTurnoverDay: "SUNDAY",
   checkInTime: "15:00",
   checkOutTime: "11:00",
+  allowedBookingPeriods: "ALL",
+  allowCustomDays: true,
+  turnoverDayScope: "GLOBAL",
+  checkTimesScope: "GLOBAL",
+  customDaysScope: "GLOBAL",
 };
+
+export interface ObjectBookingSettings {
+  defaultTurnoverDay?: DefaultTurnoverDay;
+  checkInTime?: string;
+  checkOutTime?: string;
+  allowedBookingPeriods?: AllowedBookingPeriods;
+  allowCustomDays?: boolean;
+}
 
 export interface CmsSettingsData {
   activeLanguages: string[];
@@ -38,4 +58,3 @@ export interface CmsSettingsData {
 }
 
 export type { AdminLanguage, SupportedLocale };
-

@@ -11,12 +11,18 @@ import {
   Loader2,
   Info,
   Sparkles,
-  ArrowRight,
+  Layers,
+  Globe,
+  SlidersHorizontal,
+  CalendarDays,
+  ShieldCheck,
 } from "lucide-react";
 import {
   BookingSettings,
   DEFAULT_BOOKING_SETTINGS,
   DefaultTurnoverDay,
+  BookingSettingScope,
+  AllowedBookingPeriods,
 } from "../../types/settings";
 
 export interface BookingSettingsViewProps {
@@ -35,11 +41,29 @@ export function BookingSettingsView({
   const [turnoverDay, setTurnoverDay] = useState<DefaultTurnoverDay>(
     bookingSettings?.defaultTurnoverDay || "SUNDAY"
   );
+  const [turnoverDayScope, setTurnoverDayScope] = useState<BookingSettingScope>(
+    bookingSettings?.turnoverDayScope || "GLOBAL"
+  );
+
   const [checkInTime, setCheckInTime] = useState<string>(
     bookingSettings?.checkInTime || "15:00"
   );
   const [checkOutTime, setCheckOutTime] = useState<string>(
     bookingSettings?.checkOutTime || "11:00"
+  );
+  const [checkTimesScope, setCheckTimesScope] = useState<BookingSettingScope>(
+    bookingSettings?.checkTimesScope || "GLOBAL"
+  );
+
+  const [allowedBookingPeriods, setAllowedBookingPeriods] =
+    useState<AllowedBookingPeriods>(
+      bookingSettings?.allowedBookingPeriods ||
+        (bookingSettings?.allowCustomDays === false
+          ? "PERIODS_AND_WEEKS"
+          : "ALL")
+    );
+  const [customDaysScope, setCustomDaysScope] = useState<BookingSettingScope>(
+    bookingSettings?.customDaysScope || "GLOBAL"
   );
 
   const [isSaving, setIsSaving] = useState(false);
@@ -51,11 +75,27 @@ export function BookingSettingsView({
       if (bookingSettings.defaultTurnoverDay) {
         setTurnoverDay(bookingSettings.defaultTurnoverDay);
       }
+      if (bookingSettings.turnoverDayScope) {
+        setTurnoverDayScope(bookingSettings.turnoverDayScope);
+      }
       if (bookingSettings.checkInTime) {
         setCheckInTime(bookingSettings.checkInTime);
       }
       if (bookingSettings.checkOutTime) {
         setCheckOutTime(bookingSettings.checkOutTime);
+      }
+      if (bookingSettings.checkTimesScope) {
+        setCheckTimesScope(bookingSettings.checkTimesScope);
+      }
+      if (bookingSettings.allowedBookingPeriods) {
+        setAllowedBookingPeriods(bookingSettings.allowedBookingPeriods);
+      } else if (bookingSettings.allowCustomDays !== undefined) {
+        setAllowedBookingPeriods(
+          bookingSettings.allowCustomDays ? "ALL" : "PERIODS_AND_WEEKS"
+        );
+      }
+      if (bookingSettings.customDaysScope) {
+        setCustomDaysScope(bookingSettings.customDaysScope);
       }
     }
   }, [bookingSettings]);
@@ -70,8 +110,13 @@ export function BookingSettingsView({
       await onSaveSettings({
         bookingSettings: {
           defaultTurnoverDay: turnoverDay,
+          turnoverDayScope,
           checkInTime: checkInTime || "15:00",
           checkOutTime: checkOutTime || "11:00",
+          checkTimesScope,
+          allowedBookingPeriods,
+          allowCustomDays: allowedBookingPeriods === "ALL",
+          customDaysScope,
         },
       });
       setSavedSuccess(true);
@@ -135,17 +180,48 @@ export function BookingSettingsView({
 
       {/* Section 1: Default turnover day */}
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 space-y-4 shadow-sm">
-        <div className="flex items-center gap-2 text-white">
-          <Calendar className="w-4 h-4 text-sky-400" />
-          <h2 className="text-sm font-semibold text-white">
-            {t("turnoverDaySectionTitle")}
-          </h2>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+          <div className="flex items-center gap-2 text-white">
+            <Calendar className="w-4 h-4 text-sky-400" />
+            <h2 className="text-sm font-semibold text-white">
+              {t("turnoverDaySectionTitle")}
+            </h2>
+          </div>
+
+          {/* Scope selector */}
+          <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-lg border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setTurnoverDayScope("GLOBAL")}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1 ${
+                turnoverDayScope === "GLOBAL"
+                  ? "bg-sky-500 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Globe className="w-3 h-3" />
+              <span>{t("scopeGlobal")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTurnoverDayScope("PER_OBJECT")}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1 ${
+                turnoverDayScope === "PER_OBJECT"
+                  ? "bg-amber-500 text-slate-950 font-semibold shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Layers className="w-3 h-3" />
+              <span>{t("scopePerObject")}</span>
+            </button>
+          </div>
         </div>
+
         <p className="text-xs text-slate-400 leading-relaxed">
           {t("turnoverDaySectionDesc")}
         </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
           {/* Sunday card */}
           <div
             onClick={() => setTurnoverDay("SUNDAY")}
@@ -234,13 +310,44 @@ export function BookingSettingsView({
       </div>
 
       {/* Section 2: Check-in and Check-out Times */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 space-y-5 shadow-sm">
-        <div className="flex items-center gap-2 text-white">
-          <Clock className="w-4 h-4 text-emerald-400" />
-          <h2 className="text-sm font-semibold text-white">
-            {t("checkTimesSectionTitle")}
-          </h2>
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+          <div className="flex items-center gap-2 text-white">
+            <Clock className="w-4 h-4 text-emerald-400" />
+            <h2 className="text-sm font-semibold text-white">
+              {t("checkTimesSectionTitle")}
+            </h2>
+          </div>
+
+          {/* Scope selector */}
+          <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-lg border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setCheckTimesScope("GLOBAL")}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1 ${
+                checkTimesScope === "GLOBAL"
+                  ? "bg-sky-500 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Globe className="w-3 h-3" />
+              <span>{t("scopeGlobal")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCheckTimesScope("PER_OBJECT")}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1 ${
+                checkTimesScope === "PER_OBJECT"
+                  ? "bg-amber-500 text-slate-950 font-semibold shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Layers className="w-3 h-3" />
+              <span>{t("scopePerObject")}</span>
+            </button>
+          </div>
         </div>
+
         <p className="text-xs text-slate-400 leading-relaxed">
           {t("checkTimesSectionDesc")}
         </p>
@@ -328,19 +435,179 @@ export function BookingSettingsView({
         </div>
       </div>
 
+      {/* Section 3: Allowed booking periods */}
+      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
+          <div className="flex items-center gap-2 text-white">
+            <CalendarDays className="w-4 h-4 text-purple-400" />
+            <h2 className="text-sm font-semibold text-white">
+              {t("customDaysSectionTitle")}
+            </h2>
+          </div>
+
+          {/* Scope selector */}
+          <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-lg border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setCustomDaysScope("GLOBAL")}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1 ${
+                customDaysScope === "GLOBAL"
+                  ? "bg-sky-500 text-white shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Globe className="w-3 h-3" />
+              <span>{t("scopeGlobal")}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCustomDaysScope("PER_OBJECT")}
+              className={`px-2.5 py-1 rounded text-[11px] font-medium transition cursor-pointer flex items-center gap-1 ${
+                customDaysScope === "PER_OBJECT"
+                  ? "bg-amber-500 text-slate-950 font-semibold shadow-sm"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Layers className="w-3 h-3" />
+              <span>{t("scopePerObject")}</span>
+            </button>
+          </div>
+        </div>
+
+        <p className="text-xs text-slate-400 leading-relaxed">
+          {t("customDaysSectionDesc")}
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+          {/* 1. Allow custom number of days */}
+          <div
+            onClick={() => setAllowedBookingPeriods("ALL")}
+            className={`cursor-pointer p-4 rounded-xl border transition relative flex flex-col justify-between ${
+              allowedBookingPeriods === "ALL"
+                ? "border-sky-500/80 bg-sky-500/10 shadow-md shadow-sky-500/5 ring-1 ring-sky-500/30"
+                : "border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-900/50"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-white">
+                  {t("customDaysAllowedTitle")}
+                </span>
+                <div
+                  className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                    allowedBookingPeriods === "ALL"
+                      ? "border-sky-400 bg-sky-500"
+                      : "border-slate-600 bg-transparent"
+                  }`}
+                >
+                  {allowedBookingPeriods === "ALL" && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                {t("customDaysAllowedDesc")}
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 text-[11px] text-emerald-400 font-mono">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>Valfria nätter (1–6 dygn samt helveckor)</span>
+            </div>
+          </div>
+
+          {/* 2. Strict 3/4-day periods or full weeks */}
+          <div
+            onClick={() => setAllowedBookingPeriods("PERIODS_AND_WEEKS")}
+            className={`cursor-pointer p-4 rounded-xl border transition relative flex flex-col justify-between ${
+              allowedBookingPeriods === "PERIODS_AND_WEEKS"
+                ? "border-sky-500/80 bg-sky-500/10 shadow-md shadow-sky-500/5 ring-1 ring-sky-500/30"
+                : "border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-900/50"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-white">
+                  {t("customDaysStrictTitle")}
+                </span>
+                <div
+                  className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                    allowedBookingPeriods === "PERIODS_AND_WEEKS"
+                      ? "border-sky-400 bg-sky-500"
+                      : "border-slate-600 bg-transparent"
+                  }`}
+                >
+                  {allowedBookingPeriods === "PERIODS_AND_WEEKS" && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                {t("customDaysStrictDesc")}
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 text-[11px] text-amber-300 font-mono">
+              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+              <span>Fasta delveckor (3/4d) eller helvecka</span>
+            </div>
+          </div>
+
+          {/* 3. Full weeks only from turnover day */}
+          <div
+            onClick={() => setAllowedBookingPeriods("FULL_WEEKS_ONLY")}
+            className={`cursor-pointer p-4 rounded-xl border transition relative flex flex-col justify-between ${
+              allowedBookingPeriods === "FULL_WEEKS_ONLY"
+                ? "border-sky-500/80 bg-sky-500/10 shadow-md shadow-sky-500/5 ring-1 ring-sky-500/30"
+                : "border-slate-800 bg-slate-950/40 hover:border-slate-700 hover:bg-slate-900/50"
+            }`}
+          >
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-bold text-white">
+                  {t("customDaysFullWeeksTitle")}
+                </span>
+                <div
+                  className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                    allowedBookingPeriods === "FULL_WEEKS_ONLY"
+                      ? "border-sky-400 bg-sky-500"
+                      : "border-slate-600 bg-transparent"
+                  }`}
+                >
+                  {allowedBookingPeriods === "FULL_WEEKS_ONLY" && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                {t("customDaysFullWeeksDesc")}
+              </p>
+            </div>
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 text-[11px] text-purple-300 font-mono">
+              <Calendar className="w-3.5 h-3.5 shrink-0" />
+              <span>Enbart hela veckor (7, 14, 21 nätter...)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Live Preview Card */}
       <div className="rounded-xl border border-sky-500/20 bg-sky-950/20 p-4 flex items-start gap-3">
         <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
           <div className="font-semibold text-sky-200">
-            Förhandsgranskning av kalendertext:
+            Sammanfattning av gällande regler:
           </div>
-          <div className="text-slate-300 italic">
-            &ldquo;Incheckning sker kl {checkInTime || "15:00"} och utcheckning kl{" "}
-            {checkOutTime || "11:00"}. Bytesdagar visas som delade dagar där båda
-            sällskapen kan anlända och avresa samma dag. Perioder utanför aktiv
-            prissäsong samt spärrade datum visas som Ej uthyrning och går ej att
-            boka.&rdquo;
+          <div className="text-slate-300">
+            Bytesdag: <span className="text-white font-medium">{turnoverDay === "SUNDAY" ? "Söndag" : "Lördag"}</span> ({turnoverDayScope === "GLOBAL" ? "Låst globalt" : "Kan anpassas per objekt"})
+            {" • "}
+            Tider: <span className="text-white font-medium">In {checkInTime || "15:00"} / Ut {checkOutTime || "11:00"}</span> ({checkTimesScope === "GLOBAL" ? "Låst globalt" : "Kan anpassas per objekt"})
+            {" • "}
+            Bokningsperioder: <span className="text-white font-medium">
+              {allowedBookingPeriods === "ALL"
+                ? "Valfritt antal dygn (1-6 dgr)"
+                : allowedBookingPeriods === "PERIODS_AND_WEEKS"
+                ? "Endast 3/4-dagars eller helveckor"
+                : "Endast hela veckor (från bytesdag)"}
+            </span> ({customDaysScope === "GLOBAL" ? "Låst globalt" : "Kan anpassas per objekt"})
           </div>
         </div>
       </div>

@@ -32,19 +32,19 @@ import {
 } from "lucide-react";
 import { ModalPortal } from "../components/ui/modal-portal";
 
-export interface BookingCalendarProps {
+export interface UnitCalendarInteractProps {
   objectId: string;
   objectName?: string;
   basePrice?: number;
   className?: string;
 }
 
-export function BookingCalendar({
+export function UnitCalendarInteract({
   objectId,
   objectName = "Boende",
   basePrice = 2500,
   className = "",
-}: BookingCalendarProps) {
+}: UnitCalendarInteractProps) {
   const { data: session } = useSession();
   const isAdmin = Boolean(session?.user);
   const queryClient = useQueryClient();

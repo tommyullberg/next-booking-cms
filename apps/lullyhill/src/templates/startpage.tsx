@@ -3,7 +3,7 @@
 import React from "react";
 import {
   CMSField,
-  BookingCalendar,
+  UnitCalendar,
   AvailabilitySearch,
   CMSPageData,
 } from "@next-booking/cms-core";
@@ -50,7 +50,7 @@ export function StartpageTemplate({ page }: { page: CMSPageData }) {
           />
         </CMSField.Group>
 
-        <BookingCalendar
+        <UnitCalendar
           objectId="lullyhill-villa"
           objectName={page.page_title}
           basePrice={3200}

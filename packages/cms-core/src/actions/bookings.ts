@@ -3,6 +3,8 @@ import { BookingStatus } from "@prisma/client";
 import { AvailabilitySearchResult, CreateBookingRequest, SearchMatchItem } from "../booking/types";
 import { sendBookingEmail } from "../mail";
 import { getMondayOfISOWeek, getSundayOfISOWeek } from "../utils/weeks";
+import { getCmsSettingsAction } from "./settings";
+import { AllowedBookingPeriods } from "../types/settings";
 
 export async function resolveBookingObjectId(idOrAlias?: string): Promise<string | undefined> {
   if (!idOrAlias) return undefined;
@@ -129,6 +131,10 @@ export async function searchAvailabilityAction(params: {
       Math.round((targetEnd.getTime() - targetStart.getTime()) / (1000 * 60 * 60 * 24))
     );
 
+    // Retrieve global booking settings
+    const cmsSettings = await getCmsSettingsAction();
+    const bookingSettings = cmsSettings?.bookingSettings;
+
     // Fetch all objects that meet capacity and pet criteria
     const objects = await prisma.bookingObject.findMany({
       where: {
@@ -147,7 +153,7 @@ export async function searchAvailabilityAction(params: {
     const exactMatches: SearchMatchItem[] = [];
     const alternatives: SearchMatchItem[] = [];
 
-    // Helper to check if object is available for a date range
+    // Helper to check if an object has overlapping active bookings
     async function isAvailable(objId: string, sDate: Date, eDate: Date): Promise<boolean> {
       const conflict = await prisma.booking.findFirst({
         where: {
@@ -166,7 +172,97 @@ export async function searchAvailabilityAction(params: {
     }
 
     for (const obj of objects) {
-      const exactOk = await isAvailable(obj.id, targetStart, targetEnd);
+      // 1. Resolve effective turnover day for this unit
+      const turnoverScope = bookingSettings?.turnoverDayScope ?? "GLOBAL";
+      const objCustom = (obj.price_matrix as any)?.booking_settings;
+      const turnoverDayName =
+        (turnoverScope === "PER_OBJECT" && objCustom?.defaultTurnoverDay) ||
+        bookingSettings?.defaultTurnoverDay ||
+        "SUNDAY";
+      const turnoverDayOfWeek = turnoverDayName === "SATURDAY" ? 6 : 0; // 6 = Saturday, 0 = Sunday
+
+      // 2. Resolve effective allowed booking periods for this unit
+      const customDaysScope = bookingSettings?.customDaysScope ?? "GLOBAL";
+      const allowedPeriods: AllowedBookingPeriods =
+        (customDaysScope === "PER_OBJECT" && objCustom?.allowedBookingPeriods) ||
+        (customDaysScope === "PER_OBJECT" && typeof objCustom?.allowCustomDays === "boolean"
+          ? (objCustom.allowCustomDays ? "ALL" : "PERIODS_AND_WEEKS")
+          : null) ||
+        bookingSettings?.allowedBookingPeriods ||
+        (bookingSettings?.allowCustomDays === false ? "PERIODS_AND_WEEKS" : "ALL");
+
+      // 3. Fetch active seasonal price periods for this unit
+      const pricePeriods = await prisma.objectPricePeriod.findMany({
+        where: { object_id: obj.id },
+      });
+
+      // Validates whether the date range strictly complies with the unit's allowed rental periods
+      function isValidPeriodForObject(sDate: Date, eDate: Date): boolean {
+        const periodNights = Math.max(
+          1,
+          Math.round((eDate.getTime() - sDate.getTime()) / (1000 * 60 * 60 * 24))
+        );
+        const startDow = sDate.getDay();
+        const endDow = eDate.getDay();
+
+        if (allowedPeriods === "ALL") {
+          return true; // Any number of contiguous nights is permitted
+        }
+
+        if (allowedPeriods === "FULL_WEEKS_ONLY") {
+          // Must start on turnover day, end on turnover day, and be an exact multiple of 7 nights
+          const startsOnTurnover = startDow === turnoverDayOfWeek;
+          const endsOnTurnover = endDow === turnoverDayOfWeek;
+          const isMultipleOf7 = periodNights % 7 === 0 && periodNights >= 7;
+          return startsOnTurnover && endsOnTurnover && isMultipleOf7;
+        }
+
+        if (allowedPeriods === "PERIODS_AND_WEEKS") {
+          // Allowed:
+          // 1. Full weeks: multiple of 7 starting/ending on turnover day
+          // 2. 3 nights: Thursday (4) to Sunday (0)
+          // 3. 4 nights: Sunday (0) to Thursday (4)
+          const isFullWeek =
+            periodNights % 7 === 0 &&
+            startDow === turnoverDayOfWeek &&
+            endDow === turnoverDayOfWeek;
+          const isThuToSun = periodNights === 3 && startDow === 4 && endDow === 0;
+          const isSunToThu = periodNights === 4 && startDow === 0 && endDow === 4;
+          return isFullWeek || isThuToSun || isSunToThu;
+        }
+
+        return true;
+      }
+
+      // Validates whether the date range falls entirely within an active seasonal price period
+      function isInActiveSeason(sDate: Date, eDate: Date): boolean {
+        if (!pricePeriods || pricePeriods.length === 0) return true;
+        const sStr = sDate.toISOString().split("T")[0];
+        const eStr = eDate.toISOString().split("T")[0];
+        return pricePeriods.some((p: any) => {
+          let pStart: string | null = null;
+          let pEnd: string | null = null;
+          if (p.start_date && p.end_date) {
+            pStart =
+              typeof p.start_date === "string"
+                ? p.start_date.slice(0, 10)
+                : new Date(p.start_date).toISOString().split("T")[0];
+            pEnd =
+              typeof p.end_date === "string"
+                ? p.end_date.slice(0, 10)
+                : new Date(p.end_date).toISOString().split("T")[0];
+          } else if (p.start_year && p.start_week && p.end_year && p.end_week) {
+            pStart = getMondayOfISOWeek(p.start_year, p.start_week)
+              .toISOString()
+              .split("T")[0];
+            pEnd = getSundayOfISOWeek(p.end_year, p.end_week)
+              .toISOString()
+              .split("T")[0];
+          }
+          return pStart && pEnd && sStr >= pStart && eStr <= pEnd;
+        });
+      }
+
       const item: SearchMatchItem = {
         object: {
           id: obj.id,
@@ -189,28 +285,48 @@ export async function searchAvailabilityAction(params: {
         totalPrice: calculatePrice(obj, nights),
       };
 
+      const periodMatches = isValidPeriodForObject(targetStart, targetEnd);
+      const seasonMatches = isInActiveSeason(targetStart, targetEnd);
+      const exactOk =
+        periodMatches &&
+        seasonMatches &&
+        (await isAvailable(obj.id, targetStart, targetEnd));
+
       if (exactOk) {
         exactMatches.push(item);
-      } else if (flexDays > 0) {
-        // Check flexible date offsets
-        for (let offset = 1; offset <= flexDays; offset++) {
-          for (const dir of [1, -1]) {
-            const shiftDays = offset * dir;
-            const altStart = new Date(targetStart.getTime() + shiftDays * 86400000);
-            const altEnd = new Date(targetEnd.getTime() + shiftDays * 86400000);
+      } else {
+        // Evaluate alternative periods if flexDays are specified or if period doesn't align with rules
+        const maxOffset = Math.max(flexDays, allowedPeriods === "FULL_WEEKS_ONLY" ? 7 : 0);
+        if (maxOffset > 0) {
+          for (let offset = 1; offset <= maxOffset; offset++) {
+            for (const dir of [1, -1]) {
+              const shiftDays = offset * dir;
+              const altStart = new Date(targetStart.getTime() + shiftDays * 86400000);
+              const altEnd = new Date(targetEnd.getTime() + shiftDays * 86400000);
 
-            const altOk = await isAvailable(obj.id, altStart, altEnd);
-            if (altOk) {
-              alternatives.push({
-                ...item,
-                startDate: altStart.toISOString().split("T")[0],
-                endDate: altEnd.toISOString().split("T")[0],
-                offsetDays: shiftDays,
-              });
-              break;
+              if (
+                isValidPeriodForObject(altStart, altEnd) &&
+                isInActiveSeason(altStart, altEnd)
+              ) {
+                const altOk = await isAvailable(obj.id, altStart, altEnd);
+                if (altOk) {
+                  const altNights = Math.round(
+                    (altEnd.getTime() - altStart.getTime()) / 86400000
+                  );
+                  alternatives.push({
+                    ...item,
+                    startDate: altStart.toISOString().split("T")[0],
+                    endDate: altEnd.toISOString().split("T")[0],
+                    nights: altNights,
+                    totalPrice: calculatePrice(obj, altNights),
+                    offsetDays: shiftDays,
+                  });
+                  break;
+                }
+              }
             }
+            if (alternatives.some((a) => a.object.id === obj.id)) break;
           }
-          if (alternatives.some((a) => a.object.id === obj.id)) break;
         }
       }
     }

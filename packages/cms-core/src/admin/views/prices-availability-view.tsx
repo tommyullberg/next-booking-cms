@@ -40,6 +40,7 @@ import {
 } from "../../constants/dates";
 import type { MissingWeekRange, BlockedPeriodItem } from "../../actions/price-periods";
 import { ModalPortal } from "../../components/ui/modal-portal";
+import { useBookingSettingsQuery } from "../../booking/hooks";
 
 export type { MissingWeekRange, BlockedPeriodItem };
 
@@ -116,6 +117,26 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
     }
     return objects[0]?.id || "";
   });
+
+  const { data: bookingSettings } = useBookingSettingsQuery();
+  const currentSelectedObject = useMemo(() => {
+    return objects.find((o) => o.id === selectedObjectId);
+  }, [objects, selectedObjectId]);
+  const isCustomDaysAllowed = useMemo(() => {
+    const scope = bookingSettings?.customDaysScope ?? "GLOBAL";
+    const objSettings = (currentSelectedObject?.price_matrix as any)?.booking_settings;
+    if (scope === "PER_OBJECT" && objSettings?.allowedBookingPeriods) {
+      return objSettings.allowedBookingPeriods === "ALL";
+    }
+    if (scope === "PER_OBJECT" && objSettings?.allowCustomDays !== undefined) {
+      return Boolean(objSettings.allowCustomDays);
+    }
+    const globalPeriods = bookingSettings?.allowedBookingPeriods;
+    if (globalPeriods) {
+      return globalPeriods === "ALL";
+    }
+    return bookingSettings?.allowCustomDays ?? true;
+  }, [currentSelectedObject, bookingSettings]);
 
   // Year selection (stored in localStorage, filters out past years)
   const [selectedYear, setSelectedYear] = useState<number>(() => {
@@ -849,8 +870,12 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 <tr>
                   <th className='py-3 px-4'>{t("colPeriodName")}</th>
                   <th className='py-3 px-4 text-center'>{t("colDateRange")}</th>
-                  <th className='py-3 px-4 text-center'>{t("colCustomDays")}</th>
-                  <th className='py-3 px-4 text-right'>{t("colDaily")}</th>
+                  {isCustomDaysAllowed && (
+                    <th className='py-3 px-4 text-center'>{t("colCustomDays")}</th>
+                  )}
+                  {isCustomDaysAllowed && (
+                    <th className='py-3 px-4 text-right'>{t("colDaily")}</th>
+                  )}
                   <th className='py-3 px-4 text-right'>{t("colSunThu")}</th>
                   <th className='py-3 px-4 text-right'>{t("colThuSun")}</th>
                   <th className='py-3 px-4 text-right font-bold text-slate-300'>{t("colFullWeek")}</th>
@@ -890,19 +915,23 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         )}
                       </div>
                     </td>
-                    <td className='py-3.5 px-4 text-center'>
-                      {period.allow_custom_days ? (
-                        <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 text-[11px] font-medium border border-emerald-500/30'>
-                          <CheckCircle2 className='w-3 h-3' />
-                          <span>{t("allowed")}</span>
-                        </span>
-                      ) : (
-                        <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[11px] font-medium border border-slate-700'>
-                          <span>{t("fullWeekOnly")}</span>
-                        </span>
-                      )}
-                    </td>
-                    <td className='py-3.5 px-4 text-right font-medium'>{formatKr(period.price_day)}</td>
+                    {isCustomDaysAllowed && (
+                      <td className='py-3.5 px-4 text-center'>
+                        {period.allow_custom_days ? (
+                          <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 text-[11px] font-medium border border-emerald-500/30'>
+                            <CheckCircle2 className='w-3 h-3' />
+                            <span>{t("allowed")}</span>
+                          </span>
+                        ) : (
+                          <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[11px] font-medium border border-slate-700'>
+                            <span>{t("fullWeekOnly")}</span>
+                          </span>
+                        )}
+                      </td>
+                    )}
+                    {isCustomDaysAllowed && (
+                      <td className='py-3.5 px-4 text-right font-medium'>{formatKr(period.price_day)}</td>
+                    )}
                     <td className='py-3.5 px-4 text-right font-medium'>{formatKr(period.price_sun_thu)}</td>
                     <td className='py-3.5 px-4 text-right font-medium'>{formatKr(period.price_thu_sun)}</td>
                     <td className='py-3.5 px-4 text-right font-bold text-amber-300'>{formatKr(period.price_week)}</td>
@@ -1382,18 +1411,20 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 )}
 
                 {/* Base Prices: Daily & Weekly */}
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-800'>
-                  <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>{t("modal.dailyBasePrice")}</label>
-                    <input
-                      type='number'
-                      step='any'
-                      placeholder={t("modal.priceOptionalPlaceholder", { amount: "1500" })}
-                      value={formPriceDay}
-                      onChange={(e) => setFormPriceDay(e.target.value)}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
-                    />
-                  </div>
+                <div className={`grid gap-3 pt-2 border-t border-slate-800 ${isCustomDaysAllowed ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
+                  {isCustomDaysAllowed && (
+                    <div>
+                      <label className='block text-xs font-semibold text-slate-300 mb-1.5'>{t("modal.dailyBasePrice")}</label>
+                      <input
+                        type='number'
+                        step='any'
+                        placeholder={t("modal.priceOptionalPlaceholder", { amount: "1500" })}
+                        value={formPriceDay}
+                        onChange={(e) => setFormPriceDay(e.target.value)}
+                        className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className='block text-xs font-semibold text-amber-300 mb-1.5'>{t("modal.priceWeek")}</label>
                     <input
@@ -1437,78 +1468,81 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   </div>
                 </div>
 
-                {/* Custom Days Toggle */}
-                <div className='pt-2 border-t border-slate-800'>
-                  <label className='flex items-center gap-2.5 cursor-pointer'>
-                    <input
-                      type='checkbox'
-                      checked={formAllowCustomDays}
-                      onChange={(e) => setFormAllowCustomDays(e.target.checked)}
-                      className='h-4 w-4 rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900'
-                    />
-                    <span className='text-xs font-semibold text-slate-200'>
-                      {t("modal.allowCustomDays")}
-                    </span>
-                  </label>
-                </div>
-
-                {/* Tiered Custom Day Prices */}
-                {formAllowCustomDays && (
-                  <div className='p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-3'>
-                    <div className='text-[11px] font-semibold text-slate-300'>{t("modal.tieredPricesTitle")}</div>
-                    <div className='grid grid-cols-2 sm:grid-cols-5 gap-2.5'>
-                      <div>
-                        <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 2 })}</label>
+                {/* Custom Days Toggle & Tiered Prices (only if custom days are enabled for this unit) */}
+                {isCustomDaysAllowed && (
+                  <>
+                    <div className='pt-2 border-t border-slate-800'>
+                      <label className='flex items-center gap-2.5 cursor-pointer'>
                         <input
-                          type='number'
-                          step='any'
-                          value={formPrice2Days}
-                          onChange={(e) => setFormPrice2Days(e.target.value)}
-                          className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
+                          type='checkbox'
+                          checked={formAllowCustomDays}
+                          onChange={(e) => setFormAllowCustomDays(e.target.checked)}
+                          className='h-4 w-4 rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900'
                         />
-                      </div>
-                      <div>
-                        <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 3 })}</label>
-                        <input
-                          type='number'
-                          step='any'
-                          value={formPrice3Days}
-                          onChange={(e) => setFormPrice3Days(e.target.value)}
-                          className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 4 })}</label>
-                        <input
-                          type='number'
-                          step='any'
-                          value={formPrice4Days}
-                          onChange={(e) => setFormPrice4Days(e.target.value)}
-                          className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 5 })}</label>
-                        <input
-                          type='number'
-                          step='any'
-                          value={formPrice5Days}
-                          onChange={(e) => setFormPrice5Days(e.target.value)}
-                          className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
-                        />
-                      </div>
-                      <div>
-                        <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 6 })}</label>
-                        <input
-                          type='number'
-                          step='any'
-                          value={formPrice6Days}
-                          onChange={(e) => setFormPrice6Days(e.target.value)}
-                          className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
-                        />
-                      </div>
+                        <span className='text-xs font-semibold text-slate-200'>
+                          {t("modal.allowCustomDays")}
+                        </span>
+                      </label>
                     </div>
-                  </div>
+
+                    {formAllowCustomDays && (
+                      <div className='p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-3'>
+                        <div className='text-[11px] font-semibold text-slate-300'>{t("modal.tieredPricesTitle")}</div>
+                        <div className='grid grid-cols-2 sm:grid-cols-5 gap-2.5'>
+                          <div>
+                            <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 2 })}</label>
+                            <input
+                              type='number'
+                              step='any'
+                              value={formPrice2Days}
+                              onChange={(e) => setFormPrice2Days(e.target.value)}
+                              className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
+                            />
+                          </div>
+                          <div>
+                            <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 3 })}</label>
+                            <input
+                              type='number'
+                              step='any'
+                              value={formPrice3Days}
+                              onChange={(e) => setFormPrice3Days(e.target.value)}
+                              className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
+                            />
+                          </div>
+                          <div>
+                            <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 4 })}</label>
+                            <input
+                              type='number'
+                              step='any'
+                              value={formPrice4Days}
+                              onChange={(e) => setFormPrice4Days(e.target.value)}
+                              className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
+                            />
+                          </div>
+                          <div>
+                            <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 5 })}</label>
+                            <input
+                              type='number'
+                              step='any'
+                              value={formPrice5Days}
+                              onChange={(e) => setFormPrice5Days(e.target.value)}
+                              className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
+                            />
+                          </div>
+                          <div>
+                            <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 6 })}</label>
+                            <input
+                              type='number'
+                              step='any'
+                              value={formPrice6Days}
+                              onChange={(e) => setFormPrice6Days(e.target.value)}
+                              className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Modal Buttons */}

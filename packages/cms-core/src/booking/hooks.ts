@@ -49,6 +49,27 @@ export function usePricePeriodsQuery(objectId?: string) {
   });
 }
 
+export function useBookingObjectQuery(objectId?: string) {
+  return useQuery<any>({
+    queryKey: ["booking-object", objectId || "unknown"],
+    queryFn: async () => {
+      if (!objectId) return null;
+      try {
+        const res = await fetch(`/api/cms/booking-objects/${objectId}`);
+        if (res.ok) return res.json();
+        const allRes = await fetch("/api/cms/booking-objects");
+        if (!allRes.ok) return null;
+        const list = await allRes.json();
+        return list.find((o: any) => o.id === objectId || o.slug === objectId) || null;
+      } catch {
+        return null;
+      }
+    },
+    enabled: Boolean(objectId),
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useAvailabilitySearchQuery(params: {
   startDate: string;
   endDate: string;

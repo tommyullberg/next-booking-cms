@@ -4,7 +4,7 @@ The booking engine in NextBooking CMS combines an interactive guest reservation 
 
 ## TanStack Query Booking Calendar
 
-The booking calendar (`BookingCalendar`) leverages `@tanstack/react-query` for asynchronous availability fetching, automatic background cache invalidation, and optimistic state updates.
+The booking calendar (`UnitCalendar`) leverages `@tanstack/react-query` for asynchronous availability fetching, automatic background cache invalidation, and optimistic state updates. Depending on unit rental settings, it seamlessly renders either an interactive booking calendar (`UnitCalendarInteract`) or a display-only availability overview (`UnitCalendarView`).
 
 ### Core Features
 
