@@ -5,6 +5,11 @@ import { CMSField, BookingCalendar, CMSPageData } from "@next-booking/cms-core";
 import { DemoSiteLayout } from "../components/site-layout";
 
 export function BookingUnitTemplate({ page }: { page: CMSPageData }) {
+  const bookingObj = page.objects?.[0];
+  const objectId = bookingObj?.id || `unit-${page.id}`;
+  const objectName = bookingObj?.name || page.page_title;
+  const basePrice = (bookingObj?.price_matrix as any)?.base_night_price || 2400;
+
   return (
     <DemoSiteLayout page={page}>
       <section className='space-y-4 max-w-3xl'>
@@ -49,7 +54,7 @@ export function BookingUnitTemplate({ page }: { page: CMSPageData }) {
       </CMSField.Group>
 
       <section id='calendar' className='space-y-4'>
-        <BookingCalendar objectId={`unit-${page.id}`} objectName={page.page_title} basePrice={2400} />
+        <BookingCalendar objectId={objectId} objectName={objectName} basePrice={basePrice} />
       </section>
     </DemoSiteLayout>
   );

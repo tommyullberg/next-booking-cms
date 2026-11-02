@@ -111,6 +111,7 @@ import {
   getBookingsAction,
   searchAvailabilityAction,
   createBookingRequestAction,
+  updateBookingAction,
 } from "../actions/bookings";
 import { prisma } from "../db";
 
@@ -298,9 +299,29 @@ export async function handleCmsApiRoute(
       try {
         const body = await req.json();
         const result = await createBookingRequestAction(body);
+        revalidateBookingCaches();
         return NextResponse.json(result);
       } catch (err: any) {
         return NextResponse.json({ error: err?.message }, { status: 400 });
+      }
+    }
+    if (path === "bookings" || path.startsWith("bookings/")) {
+      try {
+        const body = await req.json();
+        if (body.id) {
+          const updated = await updateBookingAction(body);
+          revalidateBookingCaches();
+          return NextResponse.json(updated);
+        } else {
+          const created = await createBookingRequestAction(body);
+          revalidateBookingCaches();
+          return NextResponse.json(created);
+        }
+      } catch (err: any) {
+        return NextResponse.json(
+          { error: err?.message || "Failed to save booking" },
+          { status: 400 }
+        );
       }
     }
     if (path === "pages" || path.startsWith("pages/")) {

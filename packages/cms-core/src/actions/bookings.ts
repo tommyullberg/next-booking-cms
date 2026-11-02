@@ -2,8 +2,9 @@ import { prisma } from "../db";
 import { BookingStatus } from "@prisma/client";
 import { AvailabilitySearchResult, CreateBookingRequest, SearchMatchItem } from "../booking/types";
 import { sendBookingEmail } from "../mail";
+import { getMondayOfISOWeek, getSundayOfISOWeek } from "../utils/weeks";
 
-async function resolveBookingObjectId(idOrAlias?: string): Promise<string | undefined> {
+export async function resolveBookingObjectId(idOrAlias?: string): Promise<string | undefined> {
   if (!idOrAlias) return undefined;
 
   // 1. Direct match on BookingObject ID
@@ -78,11 +79,32 @@ export async function getBookingsAction(params?: {
       customerName: b.customer_name,
       customerEmail: b.customer_email,
       customerPhone: b.customer_phone,
+      customerMobile: b.customer_mobile,
+      addressLine1: b.address_line1,
+      addressLine2: b.address_line2,
+      postalCode: b.postal_code,
+      city: b.city,
+      country: b.country || "Sverige",
       guestsCount: b.guests_count,
+      adultsCount: b.adults_count,
+      childrenCount: b.children_count,
       petsCount: b.pets_count,
       price: b.price,
+      depositAmount: b.deposit_amount,
+      depositDueDate: b.deposit_due_date ? b.deposit_due_date.toISOString().split("T")[0] : null,
+      depositPaidAt: b.deposit_paid_at ? b.deposit_paid_at.toISOString().split("T")[0] : null,
+      finalPaymentAmount: b.final_payment_amount,
+      finalPaymentDueDate: b.final_payment_due_date ? b.final_payment_due_date.toISOString().split("T")[0] : null,
+      finalPaymentPaidAt: b.final_payment_paid_at ? b.final_payment_paid_at.toISOString().split("T")[0] : null,
+      contractNumber: b.contract_number,
+      contractSentAt: b.contract_sent_at ? b.contract_sent_at.toISOString().split("T")[0] : null,
+      contractReceivedAt: b.contract_received_at ? b.contract_received_at.toISOString().split("T")[0] : null,
+      customerNotes: b.customer_notes,
+      adminNotes: b.admin_notes,
+      isPreliminary: b.is_preliminary,
       icalSourceId: b.ical_source_id,
       createdAt: b.created_at.toISOString(),
+      updatedAt: b.updated_at.toISOString(),
     }));
   } catch (error) {
     console.error("[cms-core] Failed to fetch bookings:", error);
@@ -130,7 +152,7 @@ export async function searchAvailabilityAction(params: {
       const conflict = await prisma.booking.findFirst({
         where: {
           object_id: objId,
-          status: { in: [BookingStatus.PENDING, BookingStatus.APPROVED, BookingStatus.IMPORTED] },
+          status: { notIn: [BookingStatus.CANCELLED, BookingStatus.REJECTED] },
           start_date: { lt: eDate },
           end_date: { gt: sDate },
         },
@@ -242,7 +264,7 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
   const conflict = await prisma.booking.findFirst({
     where: {
       object_id: resolvedObjectId,
-      status: { in: [BookingStatus.PENDING, BookingStatus.APPROVED, BookingStatus.IMPORTED] },
+      status: { notIn: [BookingStatus.CANCELLED, BookingStatus.REJECTED] },
       start_date: { lt: end },
       end_date: { gt: start },
     },
@@ -250,6 +272,34 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
 
   if (conflict) {
     throw new Error("De valda datumen är tyvärr redan upptagna.");
+  }
+
+  // Verify that all nights are within active configured price periods
+  const periods = await prisma.objectPricePeriod.findMany({
+    where: { object_id: resolvedObjectId },
+  });
+
+  if (periods.length > 0) {
+    let curr = new Date(start);
+    while (curr < end) {
+      const dayStr = curr.toISOString().split("T")[0];
+      const inSeason = periods.some((p) => {
+        let s = p.start_date ? p.start_date.toISOString().split("T")[0] : null;
+        let e = p.end_date ? p.end_date.toISOString().split("T")[0] : null;
+        if (!s && p.start_year && p.start_week) {
+          s = getMondayOfISOWeek(p.start_year, p.start_week).toISOString().split("T")[0];
+        }
+        if (!e && p.end_year && p.end_week) {
+          e = getSundayOfISOWeek(p.end_year, p.end_week).toISOString().split("T")[0];
+        }
+        return s && e && dayStr >= s && dayStr <= e;
+      });
+
+      if (!inSeason) {
+        throw new Error("De valda datumen ligger utanför objektets bokningsbara prisperioder.");
+      }
+      curr.setDate(curr.getDate() + 1);
+    }
   }
 
   const obj = await prisma.bookingObject.findUnique({
@@ -260,7 +310,9 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
   const baseNightPrice = (obj?.price_matrix as any)?.base_night_price || 2500;
   const totalPrice = baseNightPrice * nights;
 
-  // Create booking with status PENDING (blocks calendar)
+  const isPreliminary = Boolean(data.isPreliminary);
+
+  // Create booking (status PENDING blocks calendar)
   const booking = await prisma.booking.create({
     data: {
       object_id: resolvedObjectId,
@@ -268,9 +320,19 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
       end_date: end,
       customer_name: data.customerName,
       customer_email: data.customerEmail,
-      customer_phone: data.customerPhone,
-      guests_count: data.guestsCount,
-      pets_count: data.petsCount,
+      customer_phone: data.customerPhone || null,
+      customer_mobile: data.customerMobile || null,
+      address_line1: data.addressLine1 || null,
+      address_line2: data.addressLine2 || null,
+      postal_code: data.postalCode || null,
+      city: data.city || null,
+      country: data.country || "Sverige",
+      guests_count: data.guestsCount || ((data.adultsCount || 1) + (data.childrenCount || 0)),
+      adults_count: data.adultsCount ?? (data.guestsCount || 1),
+      children_count: data.childrenCount ?? 0,
+      pets_count: data.petsCount || 0,
+      customer_notes: data.customerNotes || null,
+      is_preliminary: isPreliminary,
       price: totalPrice,
       status: BookingStatus.PENDING,
     },
@@ -285,15 +347,15 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
     const mailVariables = {
       customer_name: data.customerName,
       customer_email: data.customerEmail,
-      customer_phone: data.customerPhone || "Ej angivet",
+      customer_phone: data.customerPhone || data.customerMobile || "Ej angivet",
       object_name: obj?.name || "Boende",
       start_date: data.startDate,
       end_date: data.endDate,
-      guests_count: data.guestsCount,
-      pets_count: data.petsCount,
+      guests_count: data.guestsCount || ((data.adultsCount || 1) + (data.childrenCount || 0)),
+      pets_count: data.petsCount || 0,
       price: `${totalPrice} SEK`,
       deeplink,
-      status: "PENDING",
+      status: isPreliminary ? "PRELIMINARY" : "PENDING",
     };
 
     // 1. Send notification to administrator
@@ -306,4 +368,161 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
   }
 
   return booking;
+}
+
+function parseDateOrNull(val: string | null | undefined): Date | null | undefined {
+  if (val === undefined) return undefined;
+  if (!val || typeof val !== "string" || val.trim() === "") return null;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+export async function updateBookingAction(data: {
+  id: string;
+  startDate?: string;
+  endDate?: string;
+  status?: BookingStatus;
+  price?: number | null;
+  depositAmount?: number | null;
+  depositDueDate?: string | null;
+  depositPaidAt?: string | null;
+  finalPaymentAmount?: number | null;
+  finalPaymentDueDate?: string | null;
+  finalPaymentPaidAt?: string | null;
+  contractNumber?: string | null;
+  contractSentAt?: string | null;
+  contractReceivedAt?: string | null;
+  adminNotes?: string | null;
+  customerNotes?: string | null;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string | null;
+  customerMobile?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
+  postalCode?: string | null;
+  city?: string | null;
+  country?: string | null;
+  adultsCount?: number;
+  childrenCount?: number;
+  guestsCount?: number;
+  petsCount?: number;
+  isPreliminary?: boolean;
+}) {
+  const existing = await prisma.booking.findUnique({
+    where: { id: data.id },
+    select: { id: true, ical_source_id: true, status: true },
+  });
+
+  if (!existing) {
+    throw new Error("Bokningen kunde inte hittas.");
+  }
+
+  const isImported =
+    existing.status === BookingStatus.IMPORTED ||
+    (Boolean(existing.ical_source_id) && existing.ical_source_id !== "blocked_period");
+
+  if (isImported) {
+    throw new Error(
+      "Importerade bokningar från iCal / externa kanaler är låsta och kan inte redigeras."
+    );
+  }
+
+  const updateData: any = {};
+  if (data.startDate !== undefined) {
+    const parsed = parseDateOrNull(data.startDate);
+    if (parsed) updateData.start_date = parsed;
+  }
+  if (data.endDate !== undefined) {
+    const parsed = parseDateOrNull(data.endDate);
+    if (parsed) updateData.end_date = parsed;
+  }
+  if (data.status !== undefined) updateData.status = data.status;
+  if (data.price !== undefined) updateData.price = data.price;
+  if (data.depositAmount !== undefined) updateData.deposit_amount = data.depositAmount;
+  if (data.depositDueDate !== undefined) {
+    updateData.deposit_due_date = parseDateOrNull(data.depositDueDate);
+  }
+  if (data.depositPaidAt !== undefined) {
+    updateData.deposit_paid_at = parseDateOrNull(data.depositPaidAt);
+  }
+  if (data.finalPaymentAmount !== undefined) updateData.final_payment_amount = data.finalPaymentAmount;
+  if (data.finalPaymentDueDate !== undefined) {
+    updateData.final_payment_due_date = parseDateOrNull(data.finalPaymentDueDate);
+  }
+  if (data.finalPaymentPaidAt !== undefined) {
+    updateData.final_payment_paid_at = parseDateOrNull(data.finalPaymentPaidAt);
+  }
+  if (data.contractNumber !== undefined) updateData.contract_number = data.contractNumber;
+  if (data.contractSentAt !== undefined) {
+    updateData.contract_sent_at = parseDateOrNull(data.contractSentAt);
+  }
+  if (data.contractReceivedAt !== undefined) {
+    updateData.contract_received_at = parseDateOrNull(data.contractReceivedAt);
+  }
+  if (data.adminNotes !== undefined) updateData.admin_notes = data.adminNotes;
+  if (data.customerNotes !== undefined) updateData.customer_notes = data.customerNotes;
+  if (data.customerName !== undefined) updateData.customer_name = data.customerName;
+  if (data.customerEmail !== undefined) updateData.customer_email = data.customerEmail;
+  if (data.customerPhone !== undefined) updateData.customer_phone = data.customerPhone;
+  if (data.customerMobile !== undefined) updateData.customer_mobile = data.customerMobile;
+  if (data.addressLine1 !== undefined) updateData.address_line1 = data.addressLine1;
+  if (data.addressLine2 !== undefined) updateData.address_line2 = data.addressLine2;
+  if (data.postalCode !== undefined) updateData.postal_code = data.postalCode;
+  if (data.city !== undefined) updateData.city = data.city;
+  if (data.country !== undefined) updateData.country = data.country;
+  if (data.adultsCount !== undefined) updateData.adults_count = data.adultsCount;
+  if (data.childrenCount !== undefined) updateData.children_count = data.childrenCount;
+  if (data.guestsCount !== undefined) updateData.guests_count = data.guestsCount;
+  if (data.petsCount !== undefined) updateData.pets_count = data.petsCount;
+  if (data.isPreliminary !== undefined) updateData.is_preliminary = data.isPreliminary;
+
+  const updated = await prisma.booking.update({
+    where: { id: data.id },
+    data: updateData,
+    include: {
+      object: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  return {
+    id: updated.id,
+    objectId: updated.object_id,
+    objectName: updated.object?.name || "Unknown Object",
+    startDate: updated.start_date.toISOString().split("T")[0],
+    endDate: updated.end_date.toISOString().split("T")[0],
+    status: updated.status,
+    customerName: updated.customer_name,
+    customerEmail: updated.customer_email,
+    customerPhone: updated.customer_phone,
+    customerMobile: updated.customer_mobile,
+    addressLine1: updated.address_line1,
+    addressLine2: updated.address_line2,
+    postalCode: updated.postal_code,
+    city: updated.city,
+    country: updated.country || "Sverige",
+    guestsCount: updated.guests_count,
+    adultsCount: updated.adults_count,
+    childrenCount: updated.children_count,
+    petsCount: updated.pets_count,
+    price: updated.price,
+    depositAmount: updated.deposit_amount,
+    depositDueDate: updated.deposit_due_date ? updated.deposit_due_date.toISOString().split("T")[0] : null,
+    depositPaidAt: updated.deposit_paid_at ? updated.deposit_paid_at.toISOString().split("T")[0] : null,
+    finalPaymentAmount: updated.final_payment_amount,
+    finalPaymentDueDate: updated.final_payment_due_date ? updated.final_payment_due_date.toISOString().split("T")[0] : null,
+    finalPaymentPaidAt: updated.final_payment_paid_at ? updated.final_payment_paid_at.toISOString().split("T")[0] : null,
+    contractNumber: updated.contract_number,
+    contractSentAt: updated.contract_sent_at ? updated.contract_sent_at.toISOString().split("T")[0] : null,
+    contractReceivedAt: updated.contract_received_at ? updated.contract_received_at.toISOString().split("T")[0] : null,
+    adminNotes: updated.admin_notes,
+    customerNotes: updated.customer_notes,
+    icalSourceId: updated.ical_source_id,
+    isPreliminary: updated.is_preliminary,
+  };
 }

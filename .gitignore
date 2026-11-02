@@ -38,3 +38,7 @@ seed-booking.ts
 mock-ical/*.ics
 public/mock-ical/
 apps/*/public/mock-ical/
+
+.postman/
+postman/
+GEMINI.md

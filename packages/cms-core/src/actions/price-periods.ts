@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { revalidatePath } from "next/cache";
+import { resolveBookingObjectId } from "./bookings";
 import {
   getWeeksInYear,
   getISOWeekNumber,
@@ -98,9 +99,10 @@ export async function getPricePeriodsAction(params?: {
   year?: number;
 }) {
   try {
+    const resolvedObjectId = await resolveBookingObjectId(params?.objectId);
     const where: any = {};
-    if (params?.objectId) {
-      where.object_id = params.objectId;
+    if (resolvedObjectId) {
+      where.object_id = resolvedObjectId;
     }
     if (params?.year) {
       const yearStart = new Date(`${params.year}-01-01T00:00:00.000Z`);
@@ -298,8 +300,9 @@ export async function getBlockedPeriodsAction(
   year?: number
 ): Promise<BlockedPeriodItem[]> {
   try {
+    const resolvedObjectId = (await resolveBookingObjectId(objectId)) || objectId;
     const where: any = {
-      object_id: objectId,
+      object_id: resolvedObjectId,
       status: "APPROVED",
       OR: [
         { ical_source_id: "blocked_period" },
@@ -341,6 +344,7 @@ export async function createBlockedPeriodAction(data: {
   startDate: string;
   endDate: string;
 }) {
+  const resolvedObjectId = (await resolveBookingObjectId(data.objectId)) || data.objectId;
   const start = new Date(data.startDate + "T12:00:00Z");
   const end = new Date(data.endDate + "T12:00:00Z");
 
@@ -350,7 +354,7 @@ export async function createBlockedPeriodAction(data: {
 
   const created = await prisma.booking.create({
     data: {
-      object_id: data.objectId,
+      object_id: resolvedObjectId,
       customer_name: data.name?.trim() || "Not for rent",
       customer_email: "internal@blocked",
       start_date: start,
