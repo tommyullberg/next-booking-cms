@@ -1,8 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
-import { useAvailabilitySearchQuery, useCreateBookingMutation } from "./hooks";
-import { Search, Users, Calendar, Dog, Sparkles, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  useAvailabilitySearchQuery,
+  useCreateBookingMutation,
+  useBookingObjectsQuery,
+  useBookingSettingsQuery,
+} from "./hooks";
+import {
+  Search,
+  Users,
+  Calendar,
+  Dog,
+  Sparkles,
+  CheckCircle2,
+  Loader2,
+  ArrowRight,
+  Home,
+} from "lucide-react";
 import { SearchMatchItem } from "./types";
 import { DatePicker } from "../components/ui/date-picker";
 import { ModalPortal } from "../components/ui/modal-portal";
@@ -14,23 +29,47 @@ export const MIN_SEARCH_LOADER_DURATION_MS = 900;
 export interface AvailabilitySearchProps {
   onSelectBooking?: (item: SearchMatchItem) => void;
   className?: string;
+  initialObjectId?: string;
+}
+
+/**
+ * Calculates the next turnover day strictly after today and spans 1 week (7 nights) until the following turnover day.
+ */
+function getInitialTurnoverDates(turnoverDay: "SUNDAY" | "SATURDAY" = "SUNDAY") {
+  const targetDayOfWeek = turnoverDay === "SATURDAY" ? 6 : 0;
+  const now = new Date();
+
+  // Days until next turnover day strictly after today (1 to 7 days ahead)
+  const daysUntilNext = (targetDayOfWeek - now.getDay() + 7) % 7 || 7;
+  const start = new Date(now);
+  start.setDate(now.getDate() + daysUntilNext);
+
+  // End date is exactly 7 days after start date
+  const end = new Date(start);
+  end.setDate(start.getDate() + 7);
+
+  return {
+    startDate: start.toISOString().split("T")[0],
+    endDate: end.toISOString().split("T")[0],
+  };
 }
 
 export function AvailabilitySearch({
   onSelectBooking,
   className = "",
+  initialObjectId,
 }: AvailabilitySearchProps) {
-  // Tomorrow as default start, +3 days as default end
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const inThreeDays = new Date(tomorrow);
-  inThreeDays.setDate(inThreeDays.getDate() + 3);
+  // Fetch available booking units and global booking settings
+  const { data: bookingObjects = [] } = useBookingObjectsQuery();
+  const { data: bookingSettings } = useBookingSettingsQuery();
 
-  const [startDate, setStartDate] = useState(tomorrow.toISOString().split("T")[0]);
-  const [endDate, setEndDate] = useState(inThreeDays.toISOString().split("T")[0]);
+  const [datesManuallyModified, setDatesManuallyModified] = useState(false);
+  const [startDate, setStartDate] = useState(() => getInitialTurnoverDates().startDate);
+  const [endDate, setEndDate] = useState(() => getInitialTurnoverDates().endDate);
   const [guests, setGuests] = useState(2);
   const [pets, setPets] = useState(0);
   const [flexDays, setFlexDays] = useState(2);
+  const [selectedObjectId, setSelectedObjectId] = useState<string>(initialObjectId || "all");
   const [searchTriggered, setSearchTriggered] = useState(false);
 
   const [bookingModalItem, setBookingModalItem] = useState<SearchMatchItem | null>(null);
@@ -42,12 +81,50 @@ export function AvailabilitySearch({
 
   const createMutation = useCreateBookingMutation();
 
+  // Adjust default start and end dates based on effective turnover day until user manually changes them
+  useEffect(() => {
+    if (!datesManuallyModified && !searchTriggered) {
+      const selectedObj = bookingObjects.find((b: any) => String(b.id) === selectedObjectId);
+      const objTurnover = selectedObj?.price_matrix?.booking_settings?.defaultTurnoverDay;
+      const effectiveTurnover = objTurnover || bookingSettings?.defaultTurnoverDay || "SUNDAY";
+      const { startDate: newStart, endDate: newEnd } = getInitialTurnoverDates(effectiveTurnover);
+      setStartDate(newStart);
+      setEndDate(newEnd);
+    }
+  }, [bookingSettings, selectedObjectId, bookingObjects, datesManuallyModified, searchTriggered]);
+
+  // Check URL query parameters for objectId / unit on initial load (only selects object, no auto-search)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlObj = urlParams.get("objectId") || urlParams.get("unit") || urlParams.get("object");
+      if (urlObj) {
+        setSelectedObjectId(urlObj);
+      }
+    }
+  }, []);
+
+  // When booking objects load, match slug or ID if an object parameter was provided
+  useEffect(() => {
+    if (typeof window !== "undefined" && bookingObjects.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlObj = urlParams.get("objectId") || urlParams.get("unit") || urlParams.get("object");
+      if (urlObj) {
+        const found = bookingObjects.find((b: any) => String(b.id) === urlObj || b.slug === urlObj);
+        if (found) {
+          setSelectedObjectId(String(found.id));
+        }
+      }
+    }
+  }, [bookingObjects]);
+
   const { data, isLoading, isFetching, refetch } = useAvailabilitySearchQuery({
     startDate,
     endDate,
     guests,
     pets,
     flexDays,
+    objectId: selectedObjectId !== "all" ? selectedObjectId : undefined,
     enabled: searchTriggered,
   });
 
@@ -100,11 +177,52 @@ export function AvailabilitySearch({
 
   return (
     <div className={`space-y-8 ${className}`}>
-      {/* Search Input Bar */}
+      {/* Search Input Bar - split into two spacious rows */}
       <form
         onSubmit={handleSearch}
-        className="rounded-3xl border border-neutral-300 bg-neutral-100 p-5 shadow-xl shadow-black/10 dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-2xl grid grid-cols-1 md:grid-cols-5 gap-3 items-end transition-colors"
+        className="rounded-3xl border border-neutral-300 bg-neutral-100 p-6 shadow-xl shadow-black/10 dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-4 items-end transition-colors"
       >
+        {/* Row 1, Column 1: Unit / Object Selector */}
+        <div>
+          <label className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-700 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+            <Home className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
+            <span>Boende</span>
+          </label>
+          <select
+            value={selectedObjectId}
+            onChange={(e) => {
+              const val = e.target.value;
+              setSelectedObjectId(val);
+              if (typeof window !== "undefined") {
+                const url = new URL(window.location.href);
+                if (val && val !== "all") {
+                  url.searchParams.set("objectId", val);
+                } else {
+                  url.searchParams.delete("objectId");
+                  url.searchParams.delete("unit");
+                  url.searchParams.delete("object");
+                }
+                window.history.replaceState({}, "", url.toString());
+              }
+            }}
+            className="w-full rounded-xl border border-neutral-400/80 dark:border-slate-700 bg-white dark:bg-slate-950/70 p-2.5 text-xs font-medium text-neutral-900 dark:text-white focus:outline-none focus:border-sky-500 transition-colors"
+          >
+            <option value="all" className="bg-white dark:bg-slate-900 text-neutral-900 dark:text-white">
+              Alla objekt
+            </option>
+            {bookingObjects.map((obj: any) => (
+              <option
+                key={obj.id}
+                value={String(obj.id)}
+                className="bg-white dark:bg-slate-900 text-neutral-900 dark:text-white"
+              >
+                {obj.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Row 1, Column 2: Check-in Date */}
         <div>
           <label className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-700 dark:text-slate-400 mb-1 flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
@@ -112,13 +230,17 @@ export function AvailabilitySearch({
           </label>
           <DatePicker
             value={startDate}
-            onChange={setStartDate}
+            onChange={(val) => {
+              setStartDate(val);
+              setDatesManuallyModified(true);
+            }}
             locale="sv"
             allowClear={false}
             minDate={new Date().toISOString().split("T")[0]}
           />
         </div>
 
+        {/* Row 1, Column 3: Check-out Date */}
         <div>
           <label className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-700 dark:text-slate-400 mb-1 flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
@@ -126,13 +248,17 @@ export function AvailabilitySearch({
           </label>
           <DatePicker
             value={endDate}
-            onChange={setEndDate}
+            onChange={(val) => {
+              setEndDate(val);
+              setDatesManuallyModified(true);
+            }}
             locale="sv"
             allowClear={false}
             minDate={startDate}
           />
         </div>
 
+        {/* Row 2, Column 1: Guests & Pets */}
         <div>
           <label className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-700 dark:text-slate-400 mb-1 flex items-center gap-1.5">
             <Users className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" />
@@ -162,6 +288,7 @@ export function AvailabilitySearch({
           </div>
         </div>
 
+        {/* Row 2, Column 2: Flexible Dates */}
         <div>
           <label className="block text-[11px] font-semibold uppercase tracking-wider text-neutral-700 dark:text-slate-400 mb-1 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -179,18 +306,21 @@ export function AvailabilitySearch({
           </select>
         </div>
 
-        <button
-          type="submit"
-          disabled={isLoading || isFetching}
-          className="h-10 w-full flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
-        >
-          {isSearching ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Search className="w-4 h-4" />
-          )}
-          <span>Sök ledigt boende</span>
-        </button>
+        {/* Row 2, Column 3: Search Action Button */}
+        <div>
+          <button
+            type="submit"
+            disabled={isLoading || isFetching}
+            className="h-10 w-full flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50 cursor-pointer"
+          >
+            {isSearching ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Search className="w-4 h-4" />
+            )}
+            <span>Sök ledigt boende</span>
+          </button>
+        </div>
       </form>
 
       {/* Results Presentation View */}

@@ -728,6 +728,7 @@ export async function handleCmsApiRoute(
         const guests = Number(req.nextUrl.searchParams.get("guests") || "1");
         const pets = Number(req.nextUrl.searchParams.get("pets") || "0");
         const flexDays = Number(req.nextUrl.searchParams.get("flexDays") || "0");
+        const objectId = req.nextUrl.searchParams.get("objectId") || undefined;
 
         const result = await searchAvailabilityAction({
           startDate,
@@ -735,6 +736,7 @@ export async function handleCmsApiRoute(
           guests,
           pets,
           flexDays,
+          objectId,
         });
         return NextResponse.json(result);
       } catch (err: any) {

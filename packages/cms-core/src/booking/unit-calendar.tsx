@@ -44,14 +44,19 @@ export function UnitCalendar({
   const { data: bookingSettings } = useBookingSettingsQuery();
   const { data: bookingObject } = useBookingObjectQuery(objectId);
 
-  const effectiveSearchUrl =
+  const rawSearchBase =
     searchUrl !== undefined
       ? searchUrl
-      : bookingSettings?.bookingSearchPageSlug
-      ? bookingSettings.bookingSearchPageSlug.startsWith("/")
-        ? bookingSettings.bookingSearchPageSlug
-        : `/${bookingSettings.bookingSearchPageSlug}`
-      : undefined;
+      : (bookingSettings?.bookingSearchPageSlug || "/bookings");
+
+  const effectiveSearchUrl = rawSearchBase
+    ? (() => {
+        const path = rawSearchBase.startsWith("/") ? rawSearchBase : `/${rawSearchBase}`;
+        if (!objectId || path.includes("objectId=")) return path;
+        const separator = path.includes("?") ? "&" : "?";
+        return `${path}${separator}objectId=${encodeURIComponent(String(objectId))}`;
+      })()
+    : undefined;
 
   if (mode === "interact") {
     return (

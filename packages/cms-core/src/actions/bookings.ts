@@ -120,8 +120,9 @@ export async function searchAvailabilityAction(params: {
   guests: number;
   pets: number;
   flexDays?: number;
+  objectId?: string;
 }): Promise<AvailabilitySearchResult> {
-  const { startDate, endDate, guests, pets, flexDays = 0 } = params;
+  const { startDate, endDate, guests, pets, flexDays = 0, objectId } = params;
 
   try {
     const targetStart = new Date(startDate);
@@ -135,9 +136,19 @@ export async function searchAvailabilityAction(params: {
     const cmsSettings = await getCmsSettingsAction();
     const bookingSettings = cmsSettings?.bookingSettings;
 
-    // Fetch all objects that meet capacity and pet criteria
+    const cleanObjId = objectId?.replace(/^\//, "");
+
+    // Fetch matching object(s) meeting capacity and pet criteria
     const objects = await prisma.bookingObject.findMany({
       where: {
+        ...(objectId && objectId !== "all" && objectId !== "ALL"
+          ? {
+              OR: [
+                { id: objectId },
+                ...(cleanObjId ? [{ page: { slug: cleanObjId } }] : []),
+              ],
+            }
+          : {}),
         bed_count: { gte: Math.min(guests, 10) },
         ...(pets > 0 ? { pets_allowed: true } : {}),
       },

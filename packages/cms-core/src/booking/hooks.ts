@@ -70,12 +70,29 @@ export function useBookingObjectQuery(objectId?: string) {
   });
 }
 
+export function useBookingObjectsQuery() {
+  return useQuery<any[]>({
+    queryKey: ["booking-objects"],
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/cms/booking-objects");
+        if (!res.ok) return [];
+        return res.json();
+      } catch {
+        return [];
+      }
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useAvailabilitySearchQuery(params: {
   startDate: string;
   endDate: string;
   guests: number;
   pets: number;
   flexDays?: number;
+  objectId?: string;
   enabled?: boolean;
 }) {
   return useQuery<AvailabilitySearchResult>({
@@ -86,6 +103,7 @@ export function useAvailabilitySearchQuery(params: {
       params.guests,
       params.pets,
       params.flexDays ?? 0,
+      params.objectId || "all",
     ],
     queryFn: async () => {
       const searchParams = new URLSearchParams({
@@ -94,6 +112,9 @@ export function useAvailabilitySearchQuery(params: {
         guests: String(params.guests),
         pets: String(params.pets),
         flexDays: String(params.flexDays ?? 0),
+        ...(params.objectId && params.objectId !== "all" && params.objectId !== "ALL"
+          ? { objectId: params.objectId }
+          : {}),
       });
       const res = await fetch(`/api/cms/bookings/search?${searchParams.toString()}`);
       if (!res.ok) throw new Error("Tillgänglighetssökning misslyckades");
