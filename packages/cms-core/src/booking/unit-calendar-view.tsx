@@ -36,7 +36,7 @@ export function UnitCalendarView({
   objectName = "Boende",
   basePrice,
   className = "",
-  searchUrl = "/boka",
+  searchUrl,
   onSearchClick,
 }: UnitCalendarViewProps) {
   const { data: session } = useSession();
@@ -402,32 +402,34 @@ export function UnitCalendarView({
           Incheckning sker kl {checkInTime} och utcheckning kl {checkOutTime}. Bytesdagar visas som delade dagar där ett sällskap avreser på förmiddagen och nästa anländer på eftermiddagen.
         </p>
 
-        {/* CTA to Search / Booking Flow */}
-        <div className='pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
-          <div className='text-xs text-slate-400'>
-            Vill du boka en ledig period för {objectName}?
+        {/* CTA to Search / Booking Flow (hidden if no searchUrl or onSearchClick is provided) */}
+        {(onSearchClick || searchUrl) ? (
+          <div className='pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
+            <div className='text-xs text-slate-400'>
+              Vill du boka en ledig period för {objectName}?
+            </div>
+            {onSearchClick ? (
+              <button
+                type='button'
+                onClick={onSearchClick}
+                className='inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md shadow-sky-600/20 transition cursor-pointer'
+              >
+                <Search className='w-3.5 h-3.5' />
+                <span>Sök lediga datum & boka</span>
+                <ArrowRight className='w-3.5 h-3.5' />
+              </button>
+            ) : searchUrl ? (
+              <a
+                href={searchUrl}
+                className='inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md shadow-sky-600/20 transition'
+              >
+                <Search className='w-3.5 h-3.5' />
+                <span>Sök lediga datum & boka</span>
+                <ArrowRight className='w-3.5 h-3.5' />
+              </a>
+            ) : null}
           </div>
-          {onSearchClick ? (
-            <button
-              type='button'
-              onClick={onSearchClick}
-              className='inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md shadow-sky-600/20 transition cursor-pointer'
-            >
-              <Search className='w-3.5 h-3.5' />
-              <span>Sök lediga datum & boka</span>
-              <ArrowRight className='w-3.5 h-3.5' />
-            </button>
-          ) : searchUrl ? (
-            <a
-              href={searchUrl}
-              className='inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow-md shadow-sky-600/20 transition'
-            >
-              <Search className='w-3.5 h-3.5' />
-              <span>Sök lediga datum & boka</span>
-              <ArrowRight className='w-3.5 h-3.5' />
-            </a>
-          ) : null}
-        </div>
+        ) : null}
       </div>
 
       {/* Admin details modal if clicked */}

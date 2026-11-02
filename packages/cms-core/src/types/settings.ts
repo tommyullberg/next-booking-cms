@@ -29,6 +29,7 @@ export interface BookingSettings {
   turnoverDayScope: BookingSettingScope;
   checkTimesScope: BookingSettingScope;
   customDaysScope: BookingSettingScope;
+  bookingSearchPageSlug?: string;
 }
 
 export const DEFAULT_BOOKING_SETTINGS: BookingSettings = {
@@ -40,6 +41,7 @@ export const DEFAULT_BOOKING_SETTINGS: BookingSettings = {
   turnoverDayScope: "GLOBAL",
   checkTimesScope: "GLOBAL",
   customDaysScope: "GLOBAL",
+  bookingSearchPageSlug: "",
 };
 
 export interface ObjectBookingSettings {

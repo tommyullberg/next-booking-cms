@@ -16,6 +16,7 @@ import {
   SlidersHorizontal,
   CalendarDays,
   ShieldCheck,
+  Search,
 } from "lucide-react";
 import {
   BookingSettings,
@@ -27,6 +28,7 @@ import {
 
 export interface BookingSettingsViewProps {
   bookingSettings?: BookingSettings;
+  pages?: Array<{ id: string | number; page_title?: string; title?: string; slug?: string }>;
   onSaveSettings: (newSettings: {
     bookingSettings: BookingSettings;
   }) => Promise<void>;
@@ -34,6 +36,7 @@ export interface BookingSettingsViewProps {
 
 export function BookingSettingsView({
   bookingSettings = DEFAULT_BOOKING_SETTINGS,
+  pages = [],
   onSaveSettings,
 }: BookingSettingsViewProps) {
   const t = useTranslations("bookingSettings");
@@ -64,6 +67,10 @@ export function BookingSettingsView({
     );
   const [customDaysScope, setCustomDaysScope] = useState<BookingSettingScope>(
     bookingSettings?.customDaysScope || "GLOBAL"
+  );
+
+  const [bookingSearchPageSlug, setBookingSearchPageSlug] = useState<string>(
+    bookingSettings?.bookingSearchPageSlug || ""
   );
 
   const [isSaving, setIsSaving] = useState(false);
@@ -97,6 +104,9 @@ export function BookingSettingsView({
       if (bookingSettings.customDaysScope) {
         setCustomDaysScope(bookingSettings.customDaysScope);
       }
+      if (bookingSettings.bookingSearchPageSlug !== undefined) {
+        setBookingSearchPageSlug(bookingSettings.bookingSearchPageSlug);
+      }
     }
   }, [bookingSettings]);
 
@@ -117,6 +127,7 @@ export function BookingSettingsView({
           allowedBookingPeriods,
           allowCustomDays: allowedBookingPeriods === "ALL",
           customDaysScope,
+          bookingSearchPageSlug: bookingSearchPageSlug.trim(),
         },
       });
       setSavedSuccess(true);
@@ -589,6 +600,46 @@ export function BookingSettingsView({
         </div>
       </div>
 
+      {/* 4. Booking Search Page Selection */}
+      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 space-y-4">
+        <div>
+          <h2 className="text-sm font-bold text-white flex items-center gap-2">
+            <Search className="w-4 h-4 text-sky-400" />
+            {t("searchPageSectionTitle")}
+          </h2>
+          <p className="text-xs text-slate-400 mt-1">
+            {t("searchPageSectionDesc")}
+          </p>
+        </div>
+
+        <div className="max-w-md space-y-1.5">
+          <label className="text-xs font-semibold text-slate-200">
+            {t("searchPageSelectLabel")}
+          </label>
+          <select
+            value={bookingSearchPageSlug}
+            onChange={(e) => setBookingSearchPageSlug(e.target.value)}
+            className="w-full bg-slate-950 border border-slate-800 focus:border-sky-500 rounded-xl px-3.5 py-2.5 text-xs text-white outline-none transition"
+          >
+            <option value="">{t("searchPageNone")}</option>
+            {pages.map((p) => {
+              const displayTitle = p.page_title || p.title || p.slug || `Page #${p.id}`;
+              const slugPath = p.slug ? (p.slug.startsWith("/") ? p.slug : `/${p.slug}`) : "/";
+              return (
+                <option key={p.id} value={p.slug || ""}>
+                  {displayTitle} ({slugPath})
+                </option>
+              );
+            })}
+          </select>
+          <p className="text-[11px] text-slate-500">
+            {bookingSearchPageSlug
+              ? `Aktiv länk: ${bookingSearchPageSlug.startsWith("/") ? bookingSearchPageSlug : `/${bookingSearchPageSlug}`}`
+              : "Ingen sida vald – sökknapp och länk döljs i kalendern"}
+          </p>
+        </div>
+      </div>
+
       {/* Live Preview Card */}
       <div className="rounded-xl border border-sky-500/20 bg-sky-950/20 p-4 flex items-start gap-3">
         <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
@@ -608,6 +659,12 @@ export function BookingSettingsView({
                 ? "Endast 3/4-dagars eller helveckor"
                 : "Endast hela veckor (från bytesdag)"}
             </span> ({customDaysScope === "GLOBAL" ? "Låst globalt" : "Kan anpassas per objekt"})
+            {" • "}
+            Söksida: <span className="text-white font-medium">
+              {bookingSearchPageSlug
+                ? (bookingSearchPageSlug.startsWith("/") ? bookingSearchPageSlug : `/${bookingSearchPageSlug}`)
+                : "Dold länk"}
+            </span>
           </div>
         </div>
       </div>

@@ -1288,6 +1288,7 @@ export function AdminApp({
         {currentTab === "booking-settings" && (
           <BookingSettingsView
             bookingSettings={bookingSettings}
+            pages={pages}
             onSaveSettings={async (newSettings) => {
               setBookingSettings(newSettings.bookingSettings);
               const res = await fetch("/api/cms/settings", {

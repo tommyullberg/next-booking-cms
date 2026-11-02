@@ -36,13 +36,22 @@ export function UnitCalendar({
   objectName = "Boende",
   basePrice = 2500,
   className = "",
-  searchUrl = "/boka",
+  searchUrl,
   onSearchClick,
   mode = "auto",
   allowCustomDays,
 }: UnitCalendarProps) {
   const { data: bookingSettings } = useBookingSettingsQuery();
   const { data: bookingObject } = useBookingObjectQuery(objectId);
+
+  const effectiveSearchUrl =
+    searchUrl !== undefined
+      ? searchUrl
+      : bookingSettings?.bookingSearchPageSlug
+      ? bookingSettings.bookingSearchPageSlug.startsWith("/")
+        ? bookingSettings.bookingSearchPageSlug
+        : `/${bookingSettings.bookingSearchPageSlug}`
+      : undefined;
 
   if (mode === "interact") {
     return (
@@ -62,7 +71,7 @@ export function UnitCalendar({
         objectName={objectName}
         basePrice={basePrice}
         className={className}
-        searchUrl={searchUrl}
+        searchUrl={effectiveSearchUrl}
         onSearchClick={onSearchClick}
       />
     );
@@ -102,7 +111,7 @@ export function UnitCalendar({
       objectName={objectName}
       basePrice={basePrice}
       className={className}
-      searchUrl={searchUrl}
+      searchUrl={effectiveSearchUrl}
       onSearchClick={onSearchClick}
     />
   );

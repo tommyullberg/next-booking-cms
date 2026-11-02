@@ -117,6 +117,10 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
               parsed.checkTimesScope === "PER_OBJECT" ? "PER_OBJECT" : "GLOBAL",
             customDaysScope:
               parsed.customDaysScope === "PER_OBJECT" ? "PER_OBJECT" : "GLOBAL",
+            bookingSearchPageSlug:
+              typeof parsed.bookingSearchPageSlug === "string"
+                ? parsed.bookingSearchPageSlug.trim()
+                : "",
           };
         }
       } catch {
