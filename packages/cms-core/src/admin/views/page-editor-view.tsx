@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useId } from "react";
 import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
@@ -21,6 +21,7 @@ import {
   Box,
   AlertTriangle,
   UserCheck,
+  Globe,
 } from "lucide-react";
 import { CMSPageField } from "../../components/fields/types";
 import { FlagIcon } from "../../components/ui/flag-icon";
@@ -47,6 +48,13 @@ import {
 } from "../../constants/languages";
 import { formatDateInput } from "../../constants/dates";
 import { PageStatus } from "../../types/admin";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
+import { Label } from "../../components/ui/label";
+import { NativeSelect } from "../../components/ui/select";
+import { Card } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 
 export type { PageStatus };
 
@@ -109,6 +117,23 @@ function getTemplateIcon(templateId: string) {
   }
 }
 
+function CharacterCounter({ current, limit }: { current: number; limit: number }) {
+  const isOver = current > limit;
+  return (
+    <span
+      className={`text-[10px] font-mono ${
+        isOver
+          ? "text-amber-400 font-semibold"
+          : current > limit * 0.85
+          ? "text-sky-400"
+          : "text-slate-500"
+      }`}
+    >
+      {current} / {limit}
+    </span>
+  );
+}
+
 export function PageEditorView({
   page,
   availableTemplates = DEFAULT_CMS_TEMPLATES,
@@ -124,6 +149,19 @@ export function PageEditorView({
 }: PageEditorViewProps) {
   const t = useTranslations("pageEditor");
   const tCommon = useTranslations("common");
+
+  const svTitleId = useId();
+  const svLinkId = useId();
+  const slugId = useId();
+  const slugHelpId = useId();
+  const slugErrorId = useId();
+  const svMetaTitleId = useId();
+  const svMetaDescId = useId();
+  const sectionSelectId = useId();
+  const templateLabelId = useId();
+  const templateTriggerId = useId();
+  const templateListboxId = useId();
+  const statusLabelId = useId();
 
   const effectiveLocales = activeLanguages || activeLocales;
   const secondaryLocales = effectiveLocales.filter((loc) => loc !== "sv");
@@ -143,6 +181,53 @@ export function PageEditorView({
     isHomepage ? "startpage" : initialResolved.id
   );
   const [isTemplateOpen, setIsTemplateOpen] = useState(false);
+  const templateTriggerRef = React.useRef<HTMLButtonElement | null>(null);
+  const templateOptionsRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
+  const statusButtonRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
+  const selectableTemplates = React.useMemo(
+    () => availableTemplates.filter((opt) => !opt.isProtected),
+    [availableTemplates]
+  );
+
+  React.useEffect(() => {
+    if (isTemplateOpen) {
+      const selectedIdx = selectableTemplates.findIndex(
+        (opt) => opt.id.toLowerCase() === templateName.toLowerCase()
+      );
+      const targetIdx = selectedIdx >= 0 ? selectedIdx : 0;
+      setTimeout(() => {
+        templateOptionsRefs.current[targetIdx]?.focus();
+      }, 0);
+    }
+  }, [isTemplateOpen, selectableTemplates, templateName]);
+
+  const statusOptions: Array<"NEW" | "PUBLISHED" | "ARCHIVED"> = ["NEW", "PUBLISHED", "ARCHIVED"];
+  const handleStatusKeyDown = (
+    e: React.KeyboardEvent,
+    currentStatus: "NEW" | "PUBLISHED" | "ARCHIVED"
+  ) => {
+    const currentIndex = statusOptions.indexOf(currentStatus);
+    let targetIndex = -1;
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      targetIndex = (currentIndex + 1) % statusOptions.length;
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      targetIndex =
+        (currentIndex - 1 + statusOptions.length) % statusOptions.length;
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      targetIndex = 0;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      targetIndex = statusOptions.length - 1;
+    }
+    if (targetIndex !== -1) {
+      const next = statusOptions[targetIndex];
+      setStatus(next);
+      statusButtonRefs.current[targetIndex]?.focus();
+    }
+  };
   const [sectionId, setSectionId] = useState<string>(page.section_id || "");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(() =>
     Array.isArray(page.categories) ? page.categories.map((c) => c.id) : []
@@ -302,8 +387,8 @@ export function PageEditorView({
           locale: loc,
           pageTitle: effPageTitle,
           linkDescription: effLink,
-          metaTitle: current.metaTitle || svMetaTitle,
-          metaDescription: current.metaDescription || svMetaDesc,
+          metaTitle: current.metaTitle ? current.metaTitle : null,
+          metaDescription: current.metaDescription ? current.metaDescription : null,
         };
       });
 
@@ -314,8 +399,8 @@ export function PageEditorView({
         categoryIds: selectedCategoryIds,
         pageTitle: svTitle,
         linkDescription: svLinkTitle.trim() || null,
-        metaTitle: svMetaTitle,
-        metaDescription: svMetaDesc,
+        metaTitle: svMetaTitle ? svMetaTitle : null,
+        metaDescription: svMetaDesc ? svMetaDesc : null,
         slug: isHomepage
           ? "/"
           : finalCleanSlug || String(page.id),
@@ -357,30 +442,34 @@ export function PageEditorView({
         </h1>
 
         <div className='flex items-center gap-2.5'>
-          <button
+          <Button
             type='button'
+            variant='outline'
+            size='sm'
             onClick={onBack}
-            className='flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/80 px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition'>
+            className='h-8 text-xs font-medium gap-1.5'
+          >
             <ArrowLeft className='w-3.5 h-3.5' />
             <span>{tCommon("back")}</span>
-          </button>
+          </Button>
 
-          <div
+          <Badge
             title='Current saved status'
-            className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider select-none ${
+            className={`uppercase tracking-wider select-none text-[11px] font-semibold px-2.5 py-1 ${
               savedStatus === "PUBLISHED"
                 ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                 : savedStatus === "NEW"
                   ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
                   : "border-red-500/30 bg-red-500/10 text-red-400"
-            }`}>
+            }`}
+          >
             <span
-              className={`w-2 h-2 rounded-full ${
+              className={`w-2 h-2 rounded-full mr-1.5 ${
                 savedStatus === "PUBLISHED" ? "bg-emerald-400" : savedStatus === "NEW" ? "bg-amber-400" : "bg-red-400"
               }`}
             />
             <span>{getStatusLabel(savedStatus)}</span>
-          </div>
+          </Badge>
         </div>
       </div>
 
@@ -390,10 +479,13 @@ export function PageEditorView({
         <div className='lg:col-span-2 space-y-3'>
           <h2 className='text-sm font-semibold text-slate-200'>{t("docInfoTitle")}</h2>
 
-          <form onSubmit={handleSave} className='rounded-2xl border border-slate-800/90 bg-slate-900/40 p-6 space-y-6'>
+          <Card variant="admin" className='p-6'>
+            <form onSubmit={handleSave} className='space-y-6'>
             {/* 1. Page Title (Multi-language stacked) */}
             <div className='space-y-2.5'>
-              <label className='block text-xs font-medium text-slate-200'>{t("pageTitle")}</label>
+              <Label htmlFor={svTitleId} className='block text-xs font-medium text-slate-200'>
+                {t("pageTitle")}
+              </Label>
 
               {/* Primary Language (SE) */}
               <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
@@ -401,13 +493,14 @@ export function PageEditorView({
                   <FlagIcon code='sv' size='sm' />
                   <span className='font-mono text-[11px]'>{LANGUAGE_META.sv.code}</span>
                 </span>
-                <input
+                <Input
+                  id={svTitleId}
                   type='text'
                   required
                   value={svTitle}
                   onChange={(e) => setSvTitle(e.target.value)}
                   placeholder={t("svTitlePlaceholder")}
-                  className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none'
+                  className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
                 />
               </div>
 
@@ -427,12 +520,12 @@ export function PageEditorView({
                         <FlagIcon code={loc} size='sm' />
                         <span className='font-mono text-[11px]'>{meta.code}</span>
                       </span>
-                      <input
+                      <Input
                         type='text'
                         value={translations[loc]?.pageTitle || ""}
                         onChange={(e) => updateTranslation(loc, "pageTitle", e.target.value)}
                         placeholder={t("translationsTitlePlaceholder", { language: meta.label })}
-                        className='w-full bg-transparent px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
+                        className='h-auto border-0 bg-transparent px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
                       />
                     </div>
                   );
@@ -451,16 +544,18 @@ export function PageEditorView({
                 </label>
 
                 {useSamePageTitle && (
-                  <span className='text-[11px] text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-md px-2 py-0.5'>
+                  <Badge variant='outline' className='text-[11px] text-sky-400 bg-sky-500/10 border-sky-500/20 font-normal py-0.5 px-2'>
                     {t("sameTitleFallback")}
-                  </span>
+                  </Badge>
                 )}
               </div>
             </div>
 
             {/* 2. Link text (if other) */}
             <div className='space-y-2.5'>
-              <label className='block text-xs font-medium text-slate-200'>{t("linkText")}</label>
+              <Label htmlFor={svLinkId} className='block text-xs font-medium text-slate-200'>
+                {t("linkText")}
+              </Label>
 
               {/* Primary Language (SE) */}
               <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
@@ -468,12 +563,13 @@ export function PageEditorView({
                   <FlagIcon code='sv' size='sm' />
                   <span className='font-mono text-[11px]'>{LANGUAGE_META.sv.code}</span>
                 </span>
-                <input
+                <Input
+                  id={svLinkId}
                   type='text'
                   value={svLinkTitle}
                   onChange={(e) => setSvLinkTitle(e.target.value)}
                   placeholder={svTitle.trim() || t("svLinkPlaceholder")}
-                  className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none'
+                  className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
                 />
               </div>
 
@@ -498,12 +594,12 @@ export function PageEditorView({
                         <FlagIcon code={loc} size='sm' />
                         <span className='font-mono text-[11px]'>{meta.code}</span>
                       </span>
-                      <input
+                      <Input
                         type='text'
                         value={translations[loc]?.linkDescription || ""}
                         onChange={(e) => updateTranslation(loc, "linkDescription", e.target.value)}
                         placeholder={locPlaceholder}
-                        className='w-full bg-transparent px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
+                        className='h-auto border-0 bg-transparent px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
                       />
                     </div>
                   );
@@ -522,16 +618,18 @@ export function PageEditorView({
                 </label>
 
                 {useSameLinkTitle && (
-                  <span className='text-[11px] text-sky-400 bg-sky-500/10 border border-sky-500/20 rounded-md px-2 py-0.5'>
+                  <Badge variant='outline' className='text-[11px] text-sky-400 bg-sky-500/10 border-sky-500/20 font-normal py-0.5 px-2'>
                     {t("sameLinkFallback")}
-                  </span>
+                  </Badge>
                 )}
               </div>
             </div>
 
             {/* 3. URL Slug */}
             <div className='space-y-1.5'>
-              <label className='block text-xs font-medium text-slate-200'>{t("urlSlug")}</label>
+              <Label htmlFor={slugId} className='block text-xs font-medium text-slate-200'>
+                {t("urlSlug")}
+              </Label>
               <div
                 className={`flex items-center rounded-xl border bg-slate-950/90 overflow-hidden transition ${
                   !slugValidation.isValid
@@ -541,10 +639,13 @@ export function PageEditorView({
                 <span className='px-3 py-2.5 text-xs font-mono text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
                   /
                 </span>
-                <input
+                <Input
+                  id={slugId}
                   type='text'
                   value={isHomepage ? "" : slug}
                   readOnly={isHomepage}
+                  aria-describedby={!slugValidation.isValid && slugValidation.error ? slugErrorId : slugHelpId}
+                  aria-invalid={!slugValidation.isValid}
                   onChange={(e) => {
                     if (!isHomepage) {
                       setSlug(cleanSlugInput(e.target.value, true));
@@ -556,15 +657,15 @@ export function PageEditorView({
                     }
                   }}
                   placeholder={isHomepage ? "" : `${page.id}`}
-                  className='w-full bg-transparent px-3.5 py-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none'
+                  className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
                 />
               </div>
               {!slugValidation.isValid && slugValidation.error ? (
-                <p className='text-[11px] font-medium text-red-400'>
+                <p id={slugErrorId} className='text-[11px] font-medium text-red-400'>
                   {slugValidation.error}
                 </p>
               ) : (
-                <p className='text-[11px] text-slate-500'>
+                <p id={slugHelpId} className='text-[11px] text-slate-500'>
                   {isHomepage
                     ? t("startpageSlugHelp")
                     : t("slugHelp", { id: String(page.id) })}
@@ -572,14 +673,176 @@ export function PageEditorView({
               )}
             </div>
 
+            {/* 3b. SEO & Social Sharing */}
+            <div className='space-y-4 pt-2 border-t border-slate-800/70'>
+              <div className='flex items-center gap-2'>
+                <Globe className='w-4 h-4 text-sky-400' />
+                <h3 className='text-xs font-semibold text-slate-200'>
+                  {t("seoSettings")}
+                </h3>
+              </div>
+
+              {/* Meta-titel */}
+              <div className='space-y-2.5'>
+                <div className='flex items-center justify-between'>
+                  <Label htmlFor={svMetaTitleId} className='block text-xs font-medium text-slate-300'>
+                    {adminLanguage === "sv" ? "Meta-titel" : "Meta Title"}
+                  </Label>
+                  <CharacterCounter current={svMetaTitle.length} limit={60} />
+                </div>
+
+                {/* Primary Swedish Meta Title */}
+                <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                  <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
+                    <FlagIcon code='sv' size='sm' />
+                    <span className='font-mono text-[11px]'>{LANGUAGE_META.sv.code}</span>
+                  </span>
+                  <Input
+                    id={svMetaTitleId}
+                    type='text'
+                    value={svMetaTitle}
+                    aria-label={`${adminLanguage === "sv" ? "Meta-titel" : "Meta Title"} – ${LANGUAGE_META.sv.label}`}
+                    onChange={(e) => setSvMetaTitle(e.target.value)}
+                    placeholder={
+                      adminLanguage === "sv"
+                        ? "Titel för sökmotorer och delning på svenska..."
+                        : "Search engine title in Swedish..."
+                    }
+                    className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+                  />
+                </div>
+
+                {/* Secondary Active Languages Meta Title */}
+                {secondaryLocales.map((loc) => {
+                  const meta = LANGUAGE_META[loc] || {
+                    code: loc.toUpperCase(),
+                    flag: "",
+                    label: loc,
+                  };
+                  const val = translations[loc]?.metaTitle || "";
+                  return (
+                    <div key={loc} className='space-y-1'>
+                      <div className='flex items-center justify-end pr-1'>
+                        <CharacterCounter current={val.length} limit={60} />
+                      </div>
+                      <div className='flex items-center rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition'>
+                        <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20'>
+                          <FlagIcon code={loc} size='sm' />
+                          <span className='font-mono text-[11px]'>{meta.code}</span>
+                        </span>
+                        <Input
+                          type='text'
+                          value={val}
+                          aria-label={`${adminLanguage === "sv" ? "Meta-titel" : "Meta Title"} – ${meta.label}`}
+                          onChange={(e) => updateTranslation(loc, "metaTitle", e.target.value)}
+                          placeholder={
+                            adminLanguage === "sv"
+                              ? `Titel för sökmotorer på ${meta.label}...`
+                              : `Search engine title in ${meta.label}...`
+                          }
+                          className='h-auto border-0 bg-transparent px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Meta-beskrivning */}
+              <div className='space-y-2.5 pt-2'>
+                <div className='flex items-center justify-between'>
+                  <Label htmlFor={svMetaDescId} className='block text-xs font-medium text-slate-300'>
+                    {adminLanguage === "sv" ? "Meta-beskrivning" : "Meta Description"}
+                  </Label>
+                  <CharacterCounter current={svMetaDesc.length} limit={160} />
+                </div>
+
+                {/* Primary Swedish Meta Description */}
+                <div className='flex items-start rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                  <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20 self-stretch'>
+                    <FlagIcon code='sv' size='sm' />
+                    <span className='font-mono text-[11px]'>{LANGUAGE_META.sv.code}</span>
+                  </span>
+                  <Textarea
+                    id={svMetaDescId}
+                    rows={2}
+                    value={svMetaDesc}
+                    aria-label={`${adminLanguage === "sv" ? "Meta-beskrivning" : "Meta Description"} – ${LANGUAGE_META.sv.label}`}
+                    onChange={(e) => setSvMetaDesc(e.target.value)}
+                    placeholder={
+                      adminLanguage === "sv"
+                        ? "Kort sammanfattning för sökmotorer och delning på svenska..."
+                        : "Short summary for search engines and social sharing in Swedish..."
+                    }
+                    className='min-h-[56px] border-0 bg-transparent px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 resize-y'
+                  />
+                </div>
+
+                {/* Secondary Active Languages Meta Description */}
+                {secondaryLocales.map((loc) => {
+                  const meta = LANGUAGE_META[loc] || {
+                    code: loc.toUpperCase(),
+                    flag: "",
+                    label: loc,
+                  };
+                  const val = translations[loc]?.metaDescription || "";
+                  return (
+                    <div key={loc} className='space-y-1'>
+                      <div className='flex items-center justify-end pr-1'>
+                        <CharacterCounter current={val.length} limit={160} />
+                      </div>
+                      <div className='flex items-start rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition'>
+                        <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20 self-stretch'>
+                          <FlagIcon code={loc} size='sm' />
+                          <span className='font-mono text-[11px]'>{meta.code}</span>
+                        </span>
+                        <Textarea
+                          rows={2}
+                          value={val}
+                          aria-label={`${adminLanguage === "sv" ? "Meta-beskrivning" : "Meta Description"} – ${meta.label}`}
+                          onChange={(e) => updateTranslation(loc, "metaDescription", e.target.value)}
+                          placeholder={
+                            adminLanguage === "sv"
+                              ? `Sammanfattning på ${meta.label}...`
+                              : `Summary in ${meta.label}...`
+                          }
+                          className='min-h-[52px] border-0 bg-transparent px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 resize-y'
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* 4. Page Template (Styled Select Dropdown) */}
             <div className='space-y-1.5 relative'>
-              <label className='block text-xs font-medium text-slate-200'>{t("pageTemplate")}</label>
+              <Label id={templateLabelId} className='block text-xs font-medium text-slate-200'>{t("pageTemplate")}</Label>
 
               <button
+                ref={templateTriggerRef}
+                id={templateTriggerId}
                 type='button'
                 disabled={isHomepage}
+                aria-haspopup="listbox"
+                aria-expanded={isTemplateOpen}
+                aria-controls={templateListboxId}
+                aria-labelledby={templateLabelId}
                 onClick={() => !isHomepage && setIsTemplateOpen((prev) => !prev)}
+                onKeyDown={(e) => {
+                  if (isHomepage) return;
+                  if (
+                    e.key === "ArrowDown" ||
+                    e.key === "ArrowUp" ||
+                    e.key === "Enter" ||
+                    e.key === " "
+                  ) {
+                    e.preventDefault();
+                    setIsTemplateOpen(true);
+                  } else if (e.key === "Escape") {
+                    setIsTemplateOpen(false);
+                  }
+                }}
                 className={`w-full flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-xs text-white bg-slate-950/90 transition ${
                   isHomepage
                     ? "opacity-60 cursor-not-allowed border-slate-800"
@@ -599,35 +862,77 @@ export function PageEditorView({
               </button>
 
               {isTemplateOpen && !isHomepage && (
-                <div className='mt-1 w-full rounded-xl border border-slate-800 bg-slate-900/95 shadow-xl overflow-hidden divide-y divide-slate-800/60'>
-                  {availableTemplates
-                    .filter((opt) => !opt.isProtected)
-                    .map((opt) => {
-                      const Icon = getTemplateIcon(opt.id);
-                      const isSelected = opt.id.toLowerCase() === templateName.toLowerCase();
-                      return (
-                        <button
-                          key={opt.id}
-                          type='button'
-                          onClick={() => {
+                <div
+                  id={templateListboxId}
+                  role="listbox"
+                  aria-labelledby={templateTriggerId}
+                  className='mt-1 w-full rounded-xl border border-slate-800 bg-slate-900/95 shadow-xl overflow-hidden divide-y divide-slate-800/60'
+                >
+                  {selectableTemplates.map((opt, idx) => {
+                    const Icon = getTemplateIcon(opt.id);
+                    const isSelected = opt.id.toLowerCase() === templateName.toLowerCase();
+                    return (
+                      <button
+                        key={opt.id}
+                        ref={(el) => {
+                          templateOptionsRefs.current[idx] = el;
+                        }}
+                        type='button'
+                        role='option'
+                        aria-selected={isSelected}
+                        tabIndex={isSelected ? 0 : -1}
+                        onClick={() => {
+                          setTemplateName(opt.id);
+                          setIsTemplateOpen(false);
+                          templateTriggerRef.current?.focus();
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "ArrowDown") {
+                            e.preventDefault();
+                            const nextIdx = (idx + 1) % selectableTemplates.length;
+                            templateOptionsRefs.current[nextIdx]?.focus();
+                          } else if (e.key === "ArrowUp") {
+                            e.preventDefault();
+                            const prevIdx =
+                              (idx - 1 + selectableTemplates.length) %
+                              selectableTemplates.length;
+                            templateOptionsRefs.current[prevIdx]?.focus();
+                          } else if (e.key === "Home") {
+                            e.preventDefault();
+                            templateOptionsRefs.current[0]?.focus();
+                          } else if (e.key === "End") {
+                            e.preventDefault();
+                            templateOptionsRefs.current[
+                              selectableTemplates.length - 1
+                            ]?.focus();
+                          } else if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
                             setTemplateName(opt.id);
                             setIsTemplateOpen(false);
-                          }}
-                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-left transition ${
-                            isSelected
-                              ? "bg-sky-500/15 text-sky-300 font-medium"
-                              : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
-                          }`}>
-                          <Icon className='w-4 h-4 text-slate-400 shrink-0' />
-                          <div className='flex flex-col'>
-                            <span className='font-medium'>{getTemplateLabel(opt.id, opt.label)}</span>
-                            {opt.description && (
-                              <span className='text-[10px] text-slate-400'>{opt.description}</span>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
+                            templateTriggerRef.current?.focus();
+                          } else if (e.key === "Escape") {
+                            e.preventDefault();
+                            setIsTemplateOpen(false);
+                            templateTriggerRef.current?.focus();
+                          } else if (e.key === "Tab") {
+                            setIsTemplateOpen(false);
+                          }
+                        }}
+                        className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-left transition ${
+                          isSelected
+                            ? "bg-sky-500/15 text-sky-300 font-medium"
+                            : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                        }`}>
+                        <Icon className='w-4 h-4 text-slate-400 shrink-0' />
+                        <div className='flex flex-col'>
+                          <span className='font-medium'>{getTemplateLabel(opt.id, opt.label)}</span>
+                          {opt.description && (
+                            <span className='text-[10px] text-slate-400'>{opt.description}</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
 
@@ -654,9 +959,9 @@ export function PageEditorView({
                             : t("noBookingObjectConnected")}
                         </span>
                         {linkedBookingObject && (
-                          <span className="rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-300">
+                          <Badge variant="outline" className="bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-300 border-emerald-500/30">
                             {tCommon("active")}
-                          </span>
+                          </Badge>
                         )}
                       </div>
                       <p className="text-[11px] opacity-90">
@@ -672,22 +977,26 @@ export function PageEditorView({
 
             {/* 5. Section Assignment */}
             <div className='space-y-1.5'>
-              <label className='block text-xs font-medium text-slate-200'>{t("section")}</label>
+              <Label htmlFor={sectionSelectId} className='block text-xs font-medium text-slate-200'>
+                {t("section")}
+              </Label>
               <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
                 <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
                   <FolderTree className='w-4 h-4' />
                 </span>
-                <select
+                <NativeSelect
+                  id={sectionSelectId}
                   value={sectionId}
                   onChange={(e) => setSectionId(e.target.value)}
-                  className='w-full bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:outline-none'>
+                  className='h-auto border-0 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus-visible:ring-0 focus-visible:ring-offset-0'
+                >
                   <option value=''>{t("noSection")}</option>
                   {sections.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             </div>
 
@@ -696,9 +1005,9 @@ export function PageEditorView({
               <div className='space-y-3 pt-1'>
                 <div className='flex items-center gap-2'>
                   <Layers className='w-4 h-4 text-sky-400' />
-                  <label className='block text-xs font-medium text-slate-200'>
+                  <Label className='block text-xs font-medium text-slate-200'>
                     {t("categoriesAndTypes")}
-                  </label>
+                  </Label>
                 </div>
 
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
@@ -730,15 +1039,16 @@ export function PageEditorView({
                     };
 
                     return (
-                      <div
+                      <Card
                         key={ct.id}
-                        className='rounded-xl border border-slate-800/90 bg-slate-950/70 p-3.5 space-y-2.5'
+                        variant="admin"
+                        className='p-3.5 space-y-2.5 bg-slate-950/70 border-slate-800/90'
                       >
                         <div className='flex items-center justify-between gap-2 border-b border-slate-800/70 pb-2'>
                           <span className='text-xs font-semibold text-slate-200'>
                             {ct.name}
                           </span>
-                          <span className='inline-flex items-center gap-1 text-[10px] font-medium text-slate-400 bg-slate-900 border border-slate-800 rounded px-1.5 py-0.5'>
+                          <Badge variant="outline" className='text-[10px] font-medium text-slate-400 bg-slate-900 border-slate-800 px-1.5 py-0.5 gap-1'>
                             {isMulti ? (
                               <>
                                 <CheckSquare className='w-2.5 h-2.5 text-sky-400' />
@@ -750,7 +1060,7 @@ export function PageEditorView({
                                 <span>{t("single")}</span>
                               </>
                             )}
-                          </span>
+                          </Badge>
                         </div>
 
                         {cats.length === 0 ? (
@@ -827,7 +1137,7 @@ export function PageEditorView({
                             })}
                           </div>
                         )}
-                      </div>
+                      </Card>
                     );
                   })}
                 </div>
@@ -837,7 +1147,7 @@ export function PageEditorView({
             {/* 7. Published At (Scheduled Publication Start) */}
             <div className='space-y-1.5'>
               <div className='flex items-center gap-1.5'>
-                <label className='block text-xs font-medium text-slate-200'>{t("publishedAt")}</label>
+                <Label className='block text-xs font-medium text-slate-200'>{t("publishedAt")}</Label>
                 <button
                   type='button'
                   onClick={() => setActiveTooltip((prev) => (prev === "pubStart" ? null : "pubStart"))}
@@ -864,10 +1174,10 @@ export function PageEditorView({
               />
             </div>
 
-            {/* 7. Unpublish Date */}
+            {/* 8. Unpublish Date */}
             <div className='space-y-1.5'>
               <div className='flex items-center gap-1.5'>
-                <label className='block text-xs font-medium text-slate-200'>{t("unpublishDate")}</label>
+                <Label className='block text-xs font-medium text-slate-200'>{t("unpublishDate")}</Label>
                 <button
                   type='button'
                   onClick={() => setActiveTooltip((prev) => (prev === "pubEnd" ? null : "pubEnd"))}
@@ -905,24 +1215,38 @@ export function PageEditorView({
               </div>
             </div>
           </form>
+          </Card>
         </div>
 
         {/* Right Column: Document Status & Activity */}
         <div className='lg:col-span-1 space-y-3'>
           <h2 className='text-sm font-semibold text-slate-200'>{t("docStatusTitle")}</h2>
 
-          <div className='rounded-2xl border border-slate-800/90 bg-slate-900/40 p-6 space-y-5'>
+          <Card variant="admin" className='p-6 space-y-5'>
             {/* Status */}
             <div className='space-y-2'>
-              <div className='text-xs font-medium text-slate-400'>{tCommon("status")}</div>
-              <div className='grid grid-cols-3 gap-1.5 bg-slate-950/90 border border-slate-800 rounded-xl p-1'>
-                {(["NEW", "PUBLISHED", "ARCHIVED"] as const).map((st) => {
+              <div id={statusLabelId} className='text-xs font-medium text-slate-400'>
+                {tCommon("status")}
+              </div>
+              <div
+                role="radiogroup"
+                aria-labelledby={statusLabelId}
+                className='grid grid-cols-3 gap-1.5 bg-slate-950/90 border border-slate-800 rounded-xl p-1'
+              >
+                {statusOptions.map((st, idx) => {
                   const active = status === st;
                   return (
                     <button
                       key={st}
+                      ref={(el) => {
+                        statusButtonRefs.current[idx] = el;
+                      }}
                       type='button'
+                      role='radio'
+                      aria-checked={active}
+                      tabIndex={active ? 0 : -1}
                       onClick={() => setStatus(st)}
+                      onKeyDown={(e) => handleStatusKeyDown(e, st)}
                       className={`py-1.5 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition ${
                         active
                           ? st === "PUBLISHED"
@@ -967,9 +1291,9 @@ export function PageEditorView({
                 <div className='rounded-xl border border-slate-800 bg-slate-950/80 p-2.5 space-y-1 text-xs'>
                   <div className='font-semibold text-white flex items-center justify-between'>
                     <span>{linkedBookingObject.name}</span>
-                    <span className='text-[10px] text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.2 rounded'>
+                    <Badge variant="outline" className='text-[10px] text-emerald-400 font-medium bg-emerald-500/10 border-emerald-500/20 px-1.5 py-0.5'>
                       {tCommon("active")}
-                    </span>
+                    </Badge>
                   </div>
                   <div className='text-[11px] text-slate-400'>
                     {formatBookingObjectType(linkedBookingObject.type)}
@@ -1056,11 +1380,12 @@ export function PageEditorView({
 
             {/* Save Button */}
             <div className='pt-2'>
-              <button
+              <Button
                 type='button'
                 onClick={() => handleSave()}
                 disabled={isSaving || !slugValidation.isValid}
-                className='w-full flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50'>
+                className='w-full h-10 font-semibold text-xs shadow-lg shadow-sky-600/20'
+              >
                 {isSaving ? (
                   <Loader2 className='w-4 h-4 animate-spin' />
                 ) : saveSuccess ? (
@@ -1069,9 +1394,9 @@ export function PageEditorView({
                   <Save className='w-4 h-4' />
                 )}
                 <span>{saveSuccess ? tCommon("saved") : t("saveChanges")}</span>
-              </button>
+              </Button>
             </div>
-          </div>
+          </Card>
         </div>
       </div>
     </div>
