@@ -1,9 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Globe, Languages, Check, Save, Lock, Images, LayoutGrid } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { Label } from "../../components/ui/label";
+import { Card } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { Checkbox } from "../../components/ui/checkbox";
+import { Switch } from "../../components/ui/switch";
+import { NativeSelect } from "../../components/ui/select";
+import { SelectableCard, SelectableCardGroup } from "../../components/ui/selectable-card";
+import { SegmentedControl } from "../../components/ui/segmented-control";
 import { FlagIcon } from "../../components/ui/flag-icon";
+import { cn } from "../../utils/cn";
 import {
   AVAILABLE_LANGUAGES,
   ADMIN_LANGUAGES,
@@ -33,6 +43,9 @@ export function SettingsView({
 }: SettingsViewProps) {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
+
+  const captionPositionId = useId();
+  const showThumbnailsId = useId();
 
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
     Array.from(new Set(["sv", ...activeLanguages]))
@@ -94,9 +107,9 @@ export function SettingsView({
   };
 
   return (
-    <form onSubmit={handleSave} className="space-y-6 max-w-4xl">
+    <form onSubmit={handleSave} className="space-y-6 max-w-4xl pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">
             {t("title")}
@@ -106,10 +119,11 @@ export function SettingsView({
           </p>
         </div>
 
-        <button
+        <Button
           type="submit"
+          variant="adminPrimary"
+          size="default"
           disabled={isSaving}
-          className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/25 hover:bg-sky-500 disabled:opacity-50 transition shrink-0 cursor-pointer"
         >
           {savedSuccess ? (
             <>
@@ -122,11 +136,11 @@ export function SettingsView({
               <span>{isSaving ? tCommon("loading") : t("saveSettings")}</span>
             </>
           )}
-        </button>
+        </Button>
       </div>
 
       {/* Card 1: Site Language Configuration */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/50 p-6 shadow-xl">
+      <Card variant="admin" className="p-6">
         <div className="flex items-start gap-3 mb-5 pb-4 border-b border-slate-800/80">
           <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
             <Globe className="w-4 h-4" />
@@ -144,29 +158,27 @@ export function SettingsView({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {AVAILABLE_LANGUAGES.map((lang) => {
             const isChecked = selectedLanguages.includes(lang.locale);
+            const inputId = `site-lang-${lang.locale}`;
             return (
               <label
                 key={lang.locale}
-                onClick={() => toggleLanguage(lang.locale, lang.locked)}
-                className={`flex items-center justify-between gap-3 rounded-xl border p-3.5 transition select-none ${
+                htmlFor={inputId}
+                className={cn(
+                  "flex items-center justify-between gap-3 rounded-admin-card border p-3.5 transition select-none",
                   lang.locked
                     ? "border-sky-500/40 bg-sky-950/20 cursor-default"
                     : isChecked
-                    ? "border-sky-500/60 bg-slate-900/95 cursor-pointer hover:border-sky-400"
-                    : "border-slate-800 bg-slate-950/50 cursor-pointer hover:border-slate-700 hover:bg-slate-900/60"
-                }`}
+                    ? "border-admin-accent bg-admin-surface cursor-pointer ring-1 ring-admin-accent/20"
+                    : "border-admin-border bg-admin-surface-subtle cursor-pointer hover:border-admin-border-hover hover:bg-admin-surface"
+                )}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  {/* Custom Styled Checkbox */}
-                  <div
-                    className={`w-4 h-4 rounded flex items-center justify-center border transition shrink-0 ${
-                      isChecked
-                        ? "bg-sky-600 border-sky-500 text-white"
-                        : "bg-slate-950 border-slate-700 text-transparent"
-                    }`}
-                  >
-                    <Check className="w-3 h-3 stroke-[3]" />
-                  </div>
+                  <Checkbox
+                    id={inputId}
+                    checked={isChecked}
+                    disabled={lang.locked}
+                    onCheckedChange={() => toggleLanguage(lang.locale, lang.locked)}
+                  />
 
                   <FlagIcon code={lang.locale} size="md" />
 
@@ -175,9 +187,9 @@ export function SettingsView({
                       <span className="text-xs font-semibold text-white">
                         {lang.name}
                       </span>
-                      <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-300">
+                      <Badge variant="adminMuted" size="xs" className="font-mono">
                         {lang.code}
-                      </span>
+                      </Badge>
                     </div>
                     <p className="text-[11px] text-slate-400 truncate mt-0.5">
                       {lang.subtitle}
@@ -186,19 +198,19 @@ export function SettingsView({
                 </div>
 
                 {lang.locked && (
-                  <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-300 shrink-0">
+                  <Badge variant="adminAccent" size="sm">
                     <Lock className="w-2.5 h-2.5" />
                     <span>{t("defaultBadge")}</span>
-                  </span>
+                  </Badge>
                 )}
               </label>
             );
           })}
         </div>
-      </div>
+      </Card>
 
       {/* Card 2: Admin Language Configuration */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/50 p-6 shadow-xl">
+      <Card variant="admin" className="p-6">
         <div className="flex items-start gap-3 mb-5 pb-4 border-b border-slate-800/80">
           <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
             <Languages className="w-4 h-4" />
@@ -213,82 +225,57 @@ export function SettingsView({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {ADMIN_LANGUAGES.map((lang) => {
-            const isSelected = selectedAdminLanguage === lang.locale;
-            return (
-              <div
-                key={lang.locale}
-                role="radio"
-                aria-checked={isSelected}
-                tabIndex={0}
-                onClick={() => setSelectedAdminLanguage(lang.locale)}
-                onKeyDown={(e) => {
-                  if (e.key === " " || e.key === "Enter") {
-                    e.preventDefault();
-                    setSelectedAdminLanguage(lang.locale);
-                  }
-                }}
-                className={`flex items-center justify-between gap-3 rounded-xl border p-3.5 transition select-none cursor-pointer ${
-                  isSelected
-                    ? "border-sky-500/60 bg-slate-900/95 hover:border-sky-400 ring-1 ring-sky-500/20"
-                    : "border-slate-800 bg-slate-950/50 hover:border-slate-700 hover:bg-slate-900/60"
-                }`}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  {/* Custom Styled Radio */}
-                  <div
-                    className={`w-4 h-4 rounded-full flex items-center justify-center border transition shrink-0 ${
-                      isSelected
-                        ? "bg-sky-600 border-sky-500"
-                        : "bg-slate-950 border-slate-700"
-                    }`}
-                  >
-                    <div
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        isSelected ? "bg-white" : "bg-transparent"
-                      }`}
-                    />
-                  </div>
+        <SelectableCardGroup<"en" | "sv">
+          value={selectedAdminLanguage}
+          onChange={setSelectedAdminLanguage}
+          aria-label={t("adminLanguageTitle")}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+        >
+          {ADMIN_LANGUAGES.map((lang) => (
+            <SelectableCard
+              key={lang.locale}
+              value={lang.locale}
+              indicator="radio"
+              className="p-3.5 justify-between flex-row items-center"
+            >
+              <div className="flex items-center gap-3 min-w-0 pr-8">
+                <FlagIcon code={lang.locale} size="md" />
 
-                  <FlagIcon code={lang.locale} size="md" />
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-white">
-                        {lang.name}
-                      </span>
-                      <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-300">
-                        {lang.code}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                      {lang.subtitle}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {lang.isDefault && (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-slate-700/80 bg-slate-800/60 px-2 py-0.5 text-[10px] font-medium text-slate-300">
-                      {t("defaultBadge")}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-white">
+                      {lang.name}
                     </span>
-                  )}
-                  {isSelected && (
-                    <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-300">
-                      <Check className="w-2.5 h-2.5" />
-                      <span>{tCommon("active")}</span>
-                    </span>
-                  )}
+                    <Badge variant="adminMuted" size="xs" className="font-mono">
+                      {lang.code}
+                    </Badge>
+                  </div>
+                  <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                    {lang.subtitle}
+                  </p>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
+
+              <div className="flex items-center gap-1.5 shrink-0 pr-8">
+                {lang.isDefault && (
+                  <Badge variant="adminMuted" size="sm">
+                    {t("defaultBadge")}
+                  </Badge>
+                )}
+                {selectedAdminLanguage === lang.locale && (
+                  <Badge variant="adminAccent" size="sm">
+                    <Check className="w-2.5 h-2.5" />
+                    <span>{tCommon("active")}</span>
+                  </Badge>
+                )}
+              </div>
+            </SelectableCard>
+          ))}
+        </SelectableCardGroup>
+      </Card>
 
       {/* Card 3: Gallery Configuration */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/50 p-6 shadow-xl">
+      <Card variant="admin" className="p-6">
         <div className="flex items-start gap-3 mb-5 pb-4 border-b border-slate-800/80">
           <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
             <Images className="w-4 h-4" />
@@ -306,10 +293,20 @@ export function SettingsView({
         <div className="space-y-6">
           {/* Default Gallery Layout */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-2">
+            <span className="block text-xs font-semibold text-slate-300 mb-2">
               {t("defaultGalleryLayout")}
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            </span>
+            <SelectableCardGroup<"grid" | "bento" | "carousel">
+              value={selectedGallerySettings.layout}
+              onChange={(val) =>
+                setSelectedGallerySettings((prev) => ({
+                  ...prev,
+                  layout: val,
+                }))
+              }
+              aria-label={t("defaultGalleryLayout")}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+            >
               {[
                 {
                   id: "grid" as const,
@@ -326,40 +323,25 @@ export function SettingsView({
                   title: "Carousel / Slider",
                   desc: t("layoutCarouselDesc"),
                 },
-              ].map((opt) => {
-                const isSelected = selectedGallerySettings.layout === opt.id;
-                return (
-                  <button
-                    key={opt.id}
-                    type="button"
-                    onClick={() =>
-                      setSelectedGallerySettings((prev) => ({
-                        ...prev,
-                        layout: opt.id,
-                      }))
-                    }
-                    className={`flex flex-col items-start text-left rounded-xl border p-3.5 transition cursor-pointer ${
-                      isSelected
-                        ? "border-sky-500/60 bg-slate-900/95 ring-1 ring-sky-500/20"
-                        : "border-slate-800 bg-slate-950/50 hover:border-slate-700 hover:bg-slate-900/60"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between w-full mb-1">
-                      <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-                        <LayoutGrid className="w-3.5 h-3.5 text-sky-400" />
-                        {opt.title}
-                      </span>
-                      {isSelected && (
-                        <Check className="w-3.5 h-3.5 text-sky-400" />
-                      )}
-                    </div>
-                    <span className="text-[11px] text-slate-400 leading-snug">
-                      {opt.desc}
+              ].map((opt) => (
+                <SelectableCard
+                  key={opt.id}
+                  value={opt.id}
+                  indicator="check"
+                  className="p-3.5"
+                >
+                  <div className="flex items-center justify-between w-full mb-1 pr-6">
+                    <span className="text-xs font-semibold text-white flex items-center gap-1.5">
+                      <LayoutGrid className="w-3.5 h-3.5 text-sky-400" />
+                      {opt.title}
                     </span>
-                  </button>
-                );
-              })}
-            </div>
+                  </div>
+                  <span className="text-[11px] text-slate-400 leading-snug">
+                    {opt.desc}
+                  </span>
+                </SelectableCard>
+              ))}
+            </SelectableCardGroup>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -369,41 +351,32 @@ export function SettingsView({
                 selectedGallerySettings.layout !== "grid";
               return (
                 <div
-                  className={`transition-opacity ${
-                    isColumnsDisabled ? "opacity-40" : ""
-                  }`}
+                  className={cn(
+                    "transition-opacity",
+                    isColumnsDisabled && "opacity-40"
+                  )}
                 >
-                  <label className="block text-xs font-semibold text-slate-300 mb-2">
+                  <span className="block text-xs font-semibold text-slate-300 mb-2">
                     {t("gridColumns")}
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {([2, 3, 4] as const).map((cols) => {
-                      const isSelected =
-                        selectedGallerySettings.columns === cols;
-                      return (
-                        <button
-                          key={cols}
-                          type="button"
-                          disabled={isColumnsDisabled}
-                          onClick={() =>
-                            setSelectedGallerySettings((prev) => ({
-                              ...prev,
-                              columns: cols,
-                            }))
-                          }
-                          className={`rounded-xl border py-2.5 text-xs font-semibold transition ${
-                            isColumnsDisabled
-                              ? "border-slate-800 bg-slate-950/40 text-slate-500 cursor-not-allowed"
-                              : isSelected
-                              ? "border-sky-500 bg-sky-600/20 text-sky-300 cursor-pointer"
-                              : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200 cursor-pointer"
-                          }`}
-                        >
-                          {t("colsCount", { count: cols })}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  </span>
+                  <SegmentedControl<2 | 3 | 4>
+                    size="sm"
+                    aria-label={t("gridColumns")}
+                    disabled={isColumnsDisabled}
+                    value={selectedGallerySettings.columns}
+                    onChange={(cols) =>
+                      setSelectedGallerySettings((prev) => ({
+                        ...prev,
+                        columns: cols,
+                      }))
+                    }
+                    options={[
+                      { value: 2, label: t("colsCount", { count: 2 }) },
+                      { value: 3, label: t("colsCount", { count: 3 }) },
+                      { value: 4, label: t("colsCount", { count: 4 }) },
+                    ]}
+                    className="w-full justify-between"
+                  />
                   <p className="mt-1.5 text-[11px] text-slate-500">
                     {isColumnsDisabled
                       ? t("columnsDisabledHelp")
@@ -419,41 +392,33 @@ export function SettingsView({
                 selectedGallerySettings.layout === "bento";
               return (
                 <div
-                  className={`transition-opacity ${
-                    isAspectRatioDisabled ? "opacity-40" : ""
-                  }`}
+                  className={cn(
+                    "transition-opacity",
+                    isAspectRatioDisabled && "opacity-40"
+                  )}
                 >
-                  <label className="block text-xs font-semibold text-slate-300 mb-2">
+                  <span className="block text-xs font-semibold text-slate-300 mb-2">
                     {t("thumbnailAspectRatio")}
-                  </label>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {(["16/9", "4/3", "3/2", "1/1"] as const).map((ratio) => {
-                      const isSelected =
-                        selectedGallerySettings.aspectRatio === ratio;
-                      return (
-                        <button
-                          key={ratio}
-                          type="button"
-                          disabled={isAspectRatioDisabled}
-                          onClick={() =>
-                            setSelectedGallerySettings((prev) => ({
-                              ...prev,
-                              aspectRatio: ratio,
-                            }))
-                          }
-                          className={`rounded-xl border py-2.5 text-xs font-mono font-semibold transition ${
-                            isAspectRatioDisabled
-                              ? "border-slate-800 bg-slate-950/40 text-slate-500 cursor-not-allowed"
-                              : isSelected
-                              ? "border-sky-500 bg-sky-600/20 text-sky-300 cursor-pointer"
-                              : "border-slate-800 bg-slate-950/60 text-slate-400 hover:border-slate-700 hover:text-slate-200 cursor-pointer"
-                          }`}
-                        >
-                          {ratio.replace("/", ":")}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  </span>
+                  <SegmentedControl<"16/9" | "4/3" | "3/2" | "1/1">
+                    size="sm"
+                    aria-label={t("thumbnailAspectRatio")}
+                    disabled={isAspectRatioDisabled}
+                    value={selectedGallerySettings.aspectRatio}
+                    onChange={(ratio) =>
+                      setSelectedGallerySettings((prev) => ({
+                        ...prev,
+                        aspectRatio: ratio,
+                      }))
+                    }
+                    options={[
+                      { value: "16/9", label: "16:9" },
+                      { value: "4/3", label: "4:3" },
+                      { value: "3/2", label: "3:2" },
+                      { value: "1/1", label: "1:1" },
+                    ]}
+                    className="w-full justify-between font-mono"
+                  />
                   <p className="mt-1.5 text-[11px] text-slate-500">
                     {isAspectRatioDisabled
                       ? t("aspectRatioDisabledHelp")
@@ -465,10 +430,15 @@ export function SettingsView({
 
             {/* Caption Position */}
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-2">
+              <Label
+                htmlFor={captionPositionId}
+                variant="admin"
+                className="block mb-2 font-semibold text-slate-300"
+              >
                 {t("captionVisibility")}
-              </label>
-              <select
+              </Label>
+              <NativeSelect
+                id={captionPositionId}
                 value={selectedGallerySettings.captionPosition}
                 onChange={(e) =>
                   setSelectedGallerySettings((prev) => ({
@@ -479,12 +449,13 @@ export function SettingsView({
                       | "hidden",
                   }))
                 }
-                className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
+                size="sm"
+                variant="admin"
               >
                 <option value="both">{t("captionBoth")}</option>
                 <option value="lightbox">{t("captionLightbox")}</option>
                 <option value="hidden">{t("captionHidden")}</option>
-              </select>
+              </NativeSelect>
               <p className="mt-1.5 text-[11px] text-slate-500">
                 {t("captionHelp")}
               </p>
@@ -493,43 +464,41 @@ export function SettingsView({
 
           {/* Lightbox Thumbnail Strip */}
           <div className="pt-2 border-t border-slate-800/70">
-            <label
-              onClick={() =>
-                setSelectedGallerySettings((prev) => ({
-                  ...prev,
-                  showThumbnails: !prev.showThumbnails,
-                }))
-              }
-              className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-slate-950/50 p-3.5 cursor-pointer hover:border-slate-700 transition select-none"
-            >
+            <div className="flex items-center justify-between gap-4 rounded-admin-card border border-admin-border bg-admin-surface-subtle p-3.5">
               <div>
-                <div className="text-xs font-semibold text-white">
+                <Label
+                  htmlFor={showThumbnailsId}
+                  variant="admin"
+                  className="text-xs font-semibold text-white cursor-pointer"
+                >
                   {t("showThumbnailStrip")}
-                </div>
+                </Label>
                 <div className="text-[11px] text-slate-400 mt-0.5">
                   {t("showThumbnailStripHelp")}
                 </div>
               </div>
-              <div
-                className={`w-5 h-5 rounded flex items-center justify-center border transition shrink-0 ${
-                  selectedGallerySettings.showThumbnails
-                    ? "bg-sky-600 border-sky-500 text-white"
-                    : "bg-slate-950 border-slate-700 text-transparent"
-                }`}
-              >
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-              </div>
-            </label>
+              <Switch
+                id={showThumbnailsId}
+                checked={selectedGallerySettings.showThumbnails}
+                onCheckedChange={(checked) =>
+                  setSelectedGallerySettings((prev) => ({
+                    ...prev,
+                    showThumbnails: checked,
+                  }))
+                }
+              />
+            </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Bottom Save Action */}
       <div className="flex items-center justify-end pt-2 pb-4">
-        <button
+        <Button
           type="submit"
+          variant="adminPrimary"
+          size="default"
           disabled={isSaving}
-          className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/25 hover:bg-sky-500 disabled:opacity-50 transition shrink-0 cursor-pointer"
         >
           {savedSuccess ? (
             <>
@@ -542,7 +511,7 @@ export function SettingsView({
               <span>{isSaving ? tCommon("saving") : t("saveSettings")}</span>
             </>
           )}
-        </button>
+        </Button>
       </div>
     </form>
   );

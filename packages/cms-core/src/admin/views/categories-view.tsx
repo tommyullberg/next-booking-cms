@@ -15,6 +15,12 @@ import {
   CheckSquare,
   Loader2,
 } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Card } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { SegmentedControl } from "../../components/ui/segmented-control";
+import { cn } from "../../utils/cn";
 
 export interface CategoryItem {
   id: string;
@@ -387,90 +393,91 @@ export function CategoriesView({
   };
 
   return (
-    <div className='space-y-6'>
+    <div className="space-y-6">
       {/* Header */}
-      <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-          <h1 className='text-2xl font-bold tracking-tight text-white'>{t("title")}</h1>
-          <p className='text-xs text-slate-400 mt-1'>{t("subtitle")}</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white">{t("title")}</h1>
+          <p className="text-xs text-slate-400 mt-1">{t("subtitle")}</p>
         </div>
       </div>
 
       {/* Create New Category Type Bar */}
-      <form
-        onSubmit={handleCreateCategoryType}
-        className='rounded-2xl border border-slate-800/90 bg-slate-900/50 p-5 space-y-4'>
-        <div className='flex items-center gap-2 text-xs font-semibold text-slate-200'>
-          <Layers className='w-4 h-4 text-sky-400' />
+      <Card variant="admin" className="p-5 space-y-4">
+        <div className="flex items-center gap-2 text-xs font-semibold text-slate-200">
+          <Layers className="w-4 h-4 text-sky-400" />
           <span>{t("addType")}</span>
         </div>
 
-        <div className='grid grid-cols-1 md:grid-cols-12 gap-3 items-center'>
-          <div className='md:col-span-6'>
-            <input
-              type='text'
+        <form onSubmit={handleCreateCategoryType} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+          <div className="md:col-span-6">
+            <Input
+              type="text"
               value={newTypeName}
               onChange={(e) => setNewTypeName(e.target.value)}
               placeholder={t("typeNamePlaceholder")}
-              className='w-full rounded-xl border border-slate-800 bg-slate-950/90 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none'
+              aria-label={t("typeNamePlaceholder")}
+              size="sm"
+              variant="admin"
             />
           </div>
 
           {/* Selection Mode Toggle: Radio vs Checkbox */}
-          <div className='md:col-span-4 flex items-center gap-2 bg-slate-950/90 border border-slate-800 rounded-xl p-1'>
-            <button
-              type='button'
-              onClick={() => setNewTypeIsMultiple(false)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg text-xs font-medium transition ${
-                !newTypeIsMultiple
-                  ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
-                  : "text-slate-400 hover:text-slate-200 border border-transparent"
-              }`}>
-              <CircleDot className='w-3.5 h-3.5' />
-              <span>{t("singleRadio")}</span>
-            </button>
-            <button
-              type='button'
-              onClick={() => setNewTypeIsMultiple(true)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg text-xs font-medium transition ${
-                newTypeIsMultiple
-                  ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
-                  : "text-slate-400 hover:text-slate-200 border border-transparent"
-              }`}>
-              <CheckSquare className='w-3.5 h-3.5' />
-              <span>{t("multipleCheckbox")}</span>
-            </button>
+          <div className="md:col-span-4 flex items-center">
+            <SegmentedControl
+              size="sm"
+              aria-label={`${t("addType")}: ${t("singleRadio")} / ${t("multipleCheckbox")}`}
+              value={newTypeIsMultiple ? "multiple" : "single"}
+              onChange={(val) => setNewTypeIsMultiple(val === "multiple")}
+              options={[
+                {
+                  value: "single",
+                  label: t("singleRadio"),
+                  icon: <CircleDot className="w-3.5 h-3.5" />,
+                },
+                {
+                  value: "multiple",
+                  label: t("multipleCheckbox"),
+                  icon: <CheckSquare className="w-3.5 h-3.5" />,
+                },
+              ]}
+              className="w-full justify-between"
+            />
           </div>
 
-          <div className='md:col-span-2'>
-            <button
-              type='submit'
+          <div className="md:col-span-2">
+            <Button
+              type="submit"
+              variant="adminPrimary"
+              size="sm"
               disabled={isCreatingType || !newTypeName.trim()}
-              className='w-full flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50'>
-              {isCreatingType ? <Loader2 className='w-4 h-4 animate-spin' /> : <Plus className='w-4 h-4' />}
+              className="w-full"
+            >
+              {isCreatingType ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               <span>{t("addType")}</span>
-            </button>
+            </Button>
           </div>
-        </div>
-      </form>
+        </form>
+      </Card>
 
       {/* List of Category Types */}
       {types.length === 0 ? (
-        <div className='rounded-2xl border border-slate-800/80 bg-slate-900/30 p-10 text-center space-y-2'>
-          <Layers className='w-8 h-8 text-slate-600 mx-auto' />
-          <div className='text-sm font-semibold text-slate-300'>{t("noTypesCreated")}</div>
-          <p className='text-xs text-slate-500 max-w-md mx-auto'>{t("noTypesHelp")}</p>
-        </div>
+        <Card variant="adminSubtle" className="p-10 text-center space-y-2">
+          <Layers className="w-8 h-8 text-slate-600 mx-auto" />
+          <div className="text-sm font-semibold text-slate-300">{t("noTypesCreated")}</div>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">{t("noTypesHelp")}</p>
+        </Card>
       ) : (
-        <div className='space-y-4'>
+        <div className="space-y-4">
           {types.map((typeItem) => {
             const categories = typeItem.categories || [];
             const isEditingThisType = editingTypeId === typeItem.id;
             const isDragOverThisType = dragOverTypeId === typeItem.id;
 
             return (
-              <div
+              <Card
                 key={typeItem.id}
+                variant="admin"
                 draggable={!isEditingThisType && !editingCategoryId}
                 onDragStart={(e) => handleTypeDragStart(e, typeItem.id)}
                 onDragOver={(e) => handleTypeDragOver(e, typeItem.id)}
@@ -479,127 +486,120 @@ export function CategoriesView({
                   setDraggedTypeId(null);
                   setDragOverTypeId(null);
                 }}
-                className={`rounded-2xl border bg-slate-900/40 overflow-hidden transition ${
-                  isDragOverThisType ? "border-sky-500 ring-1 ring-sky-500/30" : "border-slate-800/90"
-                }`}>
+                className={cn(
+                  "overflow-hidden transition",
+                  isDragOverThisType && "border-sky-500 ring-1 ring-sky-500/30"
+                )}
+              >
                 {/* Category Type Header */}
-                <div className='px-5 py-3.5 bg-slate-900/80 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-3'>
-                  <div className='flex items-center gap-3 min-w-0 flex-1'>
+                <div className="px-5 py-3.5 bg-slate-900/80 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <span
-                      className='cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300'
-                      title={t("dragReorderTypeTooltip")}>
-                      <GripVertical className='w-4 h-4' />
+                      className="cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300"
+                      title={t("dragReorderTypeTooltip")}
+                      aria-label={t("dragReorderTypeTooltip")}
+                    >
+                      <GripVertical className="w-4 h-4" />
                     </span>
 
                     {isEditingThisType ? (
-                      <div className='flex flex-wrap items-center gap-2 flex-1'>
-                        <input
-                          type='text'
+                      <div className="flex flex-wrap items-center gap-2 flex-1">
+                        <Input
+                          type="text"
                           value={editTypeName}
                           onChange={(e) => setEditTypeName(e.target.value)}
-                          className='rounded-lg border border-sky-500 bg-slate-950 px-3 py-1.5 text-xs text-white focus:outline-none'
+                          size="sm"
+                          variant="admin"
+                          className="w-48"
+                          aria-label="Category type name"
                           autoFocus
                         />
-                        <div className='flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-lg p-0.5'>
-                          <button
-                            type='button'
-                            onClick={() => setEditTypeIsMultiple(false)}
-                            className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition ${
-                              !editTypeIsMultiple ? "bg-sky-500/20 text-sky-400" : "text-slate-400 hover:text-white"
-                            }`}>
-                            <CircleDot className='w-3 h-3' />
-                            <span>{t("radio")}</span>
-                          </button>
-                          <button
-                            type='button'
-                            onClick={() => setEditTypeIsMultiple(true)}
-                            className={`flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium transition ${
-                              editTypeIsMultiple ? "bg-sky-500/20 text-sky-400" : "text-slate-400 hover:text-white"
-                            }`}>
-                            <CheckSquare className='w-3 h-3' />
-                            <span>{t("checkbox")}</span>
-                          </button>
-                        </div>
-                        <button
-                          type='button'
+                        <SegmentedControl
+                          size="sm"
+                          aria-label={`${editTypeName || "Category type"} mode`}
+                          value={editTypeIsMultiple ? "multiple" : "single"}
+                          onChange={(val) => setEditTypeIsMultiple(val === "multiple")}
+                          options={[
+                            { value: "single", label: t("radio"), icon: <CircleDot className="w-3 h-3" /> },
+                            { value: "multiple", label: t("checkbox"), icon: <CheckSquare className="w-3 h-3" /> },
+                          ]}
+                        />
+                        <Button
+                          type="button"
+                          variant="adminPrimary"
+                          size="iconSm"
                           onClick={() => handleSaveEditType(typeItem)}
-                          className='p-1.5 rounded-lg bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 transition'
-                          title={tCommon("save")}>
-                          <Check className='w-3.5 h-3.5' />
-                        </button>
-                        <button
-                          type='button'
+                          title={tCommon("save")}
+                          aria-label={tCommon("save")}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="adminSecondary"
+                          size="iconSm"
                           onClick={() => setEditingTypeId(null)}
-                          className='p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white transition'
-                          title={tCommon("cancel")}>
-                          <X className='w-3.5 h-3.5' />
-                        </button>
+                          title={tCommon("cancel")}
+                          aria-label={tCommon("cancel")}
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
                     ) : (
-                      <div className='flex items-center gap-3 flex-wrap'>
-                        <span className='text-sm font-semibold text-white'>{typeItem.name}</span>
-                        <span className='text-[11px] text-slate-500 font-mono'>
-                          ({categories.length} {categories.length === 1 ? t("categorySingle") : t("categoryPlural")})
-                        </span>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <span className="text-sm font-semibold text-white">{typeItem.name}</span>
+                        <Badge variant="adminMuted" size="sm" className="font-mono">
+                          {categories.length} {categories.length === 1 ? t("categorySingle") : t("categoryPlural")}
+                        </Badge>
                       </div>
                     )}
                   </div>
 
                   {/* Quick Mode Selector & Actions */}
                   {!isEditingThisType && (
-                    <div className='flex items-center gap-2.5'>
-                      <div className='flex items-center bg-slate-950/90 border border-slate-800 rounded-lg p-0.5'>
-                        <button
-                          type='button'
-                          onClick={() => handleToggleTypeMode(typeItem, false)}
-                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition ${
-                            !typeItem.is_multiple
-                              ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
-                              : "text-slate-400 hover:text-slate-200 border border-transparent"
-                          }`}
-                          title={t("singleSelectionTooltip")}>
-                          <CircleDot className='w-3 h-3' />
-                          <span>{t("singleRadio")}</span>
-                        </button>
-                        <button
-                          type='button'
-                          onClick={() => handleToggleTypeMode(typeItem, true)}
-                          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition ${
-                            typeItem.is_multiple
-                              ? "bg-sky-500/15 text-sky-400 border border-sky-500/30"
-                              : "text-slate-400 hover:text-slate-200 border border-transparent"
-                          }`}
-                          title={t("multipleSelectionTooltip")}>
-                          <CheckSquare className='w-3 h-3' />
-                          <span>{t("multipleCheckbox")}</span>
-                        </button>
-                      </div>
+                    <div className="flex items-center gap-2.5">
+                      <SegmentedControl
+                        size="sm"
+                        aria-label={`${typeItem.name} ${t("singleRadio")} / ${t("multipleCheckbox")}`}
+                        value={typeItem.is_multiple ? "multiple" : "single"}
+                        onChange={(val) => handleToggleTypeMode(typeItem, val === "multiple")}
+                        options={[
+                          { value: "single", label: t("singleRadio"), icon: <CircleDot className="w-3 h-3" /> },
+                          { value: "multiple", label: t("multipleCheckbox"), icon: <CheckSquare className="w-3 h-3" /> },
+                        ]}
+                      />
 
-                      <button
-                        type='button'
+                      <Button
+                        type="button"
+                        variant="adminGhost"
+                        size="iconSm"
                         onClick={() => startEditingType(typeItem)}
-                        className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'
-                        title={t("renameTypeTooltip")}>
-                        <Edit2 className='w-3.5 h-3.5' />
-                      </button>
+                        title={t("renameTypeTooltip")}
+                        aria-label={`${t("renameTypeTooltip")}: ${typeItem.name}`}
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </Button>
 
-                      <button
-                        type='button'
+                      <Button
+                        type="button"
+                        variant="adminGhostDestructive"
+                        size="iconSm"
                         onClick={() => handleDeleteType(typeItem.id)}
-                        className='p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition'
-                        title={t("deleteTypeTooltip")}>
-                        <Trash2 className='w-3.5 h-3.5' />
-                      </button>
+                        title={t("deleteTypeTooltip")}
+                        aria-label={`${t("deleteTypeTooltip")}: ${typeItem.name}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
                     </div>
                   )}
                 </div>
 
                 {/* Categories List inside this CategoryType */}
-                <div className='p-4 space-y-3'>
+                <div className="p-4 space-y-3">
                   {categories.length === 0 ? (
-                    <div className='text-xs text-slate-500 italic px-2 py-1'>{t("noCategoriesYet")}</div>
+                    <div className="text-xs text-slate-500 italic px-2 py-1">{t("noCategoriesYet")}</div>
                   ) : (
-                    <div className='space-y-1.5'>
+                    <div className="space-y-1.5">
                       {categories.map((cat) => {
                         const isEditingThisCat = editingCategoryId === cat.id;
                         const isDragOverCat = dragOverCatId === cat.id;
@@ -615,28 +615,32 @@ export function CategoriesView({
                               setDraggedCat(null);
                               setDragOverCatId(null);
                             }}
-                            className={`flex items-center justify-between gap-3 rounded-xl border px-3.5 py-2 text-xs transition ${
+                            className={cn(
+                              "flex items-center justify-between gap-3 rounded-admin-compact border px-3.5 py-2 text-xs transition",
                               isDragOverCat
                                 ? "border-sky-500 bg-sky-500/10"
-                                : "border-slate-800/80 bg-slate-950/60 hover:border-slate-700/80"
-                            }`}>
-                            <div className='flex items-center gap-2.5 min-w-0 flex-1'>
+                                : "border-admin-border/80 bg-admin-surface-subtle hover:border-admin-border-hover"
+                            )}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
                               <span
-                                className='cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300'
-                                title={t("dragReorderCategoryTooltip")}>
-                                <GripVertical className='w-3.5 h-3.5' />
+                                className="cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300"
+                                title={t("dragReorderCategoryTooltip")}
+                                aria-label={t("dragReorderCategoryTooltip")}
+                              >
+                                <GripVertical className="w-3.5 h-3.5" />
                               </span>
 
                               {typeItem.is_multiple ? (
-                                <CheckSquare className='w-3.5 h-3.5 text-sky-400/80 shrink-0' />
+                                <CheckSquare className="w-3.5 h-3.5 text-sky-400/80 shrink-0" />
                               ) : (
-                                <CircleDot className='w-3.5 h-3.5 text-sky-400/80 shrink-0' />
+                                <CircleDot className="w-3.5 h-3.5 text-sky-400/80 shrink-0" />
                               )}
 
                               {isEditingThisCat ? (
-                                <div className='flex items-center gap-2 flex-1'>
-                                  <input
-                                    type='text'
+                                <div className="flex items-center gap-2 flex-1">
+                                  <Input
+                                    type="text"
                                     value={editCategoryName}
                                     onChange={(e) => setEditCategoryName(e.target.value)}
                                     onKeyDown={(e) => {
@@ -647,45 +651,60 @@ export function CategoriesView({
                                         setEditingCategoryId(null);
                                       }
                                     }}
-                                    className='flex-1 rounded-lg border border-sky-500 bg-slate-900 px-2.5 py-1 text-xs text-white focus:outline-none'
+                                    size="sm"
+                                    variant="admin"
+                                    className="flex-1"
+                                    aria-label={t("categorySingle")}
                                     autoFocus
                                   />
-                                  <button
-                                    type='button'
+                                  <Button
+                                    type="button"
+                                    variant="adminPrimary"
+                                    size="iconSm"
                                     onClick={() => handleSaveEditCategory(cat)}
-                                    className='p-1 rounded bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25'
-                                    title={tCommon("save")}>
-                                    <Check className='w-3.5 h-3.5' />
-                                  </button>
-                                  <button
-                                    type='button'
+                                    title={tCommon("save")}
+                                    aria-label={tCommon("save")}
+                                  >
+                                    <Check className="w-3.5 h-3.5" />
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="adminSecondary"
+                                    size="iconSm"
                                     onClick={() => setEditingCategoryId(null)}
-                                    className='p-1 rounded bg-slate-800 text-slate-400 hover:text-white'
-                                    title={tCommon("cancel")}>
-                                    <X className='w-3.5 h-3.5' />
-                                  </button>
+                                    title={tCommon("cancel")}
+                                    aria-label={tCommon("cancel")}
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </Button>
                                 </div>
                               ) : (
-                                <span className='text-slate-200 font-medium truncate'>{cat.name}</span>
+                                <span className="text-slate-200 font-medium truncate">{cat.name}</span>
                               )}
                             </div>
 
                             {!isEditingThisCat && (
-                              <div className='flex items-center gap-1'>
-                                <button
-                                  type='button'
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  type="button"
+                                  variant="adminGhost"
+                                  size="iconSm"
                                   onClick={() => startEditingCategory(cat)}
-                                  className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'
-                                  title={t("renameCategoryTooltip")}>
-                                  <Edit2 className='w-3.5 h-3.5' />
-                                </button>
-                                <button
-                                  type='button'
+                                  title={t("renameCategoryTooltip")}
+                                  aria-label={`${t("renameCategoryTooltip")}: ${cat.name}`}
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="adminGhostDestructive"
+                                  size="iconSm"
                                   onClick={() => handleDeleteCategoryItem(cat)}
-                                  className='p-1 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition'
-                                  title={t("deleteCategoryTooltip")}>
-                                  <Trash2 className='w-3.5 h-3.5' />
-                                </button>
+                                  title={t("deleteCategoryTooltip")}
+                                  aria-label={`${t("deleteCategoryTooltip")}: ${cat.name}`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
                               </div>
                             )}
                           </div>
@@ -695,11 +714,11 @@ export function CategoriesView({
                   )}
 
                   {/* Add Category Input Row */}
-                  <form onSubmit={(e) => handleAddCategory(e, typeItem.id)} className='flex items-center gap-2 pt-1'>
-                    <div className='relative flex-1'>
-                      <Tag className='w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2' />
-                      <input
-                        type='text'
+                  <form onSubmit={(e) => handleAddCategory(e, typeItem.id)} className="flex items-center gap-2 pt-1">
+                    <div className="relative flex-1">
+                      <Tag className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <Input
+                        type="text"
                         value={newCategoryNames[typeItem.id] || ""}
                         onChange={(e) =>
                           setNewCategoryNames((prev) => ({
@@ -708,23 +727,28 @@ export function CategoriesView({
                           }))
                         }
                         placeholder={t("addCategoryPlaceholder", { name: typeItem.name })}
-                        className='w-full rounded-xl border border-slate-800 bg-slate-950/80 pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none'
+                        aria-label={t("addCategoryPlaceholder", { name: typeItem.name })}
+                        size="sm"
+                        variant="admin"
+                        className="pl-9"
                       />
                     </div>
-                    <button
-                      type='submit'
+                    <Button
+                      type="submit"
+                      variant="adminSecondary"
+                      size="sm"
                       disabled={addingCategoryForType === typeItem.id || !(newCategoryNames[typeItem.id] || "").trim()}
-                      className='flex items-center gap-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 px-3.5 py-2 text-xs font-medium text-sky-400 transition disabled:opacity-40'>
+                    >
                       {addingCategoryForType === typeItem.id ? (
-                        <Loader2 className='w-3.5 h-3.5 animate-spin' />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
-                        <Plus className='w-3.5 h-3.5' />
+                        <Plus className="w-3.5 h-3.5" />
                       )}
                       <span>{t("addItem")}</span>
-                    </button>
+                    </Button>
                   </form>
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>

@@ -15,6 +15,7 @@ export * from "./views/bookings-dashboard-view";
 export * from "./views/optionals-view";
 export * from "./views/amenities-view";
 export * from "./views/navigation-menus-view";
+export * from "./views/booking-settings-view";
 export * from "./views/settings-view";
 export * from "./views/media-view";
 export * from "./views/mail-templates-view";
