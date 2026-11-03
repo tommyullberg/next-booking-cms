@@ -165,9 +165,9 @@ export function BookingsDashboardView({
               key={tab.id}
               type="button"
               onClick={() => onNavigateTab?.(tab.id)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition shrink-0 ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                 isActive
-                  ? "bg-sky-500 text-slate-950 shadow-md shadow-sky-500/20"
+                  ? "bg-sky-600 hover:bg-sky-500 text-white shadow-md shadow-sky-600/20"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/60"
               }`}
             >
