@@ -23,7 +23,26 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
+  /* Centralized admin visual tokens */
+  --color-admin-canvas: #020617;
+  --color-admin-surface: #0f172a;
+  --color-admin-surface-subtle: rgba(15, 23, 42, 0.6);
+  --color-admin-border: #1e293b;
+  --color-admin-border-subtle: rgba(30, 41, 59, 0.6);
+  --color-admin-accent: #0284c7;
+  --color-admin-accent-hover: #0ea5e9;
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+}
+
+@utility shadow-admin-glow {
+  box-shadow: 0 0 20px -5px rgba(2, 132, 199, 0.25);
+}
+
+@utility shadow-admin-card {
+  box-shadow: 0 10px 25px -5px rgba(2, 6, 23, 0.5), 0 8px 10px -6px rgba(2, 6, 23, 0.5);
 }

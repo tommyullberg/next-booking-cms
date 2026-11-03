@@ -2,6 +2,7 @@ export * from "./constants";
 export * from "./types";
 export * from "./state/editor-store";
 export * from "./utils/slug";
+export * from "./utils/cn";
 export * from "./components/ui/flag-icon";
 export * from "./components/ui/date-picker";
 export * from "./components/ui/modal-portal";
