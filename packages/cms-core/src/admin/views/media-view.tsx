@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useId } from "react";
 import { useTranslations } from "next-intl";
 import {
   Upload,
@@ -19,7 +19,18 @@ import {
   Layers,
   HardDrive,
 } from "lucide-react";
-import { ModalPortal } from "../../components/ui/modal-portal";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Card } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { NativeSelect } from "../../components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 
 export interface MediaFolderItem {
   id: string;
@@ -161,6 +172,10 @@ export function MediaView({
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
   const [isDropzoneActive, setIsDropzoneActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
+
+  const parentFolderSelectId = useId();
+  const folderNameInputId = useId();
+  const searchInputId = useId();
 
   // Filtered files based on active folder selection and search
   const displayedFiles = useMemo(() => {
@@ -466,17 +481,19 @@ export function MediaView({
 
         <div className="flex items-center gap-2">
           {onCreateFolder && (
-            <button
+            <Button
               type="button"
+              variant="adminSecondary"
+              size="sm"
               onClick={() => handleOpenCreateFolder()}
-              className="flex items-center gap-1.5 rounded-xl border border-slate-800 bg-slate-900/80 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:text-white hover:border-slate-700 transition"
+              className="gap-1.5"
             >
               <FolderPlus className="w-4 h-4 text-sky-400" />
               <span>{t("createFolder")}</span>
-            </button>
+            </Button>
           )}
 
-          <label className="flex items-center gap-2 cursor-pointer rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition">
+          <label className="inline-flex items-center gap-2 cursor-pointer rounded-admin-button bg-admin-accent px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-admin-accent-hover transition">
             {isUploading ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
@@ -504,15 +521,18 @@ export function MediaView({
       </div>
 
       {actionError && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300 flex items-center justify-between">
+        <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300 flex items-center justify-between">
           <span>{actionError}</span>
-          <button
+          <Button
             type="button"
+            variant="adminGhost"
+            size="xs"
             onClick={() => setActionError(null)}
-            className="text-red-400 hover:text-red-200 transition"
+            className="text-red-400 hover:text-red-200"
+            aria-label={tCommon("close")}
           >
             <X className="w-4 h-4" />
-          </button>
+          </Button>
         </div>
       )}
 
@@ -520,20 +540,23 @@ export function MediaView({
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* Folders Sidebar */}
         <div className="w-full lg:w-64 shrink-0 space-y-3">
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-3 shadow-sm">
+          <Card variant="admin" className="p-3 shadow-sm">
             <div className="flex items-center justify-between px-2 py-1 mb-2">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                 {t("folders")}
               </span>
               {onCreateFolder && (
-                <button
+                <Button
                   type="button"
+                  variant="adminGhost"
+                  size="xs"
                   onClick={() => handleOpenCreateFolder(null)}
-                  className="p-1 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition"
+                  className="p-1 h-auto text-slate-400 hover:text-sky-400 hover:bg-slate-800"
                   title={t("createNewFolderTooltip")}
+                  aria-label={t("createNewFolderTooltip")}
                 >
                   <FolderPlus className="w-3.5 h-3.5" />
-                </button>
+                </Button>
               )}
             </div>
 
@@ -552,9 +575,9 @@ export function MediaView({
                   <Layers className="w-4 h-4 text-sky-400 shrink-0" />
                   <span className="truncate">{t("allFiles")}</span>
                 </div>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 shrink-0">
+                <Badge variant="adminMuted" className="text-[11px] font-mono px-2 py-0.5 rounded-full shrink-0">
                   {folderCounts.ALL || 0}
-                </span>
+                </Badge>
               </button>
 
               {/* Mediafolder (Root) */}
@@ -585,9 +608,9 @@ export function MediaView({
                   )}
                   <span className="truncate">{t("mediafolder")}</span>
                 </div>
-                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 shrink-0">
+                <Badge variant="adminMuted" className="text-[11px] font-mono px-2 py-0.5 rounded-full shrink-0">
                   {folderCounts.ROOT || 0}
-                </span>
+                </Badge>
               </div>
 
               {/* User Folders (Level 1 & Level 2) */}
@@ -634,28 +657,34 @@ export function MediaView({
 
                       <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                         {onCreateFolder && (
-                          <button
+                          <Button
                             type="button"
+                            variant="adminGhost"
+                            size="xs"
                             onClick={() => handleOpenCreateFolder(folder.id)}
-                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-sky-400 hover:bg-slate-800 rounded transition"
+                            className="opacity-0 group-hover:opacity-100 p-1 h-auto text-slate-400 hover:text-sky-400 hover:bg-slate-800"
                             title={t("createSubfolderTooltip", { name: folder.name })}
+                            aria-label={t("createSubfolderTooltip", { name: folder.name })}
                           >
                             <FolderPlus className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         )}
                         {canDeleteTop && onDeleteFolder && (
-                          <button
+                          <Button
                             type="button"
+                            variant="adminGhost"
+                            size="xs"
                             onClick={() => handleDeleteFolder(folder)}
-                            className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded transition"
+                            className="opacity-0 group-hover:opacity-100 p-1 h-auto text-slate-400 hover:text-red-400 hover:bg-slate-800"
                             title={t("deleteEmptyFolderTooltip")}
+                            aria-label={t("deleteEmptyFolderTooltip")}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         )}
-                        <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
+                        <Badge variant="adminMuted" className="text-[11px] font-mono px-2 py-0.5 rounded-full">
                           {count}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
 
@@ -702,18 +731,21 @@ export function MediaView({
 
                           <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
                             {childCount === 0 && onDeleteFolder && (
-                              <button
+                              <Button
                                 type="button"
+                                variant="adminGhost"
+                                size="xs"
                                 onClick={() => handleDeleteFolder(child)}
-                                className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded transition"
+                                className="opacity-0 group-hover:opacity-100 p-1 h-auto text-slate-400 hover:text-red-400 hover:bg-slate-800"
                                 title={t("deleteEmptyFolderTooltip")}
+                                aria-label={t("deleteEmptyFolderTooltip")}
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              </Button>
                             )}
-                            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">
+                            <Badge variant="adminMuted" className="text-[11px] font-mono px-2 py-0.5 rounded-full">
                               {childCount}
-                            </span>
+                            </Badge>
                           </div>
                         </div>
                       );
@@ -722,7 +754,7 @@ export function MediaView({
                 );
               })}
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Files Content Area */}
@@ -733,7 +765,7 @@ export function MediaView({
           onDrop={handleDropzoneDrop}
         >
           {/* Top Filter and Breadcrumb Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 border border-slate-800 p-3 rounded-2xl">
+          <Card variant="admin" className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3">
             <div className="flex items-center gap-2 text-xs">
               <span className="text-slate-400">{t("pathLabel")}</span>
               <span className="font-semibold text-white">
@@ -745,23 +777,27 @@ export function MediaView({
             </div>
 
             <div className="relative w-full sm:w-64">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-500" />
-              <input
+              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
+              <Input
+                id={searchInputId}
                 type="text"
+                variant="admin"
+                size="sm"
                 placeholder={t("searchPlaceholder")}
+                aria-label={t("searchPlaceholder")}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full rounded-xl border border-slate-800 bg-slate-950/80 pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
+                className="pl-9"
               />
             </div>
-          </div>
+          </Card>
 
           {/* Always-visible Multi-File Dropzone */}
           <label
             onDragOver={handleDropzoneDragOver}
             onDragLeave={handleDropzoneDragLeave}
             onDrop={handleDropzoneDrop}
-            className={`block w-full text-center rounded-2xl border-2 border-dashed transition cursor-pointer ${
+            className={`block w-full text-center rounded-admin-card border-2 border-dashed transition cursor-pointer ${
               displayedFiles.length === 0 ? "py-14 px-6" : "py-5 px-4"
             } ${
               isDropzoneActive
@@ -815,12 +851,13 @@ export function MediaView({
                 const isDragging = draggedFileId === item.id;
 
                 return (
-                  <div
+                  <Card
                     key={item.id}
+                    variant="admin"
                     draggable={true}
                     onDragStart={(e) => handleDragStart(e, item.id)}
                     onDragEnd={handleDragEnd}
-                    className={`group relative rounded-2xl border border-slate-800 bg-slate-900/60 overflow-hidden flex flex-col hover:border-slate-700 transition shadow-sm ${
+                    className={`group relative overflow-hidden flex flex-col hover:border-slate-700 transition shadow-sm ${
                       isDragging ? "opacity-30 scale-95" : ""
                     }`}
                   >
@@ -843,21 +880,25 @@ export function MediaView({
 
                       {/* In-Use Badge */}
                       {item.is_used && (
-                        <div
-                          className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-md bg-slate-950/80 backdrop-blur border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-300 shadow"
+                        <Badge
+                          variant="adminWarning"
+                          className="absolute top-2 left-2 gap-1 backdrop-blur shadow"
                           title={t("usedOnPagesTooltip", { count: item.usage_count || 1 })}
                         >
                           <Lock className="w-2.5 h-2.5" />
                           <span>{t("inUse")}</span>
-                        </div>
+                        </Badge>
                       )}
 
                       {/* Folder Name Badge (when in All Files view) */}
                       {selectedFolderId === "ALL" && item.folder && (
-                        <div className="absolute bottom-2 left-2 inline-flex items-center gap-1 rounded-md bg-slate-950/80 backdrop-blur border border-slate-700 px-2 py-0.5 text-[10px] font-medium text-slate-300 shadow">
-                          <Folder className="w-2.5 h-2.5 text-sky-400" />
-                          <span className="truncate max-w-[140px]">{item.folder.slug || item.folder.name}</span>
-                        </div>
+                        <Badge
+                          variant="adminMuted"
+                          className="absolute bottom-2 left-2 gap-1 backdrop-blur shadow max-w-[140px] truncate"
+                        >
+                          <Folder className="w-2.5 h-2.5 text-sky-400 shrink-0" />
+                          <span className="truncate">{item.folder.slug || item.folder.name}</span>
+                        </Badge>
                       )}
                     </div>
 
@@ -869,52 +910,61 @@ export function MediaView({
 
                       <div className="flex items-center gap-1 shrink-0">
                         {/* Copy URL */}
-                        <button
+                        <Button
                           type="button"
+                          variant="adminGhost"
+                          size="xs"
                           onClick={() => copyUrl(item.id, item.file_url)}
-                          className="p-1 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition"
+                          className="p-1 h-auto text-slate-400 hover:text-sky-400"
                           title={t("copyUrlTooltip")}
+                          aria-label={`${t("copyUrlTooltip")}: ${item.file_name}`}
                         >
                           {copiedId === item.id ? (
                             <Check className="w-3.5 h-3.5 text-emerald-400" />
                           ) : (
                             <Copy className="w-3.5 h-3.5" />
                           )}
-                        </button>
+                        </Button>
 
                         {/* Move to folder */}
                         {onMoveFile && (
-                          <button
+                          <Button
                             type="button"
+                            variant="adminGhost"
+                            size="xs"
                             onClick={() => handleOpenMoveModal(item)}
-                            className="p-1 rounded text-slate-400 hover:text-sky-400 hover:bg-slate-800 transition"
+                            className="p-1 h-auto text-slate-400 hover:text-sky-400"
                             title={t("moveFileTooltip")}
+                            aria-label={`${t("moveFileTooltip")}: ${item.file_name}`}
                           >
                             <FolderInput className="w-3.5 h-3.5" />
-                          </button>
+                          </Button>
                         )}
 
                         {/* Delete file */}
-                        <button
+                        <Button
                           type="button"
+                          variant="adminGhost"
+                          size="xs"
                           disabled={item.is_used}
                           onClick={() => handleDeleteFile(item)}
-                          className={`p-1 rounded transition ${
+                          className={`p-1 h-auto ${
                             item.is_used
                               ? "text-slate-600 cursor-not-allowed"
-                              : "text-slate-400 hover:text-red-400 hover:bg-slate-800"
+                              : "text-slate-400 hover:text-red-400"
                           }`}
                           title={
                             item.is_used
                               ? t("inUseCannotDeleteTooltip")
                               : t("deleteFileTooltip")
                           }
+                          aria-label={`${t("deleteFileTooltip")}: ${item.file_name}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
-                  </div>
+                  </Card>
                 );
               })}
             </div>
@@ -922,110 +972,134 @@ export function MediaView({
         </div>
       </div>
 
-      {/* Create Folder Modal */}
-      {isCreateFolderOpen && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <FolderPlus className="w-5 h-5 text-sky-400" />
-                  <h3 className="text-base font-bold text-white">{t("createNewFolderModalTitle")}</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setIsCreateFolderOpen(false)}
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
+      {/* Create Folder Dialog */}
+      <Dialog
+        open={isCreateFolderOpen}
+        onOpenChange={(open) => {
+          if (!open && isCreatingFolder) return;
+          setIsCreateFolderOpen(open);
+        }}
+      >
+        <DialogContent
+          variant="admin"
+          size="sm"
+          className="space-y-4"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => {
+            if (isCreatingFolder) e.preventDefault();
+          }}
+        >
+          <DialogHeader className="border-b border-slate-800 pb-3 mb-0">
+            <DialogTitle variant="admin" size="sm" className="flex items-center gap-2">
+              <FolderPlus className="w-5 h-5 text-sky-400" />
+              <span>{t("createNewFolderModalTitle")}</span>
+            </DialogTitle>
+          </DialogHeader>
 
-              <form onSubmit={handleCreateFolder} className="space-y-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-300">
-                    {t("parentFolderLabel")}
-                  </label>
-                  <select
-                    value={newFolderParentId || ""}
-                    onChange={(e) => setNewFolderParentId(e.target.value || null)}
-                    className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
-                  >
-                    <option value="">{t("mediafolderRoot")}</option>
-                    {rootLevelFolders.map((f) => (
-                      <option key={f.id} value={f.id}>
-                        {t("mediafolder")} / {f.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-300">
-                    {t("folderNameLabel")} <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={t("folderNamePlaceholder")}
-                    value={newFolderName}
-                    onChange={(e) => setNewFolderName(sanitizeFolderInput(e.target.value))}
-                    className="w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-mono text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none"
-                    autoFocus
-                  />
-                  <p className="text-[11px] text-slate-500">
-                    {t("folderNameHelp")}
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setIsCreateFolderOpen(false)}
-                    className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white transition"
-                  >
-                    {tCommon("cancel")}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isCreatingFolder || !sanitizeFolderSlug(newFolderName)}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
-                  >
-                    {isCreatingFolder && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>{t("createFolderBtn")}</span>
-                  </button>
-                </div>
-              </form>
+          <form onSubmit={handleCreateFolder} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor={parentFolderSelectId} className="text-xs font-medium text-slate-300">
+                {t("parentFolderLabel")}
+              </Label>
+              <NativeSelect
+                id={parentFolderSelectId}
+                variant="admin"
+                size="sm"
+                value={newFolderParentId || ""}
+                onChange={(e) => setNewFolderParentId(e.target.value || null)}
+              >
+                <option value="">{t("mediafolderRoot")}</option>
+                {rootLevelFolders.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {t("mediafolder")} / {f.name}
+                  </option>
+                ))}
+              </NativeSelect>
             </div>
-          </div>
-        </ModalPortal>
-      )}
 
-      {/* Move File Modal */}
-      {movingFile && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-            <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <FolderInput className="w-5 h-5 text-sky-400" />
-                  <h3 className="text-base font-bold text-white">{t("moveFileModalTitle")}</h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setMovingFile(null)}
-                  className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+            <div className="space-y-1.5">
+              <Label htmlFor={folderNameInputId} className="text-xs font-medium text-slate-300">
+                {t("folderNameLabel")} <span className="text-rose-400">*</span>
+              </Label>
+              <Input
+                id={folderNameInputId}
+                type="text"
+                variant="admin"
+                size="sm"
+                required
+                placeholder={t("folderNamePlaceholder")}
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(sanitizeFolderInput(e.target.value))}
+                className="font-mono text-xs"
+                autoFocus
+              />
+              <p className="text-[11px] text-slate-500">
+                {t("folderNameHelp")}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+              <Button
+                type="button"
+                variant="adminSecondary"
+                size="sm"
+                disabled={isCreatingFolder}
+                onClick={() => setIsCreateFolderOpen(false)}
+              >
+                {tCommon("cancel")}
+              </Button>
+              <Button
+                type="submit"
+                variant="adminPrimary"
+                size="sm"
+                disabled={isCreatingFolder || !sanitizeFolderSlug(newFolderName)}
+                className="gap-1.5"
+              >
+                {isCreatingFolder && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>{t("createFolderBtn")}</span>
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Move File Dialog */}
+      <Dialog
+        open={!!movingFile}
+        onOpenChange={(open) => {
+          if (!open && isMoving) return;
+          if (!open) setMovingFile(null);
+        }}
+      >
+        <DialogContent
+          variant="admin"
+          size="sm"
+          className="space-y-4"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => {
+            if (isMoving) e.preventDefault();
+          }}
+        >
+          <DialogHeader className="border-b border-slate-800 pb-3 mb-0">
+            <DialogTitle variant="admin" size="sm" className="flex items-center gap-2">
+              <FolderInput className="w-5 h-5 text-sky-400" />
+              <span>{t("moveFileModalTitle")}</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          {movingFile && (
+            <div className="space-y-3">
+              <div className="text-xs text-slate-300">
+                {t("moveFilePrompt", { fileName: movingFile.file_name })}
               </div>
 
-              <div className="space-y-3">
-                <div className="text-xs text-slate-300">
-                  {t("moveFilePrompt", { fileName: movingFile.file_name })}
-                </div>
-
-                <div className="max-h-60 overflow-y-auto space-y-1 border border-slate-800 rounded-xl p-2 bg-slate-900/60">
+                <div
+                  role="radiogroup"
+                  aria-label={t("moveFileModalTitle")}
+                  className="max-h-60 overflow-y-auto space-y-1 border border-slate-800 rounded-xl p-2 bg-slate-900/60"
+                >
                   {/* Option: Mediafolder (Root) */}
                   <label
                     className={`flex items-center justify-between p-2.5 rounded-lg text-xs cursor-pointer transition ${
@@ -1086,7 +1160,7 @@ export function MediaView({
                               key={child.id}
                               className={`flex items-center justify-between p-2 rounded-lg text-xs cursor-pointer transition ${
                                 targetFolderChoice === child.id
-                                    ? "bg-sky-600/20 border border-sky-500/40 text-white font-semibold"
+                                  ? "bg-sky-600/20 border border-sky-500/40 text-white font-semibold"
                                   : "text-slate-300 hover:bg-slate-800"
                               }`}
                             >
@@ -1116,28 +1190,31 @@ export function MediaView({
                 </p>
 
                 <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-                  <button
+                  <Button
                     type="button"
+                    variant="adminSecondary"
+                    size="sm"
+                    disabled={isMoving}
                     onClick={() => setMovingFile(null)}
-                    className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white transition"
                   >
                     {tCommon("cancel")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="adminPrimary"
+                    size="sm"
                     disabled={isMoving}
                     onClick={handleConfirmMove}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
+                    className="gap-1.5"
                   >
                     {isMoving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>{t("moveFileBtn")}</span>
-                  </button>
+                  </Button>
                 </div>
               </div>
-            </div>
-          </div>
-        </ModalPortal>
-      )}
+            )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

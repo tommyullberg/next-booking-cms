@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useId } from "react";
 import { useTranslations } from "next-intl";
 import {
   Plus,
@@ -23,7 +23,20 @@ import {
 import { BookingOptionalItem } from "../../booking/types";
 import { BookingObjectItem } from "./booking-objects-view";
 import { MediaItem } from "./media-view";
-import { ModalPortal } from "../../components/ui/modal-portal";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { NativeSelect } from "../../components/ui/select";
+import { Card } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../../components/ui/dialog";
 
 export type OptionalItem = BookingOptionalItem;
 
@@ -94,6 +107,17 @@ export function OptionalsView({
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const nameFieldId = useId();
+  const descFieldId = useId();
+  const objectSelectId = useId();
+  const statusSwitchId = useId();
+  const manualUrlId = useId();
+  const priceHourId = useId();
+  const priceDayId = useId();
+  const priceSunThuId = useId();
+  const priceThuSunId = useId();
+  const priceWeekId = useId();
 
   // Drag & drop handlers
   const handleDragStart = (e: React.DragEvent, id: string) => {
@@ -319,14 +343,15 @@ export function OptionalsView({
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="adminPrimary"
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition"
+          className="gap-2"
         >
           <Plus className="w-4 h-4" />
           <span>{t("createBtn")}</span>
-        </button>
+        </Button>
       </div>
 
       {/* Filter / Search Bar */}
@@ -334,23 +359,28 @@ export function OptionalsView({
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
           {/* Search */}
           <div className="relative flex-1 max-w-sm">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+            <Input
               type="text"
+              variant="admin"
+              size="sm"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+              aria-label={t("searchPlaceholder")}
+              className="pl-9"
             />
           </div>
 
           {/* Object Filter Dropdown */}
           <div className="flex items-center gap-2">
             <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            <select
+            <NativeSelect
+              variant="admin"
+              size="sm"
               value={selectedObjectFilter}
               onChange={(e) => setSelectedObjectFilter(e.target.value)}
-              className="bg-slate-900/60 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 transition"
+              aria-label={t("filterAll")}
             >
               <option value="ALL">{t("filterAll")}</option>
               <option value="ONLY_ALL">{t("filterOnlyAll")}</option>
@@ -359,7 +389,7 @@ export function OptionalsView({
                   {t("filterLocked", { name: obj.name })}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
         </div>
 
@@ -372,7 +402,7 @@ export function OptionalsView({
       </div>
 
       {/* Optionals Table */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/40 overflow-hidden shadow-xl">
+      <Card variant="admin" className="overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
@@ -423,6 +453,7 @@ export function OptionalsView({
                         <span
                           className="cursor-grab active:cursor-grabbing inline-flex p-1 rounded hover:text-slate-300 hover:bg-slate-800/60 transition"
                           title={t("dragToReorder")}
+                          aria-label={`${t("dragToReorder")}: ${opt.name}`}
                         >
                           <GripVertical className="w-4 h-4" />
                         </span>
@@ -435,8 +466,9 @@ export function OptionalsView({
                         type="button"
                         role="switch"
                         aria-checked={opt.is_active}
+                        aria-label={opt.is_active ? t("statusActiveTooltip") : t("statusHiddenTooltip")}
                         onClick={() => handleToggleActive(opt)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
                           opt.is_active ? "bg-emerald-500" : "bg-slate-700"
                         }`}
                         title={opt.is_active ? t("statusActiveTooltip") : t("statusHiddenTooltip")}
@@ -477,16 +509,14 @@ export function OptionalsView({
                     {/* Locked to Object */}
                     <td className="py-3.5 px-4">
                       {targetObject ? (
-                        <div className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/20 bg-sky-500/10 px-2 py-1 text-[11px] text-sky-300 font-medium">
-                          <Box className="w-3 h-3 text-sky-400" />
-                          <span className="truncate max-w-[130px]">
-                            {targetObject.name}
-                          </span>
-                        </div>
+                        <Badge variant="adminAccent" className="gap-1.5 font-medium truncate max-w-[140px]">
+                          <Box className="w-3 h-3 text-sky-400 shrink-0" />
+                          <span className="truncate">{targetObject.name}</span>
+                        </Badge>
                       ) : (
-                        <span className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/80 px-2 py-0.5 text-[10px] font-semibold text-slate-300">
+                        <Badge variant="adminMuted" className="text-[10px] font-semibold">
                           {t("allObjects")}
-                        </span>
+                        </Badge>
                       )}
                     </td>
 
@@ -509,15 +539,18 @@ export function OptionalsView({
 
                     {/* Actions */}
                     <td className="py-3.5 px-5 text-right">
-                      <button
+                      <Button
                         type="button"
+                        variant="adminSecondary"
+                        size="sm"
                         onClick={() => openEditModal(opt)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition shadow-sm"
+                        className="gap-1.5"
                         title={t("editOptionalTooltip")}
+                        aria-label={`${tCommon("edit")} ${opt.name}`}
                       >
                         <Edit3 className="w-3 h-3 text-sky-400" />
                         <span>{tCommon("edit")}</span>
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -536,397 +569,460 @@ export function OptionalsView({
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
-      {/* Create / Edit Optional Modal */}
-      {isModalOpen && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-            <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">
-                    {editingOptional ? t("modalEditTitle", { name: editingOptional.name }) : t("modalCreateTitle")}
-                  </h3>
-                  <p className="text-[11px] text-slate-400">
-                    {t("modalSubtitle")}
-                  </p>
-                </div>
+      {/* Create / Edit Optional Dialog */}
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          if (!open && isSaving) return;
+          setIsModalOpen(open);
+        }}
+      >
+        <DialogContent
+          variant="admin"
+          size="lg"
+          className="space-y-5 max-h-[92vh]"
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => {
+            if (isSaving) {
+              e.preventDefault();
+              return;
+            }
+            if (isMediaPickerOpen) {
+              e.preventDefault();
+              setIsMediaPickerOpen(false);
+            }
+          }}
+        >
+          {/* Modal Header */}
+          <DialogHeader className="border-b border-slate-800 pb-4 mb-0">
+            <DialogTitle variant="admin" size="sm" className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
+                <Sparkles className="w-4 h-4" />
               </div>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div>
+                <span>
+                  {editingOptional ? t("modalEditTitle", { name: editingOptional.name }) : t("modalCreateTitle")}
+                </span>
+                <DialogDescription className="text-[11px] text-slate-400 font-normal">
+                  {t("modalSubtitle")}
+                </DialogDescription>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {errorMsg && (
+            <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+              {errorMsg}
             </div>
+          )}
 
-            {errorMsg && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
-                {errorMsg}
-              </div>
-            )}
+              {/* Form */}
+              <form onSubmit={handleSave} className="space-y-4 text-xs">
+                {/* Name & Active Switch */}
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor={nameFieldId} className="text-[11px] font-semibold text-slate-300">
+                      {t("name")} <span className="text-rose-400">*</span>
+                    </Label>
+                    <Input
+                      id={nameFieldId}
+                      type="text"
+                      variant="admin"
+                      size="sm"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t("namePlaceholder")}
+                    />
+                  </div>
 
-            {/* Form */}
-            <form onSubmit={handleSave} className="space-y-4 text-xs">
-              {/* Name & Active Switch */}
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("name")} <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder={t("namePlaceholder")}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                  />
+                  {/* Description */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor={descFieldId} className="text-[11px] font-semibold text-slate-300">
+                      {t("description")}
+                    </Label>
+                    <Textarea
+                      id={descFieldId}
+                      variant="admin"
+                      rows={3}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder={t("descriptionPlaceholder")}
+                    />
+                  </div>
                 </div>
 
-                {/* Description */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("description")}
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder={t("descriptionPlaceholder")}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                  />
-                </div>
-              </div>
+                {/* Locked to Object & Active Switch */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Locked to Object */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor={objectSelectId} className="text-[11px] font-semibold text-slate-300">
+                      {t("colLocked")}
+                    </Label>
+                    <NativeSelect
+                      id={objectSelectId}
+                      variant="admin"
+                      size="sm"
+                      value={objectId}
+                      onChange={(e) => setObjectId(e.target.value)}
+                    >
+                      <option value="">-- {t("allObjects")} --</option>
+                      {objects.map((obj) => (
+                        <option key={obj.id} value={obj.id}>
+                          {obj.name}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  </div>
 
-              {/* Locked to Object & Active Switch */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* Locked to Object */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-                    <span>{t("colLocked")}</span>
-                  </label>
-                  <select
-                    value={objectId}
-                    onChange={(e) => setObjectId(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
-                  >
-                    <option value="">-- {t("allObjects")} --</option>
-                    {objects.map((obj) => (
-                      <option key={obj.id} value={obj.id}>
-                        {obj.name}
-                      </option>
-                    ))}
-                  </select>
+                  {/* Active / Hidden Switch */}
+                  <div className="space-y-1.5">
+                    <Label htmlFor={statusSwitchId} className="text-[11px] font-semibold text-slate-300">
+                      {t("status")}
+                    </Label>
+                    <div className="rounded-admin-button border border-admin-border bg-admin-field px-3 py-1.5 flex items-center justify-between h-[38px]">
+                      <span className="text-[11px] text-slate-300">
+                        {isActive ? t("statusActive") : t("statusHidden")}
+                      </span>
+                      <button
+                        id={statusSwitchId}
+                        type="button"
+                        role="switch"
+                        aria-checked={isActive}
+                        aria-label={t("status")}
+                        onClick={() => setIsActive(!isActive)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
+                          isActive ? "bg-emerald-500" : "bg-slate-700"
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                            isActive ? "translate-x-4" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Active / Hidden Switch */}
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("status")}
-                  </label>
-                  <div className="rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 flex items-center justify-between h-[38px]">
-                    <span className="text-[11px] text-slate-300">
-                      {isActive ? t("statusActive") : t("statusHidden")}
-                    </span>
+                {/* Image */}
+                <div className="space-y-2 pt-1 border-t border-slate-800/80">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                      <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{t("image")}</span>
+                    </Label>
                     <button
                       type="button"
-                      role="switch"
-                      aria-checked={isActive}
-                      onClick={() => setIsActive(!isActive)}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                        isActive ? "bg-emerald-500" : "bg-slate-700"
-                      }`}
+                      onClick={() => setShowManualUrl(!showManualUrl)}
+                      className="text-[10px] text-sky-400 hover:text-sky-300 transition underline underline-offset-2"
                     >
-                      <span
-                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                          isActive ? "translate-x-4" : "translate-x-0"
+                      {showManualUrl ? t("hideManualUrl") : t("enterManualUrl")}
+                    </button>
+                  </div>
+
+                  {/* Selected Image Preview Card */}
+                  {imageUrl ? (
+                    <div className="flex items-center justify-between p-2.5 rounded-xl border border-slate-800 bg-slate-900/90 gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-700 bg-slate-950 shrink-0">
+                          <img
+                            src={imageUrl}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLElement).style.display = "none";
+                            }}
+                          />
+                        </div>
+                        <div className="min-w-0 space-y-0.5">
+                          <span className="text-xs font-medium text-white truncate block">
+                            {selectedMediaItem?.file_name || imageUrl.split("/").pop() || imageUrl}
+                          </span>
+                          <span className="text-[10px] text-slate-400 truncate block font-mono">
+                            {imageUrl}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="adminGhost"
+                        size="xs"
+                        onClick={() => setImageUrl("")}
+                        className="text-slate-400 hover:text-rose-400 shrink-0"
+                        title={t("removeImage")}
+                        aria-label={t("removeImage")}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="p-2.5 rounded-xl border border-dashed border-slate-800 bg-slate-900/40 text-center">
+                      <span className="text-[11px] text-slate-400">
+                        {t("noImageSelected")}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Media Picker Trigger */}
+                  <div className="relative">
+                    <Button
+                      type="button"
+                      variant="adminSecondary"
+                      size="sm"
+                      onClick={() => setIsMediaPickerOpen(!isMediaPickerOpen)}
+                      className="w-full justify-between font-normal text-xs"
+                      aria-expanded={isMediaPickerOpen}
+                    >
+                      <span className="flex items-center gap-2 text-slate-200">
+                        <ImageIcon className="w-4 h-4 text-sky-400 shrink-0" />
+                        <span>
+                          {imageUrl ? t("changeImage") : t("chooseImage")}
+                        </span>
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-slate-400 transition-transform ${
+                          isMediaPickerOpen ? "rotate-180" : ""
                         }`}
                       />
-                    </button>
+                    </Button>
+
+                    {/* Media Picker List */}
+                    {isMediaPickerOpen && (
+                      <div className="mt-2 rounded-xl border border-slate-800 bg-slate-900 p-2 shadow-xl space-y-2 z-10">
+                        {/* Search */}
+                        <div className="relative">
+                          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-10" />
+                          <Input
+                            type="text"
+                            variant="admin"
+                            size="sm"
+                            value={mediaSearchQuery}
+                            onChange={(e) => setMediaSearchQuery(e.target.value)}
+                            placeholder={t("searchImages")}
+                            aria-label={t("searchImages")}
+                            className="pl-8"
+                          />
+                        </div>
+
+                        {/* Image List */}
+                        <div className="max-h-52 overflow-y-auto space-y-1 divide-y divide-slate-800/40">
+                          {imageUrl && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setImageUrl("");
+                                setIsMediaPickerOpen(false);
+                              }}
+                              className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-lg text-rose-300 hover:bg-rose-500/10 text-xs transition"
+                            >
+                              <X className="w-4 h-4 text-rose-400 shrink-0" />
+                              <span>{t("removeImage")}</span>
+                            </button>
+                          )}
+
+                          {filteredMedia.length === 0 ? (
+                            <div className="p-3 text-center text-[11px] text-slate-400">
+                              {imageMedia.length === 0
+                                ? t("noImages")
+                                : t("noMatchingImages")}
+                            </div>
+                          ) : (
+                            filteredMedia.map((m) => {
+                              const isSelected = imageUrl === m.file_url;
+                              return (
+                                <button
+                                  key={m.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setImageUrl(m.file_url);
+                                    setIsMediaPickerOpen(false);
+                                  }}
+                                  className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-lg transition ${
+                                    isSelected
+                                      ? "bg-sky-500/20 text-sky-200 border border-sky-500/30"
+                                      : "text-slate-300 hover:bg-slate-800"
+                                  }`}
+                                >
+                                  <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-950 border border-slate-800 shrink-0">
+                                    <img
+                                      src={m.file_url}
+                                      alt={m.file_name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <span className="text-xs truncate flex-1">{m.file_name}</span>
+                                  {isSelected && (
+                                    <Check className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                                  )}
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </div>
 
-              {/* Image */}
-              <div className="space-y-2 pt-1 border-t border-slate-800/80">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                    <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{t("image")}</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowManualUrl(!showManualUrl)}
-                    className="text-[10px] text-sky-400 hover:text-sky-300 transition underline underline-offset-2"
-                  >
-                    {showManualUrl ? t("hideManualUrl") : t("enterManualUrl")}
-                  </button>
-                </div>
-
-                {/* Selected Image Preview Card */}
-                {imageUrl ? (
-                  <div className="flex items-center justify-between p-2.5 rounded-xl border border-slate-800 bg-slate-900/90 gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-700 bg-slate-950 shrink-0">
-                        <img
-                          src={imageUrl}
-                          alt="Preview"
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLElement).style.display = "none";
-                          }}
-                        />
-                      </div>
-                      <div className="min-w-0 space-y-0.5">
-                        <span className="text-xs font-medium text-white truncate block">
-                          {selectedMediaItem?.file_name || imageUrl.split("/").pop() || imageUrl}
-                        </span>
-                        <span className="text-[10px] text-slate-400 truncate block font-mono">
-                          {imageUrl}
-                        </span>
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setImageUrl("")}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition shrink-0"
-                      title={t("removeImage")}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="p-2.5 rounded-xl border border-dashed border-slate-800 bg-slate-900/40 text-center">
-                    <span className="text-[11px] text-slate-400">
-                      {t("noImageSelected")}
-                    </span>
-                  </div>
-                )}
-
-                {/* Media Picker Trigger */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsMediaPickerOpen(!isMediaPickerOpen)}
-                    className="w-full flex items-center justify-between bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-sky-500 transition"
-                  >
-                    <span className="flex items-center gap-2 text-slate-300">
-                      <ImageIcon className="w-4 h-4 text-sky-400" />
-                      <span>
-                        {imageUrl ? t("changeImage") : t("chooseImage")}
-                      </span>
-                    </span>
-                    <ChevronDown
-                      className={`w-4 h-4 text-slate-400 transition-transform ${
-                        isMediaPickerOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-
-                  {/* Media Picker List */}
-                  {isMediaPickerOpen && (
-                    <div className="mt-2 rounded-xl border border-slate-800 bg-slate-900 p-2 shadow-xl space-y-2 z-10">
-                      {/* Search */}
-                      <div className="relative">
-                        <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          type="text"
-                          value={mediaSearchQuery}
-                          onChange={(e) => setMediaSearchQuery(e.target.value)}
-                          placeholder={t("searchImages")}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
-                        />
-                      </div>
-
-                      {/* Image List */}
-                      <div className="max-h-52 overflow-y-auto space-y-1 divide-y divide-slate-800/40">
-                        {imageUrl && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setImageUrl("");
-                              setIsMediaPickerOpen(false);
-                            }}
-                            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-lg text-rose-300 hover:bg-rose-500/10 text-xs transition"
-                          >
-                            <X className="w-4 h-4 text-rose-400 shrink-0" />
-                            <span>{t("removeImage")}</span>
-                          </button>
-                        )}
-
-                        {filteredMedia.length === 0 ? (
-                          <div className="p-3 text-center text-[11px] text-slate-400">
-                            {imageMedia.length === 0
-                              ? t("noImages")
-                              : t("noMatchingImages")}
-                          </div>
-                        ) : (
-                          filteredMedia.map((m) => {
-                            const isSelected = imageUrl === m.file_url;
-                            return (
-                              <button
-                                key={m.id}
-                                type="button"
-                                onClick={() => {
-                                  setImageUrl(m.file_url);
-                                  setIsMediaPickerOpen(false);
-                                }}
-                                className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 text-left rounded-lg transition ${
-                                  isSelected
-                                    ? "bg-sky-500/20 text-sky-200 border border-sky-500/30"
-                                    : "text-slate-300 hover:bg-slate-800"
-                                }`}
-                              >
-                                <div className="w-8 h-8 rounded-md overflow-hidden bg-slate-950 border border-slate-800 shrink-0">
-                                  <img
-                                    src={m.file_url}
-                                    alt={m.file_name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <span className="text-xs truncate flex-1">{m.file_name}</span>
-                                {isSelected && (
-                                  <Check className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-                                )}
-                              </button>
-                            );
-                          })
-                        )}
-                      </div>
+                  {/* Optional manual URL input */}
+                  {showManualUrl && (
+                    <div className="space-y-1 pt-1">
+                      <Label htmlFor={manualUrlId} className="text-[10px] text-slate-400 font-normal">
+                        {t("manualUrlLabel")}
+                      </Label>
+                      <Input
+                        id={manualUrlId}
+                        type="text"
+                        variant="admin"
+                        size="sm"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="e.g. /images/bad_1.jpg or https://..."
+                        className="font-mono text-xs"
+                      />
+                      {/^https?:\/\//i.test(imageUrl.trim()) && (
+                        <p className="text-[11px] text-sky-400/90 pt-0.5">
+                          {t("externalImageNotice")}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* Optional manual URL input */}
-                {showManualUrl && (
-                  <div className="space-y-1 pt-1">
-                    <span className="text-[10px] text-slate-400">{t("manualUrlLabel")}</span>
-                    <input
-                      type="text"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="e.g. /images/bad_1.jpg or https://..."
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono text-xs"
-                    />
-                    {/^https?:\/\//i.test(imageUrl.trim()) && (
-                      <p className="text-[11px] text-sky-400/90 pt-0.5">
-                        {t("externalImageNotice")}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
+                {/* Pricing Breakdown */}
+                <div className="space-y-2 pt-2 border-t border-slate-800">
+                  <Label className="text-[11px] font-semibold text-slate-300 block">
+                    {t("pricingTitle")}
+                  </Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                    <div className="space-y-1">
+                      <Label htmlFor={priceHourId} className="text-[10px] text-slate-400 font-normal">
+                        {t("hourlyRate")}
+                      </Label>
+                      <Input
+                        id={priceHourId}
+                        type="number"
+                        variant="admin"
+                        size="sm"
+                        min={0}
+                        value={priceHour}
+                        onChange={(e) => setPriceHour(Number(e.target.value))}
+                        className="text-center font-mono"
+                      />
+                    </div>
 
-              {/* Pricing Breakdown */}
-              <div className="space-y-2 pt-2 border-t border-slate-800">
-                <label className="text-[11px] font-semibold text-slate-300 block">
-                  {t("pricingTitle")}
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">{t("hourlyRate")}</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={priceHour}
-                      onChange={(e) => setPriceHour(Number(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-white font-mono text-center focus:outline-none focus:border-sky-500 transition"
-                    />
-                  </div>
+                    <div className="space-y-1">
+                      <Label htmlFor={priceDayId} className="text-[10px] text-slate-400 font-normal">
+                        {t("dailyRate")}
+                      </Label>
+                      <Input
+                        id={priceDayId}
+                        type="number"
+                        variant="admin"
+                        size="sm"
+                        min={0}
+                        value={priceDay}
+                        onChange={(e) => setPriceDay(Number(e.target.value))}
+                        className="text-center font-mono"
+                      />
+                    </div>
 
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">{t("dailyRate")}</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={priceDay}
-                      onChange={(e) => setPriceDay(Number(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-white font-mono text-center focus:outline-none focus:border-sky-500 transition"
-                    />
-                  </div>
+                    <div className="space-y-1">
+                      <Label htmlFor={priceSunThuId} className="text-[10px] text-slate-400 font-normal">
+                        {t("sunThuRate")}
+                      </Label>
+                      <Input
+                        id={priceSunThuId}
+                        type="number"
+                        variant="admin"
+                        size="sm"
+                        min={0}
+                        value={priceSunThu}
+                        onChange={(e) => setPriceSunThu(Number(e.target.value))}
+                        className="text-center font-mono"
+                      />
+                    </div>
 
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">{t("sunThuRate")}</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={priceSunThu}
-                      onChange={(e) => setPriceSunThu(Number(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-white font-mono text-center focus:outline-none focus:border-sky-500 transition"
-                    />
-                  </div>
+                    <div className="space-y-1">
+                      <Label htmlFor={priceThuSunId} className="text-[10px] text-slate-400 font-normal">
+                        {t("thuSunRate")}
+                      </Label>
+                      <Input
+                        id={priceThuSunId}
+                        type="number"
+                        variant="admin"
+                        size="sm"
+                        min={0}
+                        value={priceThuSun}
+                        onChange={(e) => setPriceThuSun(Number(e.target.value))}
+                        className="text-center font-mono"
+                      />
+                    </div>
 
-                  <div className="space-y-1">
-                    <span className="text-[10px] text-slate-400">{t("thuSunRate")}</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={priceThuSun}
-                      onChange={(e) => setPriceThuSun(Number(e.target.value))}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5 text-white font-mono text-center focus:outline-none focus:border-sky-500 transition"
-                    />
-                  </div>
-
-                  <div className="space-y-1 sm:col-span-1 col-span-2">
-                    <span className="text-[10px] text-sky-400 font-semibold">{t("weeklyRate")}</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={priceWeek}
-                      onChange={(e) => setPriceWeek(Number(e.target.value))}
-                      className="w-full bg-slate-900 border border-sky-500/40 rounded-xl px-2.5 py-1.5 text-white font-mono text-center focus:outline-none focus:border-sky-500 transition font-bold"
-                    />
+                    <div className="space-y-1 sm:col-span-1 col-span-2">
+                      <Label htmlFor={priceWeekId} className="text-[10px] text-sky-400 font-semibold">
+                        {t("weeklyRate")}
+                      </Label>
+                      <Input
+                        id={priceWeekId}
+                        type="number"
+                        variant="admin"
+                        size="sm"
+                        min={0}
+                        value={priceWeek}
+                        onChange={(e) => setPriceWeek(Number(e.target.value))}
+                        className="text-center font-mono font-bold border-sky-500/40"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Modal Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-                {editingOptional ? (
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(editingOptional)}
-                    className="inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 transition"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>{t("deleteBtn")}</span>
-                  </button>
-                ) : (
-                  <div />
-                )}
+                {/* Modal Actions */}
+                <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+                  {editingOptional ? (
+                    <Button
+                      type="button"
+                      variant="adminGhost"
+                      size="sm"
+                      onClick={() => handleDelete(editingOptional)}
+                      className="text-rose-400 hover:text-rose-300 gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>{t("deleteBtn")}</span>
+                    </Button>
+                  ) : (
+                    <div />
+                  )}
 
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
-                  >
-                    {tCommon("cancel")}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
-                  >
-                    {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>{editingOptional ? t("updateBtn") : t("saveBtn")}</span>
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      type="button"
+                      variant="adminSecondary"
+                      size="sm"
+                      disabled={isSaving}
+                      onClick={() => setIsModalOpen(false)}
+                    >
+                      {tCommon("cancel")}
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="adminPrimary"
+                      size="sm"
+                      disabled={isSaving}
+                      className="gap-2"
+                    >
+                      {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                      <span>{editingOptional ? t("updateBtn") : t("saveBtn")}</span>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      </ModalPortal>
-    )}
-  </div>
-);
+              </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
 
