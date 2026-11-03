@@ -42,3 +42,9 @@ apps/*/public/mock-ical/
 .postman/
 postman/
 GEMINI.md
+
+# Local design system baseline and playground
+.visual-baseline/
+ui-playground/
+**/ui-playground/
+apps/*/src/app/dev/
