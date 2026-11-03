@@ -21,6 +21,7 @@ export * from "./components/ui/selectable-card";
 export * from "./components/ui/tabs";
 export * from "./components/ui/segmented-control";
 export * from "./components/ui/tooltip";
+export * from "./components/ui/dialog";
 export * from "./components/fields";
 export * from "./components/inline-editor";
 export * from "./booking";
