@@ -30,6 +30,10 @@ import { SyncSummaryResult, SyncObjectResult, SyncBookingItem } from "../../ical
 import { AdminTab } from "../../types/admin";
 import { BookingObjectItem } from "./booking-objects-view";
 import { PricePeriodItem } from "./prices-availability-view";
+import { Button } from "../../components/ui/button";
+import { Card } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+import { cn } from "../../utils/cn";
 
 export interface BookingsDashboardViewProps {
   initialSyncData?: SyncSummaryResult | null;
@@ -157,29 +161,34 @@ export function BookingsDashboardView({
   return (
     <div className="space-y-6 max-w-6xl animate-in fade-in duration-150">
       {/* Sub-Navigation Jump Bar */}
-      <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-900/90 border border-slate-800 overflow-x-auto shadow-sm">
+      <nav
+        aria-label={tNav("bookingsDashboard")}
+        className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-900/90 border border-slate-800 overflow-x-auto shadow-sm"
+      >
         {navTabs.map((tab) => {
           const isActive = tab.id === "bookings-dashboard";
           return (
             <button
               key={tab.id}
               type="button"
+              aria-current={isActive ? "page" : undefined}
               onClick={() => onNavigateTab?.(tab.id)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+              className={cn(
+                "flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-sky-500",
                 isActive
                   ? "bg-sky-600 hover:bg-sky-500 text-white shadow-md shadow-sky-600/20"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/60"
-              }`}
+              )}
             >
               {tab.icon}
               <span>{tab.label}</span>
             </button>
           );
         })}
-      </div>
+      </nav>
 
       {/* Top Header Card */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <Card variant="admin" className="p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
             <LayoutDashboard className="w-6 h-6 text-sky-400" />
@@ -191,38 +200,42 @@ export function BookingsDashboardView({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
+          <Button
             type="button"
+            variant="adminOutline"
+            size="sm"
             onClick={() => onNavigateTab?.("prices-availability")}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition shadow-sm"
+            className="border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
           >
             <Coins className="w-4 h-4 text-amber-400" />
             <span>{t("pricesAvailabilityBtn")}</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="adminSecondary"
+            size="sm"
             onClick={() => onNavigateTab?.("bookings")}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-700 transition shadow-sm"
           >
             <Calendar className="w-4 h-4 text-slate-300" />
             <span>{t("calendarBtn")}</span>
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="adminPrimary"
+            size="sm"
             onClick={() => fetchSyncData(true)}
             disabled={isRefreshing || isLoading}
-            className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+            <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
             <span>{isRefreshing ? t("syncing") : t("syncChannels")}</span>
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {errorMsg && (
-        <div className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-950/20 text-xs text-rose-300 flex items-center gap-2">
+        <div role="alert" className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-950/20 text-xs text-rose-300 flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -230,19 +243,19 @@ export function BookingsDashboardView({
 
       {/* Primary KPI Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+        <Card variant="adminSubtle" className="p-4 space-y-1">
           <span className="text-[11px] font-medium text-slate-400">{t("rentalUnits")}</span>
           <p className="text-2xl font-bold text-white font-mono">{totalUnitsCount}</p>
           <span className="text-[10px] text-slate-500 block">{t("managedAccommodations")}</span>
-        </div>
+        </Card>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+        <Card variant="adminSubtle" className="p-4 space-y-1">
           <span className="text-[11px] font-medium text-slate-400">{t("configuredSeasons")}</span>
           <p className="text-2xl font-bold text-amber-400 font-mono">{pricePeriods.length}</p>
           <span className="text-[10px] text-slate-500 block">{t("activePricingPeriods")}</span>
-        </div>
+        </Card>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+        <Card variant="adminSubtle" className="p-4 space-y-1">
           <span className="text-[11px] font-medium text-slate-400">{t("reservationsAndStays")}</span>
           <p className="text-2xl font-bold text-emerald-400 font-mono">
             {bookingsCount + (syncData?.totalImportedBookings || 0)}
@@ -250,15 +263,15 @@ export function BookingsDashboardView({
           <span className="text-[10px] text-slate-500 block">
             {t("directAndExternal", { direct: bookingsCount, external: syncData?.totalImportedBookings || 0 })}
           </span>
-        </div>
+        </Card>
 
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 space-y-1">
+        <Card variant="adminSubtle" className="p-4 space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-medium text-slate-400">{t("channelFeeds")}</span>
-            <span className="inline-flex items-center gap-1 text-[10px] text-sky-400">
+            <Badge variant="adminAccent" size="xs">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
               <span>{t("healthy")}</span>
-            </span>
+            </Badge>
           </div>
           <p className="text-2xl font-bold text-sky-400 font-mono">
             {syncData ? syncData.activeFeedsCount : "—"}
@@ -266,12 +279,12 @@ export function BookingsDashboardView({
           <span className="text-[10px] text-slate-500 block truncate" title={syncData?.lastSynced ? formatDateTime(syncData.lastSynced) : undefined}>
             {t("synced", { time: syncData?.lastSynced ? formatDateTime(syncData.lastSynced) : t("never") })}
           </span>
-        </div>
+        </Card>
       </div>
 
       {/* Rental Units Status & Quick Actions */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden">
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+      <Card variant="admin" className="overflow-hidden">
+        <div className="p-4 border-b border-admin-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Box className="w-4 h-4 text-sky-400" />
             <h2 className="text-sm font-semibold text-white">{t("unitsOverview")}</h2>
@@ -325,9 +338,9 @@ export function BookingsDashboardView({
                         </span>
                       )}
                       {obj.is_visible === false && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-rose-950/60 text-rose-300 border border-rose-800/40">
+                        <Badge variant="adminDanger" size="xs">
                           {t("hidden")}
-                        </span>
+                        </Badge>
                       )}
                     </div>
 
@@ -352,78 +365,83 @@ export function BookingsDashboardView({
                     {/* Season / Pricing Status */}
                     <div className="flex items-center gap-2 pt-1 flex-wrap">
                       {activePeriod ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[11px] font-medium">
+                        <Badge variant="adminSuccess" size="xs">
                           <CheckCircle2 className="w-3 h-3 text-emerald-400" />
                           <span>
                             {t("seasonActive", {
                               name: activePeriod.name || "Season",
-                              date: new Date(activePeriod.end_date!).toISOString().split("T")[0]
+                              date: new Date(activePeriod.end_date!).toISOString().split("T")[0],
                             })}
                           </span>
-                        </span>
+                        </Badge>
                       ) : nextPeriod ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-sky-500/15 border border-sky-500/30 text-sky-300 text-[11px] font-medium">
+                        <Badge variant="adminAccent" size="xs">
                           <Clock className="w-3 h-3 text-sky-400" />
                           <span>
                             {t("upcomingSeason", {
                               name: nextPeriod.name || "Season",
-                              date: new Date(nextPeriod.start_date!).toISOString().split("T")[0]
+                              date: new Date(nextPeriod.start_date!).toISOString().split("T")[0],
                             })}
                           </span>
-                        </span>
+                        </Badge>
                       ) : objectPeriods.length > 0 ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[11px] font-medium">
+                        <Badge variant="adminWarning" size="xs">
                           <span>{t("configuredPeriods", { count: objectPeriods.length })}</span>
-                        </span>
+                        </Badge>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[11px]">
+                        <Badge variant="adminMuted" size="xs">
                           <span>{t("closedNoSeason")}</span>
-                        </span>
+                        </Badge>
                       )}
 
                       {obj.ical_url ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-sky-950/40 border border-sky-500/20 text-sky-300 text-[10px]">
+                        <Badge variant="adminAccent" size="xs">
                           <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
                           <span>{t("connected")}</span>
-                        </span>
+                        </Badge>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-500 text-[10px]">
+                        <Badge variant="adminMuted" size="xs">
                           <span>{t("noFeed")}</span>
-                        </span>
+                        </Badge>
                       )}
                     </div>
                   </div>
 
                   {/* Quick Action Buttons */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
+                    <Button
                       type="button"
+                      variant="adminOutline"
+                      size="sm"
                       onClick={() => handleJumpToPrices(obj.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-semibold transition"
+                      className="border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300"
+                      aria-label={`${t("pricesAvailabilityBtn")} - ${obj.name}`}
                     >
                       <Coins className="w-3.5 h-3.5 text-amber-400" />
                       <span>{t("pricesAvailabilityBtn")}</span>
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                       type="button"
+                      variant="adminSecondary"
+                      size="sm"
                       onClick={() => handleJumpToCalendar(obj.id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition"
+                      aria-label={`${t("calendarBtn")} - ${obj.name}`}
                     >
                       <Calendar className="w-3.5 h-3.5" />
                       <span>{t("calendarBtn")}</span>
-                    </button>
+                    </Button>
                   </div>
                 </div>
               );
             })
           )}
         </div>
-      </div>
+      </Card>
 
       {/* External Channel Synchronization (Booking.com & iCal) Section */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-lg">
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+      <Card variant="admin" className="overflow-hidden shadow-lg">
+        <div className="p-4 border-b border-admin-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <RefreshCw className="w-4 h-4 text-sky-400" />
             <div>
@@ -437,24 +455,29 @@ export function BookingsDashboardView({
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="adminOutline"
+              size="sm"
               onClick={() => fetchSyncData(true)}
               disabled={isRefreshing || isLoading}
-              className="px-3 py-1.5 rounded-xl border border-sky-500/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20 text-xs font-semibold flex items-center gap-1.5 transition"
+              className="border-sky-500/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              <RefreshCw className={cn("w-3.5 h-3.5", isRefreshing && "animate-spin")} />
               <span>{t("syncNow")}</span>
-            </button>
+            </Button>
 
-            <button
+            <Button
               type="button"
+              variant="adminGhost"
+              size="iconSm"
               onClick={() => setShowIcalDetails(!showIcalDetails)}
-              className="text-slate-400 hover:text-white transition p-1.5 rounded-lg"
               title="Toggle channel details"
+              aria-label="Toggle channel details"
+              aria-expanded={showIcalDetails}
             >
               {showIcalDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -478,11 +501,13 @@ export function BookingsDashboardView({
                 return (
                   <div
                     key={res.objectId}
-                    className="rounded-xl border border-slate-800 bg-slate-900/70 overflow-hidden shadow-sm"
+                    className="rounded-xl border border-admin-border bg-admin-surface-subtle overflow-hidden shadow-sm"
                   >
-                    <div
+                    <button
+                      type="button"
                       onClick={() => toggleCollapse(res.objectId)}
-                      className="p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-800/50 transition select-none"
+                      aria-expanded={!isCollapsed}
+                      className="w-full text-left p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-800/50 transition select-none outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <Box className="w-4 h-4 text-sky-400 shrink-0" />
@@ -496,30 +521,30 @@ export function BookingsDashboardView({
 
                       <div className="flex items-center gap-2 shrink-0">
                         {res.persistentFallback && (
-                          <span className="inline-flex items-center gap-1 rounded border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-medium text-amber-300">
+                          <Badge variant="adminWarning" size="xs">
                             {t("persistentCache")}
-                          </span>
+                          </Badge>
                         )}
 
                         {res.icalUrl ? (
-                          <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-300">
+                          <Badge variant="adminSuccess" size="xs">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                             <span>{t("periodsCount", { count: res.bookings.length })}</span>
-                          </span>
+                          </Badge>
                         ) : (
-                          <span className="rounded border border-slate-700 bg-slate-800 px-2 py-0.5 text-[10px] text-slate-400">
+                          <Badge variant="adminMuted" size="xs">
                             {t("notConnected")}
-                          </span>
+                          </Badge>
                         )}
 
-                        <span className="text-slate-400 p-0.5">
+                        <span className="text-slate-400 p-0.5" aria-hidden="true">
                           {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
                         </span>
                       </div>
-                    </div>
+                    </button>
 
                     {!isCollapsed && (
-                      <div className="border-t border-slate-800 p-3 bg-slate-950/40">
+                      <div className="border-t border-admin-border p-3 bg-slate-950/40">
                         {res.warning && (
                           <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[11px] flex items-center gap-2 mb-3">
                             <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
@@ -534,10 +559,10 @@ export function BookingsDashboardView({
                               : t("noExternalFeed")}
                           </div>
                         ) : (
-                          <div className="overflow-x-auto rounded-lg border border-slate-800">
+                          <div className="overflow-x-auto rounded-lg border border-admin-border">
                             <table className="w-full text-left border-collapse text-xs">
                               <thead>
-                                <tr className="border-b border-slate-800 bg-slate-900/90 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                <tr className="border-b border-admin-border bg-admin-surface-subtle text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
                                   <th className="py-2 px-3">{t("colCheckIn")}</th>
                                   <th className="py-2 px-3">{t("colCheckOut")}</th>
                                   <th className="py-2 px-3 text-center">{t("colNights")}</th>
@@ -551,9 +576,9 @@ export function BookingsDashboardView({
                                     <td className="py-2 px-3 font-semibold text-white">{b.startDate}</td>
                                     <td className="py-2 px-3 font-semibold text-white">{b.endDate}</td>
                                     <td className="py-2 px-3 text-center">
-                                      <span className="inline-block px-1.5 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-sky-300 font-bold text-[10px]">
+                                      <Badge variant="adminAccent" size="xs">
                                         {b.nightsCount} {b.nightsCount === 1 ? t("night") : t("nights")}
-                                      </span>
+                                      </Badge>
                                     </td>
                                     <td className="py-2 px-3 font-sans text-xs">
                                       <span className="inline-flex items-center gap-1.5 text-amber-300 font-medium">
@@ -578,7 +603,7 @@ export function BookingsDashboardView({
             )}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

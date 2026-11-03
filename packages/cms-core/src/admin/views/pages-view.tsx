@@ -1,13 +1,23 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Edit3, Trash2, Search, Lock, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { HOMEPAGE_ID, cleanSlugInput, validateSlugInput } from "../../utils/slug";
 import { CMSTemplateOption, DEFAULT_CMS_TEMPLATES, formatTemplateLabel } from "../../templates/types";
 import { FlagIcon } from "../../components/ui/flag-icon";
 import { LANGUAGE_META } from "../../constants/languages";
-import { ModalPortal } from "../../components/ui/modal-portal";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { NativeSelect } from "../../components/ui/select";
+import { Badge } from "../../components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 
 export interface PageListItem {
   id: number | string;
@@ -62,6 +72,11 @@ export function PagesView({
   const [newTemplate, setNewTemplate] = useState("article");
   const [newSectionId, setNewSectionId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const createTitleId = useId();
+  const createSlugId = useId();
+  const createSectionId = useId();
+  const createTemplateId = useId();
 
   const [sortField, setSortField] = useState<PageSortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -206,24 +221,28 @@ export function PagesView({
           <p className='mt-1 text-xs text-slate-400'>{t("subtitle")}</p>
         </div>
 
-        <button
+        <Button
           type='button'
-          onClick={() => setIsModalOpen(true)}
-          className='flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition'>
+          variant='adminPrimary'
+          size='sm'
+          onClick={() => setIsModalOpen(true)}>
           <Plus className='w-4 h-4' />
           <span>{t("createPage")}</span>
-        </button>
+        </Button>
       </div>
 
       <div className='flex items-center gap-3'>
         <div className='relative flex-1 max-w-md'>
-          <Search className='w-4 h-4 absolute left-3.5 top-2.5 text-slate-500' />
-          <input
+          <Search className='w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none' />
+          <Input
             type='text'
+            variant='admin'
+            size='sm'
             placeholder={t("searchPlaceholder")}
+            aria-label={t("searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className='w-full rounded-xl border border-slate-800 bg-slate-900/60 pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-sky-500 focus:outline-none'
+            className='pl-10'
           />
         </div>
       </div>
@@ -251,7 +270,8 @@ export function PagesView({
                     className={`flex items-center gap-1 transition cursor-pointer text-left ${
                       sortField === "title" ? "text-white font-semibold" : "text-slate-400 hover:text-white"
                     }`}
-                    title='Sort by Title'>
+                    title='Sort by Title'
+                    aria-label='Sort by Title'>
                     <span>{t("table.title")}</span>
                     {renderSortIcon("title")}
                   </button>
@@ -262,7 +282,8 @@ export function PagesView({
                     className={`flex items-center gap-1 transition cursor-pointer text-left ${
                       sortField === "slug" ? "text-white font-semibold" : "text-slate-400 hover:text-white"
                     }`}
-                    title='Sort by URL / Slug'>
+                    title='Sort by URL / Slug'
+                    aria-label='Sort by URL / Slug'>
                     <span>{t("table.slug")}</span>
                     {renderSortIcon("slug")}
                   </button>
@@ -322,10 +343,10 @@ export function PagesView({
                       <div className='flex items-center gap-2'>
                         <span className='font-semibold text-white'>{page.page_title}</span>
                         {isHomepage && (
-                          <span className='inline-flex items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-medium text-sky-300'>
+                          <Badge variant='adminAccent' size='xs'>
                             <Lock className='w-2.5 h-2.5' />
                             <span>Startpage</span>
-                          </span>
+                          </Badge>
                         )}
                       </div>
                       <div className='text-[11px] text-slate-500 font-mono'>{formatSlugDisplay(page)}</div>
@@ -337,16 +358,18 @@ export function PagesView({
                       {isHomepage ? "Startpage" : formatTemplateLabel(page.template_name, availableTemplates)}
                     </td>
                     <td className='py-3 px-4'>
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase ${
+                      <Badge
+                        variant={
                           page.status === "PUBLISHED"
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            ? "adminSuccess"
                             : page.status === "NEW"
-                              ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                              : "bg-red-500/10 text-red-400 border border-red-500/20"
-                        }`}>
+                              ? "adminWarning"
+                              : "adminDanger"
+                        }
+                        size='xs'
+                        className='uppercase'>
                         {page.status}
-                      </span>
+                      </Badge>
                     </td>
                     <td className='py-3 px-4'>
                       <div className='flex items-center gap-1'>
@@ -364,26 +387,31 @@ export function PagesView({
                     </td>
                     <td className='py-3 px-4 text-right' onClick={(e) => e.stopPropagation()}>
                       <div className='flex items-center justify-end gap-1'>
-                        <button
+                        <Button
                           type='button'
+                          variant='adminSecondary'
+                          size='sm'
                           onClick={() => onEditPage(page.id)}
-                          className='px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-700 transition inline-flex items-center gap-1.5 text-xs'
-                          title={tCommon("edit")}>
+                          title={tCommon("edit")}
+                          aria-label={`${tCommon("edit")} ${page.page_title}`}>
                           <Edit3 className='w-3.5 h-3.5' />
                           <span>{tCommon("edit")}</span>
-                        </button>
+                        </Button>
                         {!isHomepage && (
-                          <button
+                          <Button
                             type='button'
+                            variant='adminGhost'
+                            size='iconSm'
                             onClick={() => {
                               if (confirm(t("modal.deleteConfirm", { title: page.page_title }))) {
                                 onDeletePage(page.id);
                               }
                             }}
-                            className='p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition'
-                            title={tCommon("delete")}>
+                            className='text-slate-400 hover:text-red-400 hover:bg-slate-800/80'
+                            title={tCommon("delete")}
+                            aria-label={`${tCommon("delete")} ${page.page_title}`}>
                             <Trash2 className='w-4 h-4' />
-                          </button>
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -395,144 +423,159 @@ export function PagesView({
         </table>
       </div>
 
-      {/* Create Page Modal */}
-      {isModalOpen && (
-        <ModalPortal>
-          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4'>
-          <div className='w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 text-white shadow-2xl'>
-            <h2 className='text-base font-semibold mb-4'>{t("modal.createTitle")}</h2>
-            <form onSubmit={handleCreate} className='space-y-4'>
-              <div>
-                <label className='block text-xs font-medium text-slate-300 mb-1.5'>{t("modal.titleLabel")}</label>
-                <div className='space-y-2'>
-                  {/* Primary Language (SE) */}
-                  <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
-                    <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
-                      <FlagIcon code='sv' size='sm' />
-                      <span className='font-mono text-[11px]'>{LANGUAGE_META.sv?.code || "SE"}</span>
-                    </span>
-                    <input
-                      type='text'
-                      required
-                      placeholder='Sidrubrik...'
-                      value={newTitleSv}
-                      onChange={(e) => setNewTitleSv(e.target.value)}
-                      className='w-full bg-transparent px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
-                    />
-                  </div>
-
-                  {/* Secondary Active Languages */}
-                  {secondaryLocales.map((loc) => {
-                    const meta = LANGUAGE_META[loc] || {
-                      code: loc.toUpperCase(),
-                      flag: "",
-                      label: loc,
-                    };
-                    return (
-                      <div
-                        key={loc}
-                        className='flex items-center rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition'>
-                        <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20'>
-                          <FlagIcon code={loc} size='sm' />
-                          <span className='font-mono text-[11px]'>{meta.code}</span>
-                        </span>
-                        <input
-                          type='text'
-                          value={newTranslations[loc] || ""}
-                          onChange={(e) =>
-                            setNewTranslations((prev) => ({
-                              ...prev,
-                              [loc]: e.target.value,
-                            }))
-                          }
-                          placeholder={`Page title in ${meta.label}...`}
-                          className='w-full bg-transparent px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <label className='block text-xs font-medium text-slate-300 mb-1'>
-                  {t("modal.slugLabel")}
-                </label>
-                <div
-                  className={`flex items-center rounded-xl border bg-slate-950 overflow-hidden transition ${
-                    !newSlugValidation.isValid
-                      ? "border-red-500 ring-1 ring-red-500/30"
-                      : "border-slate-800 focus-within:border-sky-500"
-                  }`}>
-                  <span className='px-3 py-2.5 text-xs font-mono text-slate-500 bg-slate-900/80 border-r border-slate-800'>
-                    /
+      {/* Create Page Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent variant='admin' size='sm'>
+          <DialogHeader>
+            <DialogTitle>{t("modal.createTitle")}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleCreate} className='space-y-4'>
+            <div>
+              <Label htmlFor={createTitleId} className='block text-xs font-medium text-slate-300 mb-1.5'>
+                {t("modal.titleLabel")}
+              </Label>
+              <div className='space-y-2'>
+                {/* Primary Language (SE) */}
+                <div className='flex items-center rounded-xl border border-admin-border bg-admin-field overflow-hidden focus-within:border-admin-accent transition'>
+                  <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-admin-surface-subtle border-r border-admin-border shrink-0 w-20'>
+                    <FlagIcon code='sv' size='sm' />
+                    <span className='font-mono text-[11px]'>{LANGUAGE_META.sv?.code || "SE"}</span>
                   </span>
                   <input
+                    id={createTitleId}
                     type='text'
-                    placeholder={`${nextIdPreview}`}
-                    value={newSlug}
-                    onChange={(e) => setNewSlug(cleanSlugInput(e.target.value, true))}
-                    onBlur={() => setNewSlug((prev) => cleanSlugInput(prev, false))}
-                    className='w-full bg-transparent p-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none'
+                    required
+                    placeholder='Sidrubrik...'
+                    value={newTitleSv}
+                    onChange={(e) => setNewTitleSv(e.target.value)}
+                    className='w-full bg-transparent px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
                   />
                 </div>
-                {!newSlugValidation.isValid && newSlugValidation.error && (
-                  <p className='mt-1 text-[11px] font-medium text-red-400'>{newSlugValidation.error}</p>
-                )}
-              </div>
 
-              <div>
-                <label className='block text-xs font-medium text-slate-300 mb-1'>{t("modal.sectionLabel")}</label>
-                <select
-                  value={newSectionId}
-                  onChange={(e) => setNewSectionId(e.target.value)}
-                  className='w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none'>
-                  <option value=''>{t("modal.noSectionOption")}</option>
-                  {sections
-                    .filter((s) => Number(s.start_page_id) !== HOMEPAGE_ID)
-                    .map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                </select>
+                {/* Secondary Active Languages */}
+                {secondaryLocales.map((loc) => {
+                  const meta = LANGUAGE_META[loc] || {
+                    code: loc.toUpperCase(),
+                    flag: "",
+                    label: loc,
+                  };
+                  const subTitleId = `${createTitleId}-${loc}`;
+                  return (
+                    <div
+                      key={loc}
+                      className='flex items-center rounded-xl border border-admin-border/80 bg-admin-field/80 overflow-hidden focus-within:border-admin-accent transition'>
+                      <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-admin-surface-subtle border-r border-admin-border/80 shrink-0 w-20'>
+                        <FlagIcon code={loc} size='sm' />
+                        <span className='font-mono text-[11px]'>{meta.code}</span>
+                      </span>
+                      <input
+                        id={subTitleId}
+                        type='text'
+                        aria-label={`Page title in ${meta.label}`}
+                        value={newTranslations[loc] || ""}
+                        onChange={(e) =>
+                          setNewTranslations((prev) => ({
+                            ...prev,
+                            [loc]: e.target.value,
+                          }))
+                        }
+                        placeholder={`Page title in ${meta.label}...`}
+                        className='w-full bg-transparent px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none'
+                      />
+                    </div>
+                  );
+                })}
               </div>
+            </div>
 
-              <div>
-                <label className='block text-xs font-medium text-slate-300 mb-1'>{t("modal.templateLabel")}</label>
-                <select
-                  value={newTemplate}
-                  onChange={(e) => setNewTemplate(e.target.value)}
-                  className='w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none'>
-                  {availableTemplates
-                    .filter((t) => !t.isProtected)
-                    .map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.label}
-                      </option>
-                    ))}
-                </select>
+            <div>
+              <Label htmlFor={createSlugId} className='block text-xs font-medium text-slate-300 mb-1'>
+                {t("modal.slugLabel")}
+              </Label>
+              <div
+                className={`flex items-center rounded-xl border bg-admin-field overflow-hidden transition ${
+                  !newSlugValidation.isValid
+                    ? "border-red-500 ring-1 ring-red-500/30"
+                    : "border-admin-border focus-within:border-admin-accent"
+                }`}>
+                <span className='px-3 py-2.5 text-xs font-mono text-slate-500 bg-admin-surface-subtle border-r border-admin-border'>
+                  /
+                </span>
+                <input
+                  id={createSlugId}
+                  type='text'
+                  placeholder={`${nextIdPreview}`}
+                  value={newSlug}
+                  onChange={(e) => setNewSlug(cleanSlugInput(e.target.value, true))}
+                  onBlur={() => setNewSlug((prev) => cleanSlugInput(prev, false))}
+                  className='w-full bg-transparent p-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none'
+                />
               </div>
+              {!newSlugValidation.isValid && newSlugValidation.error && (
+                <p className='mt-1 text-[11px] font-medium text-red-400'>{newSlugValidation.error}</p>
+              )}
+            </div>
 
-              <div className='flex items-center justify-end gap-2 pt-2'>
-                <button
-                  type='button'
-                  onClick={() => setIsModalOpen(false)}
-                  className='px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-lg'>
-                  {tCommon("cancel")}
-                </button>
-                <button
-                  type='submit'
-                  disabled={isSubmitting || !newSlugValidation.isValid}
-                  className='px-4 py-2 text-xs font-semibold rounded-lg bg-sky-600 text-white hover:bg-sky-500 disabled:opacity-50'>
-                  {isSubmitting ? tCommon("loading") : t("createPage")}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </ModalPortal>
-    )}
-  </div>
-);
+            <div>
+              <Label htmlFor={createSectionId} className='block text-xs font-medium text-slate-300 mb-1'>
+                {t("modal.sectionLabel")}
+              </Label>
+              <NativeSelect
+                id={createSectionId}
+                variant='admin'
+                size='sm'
+                value={newSectionId}
+                onChange={(e) => setNewSectionId(e.target.value)}>
+                <option value=''>{t("modal.noSectionOption")}</option>
+                {sections
+                  .filter((s) => Number(s.start_page_id) !== HOMEPAGE_ID)
+                  .map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+              </NativeSelect>
+            </div>
+
+            <div>
+              <Label htmlFor={createTemplateId} className='block text-xs font-medium text-slate-300 mb-1'>
+                {t("modal.templateLabel")}
+              </Label>
+              <NativeSelect
+                id={createTemplateId}
+                variant='admin'
+                size='sm'
+                value={newTemplate}
+                onChange={(e) => setNewTemplate(e.target.value)}>
+                {availableTemplates
+                  .filter((t) => !t.isProtected)
+                  .map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.label}
+                    </option>
+                  ))}
+              </NativeSelect>
+            </div>
+
+            <div className='flex items-center justify-end gap-2 pt-2'>
+              <Button
+                type='button'
+                variant='adminSecondary'
+                size='sm'
+                onClick={() => setIsModalOpen(false)}>
+                {tCommon("cancel")}
+              </Button>
+              <Button
+                type='submit'
+                variant='adminPrimary'
+                size='sm'
+                disabled={isSubmitting || !newSlugValidation.isValid}>
+                {isSubmitting ? tCommon("loading") : t("createPage")}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }

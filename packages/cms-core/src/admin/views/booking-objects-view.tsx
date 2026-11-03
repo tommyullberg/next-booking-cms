@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useId } from "react";
 import { useTranslations } from "next-intl";
 import {
   Plus,
@@ -42,8 +42,22 @@ import {
 } from "../../booking/types";
 import { LandlordItem } from "./landlords-view";
 import { PageListItem } from "./pages-view";
-import { ModalPortal } from "../../components/ui/modal-portal";
 import { useBookingSettingsQuery } from "../../booking/hooks";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { NativeSelect } from "../../components/ui/select";
+import { Switch } from "../../components/ui/switch";
+import { Checkbox } from "../../components/ui/checkbox";
+import { Badge } from "../../components/ui/badge";
+import { cn } from "../../utils/cn";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 
 export type BookingObjectItem = BookingObjectDetails;
 
@@ -149,6 +163,25 @@ export function BookingObjectsView({
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  const landlordFieldId = useId();
+  const nameFieldId = useId();
+  const pageFieldId = useId();
+  const descFieldId = useId();
+  const typeFieldId = useId();
+  const sizeFieldId = useId();
+  const roomCountFieldId = useId();
+  const roomTypeFieldId = useId();
+  const bedCountFieldId = useId();
+  const extraBedCountFieldId = useId();
+  const petsFieldId = useId();
+  const icalUrlFieldId = useId();
+  const turnoverDayFieldId = useId();
+  const checkInTimeFieldId = useId();
+  const checkOutTimeFieldId = useId();
+  const allowedPeriodsFieldId = useId();
+  const visibilityRadioName = useId();
+  const amenitiesGroupId = useId();
 
   const openCreateModal = () => {
     setEditingObject(null);
@@ -391,26 +424,30 @@ export function BookingObjectsView({
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="adminPrimary"
+          size="sm"
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition"
         >
           <Plus className="w-4 h-4" />
           <span>{t("createBtn")}</span>
-        </button>
+        </Button>
       </div>
 
       {/* Filter / Search Bar */}
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
+          <Input
             type="text"
+            variant="admin"
+            size="sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+            aria-label={t("searchPlaceholder")}
+            className="pl-9"
           />
         </div>
 
@@ -472,6 +509,7 @@ export function BookingObjectsView({
                         <span
                           className="cursor-grab active:cursor-grabbing inline-flex p-1 rounded hover:text-slate-300 hover:bg-slate-800/60 transition"
                           title="Drag to reorder booking object"
+                          aria-label={`Drag to reorder ${obj.name}`}
                         >
                           <GripVertical className="w-4 h-4" />
                         </span>
@@ -481,13 +519,23 @@ export function BookingObjectsView({
                     {/* Status / Visibility */}
                     <td className="py-3.5 px-3 text-center">
                       {obj.is_visible ? (
-                        <span className="inline-flex items-center justify-center p-1 rounded-md text-emerald-400 bg-emerald-500/10" title="Visible / Active">
-                          <Eye className="w-4 h-4" />
-                        </span>
+                        <Badge
+                          variant="adminSuccess"
+                          size="xs"
+                          title="Visible / Active"
+                          aria-label="Visible"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                        </Badge>
                       ) : (
-                        <span className="inline-flex items-center justify-center p-1 rounded-md text-slate-500 bg-slate-800" title="Hidden / Inactive">
-                          <EyeOff className="w-4 h-4" />
-                        </span>
+                        <Badge
+                          variant="adminMuted"
+                          size="xs"
+                          title="Hidden / Inactive"
+                          aria-label="Hidden"
+                        >
+                          <EyeOff className="w-3.5 h-3.5" />
+                        </Badge>
                       )}
                     </td>
 
@@ -508,7 +556,7 @@ export function BookingObjectsView({
                     {/* Linked CMS Page */}
                     <td className="py-3.5 px-4">
                       {linkedPage ? (
-                        <div className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/20 bg-sky-500/10 px-2 py-1 text-[11px] text-sky-300">
+                        <Badge variant="adminAccent" size="xs">
                           <FileText className="w-3 h-3 text-sky-400" />
                           <span className="font-medium truncate max-w-[140px]">
                             {linkedPage.page_title}
@@ -516,7 +564,7 @@ export function BookingObjectsView({
                           <span className="text-[10px] text-sky-400/80 font-mono">
                             #{obj.page_id}
                           </span>
-                        </div>
+                        </Badge>
                       ) : (
                         <span className="text-slate-600 italic text-[11px]">
                           {t("notConnected")}
@@ -540,16 +588,24 @@ export function BookingObjectsView({
                             {obj.pets_allowed ? ` · ${t("petsAllowed")}` : ""}
                           </span>
                           {obj.amenities && obj.amenities.length > 0 && (
-                            <span className="inline-flex items-center gap-1 text-sky-400 font-medium" title={`${obj.amenities.length} active amenities`}>
+                            <Badge
+                              variant="adminAccent"
+                              size="xs"
+                              title={`${obj.amenities.length} active amenities`}
+                            >
                               <Tag className="w-2.5 h-2.5" />
                               <span>{obj.amenities.length}</span>
-                            </span>
+                            </Badge>
                           )}
                           {obj.ical_url && (
-                            <span className="inline-flex items-center gap-1 text-emerald-400 font-medium" title={`iCal linked: ${obj.ical_url}`}>
+                            <Badge
+                              variant="adminSuccess"
+                              size="xs"
+                              title={`iCal linked: ${obj.ical_url}`}
+                            >
                               <Calendar className="w-2.5 h-2.5" />
                               <span>iCal</span>
-                            </span>
+                            </Badge>
                           )}
                         </div>
                       </div>
@@ -569,15 +625,17 @@ export function BookingObjectsView({
 
                     {/* Actions */}
                     <td className="py-3.5 px-5 text-right">
-                      <button
+                      <Button
                         type="button"
+                        variant="adminSecondary"
+                        size="sm"
                         onClick={() => openEditModal(obj)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition shadow-sm"
                         title="Edit booking object"
+                        aria-label={`${tCommon("edit")} ${obj.name}`}
                       >
                         <Edit3 className="w-3 h-3 text-sky-400" />
                         <span>{tCommon("edit")}</span>
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -598,540 +656,578 @@ export function BookingObjectsView({
         </div>
       </div>
 
-      {/* Create / Edit Booking Object Modal */}
-      {isModalOpen && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5 max-h-[92vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
-                  <Box className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">
-                    {editingObject
-                      ? t("modalEditTitle", { name: editingObject.name })
-                      : t("modalCreateTitle")}
-                  </h3>
-                  <p className="text-[11px] text-slate-400">
-                    {t("modalSubtitle")}
-                  </p>
+      {/* Create / Edit Booking Object Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent variant="admin" size="xl">
+          <DialogHeader>
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
+                <Box className="w-4 h-4" />
+              </div>
+              <div>
+                <DialogTitle className="text-sm font-bold text-white">
+                  {editingObject
+                    ? t("modalEditTitle", { name: editingObject.name })
+                    : t("modalCreateTitle")}
+                </DialogTitle>
+                <p className="text-[11px] text-slate-400">
+                  {t("modalSubtitle")}
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {errorMsg && (
+            <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+              {errorMsg}
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSave} className="space-y-4 text-xs">
+            {/* Landlord & Visibility */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor={landlordFieldId} className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                  <UserCheck className="w-3.5 h-3.5 text-sky-400" />
+                  <span>{t("activeLandlord")}</span>
+                </Label>
+                <NativeSelect
+                  id={landlordFieldId}
+                  variant="admin"
+                  size="sm"
+                  value={landlordId}
+                  onChange={(e) => setLandlordId(e.target.value)}
+                >
+                  <option value="">{t("noLandlordSelected")}</option>
+                  {landlords.map((l) => (
+                    <option key={l.id} value={l.id}>
+                      {l.first_name} {l.last_name} ({l.city || l.address || l.email || "Landlord"})
+                    </option>
+                  ))}
+                </NativeSelect>
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-semibold text-slate-300 block">
+                  {t("visible")}
+                </span>
+                <div
+                  role="radiogroup"
+                  aria-label={t("visible")}
+                  className="flex items-center gap-3 pt-1.5"
+                >
+                  <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-300">
+                    <input
+                      type="radio"
+                      name={visibilityRadioName}
+                      checked={isVisible}
+                      onChange={() => setIsVisible(true)}
+                      className="text-sky-500 focus:ring-0"
+                    />
+                    <span>{tCommon("yes")}</span>
+                  </label>
+                  <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-300">
+                    <input
+                      type="radio"
+                      name={visibilityRadioName}
+                      checked={!isVisible}
+                      onChange={() => setIsVisible(false)}
+                      className="text-sky-500 focus:ring-0"
+                    />
+                    <span>{tCommon("no")}</span>
+                  </label>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
 
-            {errorMsg && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
-                {errorMsg}
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSave} className="space-y-4 text-xs">
-              {/* Landlord & Visibility */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5 sm:col-span-2">
-                  <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                    <UserCheck className="w-3.5 h-3.5 text-sky-400" />
-                    <span>{t("activeLandlord")}</span>
-                  </label>
-                  <select
-                    value={landlordId}
-                    onChange={(e) => setLandlordId(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
-                  >
-                    <option value="">{t("noLandlordSelected")}</option>
-                    {landlords.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.first_name} {l.last_name} ({l.city || l.address || l.email || "Landlord"})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("visible")}
-                  </label>
-                  <div className="flex items-center gap-3 pt-1.5">
-                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-300">
-                      <input
-                        type="radio"
-                        name="is_visible"
-                        checked={isVisible}
-                        onChange={() => setIsVisible(true)}
-                        className="text-sky-500 focus:ring-0"
-                      />
-                      <span>{tCommon("yes")}</span>
-                    </label>
-                    <label className="inline-flex items-center gap-1.5 cursor-pointer text-slate-300">
-                      <input
-                        type="radio"
-                        name="is_visible"
-                        checked={!isVisible}
-                        onChange={() => setIsVisible(false)}
-                        className="text-sky-500 focus:ring-0"
-                      />
-                      <span>{tCommon("no")}</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Object Name & Page in CMS */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("objectName")} <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder='e.g. Stuga "Storstugan"'
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-sky-400" />
-                      <span>{t("pageInCms")}</span>
-                    </span>
-                    <span className="text-[10px] text-slate-500">
-                      {t("pageInCmsDesc")}
-                    </span>
-                  </label>
-                  <select
-                    value={pageId}
-                    onChange={(e) => setPageId(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
-                  >
-                    <option value="">{t("noPageConnected")}</option>
-                    {pages.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.page_title} (ID: {p.id})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Short Description */}
+            {/* Object Name & Page in CMS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-slate-300">
-                  {t("shortDescription")}
-                </label>
-                <textarea
-                  rows={4}
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder={t("shortDescriptionPlaceholder")}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+                <Label htmlFor={nameFieldId} className="text-[11px] font-semibold text-slate-300">
+                  {t("objectName")} <span className="text-rose-400">*</span>
+                </Label>
+                <Input
+                  id={nameFieldId}
+                  type="text"
+                  required
+                  variant="admin"
+                  size="sm"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder='e.g. Stuga "Storstugan"'
                 />
               </div>
 
-              {/* Type & Size */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("type")}
-                  </label>
-                  <select
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
+              <div className="space-y-1.5">
+                <Label htmlFor={pageFieldId} className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-sky-400" />
+                    <span>{t("pageInCms")}</span>
+                  </span>
+                  <span className="text-[10px] text-slate-500">
+                    {t("pageInCmsDesc")}
+                  </span>
+                </Label>
+                <NativeSelect
+                  id={pageFieldId}
+                  variant="admin"
+                  size="sm"
+                  value={pageId}
+                  onChange={(e) => setPageId(e.target.value)}
+                >
+                  <option value="">{t("noPageConnected")}</option>
+                  {pages.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.page_title} (ID: {p.id})
+                    </option>
+                  ))}
+                </NativeSelect>
+              </div>
+            </div>
+
+            {/* Short Description */}
+            <div className="space-y-1.5">
+              <Label htmlFor={descFieldId} className="text-[11px] font-semibold text-slate-300">
+                {t("shortDescription")}
+              </Label>
+              <Textarea
+                id={descFieldId}
+                variant="admin"
+                size="sm"
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t("shortDescriptionPlaceholder")}
+              />
+            </div>
+
+            {/* Type & Size */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor={typeFieldId} className="text-[11px] font-semibold text-slate-300">
+                  {t("type")}
+                </Label>
+                <NativeSelect
+                  id={typeFieldId}
+                  variant="admin"
+                  size="sm"
+                  value={type}
+                  onChange={(e) => setType(e.target.value)}
+                >
+                  {BOOKING_OBJECT_TYPES.map((tItem) => (
+                    <option key={tItem.id} value={tItem.label}>
+                      {tItem.label}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor={sizeFieldId} className="text-[11px] font-semibold text-slate-300">
+                  {t("size")}
+                </Label>
+                <Input
+                  id={sizeFieldId}
+                  type="number"
+                  step="0.5"
+                  variant="admin"
+                  size="sm"
+                  value={sizeSqm}
+                  onChange={(e) => setSizeSqm(e.target.value)}
+                  placeholder="e.g. 66"
+                  className="font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Rooms & Bed Counts */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor={roomCountFieldId} className="text-[11px] font-semibold text-slate-300">
+                  {t("rooms")}
+                </Label>
+                <div className="grid grid-cols-3 gap-2">
+                  <Input
+                    id={roomCountFieldId}
+                    type="number"
+                    min={1}
+                    variant="admin"
+                    size="sm"
+                    value={roomCount}
+                    onChange={(e) => setRoomCount(Number(e.target.value))}
+                    className="font-mono text-center"
+                    aria-label={t("rooms")}
+                  />
+                  <NativeSelect
+                    id={roomTypeFieldId}
+                    variant="admin"
+                    size="sm"
+                    value={formatBookingRoomType(roomType)}
+                    onChange={(e) => setRoomType(e.target.value)}
+                    className="col-span-2"
+                    aria-label="Room type"
                   >
-                    {BOOKING_OBJECT_TYPES.map((tItem) => (
-                      <option key={tItem.id} value={tItem.label}>
-                        {tItem.label}
+                    {BOOKING_ROOM_TYPES.map((rt) => (
+                      <option key={rt.id} value={rt.label}>
+                        {rt.label}
                       </option>
                     ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("size")}
-                  </label>
-                  <input
-                    type="number"
-                    step="0.5"
-                    value={sizeSqm}
-                    onChange={(e) => setSizeSqm(e.target.value)}
-                    placeholder="e.g. 66"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono"
-                  />
+                  </NativeSelect>
                 </div>
               </div>
 
-              {/* Rooms & Bed Counts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("rooms")}
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <input
+              <div className="space-y-1.5">
+                <Label htmlFor={bedCountFieldId} className="text-[11px] font-semibold text-slate-300">
+                  {t("bedsAndExtraBeds")}
+                </Label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex items-center gap-1.5">
+                    <Input
+                      id={bedCountFieldId}
                       type="number"
                       min={1}
-                      value={roomCount}
-                      onChange={(e) => setRoomCount(Number(e.target.value))}
-                      className="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition font-mono text-center"
+                      variant="admin"
+                      size="sm"
+                      value={bedCount}
+                      onChange={(e) => setBedCount(Number(e.target.value))}
+                      className="w-full font-mono text-center"
+                      aria-label={t("beds")}
                     />
-                    <select
-                      value={formatBookingRoomType(roomType)}
-                      onChange={(e) => setRoomType(e.target.value)}
-                      className="col-span-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
-                    >
-                      {BOOKING_ROOM_TYPES.map((rt) => (
-                        <option key={rt.id} value={rt.label}>
-                          {rt.label}
-                        </option>
-                      ))}
-                    </select>
+                    <span className="text-[11px] text-slate-400">{t("beds")}</span>
                   </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("bedsAndExtraBeds")}
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        min={1}
-                        value={bedCount}
-                        onChange={(e) => setBedCount(Number(e.target.value))}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition font-mono text-center"
-                      />
-                      <span className="text-[11px] text-slate-400">{t("beds")}</span>
-                    </div>
-                    <span className="text-slate-500">+</span>
-                    <div className="flex-1 flex items-center gap-1.5">
-                      <input
-                        type="number"
-                        min={0}
-                        value={extraBedCount}
-                        onChange={(e) => setExtraBedCount(Number(e.target.value))}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition font-mono text-center"
-                      />
-                      <span className="text-[11px] text-slate-400">{t("extra")}</span>
-                    </div>
+                  <span className="text-slate-500">+</span>
+                  <div className="flex-1 flex items-center gap-1.5">
+                    <Input
+                      id={extraBedCountFieldId}
+                      type="number"
+                      min={0}
+                      variant="admin"
+                      size="sm"
+                      value={extraBedCount}
+                      onChange={(e) => setExtraBedCount(Number(e.target.value))}
+                      className="w-full font-mono text-center"
+                      aria-label={t("extra")}
+                    />
+                    <span className="text-[11px] text-slate-400">{t("extra")}</span>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Pets Allowed */}
-              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3 flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-semibold text-white block">
-                    {t("petsAllowed")}
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    {t("petsAllowedDesc")}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={petsAllowed}
-                  onClick={() => setPetsAllowed(!petsAllowed)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    petsAllowed ? "bg-sky-500" : "bg-slate-700"
-                  }`}
+            {/* Pets Allowed */}
+            <div className="rounded-xl border border-admin-border bg-admin-surface-subtle p-3 flex items-center justify-between">
+              <div>
+                <Label htmlFor={petsFieldId} className="text-[11px] font-semibold text-white block cursor-pointer">
+                  {t("petsAllowed")}
+                </Label>
+                <span className="text-[10px] text-slate-400">
+                  {t("petsAllowedDesc")}
+                </span>
+              </div>
+              <Switch
+                id={petsFieldId}
+                checked={petsAllowed}
+                onCheckedChange={setPetsAllowed}
+                aria-label={t("petsAllowed")}
+              />
+            </div>
+
+            {/* Active Amenities */}
+            <div className="space-y-2 pt-2 border-t border-admin-border">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-sky-400" />
+                  <span>{t("amenities")}</span>
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  {t("activeAmenitiesCount", {
+                    count: selectedAmenityIds.length,
+                    total: amenities.length,
+                  })}
+                </span>
+              </div>
+              {amenities.length === 0 ? (
+                <p className="text-[11px] text-slate-500">
+                  {t("noAmenities")}
+                </p>
+              ) : (
+                <div
+                  role="group"
+                  aria-label={t("amenities")}
+                  className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto p-2 rounded-xl border border-admin-border bg-admin-surface-subtle"
                 >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                      petsAllowed ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Active Amenities */}
-              <div className="space-y-2 pt-2 border-t border-slate-800">
-                <label className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5">
-                    <Tag className="w-3.5 h-3.5 text-sky-400" />
-                    <span>{t("amenities")}</span>
-                  </span>
-                  <span className="text-[10px] text-slate-400">
-                    {t("activeAmenitiesCount", {
-                      count: selectedAmenityIds.length,
-                      total: amenities.length,
-                    })}
-                  </span>
-                </label>
-                {amenities.length === 0 ? (
-                  <p className="text-[11px] text-slate-500">
-                    {t("noAmenities")}
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 max-h-48 overflow-y-auto p-2 rounded-xl border border-slate-800 bg-slate-900/60">
-                    {amenities.map((amenity) => {
-                      const isSelected = selectedAmenityIds.includes(amenity.id);
-                      return (
-                        <button
-                          key={amenity.id}
-                          type="button"
-                          onClick={() => {
+                  {amenities.map((amenity) => {
+                    const isSelected = selectedAmenityIds.includes(amenity.id);
+                    const amenityCheckboxId = `${amenitiesGroupId}-${amenity.id}`;
+                    return (
+                      <div
+                        key={amenity.id}
+                        className={cn(
+                          "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs transition border select-none",
+                          isSelected
+                            ? "bg-sky-500/20 text-sky-200 border-sky-500/40 font-medium"
+                            : "bg-slate-950/60 text-slate-400 border-slate-800/80 hover:border-slate-700 hover:text-slate-200"
+                        )}
+                      >
+                        <Checkbox
+                          id={amenityCheckboxId}
+                          checked={isSelected}
+                          onCheckedChange={(checked) => {
                             setSelectedAmenityIds((prev) =>
-                              prev.includes(amenity.id)
-                                ? prev.filter((id) => id !== amenity.id)
-                                : [...prev, amenity.id]
+                              checked
+                                ? [...prev, amenity.id]
+                                : prev.filter((id) => id !== amenity.id)
                             );
                           }}
-                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left text-xs transition border ${
-                            isSelected
-                              ? "bg-sky-500/20 text-sky-200 border-sky-500/40 font-medium"
-                              : "bg-slate-950/60 text-slate-400 border-slate-800/80 hover:border-slate-700 hover:text-slate-200"
-                          }`}
+                        />
+                        <Label
+                          htmlFor={amenityCheckboxId}
+                          className="truncate cursor-pointer flex-1 text-xs font-normal text-inherit select-none"
                         >
-                          <div
-                            className={`w-3.5 h-3.5 rounded flex items-center justify-center shrink-0 border ${
-                              isSelected
-                                ? "bg-sky-500 border-sky-400 text-white"
-                                : "border-slate-700 bg-slate-900"
-                            }`}
-                          >
-                            {isSelected && <Check className="w-2.5 h-2.5 stroke-[3]" />}
-                          </div>
-                          <span className="truncate">{amenity.name}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+                          {amenity.name}
+                        </Label>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
-              {/* iCal Import URL with Help / Info Box */}
-              <div className="space-y-2 pt-2 border-t border-slate-800">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+            {/* iCal Import URL with Help / Info Box */}
+            <div className="space-y-2 pt-2 border-t border-admin-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Label htmlFor={icalUrlFieldId} className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-sky-400" />
                     <span>{t("icalUrl")}</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowIcalHelp(!showIcalHelp)}
-                      className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-800 hover:bg-sky-500/20 text-slate-400 hover:text-sky-300 border border-slate-700 transition ml-1"
-                      title="Click for information about iCal sync"
-                    >
-                      <HelpCircle className="w-3 h-3" />
-                    </button>
-                  </label>
-                  {icalUrl && (
-                    <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      {t("activeIcalSync")}
-                    </span>
+                  </Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowIcalHelp(!showIcalHelp)}
+                    className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-800 hover:bg-sky-500/20 text-slate-400 hover:text-sky-300 border border-slate-700 transition"
+                    title="Click for information about iCal sync"
+                    aria-label="Click for information about iCal sync"
+                    aria-expanded={showIcalHelp}
+                  >
+                    <HelpCircle className="w-3 h-3" />
+                  </button>
+                </div>
+                {icalUrl && (
+                  <Badge variant="adminSuccess" size="xs">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>{t("activeIcalSync")}</span>
+                  </Badge>
+                )}
+              </div>
+
+              {/* Collapsible Info / Help Box */}
+              {showIcalHelp && (
+                <div className="p-3.5 rounded-xl border border-sky-500/30 bg-sky-950/30 text-sky-200 text-xs space-y-2 animate-in fade-in duration-150">
+                  <div className="font-semibold text-sky-100 flex items-center gap-1.5">
+                    <Info className="w-4 h-4 text-sky-400 shrink-0" />
+                    <span>{t("icalHelpTitle")}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-slate-300">
+                    In the Booking.com Extranet, each unit is managed individually. Under 'Prices & Availability' → 'Sync calendars', you will find the 'Export calendar' link for this specific unit.
+                  </p>
+                  <p className="text-[11px] leading-relaxed text-slate-300">
+                    Paste the URL here. The system automatically fetches and caches busy dates (at least every 60 minutes) and blocks those dates in the calendar to prevent double bookings.
+                  </p>
+                  <p className="text-[11px] leading-relaxed text-slate-300">
+                    If Booking.com is temporarily unavailable, previous dates are kept persistent so reservations stay protected. Checkout dates remain available for same-day check-in.
+                  </p>
+                </div>
+              )}
+
+              <Input
+                id={icalUrlFieldId}
+                type="text"
+                variant="admin"
+                size="sm"
+                value={icalUrl}
+                onChange={(e) => setIcalUrl(e.target.value)}
+                placeholder="https://ical.booking.com/v1/export?t=... or /mock-ical/..."
+                className="font-mono text-xs"
+              />
+            </div>
+
+            {/* Per-Object Booking Settings (Compressed Format) */}
+            <div className="space-y-2.5 pt-3 border-t border-admin-border">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Bokningsinställningar för detta objekt</span>
+                </span>
+                <span className="text-[10px] text-slate-500 font-mono">
+                  {hasAnyCustomizableSettings ? "Objektanpassning möjlig" : "Följer centrala inställningar"}
+                </span>
+              </div>
+
+              {/* If all groups are locked globally */}
+              {!hasAnyCustomizableSettings && (
+                <div className="p-3 rounded-xl border border-admin-border bg-admin-surface-subtle text-[11px] text-slate-400 space-y-1">
+                  <div className="flex items-center gap-1.5 text-slate-300 font-medium">
+                    <Lock className="w-3 h-3 text-slate-400" />
+                    <span>Alla bokningsinställningar styrs centralt</span>
+                  </div>
+                  <div className="text-[10px] text-slate-500 leading-relaxed">
+                    Bytesdag: {globalTurnoverLabel} • Tider: In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"} • Enstaka dygn: {globalCustomDaysLabel}. Dessa kan låsas upp under Bokning → Inställningar om de ska tillåtas per objekt.
+                  </div>
+                </div>
+              )}
+
+              {/* If at least one group can be customized per object */}
+              {hasAnyCustomizableSettings && (
+                <div className="p-3 rounded-xl border border-admin-border bg-admin-surface-subtle space-y-2.5">
+                  {/* Turnover day row */}
+                  {bookingSettings?.turnoverDayScope === "PER_OBJECT" ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
+                      <div>
+                        <Label htmlFor={turnoverDayFieldId} className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                          <Calendar className="w-3 h-3 text-sky-400" />
+                          <span>Default bytesdag</span>
+                        </Label>
+                        <span className="text-[9px] text-slate-500">Gäller för veckouthyrning</span>
+                      </div>
+                      <NativeSelect
+                        id={turnoverDayFieldId}
+                        variant="admin"
+                        size="sm"
+                        value={objTurnoverDay}
+                        onChange={(e) => setObjTurnoverDay(e.target.value)}
+                      >
+                        <option value="">Följ global standard ({globalTurnoverLabel})</option>
+                        <option value="SUNDAY">Söndag</option>
+                        <option value="SATURDAY">Lördag</option>
+                      </NativeSelect>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between py-1 border-b border-slate-800/50 text-[10px] text-slate-500">
+                      <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Bytesdag (låst centralt):</span>
+                      <span className="font-medium text-slate-400">{globalTurnoverLabel}</span>
+                    </div>
+                  )}
+
+                  {/* Check-in / check-out times row */}
+                  {bookingSettings?.checkTimesScope === "PER_OBJECT" ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center pt-1 border-t border-slate-800/50">
+                      <div>
+                        <span className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-emerald-400" />
+                          <span>In- / Utcheckningstider</span>
+                        </span>
+                        <span className="text-[9px] text-slate-500">Globalt: In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id={checkInTimeFieldId}
+                          type="time"
+                          variant="admin"
+                          size="sm"
+                          value={objCheckInTime}
+                          onChange={(e) => setObjCheckInTime(e.target.value)}
+                          placeholder={bookingSettings?.checkInTime || "15:00"}
+                          className="w-1/2 font-mono"
+                          title="Incheckningstid (lämna tomt för global standard)"
+                          aria-label="Incheckningstid"
+                        />
+                        <span className="text-slate-600 text-xs">/</span>
+                        <Input
+                          id={checkOutTimeFieldId}
+                          type="time"
+                          variant="admin"
+                          size="sm"
+                          value={objCheckOutTime}
+                          onChange={(e) => setObjCheckOutTime(e.target.value)}
+                          placeholder={bookingSettings?.checkOutTime || "11:00"}
+                          className="w-1/2 font-mono"
+                          title="Utcheckningstid (lämna tomt för global standard)"
+                          aria-label="Utcheckningstid"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between py-1 border-b border-slate-800/50 text-[10px] text-slate-500">
+                      <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Tider (låst centralt):</span>
+                      <span className="font-medium text-slate-400">In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"}</span>
+                    </div>
+                  )}
+
+                  {/* Allowed booking periods row */}
+                  {bookingSettings?.customDaysScope === "PER_OBJECT" ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center pt-1 border-t border-slate-800/50">
+                      <div>
+                        <Label htmlFor={allowedPeriodsFieldId} className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
+                          <CalendarDays className="w-3 h-3 text-purple-400" />
+                          <span>Tillåtna bokningsperioder</span>
+                        </Label>
+                        <span className="text-[9px] text-slate-500">Valfria dygn, 3/4-delveckor eller endast helveckor</span>
+                      </div>
+                      <NativeSelect
+                        id={allowedPeriodsFieldId}
+                        variant="admin"
+                        size="sm"
+                        value={objAllowedPeriods}
+                        onChange={(e) => setObjAllowedPeriods(e.target.value)}
+                      >
+                        <option value="">Följ global standard ({globalCustomDaysLabel})</option>
+                        <option value="ALL">Valfritt antal dygn (1-6 dgr & helvecka)</option>
+                        <option value="PERIODS_AND_WEEKS">Endast 3/4d perioder eller hela veckor</option>
+                        <option value="FULL_WEEKS_ONLY">Endast hela veckor (från bytesdag)</option>
+                      </NativeSelect>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between py-1 text-[10px] text-slate-500">
+                      <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Bokningsperioder (låst centralt):</span>
+                      <span className="font-medium text-slate-400">{globalCustomDaysLabel}</span>
+                    </div>
                   )}
                 </div>
+              )}
+            </div>
 
-                {/* Collapsible Info / Help Box */}
-                {showIcalHelp && (
-                  <div className="p-3.5 rounded-xl border border-sky-500/30 bg-sky-950/30 text-sky-200 text-xs space-y-2 animate-in fade-in duration-150">
-                    <div className="font-semibold text-sky-100 flex items-center gap-1.5">
-                      <Info className="w-4 h-4 text-sky-400 shrink-0" />
-                      <span>{t("icalHelpTitle")}</span>
-                    </div>
-                    <p className="text-[11px] leading-relaxed text-slate-300">
-                      In the Booking.com Extranet, each unit is managed individually. Under 'Prices & Availability' → 'Sync calendars', you will find the 'Export calendar' link for this specific unit.
-                    </p>
-                    <p className="text-[11px] leading-relaxed text-slate-300">
-                      Paste the URL here. The system automatically fetches and caches busy dates (at least every 60 minutes) and blocks those dates in the calendar to prevent double bookings.
-                    </p>
-                    <p className="text-[11px] leading-relaxed text-slate-300">
-                      If Booking.com is temporarily unavailable, previous dates are kept persistent so reservations stay protected. Checkout dates remain available for same-day check-in.
-                    </p>
-                  </div>
-                )}
+            {/* Modal Actions */}
+            <div className="flex items-center justify-between pt-4 border-t border-admin-border">
+              {editingObject ? (
+                <Button
+                  type="button"
+                  variant="adminGhost"
+                  size="sm"
+                  onClick={() => handleDelete(editingObject)}
+                  className="text-rose-400 hover:text-rose-300 hover:bg-rose-950/20"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>{t("deleteBtn")}</span>
+                </Button>
+              ) : (
+                <div />
+              )}
 
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={icalUrl}
-                    onChange={(e) => setIcalUrl(e.target.value)}
-                    placeholder="https://ical.booking.com/v1/export?t=... or /mock-ical/..."
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono text-xs"
-                  />
-                </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="adminSecondary"
+                  size="sm"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  {tCommon("cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  variant="adminPrimary"
+                  size="sm"
+                  disabled={isSaving}
+                >
+                  {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{editingObject ? t("updateBtn") : t("saveBtn")}</span>
+                </Button>
               </div>
-
-              {/* Per-Object Booking Settings (Compressed Format) */}
-              <div className="space-y-2.5 pt-3 border-t border-slate-800">
-                <div className="flex items-center justify-between">
-                  <label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                    <Sliders className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Bokningsinställningar för detta objekt</span>
-                  </label>
-                  <span className="text-[10px] text-slate-500 font-mono">
-                    {hasAnyCustomizableSettings ? "Objektanpassning möjlig" : "Följer centrala inställningar"}
-                  </span>
-                </div>
-
-                {/* If all groups are locked globally */}
-                {!hasAnyCustomizableSettings && (
-                  <div className="p-3 rounded-xl border border-slate-800 bg-slate-950/40 text-[11px] text-slate-400 space-y-1">
-                    <div className="flex items-center gap-1.5 text-slate-300 font-medium">
-                      <Lock className="w-3 h-3 text-slate-400" />
-                      <span>Alla bokningsinställningar styrs centralt</span>
-                    </div>
-                    <div className="text-[10px] text-slate-500 leading-relaxed">
-                      Bytesdag: {globalTurnoverLabel} • Tider: In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"} • Enstaka dygn: {globalCustomDaysLabel}. Dessa kan låsas upp under Bokning → Inställningar om de ska tillåtas per objekt.
-                    </div>
-                  </div>
-                )}
-
-                {/* If at least one group can be customized per object */}
-                {hasAnyCustomizableSettings && (
-                  <div className="p-3 rounded-xl border border-slate-800 bg-slate-950/40 space-y-2.5">
-                    {/* Turnover day row */}
-                    {bookingSettings?.turnoverDayScope === "PER_OBJECT" ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
-                        <div>
-                          <label className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
-                            <Calendar className="w-3 h-3 text-sky-400" />
-                            <span>Default bytesdag</span>
-                          </label>
-                          <span className="text-[9px] text-slate-500">Gäller för veckouthyrning</span>
-                        </div>
-                        <select
-                          value={objTurnoverDay}
-                          onChange={(e) => setObjTurnoverDay(e.target.value)}
-                          className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-sky-500"
-                        >
-                          <option value="">Följ global standard ({globalTurnoverLabel})</option>
-                          <option value="SUNDAY">Söndag</option>
-                          <option value="SATURDAY">Lördag</option>
-                        </select>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between py-1 border-b border-slate-800/50 text-[10px] text-slate-500">
-                        <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Bytesdag (låst centralt):</span>
-                        <span className="font-medium text-slate-400">{globalTurnoverLabel}</span>
-                      </div>
-                    )}
-
-                    {/* Check-in / check-out times row */}
-                    {bookingSettings?.checkTimesScope === "PER_OBJECT" ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center pt-1 border-t border-slate-800/50">
-                        <div>
-                          <label className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-emerald-400" />
-                            <span>In- / Utcheckningstider</span>
-                          </label>
-                          <span className="text-[9px] text-slate-500">Globalt: In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="time"
-                            value={objCheckInTime}
-                            onChange={(e) => setObjCheckInTime(e.target.value)}
-                            placeholder={bookingSettings?.checkInTime || "15:00"}
-                            className="w-1/2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs font-mono focus:outline-none focus:border-sky-500"
-                            title="Incheckningstid (lämna tomt för global standard)"
-                          />
-                          <span className="text-slate-600 text-xs">/</span>
-                          <input
-                            type="time"
-                            value={objCheckOutTime}
-                            onChange={(e) => setObjCheckOutTime(e.target.value)}
-                            placeholder={bookingSettings?.checkOutTime || "11:00"}
-                            className="w-1/2 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-xs font-mono focus:outline-none focus:border-sky-500"
-                            title="Utcheckningstid (lämna tomt för global standard)"
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between py-1 border-b border-slate-800/50 text-[10px] text-slate-500">
-                        <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Tider (låst centralt):</span>
-                        <span className="font-medium text-slate-400">In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"}</span>
-                      </div>
-                    )}
-
-                    {/* Allowed booking periods row */}
-                    {bookingSettings?.customDaysScope === "PER_OBJECT" ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center pt-1 border-t border-slate-800/50">
-                        <div>
-                          <label className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
-                            <CalendarDays className="w-3 h-3 text-purple-400" />
-                            <span>Tillåtna bokningsperioder</span>
-                          </label>
-                          <span className="text-[9px] text-slate-500">Valfria dygn, 3/4-delveckor eller endast helveckor</span>
-                        </div>
-                        <select
-                          value={objAllowedPeriods}
-                          onChange={(e) => setObjAllowedPeriods(e.target.value)}
-                          className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-white text-xs focus:outline-none focus:border-sky-500"
-                        >
-                          <option value="">Följ global standard ({globalCustomDaysLabel})</option>
-                          <option value="ALL">Valfritt antal dygn (1-6 dgr & helvecka)</option>
-                          <option value="PERIODS_AND_WEEKS">Endast 3/4d perioder eller hela veckor</option>
-                          <option value="FULL_WEEKS_ONLY">Endast hela veckor (från bytesdag)</option>
-                        </select>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between py-1 text-[10px] text-slate-500">
-                        <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Bokningsperioder (låst centralt):</span>
-                        <span className="font-medium text-slate-400">{globalCustomDaysLabel}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Modal Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-                {editingObject ? (
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(editingObject)}
-                    className="inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 transition"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>{t("deleteBtn")}</span>
-                  </button>
-                ) : (
-                  <div />
-                )}
-
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
-                  >
-                    {tCommon("cancel")}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
-                  >
-                    {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>{editingObject ? t("updateBtn") : t("saveBtn")}</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      </ModalPortal>
-    )}
-  </div>
-);
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
 
