@@ -4,34 +4,47 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../utils/cn";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all duration-200 outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all duration-200 outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
+        // Standard semantic shadcn variants
         default:
-          "bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/20 active:scale-[0.98]",
-        primary:
-          "bg-sky-600 hover:bg-sky-500 text-white font-semibold rounded-xl shadow-lg shadow-sky-600/20 active:scale-[0.98]",
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm rounded-md focus-visible:ring-ring",
         secondary:
-          "bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-xl border border-slate-700 active:scale-[0.98]",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md focus-visible:ring-ring",
         destructive:
-          "bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-xl shadow-lg shadow-rose-600/20 active:scale-[0.98]",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm rounded-md focus-visible:ring-destructive",
         outline:
-          "border border-slate-800 hover:border-slate-700 bg-transparent hover:bg-slate-800/60 text-slate-200 rounded-xl",
+          "border border-input bg-background hover:bg-accent hover:text-accent-foreground rounded-md focus-visible:ring-ring",
         ghost:
-          "hover:bg-slate-800/70 text-slate-400 hover:text-slate-100 rounded-lg",
+          "hover:bg-accent hover:text-accent-foreground rounded-md focus-visible:ring-ring",
+        link: "text-primary underline-offset-4 hover:underline",
+
+        // Admin Console specialized variants mapped to centralized admin tokens
+        primary:
+          "bg-admin-accent hover:bg-admin-accent-hover text-white font-semibold rounded-admin-button shadow-admin-button active:scale-[0.98] focus-visible:ring-admin-accent focus-visible:ring-offset-slate-950",
+        adminPrimary:
+          "bg-admin-accent hover:bg-admin-accent-hover text-white font-semibold rounded-admin-button shadow-admin-button active:scale-[0.98] focus-visible:ring-admin-accent focus-visible:ring-offset-slate-950",
+        adminSecondary:
+          "bg-admin-surface hover:bg-admin-border text-slate-200 font-medium rounded-admin-button border border-admin-border active:scale-[0.98] focus-visible:ring-slate-400 focus-visible:ring-offset-slate-950",
+        adminDestructive:
+          "bg-admin-danger hover:bg-admin-danger-hover text-white font-semibold rounded-admin-button shadow-admin-danger active:scale-[0.98] focus-visible:ring-admin-danger focus-visible:ring-offset-slate-950",
+        adminOutline:
+          "border border-admin-border hover:border-admin-border-hover bg-transparent hover:bg-admin-surface-subtle text-slate-200 rounded-admin-button focus-visible:ring-slate-400 focus-visible:ring-offset-slate-950",
+        adminGhost:
+          "hover:bg-admin-surface text-slate-400 hover:text-slate-100 rounded-admin-compact focus-visible:ring-slate-400 focus-visible:ring-offset-slate-950",
         table:
-          "p-2 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-lg transition-colors",
+          "p-2 hover:bg-admin-surface text-slate-400 hover:text-slate-200 rounded-admin-compact transition-colors focus-visible:ring-admin-accent focus-visible:ring-offset-slate-950",
         tableDestructive:
-          "p-2 hover:bg-rose-500/10 text-rose-400 hover:text-rose-300 rounded-lg transition-colors",
-        link: "text-sky-400 underline-offset-4 hover:underline",
+          "p-2 hover:bg-admin-danger-subtle text-rose-400 hover:text-rose-300 rounded-admin-compact transition-colors focus-visible:ring-admin-danger focus-visible:ring-offset-slate-950",
       },
       size: {
         default: "h-10 px-4 py-2.5 text-sm",
-        sm: "h-8 px-3 text-xs rounded-lg",
-        lg: "h-12 px-6 text-base rounded-xl",
-        icon: "h-9 w-9 p-0 rounded-lg",
-        tableIcon: "h-8 w-8 p-1.5 rounded-lg",
+        sm: "h-8 px-3 text-xs",
+        lg: "h-12 px-6 text-base",
+        icon: "h-9 w-9 p-0",
+        tableIcon: "h-8 w-8 p-1.5",
       },
     },
     defaultVariants: {

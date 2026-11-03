@@ -3,6 +3,7 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
+  /* Standard semantic shadcn tokens mapped from app CSS variables */
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
@@ -23,26 +24,55 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
-  /* Centralized admin visual tokens */
+  /* Centralized Admin Console Visual Tokens */
   --color-admin-canvas: #020617;
   --color-admin-surface: #0f172a;
   --color-admin-surface-subtle: rgba(15, 23, 42, 0.6);
+  --color-admin-field: rgba(2, 6, 23, 0.7);
+
   --color-admin-border: #1e293b;
-  --color-admin-border-subtle: rgba(30, 41, 59, 0.6);
+  --color-admin-border-hover: #334155;
+
   --color-admin-accent: #0284c7;
   --color-admin-accent-hover: #0ea5e9;
+  --color-admin-accent-subtle: rgba(14, 165, 233, 0.1);
+  --color-admin-accent-border: rgba(14, 165, 233, 0.3);
+
+  --color-admin-danger: #e11d48;
+  --color-admin-danger-hover: #f43f5e;
+  --color-admin-danger-subtle: rgba(244, 63, 94, 0.1);
+  --color-admin-danger-border: rgba(244, 63, 94, 0.3);
+
+  --color-admin-success: #10b981;
+  --color-admin-success-subtle: rgba(16, 185, 129, 0.1);
+  --color-admin-success-border: rgba(16, 185, 129, 0.3);
+
+  --color-admin-warning: #f59e0b;
+  --color-admin-warning-subtle: rgba(245, 158, 11, 0.1);
+  --color-admin-warning-border: rgba(245, 158, 11, 0.3);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
+
+  --radius-admin-card: 1rem;
+  --radius-admin-field: 0.75rem;
+  --radius-admin-button: 0.75rem;
+  --radius-admin-compact: 0.5rem;
 }
 
 @utility shadow-admin-glow {
-  box-shadow: 0 0 20px -5px rgba(2, 132, 199, 0.25);
+  box-shadow: 0 0 20px -5px rgba(14, 165, 233, 0.25);
 }
 
 @utility shadow-admin-card {
   box-shadow: 0 10px 25px -5px rgba(2, 6, 23, 0.5), 0 8px 10px -6px rgba(2, 6, 23, 0.5);
+}
+
+@utility shadow-admin-button {
+  box-shadow: 0 4px 14px 0 rgba(2, 132, 199, 0.25);
+}
+
+@utility shadow-admin-danger {
+  box-shadow: 0 4px 14px 0 rgba(225, 29, 72, 0.25);
 }

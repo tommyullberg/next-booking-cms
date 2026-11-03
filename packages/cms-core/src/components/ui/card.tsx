@@ -3,16 +3,26 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../../utils/cn";
 
 const cardVariants = cva(
-  "rounded-2xl border text-slate-100 shadow-xl transition-all",
+  "text-card-foreground transition-all",
   {
     variants: {
       variant: {
-        default: "border-slate-800 bg-slate-900/60 backdrop-blur-sm",
-        solid: "border-slate-800 bg-slate-900",
-        subtle: "border-slate-800/80 bg-slate-900/40 backdrop-blur-sm",
-        glass: "border-slate-800/60 bg-slate-950/60 backdrop-blur-md",
+        default: "rounded-lg border border-border bg-card shadow-sm text-card-foreground",
+        solid: "rounded-lg border border-border bg-card text-card-foreground",
+        subtle: "rounded-lg border border-border/80 bg-card/60 backdrop-blur-sm",
+        glass: "rounded-lg border border-border/60 bg-card/40 backdrop-blur-md",
         interactive:
-          "border-slate-800 bg-slate-900/60 backdrop-blur-sm hover:border-slate-700 cursor-pointer",
+          "rounded-lg border border-border bg-card hover:border-accent cursor-pointer shadow-sm",
+
+        // Admin Console specialized variants mapped to centralized admin tokens
+        admin:
+          "rounded-admin-card border border-admin-border bg-admin-surface text-slate-100 shadow-admin-card",
+        adminSubtle:
+          "rounded-admin-card border border-admin-border bg-admin-surface-subtle text-slate-100 backdrop-blur-sm",
+        adminGlass:
+          "rounded-admin-card border border-admin-border/60 bg-admin-canvas/60 text-slate-100 backdrop-blur-md",
+        adminInteractive:
+          "rounded-admin-card border border-admin-border bg-admin-surface text-slate-100 hover:border-admin-border-hover cursor-pointer shadow-admin-card",
       },
     },
     defaultVariants: {
@@ -55,7 +65,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight text-slate-100",
+      "text-lg font-semibold leading-none tracking-tight",
       className
     )}
     {...props}
@@ -69,7 +79,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-slate-400", className)}
+    className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
 ));
