@@ -1,9 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useId } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, Check, GripVertical, ChevronDown, Lock } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, GripVertical, Lock } from "lucide-react";
 import { FlagIcon } from "../../components/ui/flag-icon";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { NativeSelect } from "../../components/ui/select";
+import { Card } from "../../components/ui/card";
+import { cn } from "../../utils/cn";
 import { HOMEPAGE_ID } from "../../utils/slug";
 import { LANGUAGE_META } from "../../constants/languages";
 
@@ -67,6 +73,7 @@ export function SectionsView({
   const [isSaving, setIsSaving] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const baseFieldId = useId();
 
   const secondaryLocales = activeLanguages.filter((l) => l !== "sv");
 
@@ -254,23 +261,24 @@ export function SectionsView({
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="adminPrimary"
+          size="sm"
           onClick={handleStartAddSection}
-          className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/25 hover:bg-sky-500 transition shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>{t("addSection")}</span>
-        </button>
+        </Button>
       </div>
 
       {/* Sections List */}
       <div className="space-y-3.5">
         {orderedSections.length === 0 && !isAddingNew ? (
-          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 py-12 text-center text-xs text-slate-500">
+          <Card variant="adminSubtle" className="py-12 text-center text-xs text-slate-500">
             No sections created yet. Click &quot;+ Add Section&quot; to create
             your first section.
-          </div>
+          </Card>
         ) : (
           orderedSections.map((sec) => {
             const isRootSection = Number(sec.start_page_id) === HOMEPAGE_ID;
@@ -279,10 +287,14 @@ export function SectionsView({
               !isRootSection && dragOverId === sec.id && draggedId !== sec.id;
 
             if (isEditing) {
+              const editNameId = `${baseFieldId}-${sec.id}-name`;
+              const editStartPageSelectId = `${baseFieldId}-${sec.id}-startpage`;
+
               return (
-                <div
+                <Card
                   key={sec.id}
-                  className="rounded-2xl border border-sky-500/70 bg-slate-900/95 p-5 shadow-[0_0_25px_rgba(14,165,233,0.18)] transition-all"
+                  variant="admin"
+                  className="p-5 border-sky-500/70 bg-slate-900/95 shadow-[0_0_25px_rgba(14,165,233,0.18)] transition-all"
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                     {/* Column 1: Handle/Lock + Section Title */}
@@ -291,11 +303,16 @@ export function SectionsView({
                         <span
                           className="text-sky-400"
                           title="Root section (Page #1001) is locked at the top"
+                          aria-label="Root section is locked at top"
                         >
                           <Lock className="w-4 h-4" />
                         </span>
                       ) : (
-                        <span className="text-slate-500 cursor-grab">
+                        <span
+                          className="text-slate-500 cursor-grab"
+                          title="Drag to reorder section"
+                          aria-label={`Drag to reorder section ${sec.name}`}
+                        >
                           <GripVertical className="w-5 h-5" />
                         </span>
                       )}
@@ -310,15 +327,17 @@ export function SectionsView({
                     {/* Column 2: Stacked Multi-language Inputs */}
                     <div className="lg:col-span-3 space-y-2">
                       <div className="flex items-center gap-2.5">
-                        <span className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-300 shrink-0">
+                        <Label htmlFor={editNameId} className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-300 shrink-0 cursor-pointer">
                           <FlagIcon code="sv" size="sm" />
                           <span>{LANGUAGE_META.sv.code}</span>
-                        </span>
-                        <input
+                        </Label>
+                        <Input
+                          id={editNameId}
                           type="text"
+                          variant="admin"
+                          size="sm"
                           value={editNameSv}
                           onChange={(e) => setEditNameSv(e.target.value)}
-                          className="w-full rounded-lg border border-slate-700 bg-slate-950/90 px-3 py-1.5 text-xs text-white focus:border-sky-500 focus:outline-none"
                         />
                       </div>
                       {secondaryLocales.map((loc) => {
@@ -327,14 +346,18 @@ export function SectionsView({
                           flag: "",
                           label: loc,
                         };
+                        const transFieldId = `${baseFieldId}-${sec.id}-${loc}`;
                         return (
                           <div key={loc} className="flex items-center gap-2.5">
-                            <span className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-400 shrink-0">
+                            <Label htmlFor={transFieldId} className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-400 shrink-0 cursor-pointer">
                               <FlagIcon code={loc} size="sm" />
                               <span>{meta.code}</span>
-                            </span>
-                            <input
+                            </Label>
+                            <Input
+                              id={transFieldId}
                               type="text"
+                              variant="admin"
+                              size="sm"
                               value={editTranslations[loc] || ""}
                               onChange={(e) =>
                                 setEditTranslations((prev) => ({
@@ -343,7 +366,6 @@ export function SectionsView({
                                 }))
                               }
                               placeholder="—"
-                              className="w-full rounded-lg border border-slate-700 bg-slate-950/90 px-3 py-1.5 text-xs text-white focus:border-sky-500 focus:outline-none"
                             />
                           </div>
                         );
@@ -352,90 +374,96 @@ export function SectionsView({
 
                     {/* Column 3: Section start page dropdown (Locked for Root Section 1001) */}
                     <div className="lg:col-span-3">
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1.5">
+                      <Label htmlFor={editStartPageSelectId} className="block text-[11px] font-medium text-slate-400 mb-1.5">
                         {t("sectionStartPage")}
-                      </label>
+                      </Label>
                       {isRootSection ? (
-                        <div className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
+                        <div className="flex items-center gap-2 rounded-lg border border-admin-border bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
                           <Lock className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                           <span className="truncate">
                             {getStartPageLabel(sec)}
                           </span>
                         </div>
                       ) : (
-                        <div className="relative">
-                          <select
-                            value={editStartPageId}
-                            onChange={(e) => setEditStartPageId(e.target.value)}
-                            className="w-full appearance-none rounded-lg border border-slate-700 bg-slate-950/90 pl-3 pr-8 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
-                          >
-                            <option value="">{t("noStartPageAssigned")}</option>
-                            {nonHomepagePages.map((p) => (
-                              <option key={p.id} value={String(p.id)}>
-                                {p.page_title} (#{p.id})
-                              </option>
-                            ))}
-                          </select>
-                          <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        </div>
+                        <NativeSelect
+                          id={editStartPageSelectId}
+                          variant="admin"
+                          size="sm"
+                          value={editStartPageId}
+                          onChange={(e) => setEditStartPageId(e.target.value)}
+                        >
+                          <option value="">{t("noStartPageAssigned")}</option>
+                          {nonHomepagePages.map((p) => (
+                            <option key={p.id} value={String(p.id)}>
+                              {p.page_title} (#{p.id})
+                            </option>
+                          ))}
+                        </NativeSelect>
                       )}
                     </div>
 
                     {/* Column 4: Delete Section (hidden on Root Section) + Save Changes / Cancel */}
                     <div className="lg:col-span-3 flex flex-col items-end justify-center gap-2.5">
                       {!isRootSection && (
-                        <button
+                        <Button
                           type="button"
+                          variant="adminGhost"
+                          size="sm"
                           onClick={() => {
                             if (confirm(t("deleteConfirm"))) {
                               onDeleteSection(sec.id);
                               setEditingId(null);
                             }
                           }}
-                          className="flex items-center gap-1.5 rounded-lg bg-red-600/90 px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-red-500 transition"
+                          className="text-rose-400 hover:text-rose-300 hover:bg-rose-950/20"
+                          aria-label={`${tCommon("delete")} ${sec.name}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           <span>{tCommon("delete")}</span>
-                        </button>
+                        </Button>
                       )}
 
                       <div className="flex items-center gap-2">
-                        <button
+                        <Button
                           type="button"
+                          variant="adminPrimary"
+                          size="sm"
                           disabled={isSaving || !editNameSv.trim()}
                           onClick={() => handleSave(sec)}
-                          className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-2 text-xs font-semibold text-white shadow-md shadow-sky-600/20 hover:bg-sky-500 disabled:opacity-50 transition"
                         >
                           <Check className="w-3.5 h-3.5" />
                           <span>{isSaving ? tCommon("loading") : tCommon("save")}</span>
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="adminSecondary"
+                          size="sm"
                           onClick={handleCancelEdit}
-                          className="rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition"
                         >
                           {tCommon("cancel")}
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
-                </div>
+                </Card>
               );
             }
 
             return (
-              <div
+              <Card
                 key={sec.id}
+                variant="admin"
                 draggable={!isRootSection}
                 onDragStart={(e) => handleDragStart(e, sec)}
                 onDragOver={(e) => handleDragOver(e, sec)}
                 onDragLeave={() => setDragOverId(null)}
                 onDrop={(e) => handleDrop(e, sec)}
-                className={`rounded-2xl border p-5 transition-all ${
+                className={cn(
+                  "p-5 transition-all",
                   isDragOver
                     ? "border-sky-500/60 bg-slate-900/90"
-                    : "border-slate-800/90 bg-slate-900/45 hover:border-slate-700/80 hover:bg-slate-900/65"
-                }`}
+                    : "hover:border-slate-700/80 hover:bg-slate-900/65"
+                )}
               >
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
                   {/* Column 1: Drag Handle / Lock + Heading */}
@@ -444,6 +472,7 @@ export function SectionsView({
                       <span
                         className="text-sky-400/80 p-0.5"
                         title="Root section (Page #1001) cannot be reordered or deleted"
+                        aria-label="Root section is locked at top"
                       >
                         <Lock className="w-4 h-4" />
                       </span>
@@ -451,6 +480,7 @@ export function SectionsView({
                       <span
                         className="text-slate-500 hover:text-slate-300 cursor-grab active:cursor-grabbing transition"
                         title="Drag to reorder section"
+                        aria-label={`Drag to reorder section ${sec.name}`}
                       >
                         <GripVertical className="w-5 h-5" />
                       </span>
@@ -501,27 +531,32 @@ export function SectionsView({
 
                   {/* Column 4: Edit Button */}
                   <div className="lg:col-span-2 flex items-center justify-end">
-                    <button
+                    <Button
                       type="button"
+                      variant="adminSecondary"
+                      size="sm"
                       onClick={() => startEdit(sec)}
-                      className="flex items-center gap-1.5 rounded-lg border border-slate-700/80 bg-slate-800/70 px-3.5 py-2 text-xs font-medium text-slate-200 hover:bg-slate-800 hover:text-white transition"
+                      aria-label={`${tCommon("edit")} ${sec.name}`}
                     >
                       <Pencil className="w-3.5 h-3.5 text-slate-400" />
                       <span>{tCommon("edit")}</span>
-                    </button>
+                    </Button>
                   </div>
                 </div>
-              </div>
+              </Card>
             );
           })
         )}
 
         {/* Inline Add New Section Row (placed below existing sections) */}
         {isAddingNew && editingId === "new-section" && (
-          <div className="rounded-2xl border border-sky-500/70 bg-slate-900/95 p-5 shadow-[0_0_25px_rgba(14,165,233,0.18)] transition-all">
+          <Card variant="admin" className="p-5 border-sky-500/70 bg-slate-900/95 shadow-[0_0_25px_rgba(14,165,233,0.18)] transition-all">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               <div className="lg:col-span-3 flex items-center gap-3.5">
-                <span className="text-slate-600 cursor-grab">
+                <span
+                  className="text-slate-600 cursor-grab"
+                  aria-label="New section cannot be reordered until saved"
+                >
                   <GripVertical className="w-5 h-5" />
                 </span>
                 <span className="text-base font-medium text-white truncate">
@@ -533,17 +568,19 @@ export function SectionsView({
 
               <div className="lg:col-span-3 space-y-2">
                 <div className="flex items-center gap-2.5">
-                  <span className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-300 shrink-0">
+                  <Label htmlFor={`${baseFieldId}-new-name`} className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-300 shrink-0 cursor-pointer">
                     <FlagIcon code="sv" size="sm" />
                     <span>{LANGUAGE_META.sv.code}</span>
-                  </span>
-                  <input
+                  </Label>
+                  <Input
+                    id={`${baseFieldId}-new-name`}
                     type="text"
+                    variant="admin"
+                    size="sm"
                     value={editNameSv}
                     onChange={(e) => setEditNameSv(e.target.value)}
                     placeholder="Section name (SE)"
                     autoFocus
-                    className="w-full rounded-lg border border-slate-700 bg-slate-950/90 px-3 py-1.5 text-xs text-white focus:border-sky-500 focus:outline-none"
                   />
                 </div>
                 {secondaryLocales.map((loc) => {
@@ -554,12 +591,15 @@ export function SectionsView({
                   };
                   return (
                     <div key={loc} className="flex items-center gap-2.5">
-                      <span className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-400 shrink-0">
+                      <Label htmlFor={`${baseFieldId}-new-${loc}`} className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-400 shrink-0 cursor-pointer">
                         <FlagIcon code={loc} size="sm" />
                         <span>{meta.code}</span>
-                      </span>
-                      <input
+                      </Label>
+                      <Input
+                        id={`${baseFieldId}-new-${loc}`}
                         type="text"
+                        variant="admin"
+                        size="sm"
                         value={editTranslations[loc] || ""}
                         onChange={(e) =>
                           setEditTranslations((prev) => ({
@@ -568,7 +608,6 @@ export function SectionsView({
                           }))
                         }
                         placeholder={`Section name (${meta.code})`}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-950/90 px-3 py-1.5 text-xs text-white focus:border-sky-500 focus:outline-none"
                       />
                     </div>
                   );
@@ -576,48 +615,49 @@ export function SectionsView({
               </div>
 
               <div className="lg:col-span-3">
-                <label className="block text-[11px] font-medium text-slate-400 mb-1.5">
+                <Label htmlFor={`${baseFieldId}-new-startpage`} className="block text-[11px] font-medium text-slate-400 mb-1.5">
                   {t("sectionStartPage")}
-                </label>
-                <div className="relative">
-                  <select
-                    value={editStartPageId}
-                    onChange={(e) => setEditStartPageId(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-slate-700 bg-slate-950/90 pl-3 pr-8 py-2 text-xs text-white focus:border-sky-500 focus:outline-none"
-                  >
-                    <option value="">{t("noStartPageAssigned")}</option>
-                    {nonHomepagePages.map((p) => (
-                      <option key={p.id} value={String(p.id)}>
-                        {p.page_title} (#{p.id})
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                </Label>
+                <NativeSelect
+                  id={`${baseFieldId}-new-startpage`}
+                  variant="admin"
+                  size="sm"
+                  value={editStartPageId}
+                  onChange={(e) => setEditStartPageId(e.target.value)}
+                >
+                  <option value="">{t("noStartPageAssigned")}</option>
+                  {nonHomepagePages.map((p) => (
+                    <option key={p.id} value={String(p.id)}>
+                      {p.page_title} (#{p.id})
+                    </option>
+                  ))}
+                </NativeSelect>
               </div>
 
               <div className="lg:col-span-3 flex flex-col items-end justify-center gap-2.5">
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="adminPrimary"
+                    size="sm"
                     disabled={isSaving || !editNameSv.trim()}
                     onClick={() => handleSave()}
-                    className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-3.5 py-2 text-xs font-semibold text-white shadow-md shadow-sky-600/20 hover:bg-sky-500 disabled:opacity-50 transition"
                   >
                     <Check className="w-3.5 h-3.5" />
                     <span>{isSaving ? tCommon("loading") : tCommon("save")}</span>
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="adminSecondary"
+                    size="sm"
                     onClick={handleCancelEdit}
-                    className="rounded-lg border border-slate-700 bg-slate-800/80 px-3.5 py-2 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition"
                   >
                     {tCommon("cancel")}
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         )}
       </div>
     </div>

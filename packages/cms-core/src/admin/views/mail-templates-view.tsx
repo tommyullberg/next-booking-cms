@@ -1,11 +1,17 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Mail, HelpCircle, Copy, Check, Save, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { MAIL_PLACEHOLDERS } from "../../mail/types";
 import { useAdminIntl } from "../../i18n";
 import { getDefaultMailTemplate, DEFAULT_MAIL_TEMPLATES_EN, DEFAULT_MAIL_TEMPLATES_SV } from "../../constants/mail-templates";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { Card } from "../../components/ui/card";
+import { cn } from "../../utils/cn";
 
 export interface MailTemplateItem {
   id: string;
@@ -50,6 +56,7 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
   const [savingType, setSavingType] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
+  const baseId = useId();
 
   const templateConfigs = useMemo(
     () => [
@@ -158,24 +165,27 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
           <p className="mt-1 text-xs text-slate-400">{t("subtitle")}</p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant={showHelp ? "adminPrimary" : "adminSecondary"}
+          size="sm"
           onClick={() => setShowHelp((prev) => !prev)}
-          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition ${
-            showHelp
-              ? "bg-sky-500/10 border-sky-500/30 text-sky-400 shadow-sm"
-              : "border-slate-800 bg-slate-900 text-slate-400 hover:text-white"
-          }`}
+          aria-expanded={showHelp}
+          aria-controls="placeholders-box"
           title="Toggle dynamic placeholder tags"
         >
           <HelpCircle className="w-4 h-4 text-sky-400" />
           <span>{t("placeholdersBtn")}</span>
           {showHelp ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-        </button>
+        </Button>
       </div>
 
       {showHelp && (
-        <div className="rounded-2xl border border-sky-500/20 bg-sky-950/20 p-5 text-white backdrop-blur">
+        <Card
+          id="placeholders-box"
+          variant="adminSubtle"
+          className="p-5 text-white border-sky-500/20 bg-sky-950/20"
+        >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="p-1 rounded bg-sky-500/20 text-sky-400">
@@ -190,7 +200,11 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div
+            role="region"
+            aria-label={t("dynamicPlaceholdersTitle")}
+            className="flex flex-wrap gap-2"
+          >
             {MAIL_PLACEHOLDERS.map((p) => {
               const isCopied = copiedTag === p.tag;
               const tooltipLabel = locale === "sv" ? p.label : p.tag.replace(/[{}]/g, "").replace(/_/g, " ");
@@ -218,7 +232,10 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
               );
             })}
           </div>
-        </div>
+          <span className="sr-only" role="status" aria-live="polite">
+            {copiedTag ? `${copiedTag} ${tCommon("saved")}` : ""}
+          </span>
+        </Card>
       )}
 
       <div className="space-y-6">
@@ -226,13 +243,16 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
           const state = formState[cfg.type] || { subject: cfg.defaultSubject, body: cfg.defaultBody };
           const isSaving = savingType === cfg.type;
           const isSuccess = saveSuccess === cfg.type;
+          const subjectFieldId = `${baseId}-${cfg.type}-subject`;
+          const bodyFieldId = `${baseId}-${cfg.type}-body`;
 
           return (
-            <div
+            <Card
               key={cfg.type}
-              className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 space-y-4"
+              variant="admin"
+              className="p-6 space-y-4"
             >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="flex items-center justify-between border-b border-admin-border pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 rounded-xl bg-slate-800 text-sky-400">
                     <Mail className="w-4 h-4" />
@@ -243,11 +263,13 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
                   </div>
                 </div>
 
-                <button
+                <Button
                   type="button"
+                  variant="adminPrimary"
+                  size="sm"
                   onClick={() => handleSave(cfg.type)}
                   disabled={isSaving}
-                  className="flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
+                  aria-label={`${t("saveTemplate")} - ${cfg.title}`}
                 >
                   {isSaving ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -257,15 +279,18 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
                     <Save className="w-3.5 h-3.5" />
                   )}
                   <span>{isSuccess ? tCommon("saved") : t("saveTemplate")}</span>
-                </button>
+                </Button>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <Label htmlFor={subjectFieldId} className="block text-xs font-medium text-slate-300 mb-1.5">
                   {t("subject")}
-                </label>
-                <input
+                </Label>
+                <Input
+                  id={subjectFieldId}
                   type="text"
+                  variant="admin"
+                  size="sm"
                   value={state.subject}
                   onChange={(e) =>
                     setFormState((prev) => ({
@@ -273,15 +298,16 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
                       [cfg.type]: { ...state, subject: e.target.value },
                     }))
                   }
-                  className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-white focus:outline-none focus:border-sky-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1.5">
+                <Label htmlFor={bodyFieldId} className="block text-xs font-medium text-slate-300 mb-1.5">
                   {t("body")}
-                </label>
-                <textarea
+                </Label>
+                <Textarea
+                  id={bodyFieldId}
+                  variant="admin"
                   rows={7}
                   value={state.body}
                   onChange={(e) =>
@@ -290,10 +316,10 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
                       [cfg.type]: { ...state, body: e.target.value },
                     }))
                   }
-                  className="w-full font-sans rounded-xl border border-slate-700 bg-slate-950 p-3 text-xs text-slate-200 focus:outline-none focus:border-sky-500 leading-relaxed"
+                  className="font-sans leading-relaxed text-xs"
                 />
               </div>
-            </div>
+            </Card>
           );
         })}
       </div>

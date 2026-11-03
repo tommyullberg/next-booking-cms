@@ -4,6 +4,8 @@ import React from "react";
 import { FileText, FolderTree, Image as ImageIcon, CheckCircle2, ArrowRight } from "lucide-react";
 import { AdminTab } from "../admin-layout";
 import { useTranslations } from "next-intl";
+import { Button } from "../../components/ui/button";
+import { Card } from "../../components/ui/card";
 
 export interface DashboardViewProps {
   totalPages: number;
@@ -67,62 +69,72 @@ export function DashboardView({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {cards.map((c) => (
-          <div
+          <Card
             key={c.label}
-            onClick={() => onNavigate(c.tab)}
-            className="group cursor-pointer rounded-2xl border border-slate-800/90 bg-slate-900/50 p-5 hover:border-slate-700 hover:bg-slate-900 transition shadow-sm"
+            variant="adminInteractive"
+            className="group relative p-5 transition shadow-sm text-left"
           >
-            <div className="flex items-center justify-between mb-3">
+            <button
+              type="button"
+              onClick={() => onNavigate(c.tab)}
+              aria-label={`${c.label}: ${c.value}. ${c.subtext}`}
+              className="absolute inset-0 w-full h-full rounded-admin-card outline-none focus-visible:ring-2 focus-visible:ring-admin-accent"
+            />
+            <div className="flex items-center justify-between mb-3 pointer-events-none">
               <span className="text-xs font-medium text-slate-400">{c.label}</span>
               <div className="p-2 rounded-xl bg-slate-800/80 group-hover:scale-105 transition">
                 {c.icon}
               </div>
             </div>
-            <div className="text-2xl font-bold text-white mb-1">{c.value}</div>
-            <div className="flex items-center justify-between text-xs text-slate-500">
+            <div className="text-2xl font-bold text-white mb-1 pointer-events-none">{c.value}</div>
+            <div className="flex items-center justify-between text-xs text-slate-500 pointer-events-none">
               <span className="line-clamp-1">{c.subtext}</span>
               <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition text-sky-400" />
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/40 p-6">
+      <Card variant="admin" className="p-6">
         <h2 className="text-sm font-semibold text-white mb-1.5">{t("quickActions")}</h2>
         <p className="text-xs text-slate-400 mb-4">
           {t("subtitle")}
         </p>
         <div className="flex flex-wrap gap-3">
-          <button
+          <Button
             type="button"
+            variant="adminPrimary"
+            size="sm"
             onClick={() => onNavigate("pages")}
-            className="px-4 py-2 text-xs font-semibold rounded-xl bg-sky-600 text-white hover:bg-sky-500 shadow-md shadow-sky-600/20 transition"
           >
             {t("createNewPage")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="adminSecondary"
+            size="sm"
             onClick={() => onNavigate("bookings-dashboard")}
-            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800 transition"
           >
             {t("manageBookings")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="adminSecondary"
+            size="sm"
             onClick={() => onNavigate("media")}
-            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800 transition"
           >
             {t("viewMedia")}
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="adminSecondary"
+            size="sm"
             onClick={() => onNavigate("settings")}
-            className="px-4 py-2 text-xs font-semibold rounded-xl border border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800 transition"
           >
             {t("configureSettings")}
-          </button>
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
