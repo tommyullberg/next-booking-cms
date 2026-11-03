@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useId } from "react";
 import { useTranslations } from "next-intl";
 import {
   Plus,
@@ -10,17 +10,24 @@ import {
   Phone,
   Smartphone,
   MapPin,
-  Landmark,
-  CreditCard,
   CheckCircle2,
-  XCircle,
-  X,
   Loader2,
   Search,
   Building,
 } from "lucide-react";
 import { LandlordDto } from "../../actions/landlords";
-import { ModalPortal } from "../../components/ui/modal-portal";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Badge } from "../../components/ui/badge";
+import { Switch } from "../../components/ui/switch";
+import { NativeSelect } from "../../components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 
 export type LandlordItem = LandlordDto;
 
@@ -58,6 +65,7 @@ export function LandlordsView({
   onSaveLandlord,
   onDeleteLandlord,
 }: LandlordsViewProps) {
+  const formId = useId();
   const t = useTranslations("landlords");
   const tCommon = useTranslations("common");
 
@@ -229,26 +237,30 @@ export function LandlordsView({
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="adminPrimary"
+          size="sm"
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition"
         >
           <Plus className="w-4 h-4" />
           <span>{t("createBtn")}</span>
-        </button>
+        </Button>
       </div>
 
       {/* Filter / Search Bar */}
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
+          <Input
+            variant="admin"
+            size="sm"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+            aria-label={t("searchPlaceholder")}
+            className="pl-9"
           />
         </div>
 
@@ -356,10 +368,10 @@ export function LandlordsView({
                               <span>{landlord.mobile}</span>
                             </div>
                             {landlord.has_swish && (
-                              <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.2 text-[10px] font-semibold text-emerald-400" title="Accepts Swish payments">
+                              <Badge variant="adminSuccess" size="xs" title="Accepts Swish payments">
                                 <CheckCircle2 className="w-2.5 h-2.5" />
                                 <span>Swish</span>
-                              </span>
+                              </Badge>
                             )}
                           </div>
                         ) : (
@@ -388,15 +400,16 @@ export function LandlordsView({
 
                     {/* Actions */}
                     <td className="py-3.5 px-5 text-right">
-                      <button
+                      <Button
                         type="button"
+                        variant="adminSecondary"
+                        size="xs"
                         onClick={() => openEditModal(landlord)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 transition shadow-sm"
                         title="Edit landlord"
                       >
                         <Edit3 className="w-3 h-3 text-sky-400" />
                         <span>{tCommon("edit")}</span>
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -417,301 +430,312 @@ export function LandlordsView({
         </div>
       </div>
 
-      {/* Create / Edit Landlord Modal */}
-      {isModalOpen && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
-                  <Building className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">
-                    {editingLandlord ? t("modalEditTitle") : t("modalCreateTitle")}
-                  </h3>
-                  <p className="text-[11px] text-slate-400">
-                    {t("modalSubtitle")}
-                  </p>
-                </div>
+      {/* Create / Edit Landlord Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent variant="admin" size="lg" className="space-y-5">
+          <DialogHeader className="border-b border-slate-800 pb-4 mb-0">
+            <DialogTitle variant="admin" size="sm" className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
+                <Building className="w-4 h-4" />
               </div>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              <div>
+                <span>
+                  {editingLandlord ? t("modalEditTitle") : t("modalCreateTitle")}
+                </span>
+                <p className="text-[11px] text-slate-400 font-normal">
+                  {t("modalSubtitle")}
+                </p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+
+          {errorMsg && (
+            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+              {errorMsg}
             </div>
+          )}
 
-            {errorMsg && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
-                {errorMsg}
-              </div>
-            )}
-
-            {/* Modal Form */}
-            <form onSubmit={handleSave} autoComplete="off" className="space-y-4 text-xs">
-              {/* Names */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("firstName")} <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    autoComplete="off"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder={t("firstNamePlaceholder")}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("lastName")} <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    autoComplete="off"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder={t("lastNamePlaceholder")}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                  />
-                </div>
-              </div>
-
-              {/* Address */}
+          {/* Modal Form */}
+          <form onSubmit={handleSave} autoComplete="off" className="space-y-4 text-xs">
+            {/* Names */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-slate-300">
-                  {t("address")}
-                </label>
-                <input
+                <Label htmlFor={`${formId}-first-name`} variant="admin" size="sm">
+                  {t("firstName")} <span className="text-rose-400">*</span>
+                </Label>
+                <Input
+                  id={`${formId}-first-name`}
+                  variant="admin"
+                  size="sm"
                   type="text"
+                  required
                   autoComplete="off"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  placeholder={t("addressPlaceholder")}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder={t("firstNamePlaceholder")}
                 />
               </div>
-
-              {/* Postal code & City (Split postadress) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("postalCode")}
-                  </label>
-                  <input
-                    type="text"
-                    autoComplete="off"
-                    value={postalCode}
-                    onChange={(e) => setPostalCode(e.target.value)}
-                    placeholder={t("postalCodePlaceholder")}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("city")}
-                  </label>
-                  <input
-                    type="text"
-                    autoComplete="off"
-                    value={city}
-                    onChange={(e) => setCity(e.target.value)}
-                    placeholder={t("cityPlaceholder")}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                  />
-                </div>
-              </div>
-
-              {/* Email (moved up after postal code / city) */}
               <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-slate-300">
-                  {t("email")}
-                </label>
+                <Label htmlFor={`${formId}-last-name`} variant="admin" size="sm">
+                  {t("lastName")} <span className="text-rose-400">*</span>
+                </Label>
+                <Input
+                  id={`${formId}-last-name`}
+                  variant="admin"
+                  size="sm"
+                  type="text"
+                  required
+                  autoComplete="off"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder={t("lastNamePlaceholder")}
+                />
+              </div>
+            </div>
+
+            {/* Address */}
+            <div className="space-y-1.5">
+              <Label htmlFor={`${formId}-address`} variant="admin" size="sm">
+                {t("address")}
+              </Label>
+              <Input
+                id={`${formId}-address`}
+                variant="admin"
+                size="sm"
+                type="text"
+                autoComplete="off"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder={t("addressPlaceholder")}
+              />
+            </div>
+
+            {/* Postal code & City */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor={`${formId}-postal-code`} variant="admin" size="sm">
+                  {t("postalCode")}
+                </Label>
+                <Input
+                  id={`${formId}-postal-code`}
+                  variant="admin"
+                  size="sm"
+                  type="text"
+                  autoComplete="off"
+                  value={postalCode}
+                  onChange={(e) => setPostalCode(e.target.value)}
+                  placeholder={t("postalCodePlaceholder")}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor={`${formId}-city`} variant="admin" size="sm">
+                  {t("city")}
+                </Label>
+                <Input
+                  id={`${formId}-city`}
+                  variant="admin"
+                  size="sm"
+                  type="text"
+                  autoComplete="off"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder={t("cityPlaceholder")}
+                />
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="space-y-1.5">
+              <Label htmlFor={`${formId}-email`} variant="admin" size="sm">
+                {t("email")}
+              </Label>
+              <div className="relative">
+                <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <Input
+                  id={`${formId}-email`}
+                  variant="admin"
+                  size="sm"
+                  type="email"
+                  autoComplete="off"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={t("emailPlaceholder")}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+
+            {/* Phone & Mobile */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor={`${formId}-phone`} variant="admin" size="sm">
+                  {t("phone")}
+                </Label>
                 <div className="relative">
-                  <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="email"
+                  <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Input
+                    id={`${formId}-phone`}
+                    variant="admin"
+                    size="sm"
+                    type="tel"
                     autoComplete="off"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder={t("emailPlaceholder")}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder={t("phonePlaceholder")}
+                    className="pl-9"
                   />
                 </div>
               </div>
 
-              {/* Phone & Mobile */}
+              <div className="space-y-1.5">
+                <Label htmlFor={`${formId}-mobile`} variant="admin" size="sm">
+                  {t("mobile")}
+                </Label>
+                <div className="relative">
+                  <Smartphone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Input
+                    id={`${formId}-mobile`}
+                    variant="admin"
+                    size="sm"
+                    type="tel"
+                    autoComplete="off"
+                    value={mobile}
+                    onChange={(e) => setMobile(e.target.value)}
+                    placeholder={t("mobilePlaceholder")}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Swish Payment Switch */}
+            <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5 flex items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Label
+                    htmlFor={`${formId}-swish`}
+                    className="text-[11px] font-semibold text-white cursor-pointer select-none"
+                  >
+                    {t("swishSupport")}
+                  </Label>
+                  {hasSwish && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded">
+                      {t("swishActive")}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  {t("swishDesc")}
+                </p>
+              </div>
+
+              <Switch
+                id={`${formId}-swish`}
+                variant="success"
+                checked={hasSwish}
+                onCheckedChange={setHasSwish}
+                aria-label={t("swishSupport")}
+              />
+            </div>
+
+            {/* Account Type & Account Number */}
+            <div className="space-y-3 pt-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("phone")}
-                  </label>
-                  <div className="relative">
-                    <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="tel"
-                      autoComplete="off"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder={t("phonePlaceholder")}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                    />
-                  </div>
+                  <Label htmlFor={`${formId}-account-type`} variant="admin" size="sm">
+                    {t("accountType")}
+                  </Label>
+                  <NativeSelect
+                    id={`${formId}-account-type`}
+                    variant="admin"
+                    size="sm"
+                    value={selectedAccountType}
+                    onChange={(e) => setSelectedAccountType(e.target.value)}
+                  >
+                    {COMMON_ACCOUNT_TYPES.map((tItem) => (
+                      <option key={tItem} value={tItem}>
+                        {tItem}
+                      </option>
+                    ))}
+                  </NativeSelect>
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold text-slate-300">
-                    {t("mobile")}
-                  </label>
-                  <div className="relative">
-                    <Smartphone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="tel"
-                      autoComplete="off"
-                      value={mobile}
-                      onChange={(e) => setMobile(e.target.value)}
-                      placeholder={t("mobilePlaceholder")}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Swish Payment Switch */}
-              <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-3.5 flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-semibold text-white">
-                      {t("swishSupport")}
-                    </span>
-                    {hasSwish && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.2 rounded">
-                        {t("swishActive")}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[10px] text-slate-400">
-                    {t("swishDesc")}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={hasSwish}
-                  onClick={() => setHasSwish(!hasSwish)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    hasSwish ? "bg-emerald-500" : "bg-slate-700"
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                      hasSwish ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Account Type & Account Number */}
-              <div className="space-y-3 pt-1">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {selectedAccountType === "Other" ? (
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold text-slate-300">
-                      {t("accountType")}
-                    </label>
-                    <select
-                      value={selectedAccountType}
-                      onChange={(e) => setSelectedAccountType(e.target.value)}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-sky-500 transition"
-                    >
-                      {COMMON_ACCOUNT_TYPES.map((tItem) => (
-                        <option key={tItem} value={tItem}>
-                          {tItem}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {selectedAccountType === "Other" ? (
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-semibold text-slate-300">
-                        {t("specifyAccountType")}
-                      </label>
-                      <input
-                        type="text"
-                        autoComplete="off"
-                        value={customAccountType}
-                        onChange={(e) => setCustomAccountType(e.target.value)}
-                        placeholder={t("bankNamePlaceholder")}
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                      />
-                    </div>
-                  ) : null}
-
-                  <div className={`space-y-1.5 ${selectedAccountType !== "Other" ? "" : "sm:col-span-2"}`}>
-                    <label className="text-[11px] font-semibold text-slate-300">
-                      {t("accountNumber")}
-                    </label>
-                    <input
+                    <Label htmlFor={`${formId}-custom-account-type`} variant="admin" size="sm">
+                      {t("specifyAccountType")}
+                    </Label>
+                    <Input
+                      id={`${formId}-custom-account-type`}
+                      variant="admin"
+                      size="sm"
                       type="text"
                       autoComplete="off"
-                      value={accountNumber}
-                      onChange={(e) => setAccountNumber(e.target.value)}
-                      placeholder={t("accountNumberPlaceholder")}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition font-mono"
+                      value={customAccountType}
+                      onChange={(e) => setCustomAccountType(e.target.value)}
+                      placeholder={t("bankNamePlaceholder")}
                     />
                   </div>
+                ) : null}
+
+                <div className={`space-y-1.5 ${selectedAccountType !== "Other" ? "" : "sm:col-span-2"}`}>
+                  <Label htmlFor={`${formId}-account-number`} variant="admin" size="sm">
+                    {t("accountNumber")}
+                  </Label>
+                  <Input
+                    id={`${formId}-account-number`}
+                    variant="admin"
+                    size="sm"
+                    type="text"
+                    autoComplete="off"
+                    value={accountNumber}
+                    onChange={(e) => setAccountNumber(e.target.value)}
+                    placeholder={t("accountNumberPlaceholder")}
+                    className="font-mono"
+                  />
                 </div>
               </div>
+            </div>
 
-              {/* Form Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-800">
-                {editingLandlord ? (
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(editingLandlord)}
-                    className="inline-flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 transition"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>{t("deleteBtn")}</span>
-                  </button>
-                ) : (
-                  <div />
-                )}
+            {/* Form Actions */}
+            <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+              {editingLandlord ? (
+                <Button
+                  type="button"
+                  variant="adminGhostDestructive"
+                  size="sm"
+                  onClick={() => handleDelete(editingLandlord)}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>{t("deleteBtn")}</span>
+                </Button>
+              ) : (
+                <div />
+              )}
 
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
-                  >
-                    {tCommon("cancel")}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition disabled:opacity-50"
-                  >
-                    {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                    <span>{editingLandlord ? t("updateBtn") : t("saveBtn")}</span>
-                  </button>
-                </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  variant="adminSecondary"
+                  size="sm"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  {tCommon("cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  variant="adminPrimary"
+                  size="sm"
+                  disabled={isSaving}
+                >
+                  {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{editingLandlord ? t("updateBtn") : t("saveBtn")}</span>
+                </Button>
               </div>
-            </form>
-          </div>
-        </div>
-      </ModalPortal>
-    )}
-  </div>
-);
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
-

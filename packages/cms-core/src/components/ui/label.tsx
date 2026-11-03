@@ -10,12 +10,18 @@ const labelVariants = cva(
       variant: {
         default:
           "block text-xs font-semibold text-slate-400 uppercase tracking-wider",
+        admin: "block text-xs font-medium text-slate-300",
         inline: "text-sm font-medium text-slate-300",
         muted: "text-xs font-normal text-slate-500",
+      },
+      size: {
+        default: "",
+        sm: "text-[11px]",
       },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
     },
   }
 );
@@ -24,10 +30,10 @@ const Label = React.forwardRef<
   React.ElementRef<typeof LabelPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
     VariantProps<typeof labelVariants>
->(({ className, variant, ...props }, ref) => (
+>(({ className, variant, size, ...props }, ref) => (
   <LabelPrimitive.Root
     ref={ref}
-    className={cn(labelVariants({ variant }), className)}
+    className={cn(labelVariants({ variant, size }), className)}
     {...props}
   />
 ));

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useId } from "react";
 import { useTranslations } from "next-intl";
 import {
   Plus,
@@ -12,10 +12,18 @@ import {
   Trash2,
   Edit3,
   Loader2,
-  X,
   UserCheck,
 } from "lucide-react";
-import { ModalPortal } from "../../components/ui/modal-portal";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Badge } from "../../components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 
 export interface AdministratorItem {
   id: string;
@@ -54,6 +62,7 @@ export function AdministratorsView({
   onSaveAdministrator,
   onDeleteAdministrator,
 }: AdministratorsViewProps) {
+  const formId = useId();
   const t = useTranslations("administrators");
   const tCommon = useTranslations("common");
 
@@ -64,7 +73,7 @@ export function AdministratorsView({
   }, [initialAdmins]);
 
   // Ensure default SuperAdmin is always visible at the top and locked
-  const normalizedAdmins: AdministratorItem[] = React.useMemo(() => {
+  const normalizedAdmins: AdministratorItem[] = useMemo(() => {
     const hasSuper = admins.some((a) => a.role === "SUPERADMIN");
     const list = hasSuper ? [...admins] : [DEFAULT_SUPERADMIN_FALLBACK, ...admins];
     return list.sort((a, b) => {
@@ -76,9 +85,7 @@ export function AdministratorsView({
 
   // Modal state for adding or editing an Administrator
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingAdmin, setEditingAdmin] = useState<AdministratorItem | null>(
-    null
-  );
+  const [editingAdmin, setEditingAdmin] = useState<AdministratorItem | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -182,14 +189,15 @@ export function AdministratorsView({
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="adminPrimary"
+          size="sm"
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition"
         >
           <Plus className="w-4 h-4" />
           <span>{t("addBtn")}</span>
-        </button>
+        </Button>
       </div>
 
       {/* Visible System Roles (Read-only overview) */}
@@ -201,10 +209,10 @@ export function AdministratorsView({
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-white">{t("superAdminTitle")}</span>
-              <span className="inline-flex items-center gap-1 rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+              <Badge variant="adminWarning" size="sm">
                 <Lock className="w-2.5 h-2.5" />
                 <span>{t("systemRole")}</span>
-              </span>
+              </Badge>
             </div>
             <p className="text-[11px] text-slate-400">
               {t("superAdminDesc")}
@@ -219,10 +227,10 @@ export function AdministratorsView({
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-white">{t("adminTitle")}</span>
-              <span className="inline-flex items-center gap-1 rounded-md border border-sky-500/30 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold text-sky-300">
+              <Badge variant="adminAccent" size="sm">
                 <UserCheck className="w-2.5 h-2.5" />
                 <span>{t("assignableRole")}</span>
-              </span>
+              </Badge>
             </div>
             <p className="text-[11px] text-slate-400">
               {t("adminDesc")}
@@ -313,15 +321,15 @@ export function AdministratorsView({
 
                   <td className="py-3.5 px-4">
                     {isSuperAdmin ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/15 px-2.5 py-0.5 text-[10px] font-bold text-amber-300">
+                      <Badge variant="adminWarning" size="sm">
                         <ShieldCheck className="w-3 h-3" />
                         <span>SuperAdmin</span>
-                      </span>
+                      </Badge>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-500/30 bg-sky-500/15 px-2.5 py-0.5 text-[10px] font-bold text-sky-300">
+                      <Badge variant="adminAccent" size="sm">
                         <Shield className="w-3 h-3" />
                         <span>{t("adminTitle")}</span>
-                      </span>
+                      </Badge>
                     )}
                   </td>
 
@@ -333,23 +341,25 @@ export function AdministratorsView({
                       </span>
                     ) : (
                       <div className="flex items-center justify-end gap-1.5">
-                        <button
+                        <Button
                           type="button"
+                          variant="adminSecondary"
+                          size="xs"
                           onClick={() => openEditModal(admin)}
-                          className="px-2.5 py-1 rounded-lg border border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-700 transition inline-flex items-center gap-1.5 text-xs"
                           title={t("editAdminTooltip")}
                         >
-                          <Edit3 className="w-3.5 h-3.5" />
+                          <Edit3 className="w-3.5 h-3.5 text-slate-400" />
                           <span>{tCommon("edit")}</span>
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           type="button"
+                          variant="tableDestructive"
+                          size="tableIcon"
                           onClick={() => handleDelete(admin)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition"
                           title={t("deleteAdminTooltip")}
                         >
                           <Trash2 className="w-4 h-4" />
-                        </button>
+                        </Button>
                       </div>
                     )}
                   </td>
@@ -360,153 +370,153 @@ export function AdministratorsView({
         </table>
       </div>
 
-      {/* Add / Edit Administrator Modal */}
-      {isModalOpen && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 text-white shadow-2xl space-y-5">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-semibold">
-                {editingAdmin ? t("modalEditTitle") : t("modalCreateTitle")}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
-                title={tCommon("close")}
-              >
-                <X className="w-4 h-4" />
-              </button>
+      {/* Add / Edit Administrator Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent variant="admin" size="sm" className="space-y-5">
+          <DialogHeader className="border-b border-slate-800 pb-3 mb-0">
+            <DialogTitle variant="admin">
+              {editingAdmin ? t("modalEditTitle") : t("modalCreateTitle")}
+            </DialogTitle>
+          </DialogHeader>
+
+          {errorMsg && (
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-300">
+              {errorMsg}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
+            {/* Role Display (Read-only: Administrator) */}
+            <div>
+              <Label variant="admin" className="mb-1">
+                {t("assignedRole")}
+              </Label>
+              <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2.5 text-xs">
+                <span className="inline-flex items-center gap-2 font-semibold text-sky-400">
+                  <Shield className="w-4 h-4" />
+                  <span>{t("adminTitle")}</span>
+                </span>
+                <span className="text-[11px] text-slate-500">{t("defaultRole")}</span>
+              </div>
             </div>
 
-            {errorMsg && (
-              <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-300">
-                {errorMsg}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
-              {/* Role Display (Read-only: Administrator) */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  {t("assignedRole")}
-                </label>
-                <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2.5 text-xs">
-                  <span className="inline-flex items-center gap-2 font-semibold text-sky-400">
-                    <Shield className="w-4 h-4" />
-                    <span>{t("adminTitle")}</span>
-                  </span>
-                  <span className="text-[11px] text-slate-500">{t("defaultRole")}</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
-                    {t("firstName")} <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    autoComplete="off"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    placeholder="Anna"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300 mb-1">
-                    {t("lastName")} <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    autoComplete="off"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    placeholder="Andersson"
-                    className="w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  {t("email")} <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="email"
+                <Label htmlFor={`${formId}-first-name`} variant="admin" className="mb-1">
+                  {t("firstName")} <span className="text-rose-400">*</span>
+                </Label>
+                <Input
+                  id={`${formId}-first-name`}
+                  variant="admin"
+                  size="sm"
+                  type="text"
                   required
                   autoComplete="off"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="anna@example.com"
-                  className="w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Anna"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  {t("mobile")}
-                </label>
-                <input
-                  type="tel"
+                <Label htmlFor={`${formId}-last-name`} variant="admin" className="mb-1">
+                  {t("lastName")} <span className="text-rose-400">*</span>
+                </Label>
+                <Input
+                  id={`${formId}-last-name`}
+                  variant="admin"
+                  size="sm"
+                  type="text"
+                  required
                   autoComplete="off"
-                  value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
-                  placeholder="+46 70 123 45 67"
-                  className="w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Andersson"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-xs font-medium text-slate-300 mb-1">
-                  {editingAdmin ? (
-                    t("newPassword")
-                  ) : (
-                    <>
-                      {t("password")} <span className="text-rose-400">*</span>
-                    </>
-                  )}
-                </label>
-                <input
-                  type="password"
-                  required={!editingAdmin}
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder={
-                    editingAdmin ? "••••••••" : t("passwordMinPlaceholder")
-                  }
-                  className="w-full rounded-xl border border-slate-800 bg-slate-950 p-2.5 text-xs text-white focus:border-sky-500 focus:outline-none"
-                />
-              </div>
+            <div>
+              <Label htmlFor={`${formId}-email`} variant="admin" className="mb-1">
+                {t("email")} <span className="text-rose-400">*</span>
+              </Label>
+              <Input
+                id={`${formId}-email`}
+                variant="admin"
+                size="sm"
+                type="email"
+                required
+                autoComplete="off"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="anna@example.com"
+              />
+            </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 transition"
-                >
-                  {tCommon("cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white hover:bg-sky-500 transition disabled:opacity-50"
-                >
-                  {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  <span>
-                    {editingAdmin ? t("saveChanges") : t("createAdmin")}
-                  </span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </ModalPortal>
-    )}
-  </div>
-);
+            <div>
+              <Label htmlFor={`${formId}-mobile`} variant="admin" className="mb-1">
+                {t("mobile")}
+              </Label>
+              <Input
+                id={`${formId}-mobile`}
+                variant="admin"
+                size="sm"
+                type="tel"
+                autoComplete="off"
+                value={mobile}
+                onChange={(e) => setMobile(e.target.value)}
+                placeholder="+46 70 123 45 67"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor={`${formId}-password`} variant="admin" className="mb-1">
+                {editingAdmin ? (
+                  t("newPassword")
+                ) : (
+                  <>
+                    {t("password")} <span className="text-rose-400">*</span>
+                  </>
+                )}
+              </Label>
+              <Input
+                id={`${formId}-password`}
+                variant="admin"
+                size="sm"
+                type="password"
+                required={!editingAdmin}
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={
+                  editingAdmin ? "••••••••" : t("passwordMinPlaceholder")
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button
+                variant="adminSecondary"
+                size="sm"
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+              >
+                {tCommon("cancel")}
+              </Button>
+              <Button
+                variant="adminPrimary"
+                size="sm"
+                type="submit"
+                disabled={isSaving}
+              >
+                {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                <span>
+                  {editingAdmin ? t("saveChanges") : t("createAdmin")}
+                </span>
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }

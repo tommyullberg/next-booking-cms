@@ -32,19 +32,25 @@ const buttonVariants = cva(
           "bg-admin-danger hover:bg-admin-danger-hover text-white font-semibold rounded-admin-button shadow-admin-danger active:scale-[0.98] focus-visible:ring-admin-danger focus-visible:ring-offset-slate-950",
         adminOutline:
           "border border-admin-border hover:border-admin-border-hover bg-transparent hover:bg-admin-surface-subtle text-slate-200 rounded-admin-button focus-visible:ring-slate-400 focus-visible:ring-offset-slate-950",
+        adminOutlineDestructive:
+          "border border-admin-danger-border hover:border-admin-danger text-rose-400 hover:text-rose-300 bg-transparent hover:bg-admin-danger-subtle rounded-admin-button focus-visible:ring-admin-danger focus-visible:ring-offset-slate-950",
         adminGhost:
           "hover:bg-admin-surface text-slate-400 hover:text-slate-100 rounded-admin-compact focus-visible:ring-slate-400 focus-visible:ring-offset-slate-950",
+        adminGhostDestructive:
+          "hover:bg-admin-danger-subtle text-rose-400 hover:text-rose-300 rounded-admin-compact focus-visible:ring-admin-danger focus-visible:ring-offset-slate-950",
         table:
-          "p-2 hover:bg-admin-surface text-slate-400 hover:text-slate-200 rounded-admin-compact transition-colors focus-visible:ring-admin-accent focus-visible:ring-offset-slate-950",
+          "bg-admin-surface hover:bg-admin-border text-slate-300 hover:text-white rounded-admin-compact border border-admin-border transition-colors focus-visible:ring-admin-accent focus-visible:ring-offset-slate-950",
         tableDestructive:
-          "p-2 hover:bg-admin-danger-subtle text-rose-400 hover:text-rose-300 rounded-admin-compact transition-colors focus-visible:ring-admin-danger focus-visible:ring-offset-slate-950",
+          "hover:bg-admin-danger-subtle text-rose-400 hover:text-rose-300 rounded-admin-compact transition-colors focus-visible:ring-admin-danger focus-visible:ring-offset-slate-950",
       },
       size: {
         default: "h-10 px-4 py-2.5 text-sm",
-        sm: "h-8 px-3 text-xs",
+        sm: "h-8 px-3 text-xs gap-1.5",
+        xs: "h-7 px-2.5 text-xs font-medium gap-1.5 rounded-admin-compact",
         lg: "h-12 px-6 text-base",
         icon: "h-9 w-9 p-0",
-        tableIcon: "h-8 w-8 p-1.5",
+        iconSm: "h-7 w-7 p-1 text-xs rounded-admin-compact",
+        tableIcon: "h-7 w-7 p-1 rounded-admin-compact",
       },
     },
     defaultVariants: {

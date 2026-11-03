@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useId } from "react";
 import { useTranslations } from "next-intl";
 import {
   Plus,
@@ -8,15 +8,22 @@ import {
   Trash2,
   Tag,
   Search,
-  CheckCircle2,
   XCircle,
-  X,
   Loader2,
   GripVertical,
   Box,
 } from "lucide-react";
 import { AmenityItem } from "../../booking/types";
-import { ModalPortal } from "../../components/ui/modal-portal";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
+import { Badge } from "../../components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "../../components/ui/dialog";
 
 export interface AmenitiesViewProps {
   amenities?: AmenityItem[];
@@ -35,6 +42,7 @@ export function AmenitiesView({
   onDeleteAmenity,
   onReorderAmenities,
 }: AmenitiesViewProps) {
+  const formId = useId();
   const t = useTranslations("amenities");
   const tCommon = useTranslations("common");
 
@@ -213,26 +221,30 @@ export function AmenitiesView({
           </p>
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="adminPrimary"
+          size="sm"
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 transition"
         >
           <Plus className="w-4 h-4" />
           <span>{t("newAmenity")}</span>
-        </button>
+        </Button>
       </div>
 
       {/* Filter / Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-sm">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
+          <Input
+            variant="admin"
+            size="sm"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t("searchPlaceholder")}
-            className="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
+            aria-label={t("searchPlaceholder")}
+            className="pl-9"
           />
         </div>
 
@@ -303,7 +315,7 @@ export function AmenitiesView({
 
                       <td className="py-3 px-4 text-slate-300">
                         {item.object_count && item.object_count > 0 ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                          <Badge variant="adminSuccess" size="sm">
                             <Box className="w-3 h-3" />
                             <span>
                               {t("connectedCount", {
@@ -311,7 +323,7 @@ export function AmenitiesView({
                                 plural: item.object_count === 1 ? "object" : "objects",
                               })}
                             </span>
-                          </span>
+                          </Badge>
                         ) : (
                           <span className="text-slate-500 text-[11px]">
                             {t("notActive")}
@@ -320,14 +332,15 @@ export function AmenitiesView({
                       </td>
 
                       <td className="py-3 px-4 text-right">
-                        <button
+                        <Button
                           type="button"
+                          variant="adminSecondary"
+                          size="xs"
                           onClick={() => openEditModal(item)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:border-slate-600 hover:bg-slate-700 hover:text-white transition"
                         >
                           <Edit3 className="w-3.5 h-3.5 text-slate-400" />
                           <span>{tCommon("edit")}</span>
-                        </button>
+                        </Button>
                       </td>
                     </tr>
                   );
@@ -338,112 +351,112 @@ export function AmenitiesView({
         </div>
       </div>
 
-      {/* Create / Edit Modal */}
-      {isModalOpen && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950/50">
-              <div className="flex items-center gap-2">
-                <Tag className="w-5 h-5 text-sky-400" />
-                <h2 className="text-sm font-semibold text-white">
-                  {editingAmenity ? t("modalEditTitle") : t("modalCreateTitle")}
-                </h2>
+      {/* Create / Edit Dialog */}
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          if (!open) closeModal();
+          else setIsModalOpen(true);
+        }}
+      >
+        <DialogContent variant="admin" size="sm" className="p-0 overflow-hidden">
+          <DialogHeader className="px-6 py-4 border-b border-slate-800 bg-slate-950/50 flex flex-row items-center justify-between space-y-0">
+            <DialogTitle variant="admin" size="sm" className="flex items-center gap-2">
+              <Tag className="w-5 h-5 text-sky-400" />
+              <span>{editingAmenity ? t("modalEditTitle") : t("modalCreateTitle")}</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSave} className="p-6 space-y-4">
+            {errorMsg && (
+              <div className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
+                <XCircle className="w-4 h-4 shrink-0 text-red-400" />
+                <span>{errorMsg}</span>
               </div>
-              <button
-                type="button"
-                onClick={closeModal}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
-              >
-                <X className="w-4 h-4" />
-              </button>
+            )}
+
+            <div className="space-y-1.5">
+              <Label htmlFor={`${formId}-name`} variant="admin">
+                {t("name")} <span className="text-rose-400">*</span>
+              </Label>
+              <Input
+                id={`${formId}-name`}
+                variant="admin"
+                size="sm"
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t("namePlaceholder")}
+              />
             </div>
 
-            <form onSubmit={handleSave} className="p-6 space-y-4">
-              {errorMsg && (
-                <div className="flex items-center gap-2 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300">
-                  <XCircle className="w-4 h-4 shrink-0 text-red-400" />
-                  <span>{errorMsg}</span>
-                </div>
+            {/* Action Buttons */}
+            <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
+              {editingAmenity ? (
+                confirmDelete ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="adminDestructive"
+                      size="sm"
+                      disabled={isDeleting}
+                      onClick={handleDelete}
+                    >
+                      {isDeleting && (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      )}
+                      <span>{t("yesDelete")}</span>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="adminSecondary"
+                      size="sm"
+                      onClick={() => setConfirmDelete(false)}
+                    >
+                      {tCommon("cancel")}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="adminOutlineDestructive"
+                    size="sm"
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{t("delete")}</span>
+                  </Button>
+                )
+              ) : (
+                <div />
               )}
 
-              <div className="space-y-1.5">
-                <label className="block text-xs font-medium text-slate-200">
-                  {t("name")} <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder={t("namePlaceholder")}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-sky-500 transition"
-                />
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="adminSecondary"
+                  size="sm"
+                  onClick={closeModal}
+                >
+                  {tCommon("cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  variant="adminPrimary"
+                  size="sm"
+                  disabled={isSaving}
+                >
+                  {isSaving && (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  )}
+                  <span>{t("save")}</span>
+                </Button>
               </div>
-
-              {/* Action Buttons */}
-              <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">
-                {editingAmenity ? (
-                  confirmDelete ? (
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        disabled={isDeleting}
-                        onClick={handleDelete}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-red-600 px-3 py-2 text-xs font-semibold text-white hover:bg-red-500 disabled:opacity-50 transition"
-                      >
-                        {isDeleting && (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        )}
-                        <span>{t("yesDelete")}</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDelete(false)}
-                        className="rounded-xl border border-slate-800 bg-slate-800/60 px-2.5 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition"
-                      >
-                        {tCommon("cancel")}
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setConfirmDelete(true)}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-medium text-red-400 hover:bg-red-500/20 hover:text-red-300 transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>{t("delete")}</span>
-                    </button>
-                  )
-                ) : (
-                  <div />
-                )}
-
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="rounded-xl border border-slate-800 bg-slate-800/60 px-4 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white transition"
-                  >
-                    {tCommon("cancel")}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 disabled:opacity-50 transition"
-                  >
-                    {isSaving && (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    )}
-                    <span>{t("save")}</span>
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      </ModalPortal>
-    )}
-  </div>
-);
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }

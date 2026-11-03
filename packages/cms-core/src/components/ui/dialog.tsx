@@ -27,18 +27,28 @@ export interface DialogContentProps
   extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
   hideCloseButton?: boolean;
   variant?: "default" | "admin";
+  size?: "sm" | "default" | "lg" | "xl" | "full";
 }
+
+const DIALOG_SIZE_CLASSES: Record<NonNullable<DialogContentProps["size"]>, string> = {
+  sm: "max-w-md",
+  default: "max-w-lg",
+  lg: "max-w-xl",
+  xl: "max-w-2xl",
+  full: "max-w-5xl",
+};
 
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   DialogContentProps
->(({ className, children, hideCloseButton = false, variant = "default", ...props }, ref) => (
+>(({ className, children, hideCloseButton = false, variant = "default", size = "xl", ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-2xl translate-x-[-50%] translate-y-[-50%] gap-4 p-6 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] max-h-[90vh] overflow-y-auto",
+        "fixed left-[50%] top-[50%] z-50 grid w-full translate-x-[-50%] translate-y-[-50%] gap-4 p-6 shadow-2xl duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] max-h-[90vh] overflow-y-auto",
+        DIALOG_SIZE_CLASSES[size],
         variant === "admin"
           ? "border border-admin-border bg-admin-surface text-slate-100 rounded-admin-card shadow-admin-card"
           : "border border-border bg-background text-foreground rounded-lg shadow-lg",
@@ -93,14 +103,22 @@ const DialogFooter = ({
 );
 DialogFooter.displayName = "DialogFooter";
 
+export interface DialogTitleProps
+  extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title> {
+  variant?: "default" | "admin";
+  size?: "default" | "sm";
+}
+
 const DialogTitle = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
->(({ className, ...props }, ref) => (
+  DialogTitleProps
+>(({ className, variant = "default", size = "default", ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight text-foreground",
+      "font-semibold leading-none tracking-tight",
+      size === "sm" ? "text-sm" : "text-base",
+      variant === "admin" ? "text-white" : "text-foreground",
       className
     )}
     {...props}

@@ -10,16 +10,18 @@ const SelectValue = SelectPrimitive.Value;
 export interface SelectTriggerProps
   extends React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> {
   variant?: "default" | "admin";
+  size?: "default" | "sm";
 }
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   SelectTriggerProps
->(({ className, children, variant = "default", ...props }, ref) => (
+>(({ className, children, variant = "default", size = "default", ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between px-3.5 py-2 text-sm transition-all outline-none focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      "flex w-full items-center justify-between transition-all outline-none focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
+      size === "sm" ? "h-8.5 px-3 py-1.5 text-xs" : "h-10 px-3.5 py-2 text-sm",
       variant === "admin"
         ? "rounded-admin-field border border-admin-border bg-admin-field text-slate-100 placeholder:text-slate-500 focus:ring-2 focus:ring-admin-accent/50 focus:border-admin-accent"
         : "rounded-md border border-input bg-transparent text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-ring",
@@ -154,18 +156,20 @@ const SelectSeparator = React.forwardRef<
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName;
 
 export interface NativeSelectProps
-  extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "size"> {
   variant?: "default" | "admin";
+  size?: "default" | "sm";
 }
 
 const NativeSelect = React.forwardRef<HTMLSelectElement, NativeSelectProps>(
-  ({ className, children, variant = "default", ...props }, ref) => {
+  ({ className, children, variant = "default", size = "default", ...props }, ref) => {
     return (
       <div className="relative">
         <select
           ref={ref}
           className={cn(
-            "flex h-10 w-full appearance-none px-3.5 py-2 pr-9 text-sm transition-all outline-none focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            "flex w-full appearance-none transition-all outline-none focus:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+            size === "sm" ? "h-8.5 px-3 py-1.5 pr-8 text-xs" : "h-10 px-3.5 py-2 pr-9 text-sm",
             variant === "admin"
               ? "rounded-admin-field border border-admin-border bg-admin-field text-slate-100 focus:border-admin-accent focus:ring-2 focus:ring-admin-accent/50 [&>option]:bg-slate-900 [&>option]:text-slate-100"
               : "rounded-md border border-input bg-transparent text-foreground focus:ring-2 focus:ring-ring [&>option]:bg-background [&>option]:text-foreground",
