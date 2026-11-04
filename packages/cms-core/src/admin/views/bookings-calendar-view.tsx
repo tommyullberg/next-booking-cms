@@ -1,50 +1,28 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
   List,
-  Filter,
   Check,
-  CheckCircle2,
-  Clock,
-  ExternalLink,
-  Info,
-  User,
-  Mail,
-  Phone,
-  Users,
   Dog,
-  Coins,
   Box,
   Globe,
-  Layers,
-  Copy,
-  X,
-  AlertCircle,
-  Eye,
-  EyeOff,
-  Sparkles,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  FileText,
-  Printer,
-  Save,
-  Smartphone,
-  MapPin,
-  CreditCard,
-  Loader2,
   Lock,
 } from "lucide-react";
 import { BookingItem, BookingObjectDetails, BOOKING_STATUSES, BookingStatusType } from "../../booking/types";
 import { BookingDetailsModal } from "../../booking/booking-details-modal";
 import { useBookingSettingsQuery } from "../../booking/hooks";
 import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "../../utils/weeks";
-import { ModalPortal } from "../../components/ui/modal-portal";
+import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Badge } from "../../components/ui/badge";
 
 export interface BookingsCalendarViewProps {
   objects?: BookingObjectDetails[];
@@ -214,50 +192,25 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
 
   // Modal inspection & editing state
   const [selectedBooking, setSelectedBooking] = useState<BookingItem | null>(null);
-  const [editForm, setEditForm] = useState<Partial<BookingItem>>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
-  const [contractNotice, setContractNotice] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<boolean>(false);
+  const lastFocusedTriggerRef = useRef<HTMLElement | null>(null);
 
+  // Close modal on Escape and restore focus to trigger
   useEffect(() => {
-    if (selectedBooking) {
-      setEditForm({ ...selectedBooking });
-      setSaveError(null);
-      setSaveSuccess(false);
-      setContractNotice(null);
-    }
+    if (!selectedBooking) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setSelectedBooking(null);
+        setTimeout(() => {
+          if (lastFocusedTriggerRef.current?.isConnected) {
+            lastFocusedTriggerRef.current.focus();
+          }
+        }, 0);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedBooking]);
-
-  const handleSaveBooking = async (closeAfter: boolean = false) => {
-    if (!editForm.id) return;
-    setIsSaving(true);
-    setSaveError(null);
-    try {
-      const res = await fetch("/api/cms/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editForm),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Misslyckades att spara bokningsuppgifter");
-      }
-      setSaveSuccess(true);
-      setBookings((prev) => prev.map((b) => (b.id === editForm.id ? ({ ...b, ...editForm } as BookingItem) : b)));
-      setSelectedBooking((prev) => (prev ? ({ ...prev, ...editForm } as BookingItem) : null));
-      if (closeAfter) {
-        setTimeout(() => setSelectedBooking(null), 300);
-      } else {
-        setTimeout(() => setSaveSuccess(false), 2500);
-      }
-    } catch (err: any) {
-      setSaveError(err.message || "Ett fel uppstod vid sparande");
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   // Sync activeObjectIds when objects list loads or updates
   useEffect(() => {
@@ -575,13 +528,6 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
     }
   };
 
-  const handleCopyUid = (uid?: string | null) => {
-    if (!uid) return;
-    navigator.clipboard.writeText(uid);
-    setCopiedId(true);
-    setTimeout(() => setCopiedId(false), 2000);
-  };
-
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) {
       return <ArrowUpDown className='w-3 h-3 text-slate-500 opacity-60' />;
@@ -596,7 +542,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
   return (
     <div className='space-y-6'>
       {/* Top Header Card */}
-      <div className='rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur shadow-xl'>
+      <Card variant="admin" className='p-6 backdrop-blur shadow-xl'>
         <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
           <div className='flex items-center gap-3'>
             <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/20'>
@@ -611,11 +557,27 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
           {/* View Mode & Date Switchers */}
           <div className='flex flex-wrap items-center gap-2.5'>
             {/* View Mode Tabs */}
-            <div className='inline-flex rounded-xl bg-slate-950/70 p-1 border border-slate-800 text-xs'>
+            <div
+              role='tablist'
+              aria-label={t("title")}
+              className='inline-flex rounded-xl bg-slate-950/70 p-1 border border-slate-800 text-xs'
+            >
               <button
                 type='button'
+                role='tab'
+                id='tab-view-calendar'
+                aria-selected={viewMode === "calendar"}
+                aria-controls='view-calendar-panel'
+                tabIndex={viewMode === "calendar" ? 0 : -1}
                 onClick={() => setViewMode("calendar")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "End") {
+                    e.preventDefault();
+                    setViewMode("list");
+                    document.getElementById("tab-view-list")?.focus();
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                   viewMode === "calendar" ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-white"
                 }`}>
                 <CalendarIcon className='w-3.5 h-3.5' />
@@ -623,8 +585,20 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
               </button>
               <button
                 type='button'
+                role='tab'
+                id='tab-view-list'
+                aria-selected={viewMode === "list"}
+                aria-controls='view-list-panel'
+                tabIndex={viewMode === "list" ? 0 : -1}
                 onClick={() => setViewMode("list")}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer ${
+                onKeyDown={(e) => {
+                  if (e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "Home") {
+                    e.preventDefault();
+                    setViewMode("calendar");
+                    document.getElementById("tab-view-calendar")?.focus();
+                  }
+                }}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                   viewMode === "list" ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-white"
                 }`}>
                 <List className='w-3.5 h-3.5' />
@@ -635,29 +609,38 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
             {/* Calendar Month Controls (shown in calendar mode) */}
             {viewMode === "calendar" && (
               <div className='flex items-center gap-1.5 bg-slate-950/70 border border-slate-800 rounded-xl px-2 py-1'>
-                <button
+                <Button
                   type='button'
+                  variant='ghost'
+                  size='icon'
                   onClick={handlePrevMonth}
-                  className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer'
+                  className='h-7 w-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800'
+                  aria-label={t("prevMonth")}
                   title={t("prevMonth")}>
                   <ChevronLeft className='w-4 h-4' />
-                </button>
-                <button
+                </Button>
+                <Button
                   type='button'
+                  variant='ghost'
+                  size='sm'
                   onClick={handleToday}
-                  className='px-2 py-0.5 text-[11px] font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded transition cursor-pointer'>
+                  className='h-7 px-2 py-0.5 text-[11px] font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded'
+                  aria-label={t("today")}>
                   {t("today")}
-                </button>
-                <span className='text-xs font-bold text-white min-w-32 text-center capitalize'>
+                </Button>
+                <span className='text-xs font-bold text-white min-w-32 text-center capitalize' aria-live='polite'>
                   {currentMonthName} {year}
                 </span>
-                <button
+                <Button
                   type='button'
+                  variant='ghost'
+                  size='icon'
                   onClick={handleNextMonth}
-                  className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer'
+                  className='h-7 w-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800'
+                  aria-label={t("nextMonth")}
                   title={t("nextMonth")}>
                   <ChevronRight className='w-4 h-4' />
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -674,8 +657,9 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
             {/* Local bookings toggle */}
             <button
               type='button'
+              aria-pressed={showLocalBookings}
               onClick={() => setShowLocalBookings((prev) => !prev)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                 showLocalBookings
                   ? "bg-sky-500/15 border-sky-500/40 text-sky-200 shadow-sm"
                   : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300"
@@ -690,8 +674,9 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
             {/* Booking.com toggle */}
             <button
               type='button'
+              aria-pressed={showImportedBookings}
               onClick={() => setShowImportedBookings((prev) => !prev)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition cursor-pointer ${
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                 showImportedBookings
                   ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-200 shadow-sm"
                   : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300"
@@ -709,14 +694,14 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
             <button
               type='button'
               onClick={handleSelectAllObjects}
-              className='text-[11px] text-slate-400 hover:text-white underline decoration-slate-600 cursor-pointer'>
+              className='text-[11px] text-slate-400 hover:text-white underline decoration-slate-600 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded'>
               {t("showAllUnits")}
             </button>
             <span className='text-slate-700'>•</span>
             <button
               type='button'
               onClick={handleDeselectAllObjects}
-              className='text-[11px] text-slate-400 hover:text-white underline decoration-slate-600 cursor-pointer'>
+              className='text-[11px] text-slate-400 hover:text-white underline decoration-slate-600 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded'>
               {t("hideAllUnits")}
             </button>
           </div>
@@ -737,8 +722,9 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
               <button
                 key={obj.id}
                 type='button'
+                aria-pressed={isActive}
                 onClick={() => toggleObject(obj.id)}
-                className={`group inline-flex items-center gap-2 px-3 py-1 rounded-xl border text-xs transition select-none cursor-pointer ${
+                className={`group inline-flex items-center gap-2 px-3 py-1 rounded-xl border text-xs transition select-none cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                   isActive
                     ? theme.badgeActive
                     : "bg-slate-950/60 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-300"
@@ -754,11 +740,15 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
             );
           })}
         </div>
-      </div>
+      </Card>
 
       {/* Main View: Calendar or List */}
       {viewMode === "calendar" ? (
-        <div className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-2xl'>
+        <div
+          id='view-calendar-panel'
+          role='tabpanel'
+          aria-labelledby='tab-view-calendar'
+          className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-2xl'>
           {/* Weekday headers with Wk column */}
           <div className='grid grid-cols-[44px_repeat(7,1fr)] border-b border-slate-800 bg-slate-950/80 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-2.5'>
             <span className='text-slate-500 font-mono text-[10px]'>{t("colWk")}</span>
@@ -851,22 +841,35 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                           seg.booking.endDate,
                         )}, ${nights} nights)${isBlocked ? " [Blockad]" : isImported ? " [Booking.com]" : ""}`;
 
+                        const statusCfg = BOOKING_STATUSES.find(
+                          (s) => s.id === (seg.booking.status === "CONFIRMED" ? "BOOKED" : seg.booking.status)
+                        );
+                        const statusName = statusCfg
+                          ? statusCfg.label[locale === "en" ? "en" : "sv"]
+                          : seg.booking.status;
+                        const accessibleLabel = `${seg.booking.customerName || (isImported ? "Booking.com" : "Gäst")}, ${seg.booking.objectName || "Boende"}, ${seg.booking.startDate} till ${seg.booking.endDate}, ${nights} ${locale === "sv" ? "nätter" : "nights"}, status: ${statusName}${isBlocked ? " [Blockad]" : ""}`;
+
                         return (
-                          <div
+                          <button
+                            type='button'
                             key={`${seg.booking.id}-${sIdx}`}
-                            onClick={() => setSelectedBooking(seg.booking)}
+                            onClick={(e) => {
+                              lastFocusedTriggerRef.current = e.currentTarget;
+                              setSelectedBooking(seg.booking);
+                            }}
                             title={tooltipText}
+                            aria-label={accessibleLabel}
                             style={{
                               left: `${actualLeftPct}%`,
                               width: `calc(${widthPct}% - 2px)`,
                               top: `${topPx}px`,
                               height: `${laneHeight - 3}px`,
                             }}
-                            className={`absolute flex items-center px-2 text-[11px] font-medium transition cursor-pointer select-none shadow-sm hover:z-20 hover:brightness-125 hover:shadow-lg ${roundedClass} ${
+                            className={`absolute flex items-center px-2 text-[11px] font-medium transition cursor-pointer select-none shadow-sm hover:z-20 hover:brightness-125 hover:shadow-lg outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:z-30 text-left ${roundedClass} ${
                               isBlocked ? "bg-purple-950/80 text-purple-200 border border-purple-500/70 border-dashed" : isImported ? theme.barImported : theme.bar
                             }`}>
                             {/* Inner bar content */}
-                            <div className='flex items-center gap-1.5 truncate min-w-0 w-full'>
+                            <div className='flex items-center gap-1.5 truncate min-w-0 w-full pointer-events-none'>
                               {isBlocked ? (
                                 <Lock className='w-3 h-3 shrink-0 opacity-80 text-purple-300' />
                               ) : isImported ? (
@@ -879,7 +882,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                                 {seg.booking.customerName || (isImported ? "Booking.com" : "Guest")}
                               </span>
                             </div>
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
@@ -891,7 +894,13 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
         </div>
       ) : (
         /* List View */
-        <div className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-xl'>
+        <Card
+          id='view-list-panel'
+          role='tabpanel'
+          aria-labelledby='tab-view-list'
+          variant="admin"
+          className='overflow-hidden shadow-xl'
+        >
           <div className='p-4 border-b border-slate-800 flex items-center justify-between'>
             <h2 className='text-sm font-semibold text-white flex items-center gap-2'>
               <List className='w-4 h-4 text-slate-400' />
@@ -911,6 +920,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                   <tr>
                     {/* Unit / Object (sortable) */}
                     <th
+                      aria-sort={sortField === "object" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
                       onClick={() => handleToggleSort("object")}
                       className='py-3 px-4 cursor-pointer hover:text-white transition select-none'>
                       <div className='flex items-center gap-1.5'>
@@ -921,6 +931,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
 
                     {/* Stay Dates (sortable) */}
                     <th
+                      aria-sort={sortField === "stayDates" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
                       onClick={() => handleToggleSort("stayDates")}
                       className='py-3 px-3 cursor-pointer hover:text-white transition select-none'>
                       <div className='flex items-center gap-1.5'>
@@ -931,6 +942,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
 
                     {/* Week column between Stay dates and Nights (sortable) */}
                     <th
+                      aria-sort={sortField === "week" ? (sortDirection === "asc" ? "ascending" : "descending") : undefined}
                       onClick={() => handleToggleSort("week")}
                       className='py-3 px-3 cursor-pointer hover:text-white transition select-none'>
                       <div className='flex items-center gap-1.5'>
@@ -1047,22 +1059,28 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                               ? statusCfg.label[locale === "en" ? "en" : "sv"]
                               : b.status;
                             return (
-                              <span
-                                className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${badgeClass}`}>
+                              <Badge
+                                variant='outline'
+                                className={`text-[10px] font-semibold border ${badgeClass}`}>
                                 {label}
-                              </span>
+                              </Badge>
                             );
                           })()}
                         </td>
 
                         {/* Action */}
                         <td className='py-3.5 px-4 text-center'>
-                          <button
+                          <Button
                             type='button'
-                            onClick={() => setSelectedBooking(b)}
-                            className='rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-1 text-[11px] font-medium text-slate-200 transition cursor-pointer'>
+                            variant='secondary'
+                            size='sm'
+                            onClick={(e) => {
+                              lastFocusedTriggerRef.current = e.currentTarget;
+                              setSelectedBooking(b);
+                            }}
+                            className='h-7 rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-1 text-[11px] font-medium text-slate-200 transition border-none shadow-none'>
                             {t("detailsBtn")}
-                          </button>
+                          </Button>
                         </td>
                       </tr>
                     );
@@ -1071,7 +1089,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
               </table>
             </div>
           )}
-        </div>
+        </Card>
       )}
 
       {/* Booking Details & Administration Modal Dialog */}
@@ -1079,7 +1097,14 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
         <BookingDetailsModal
           booking={selectedBooking}
           isOpen={Boolean(selectedBooking)}
-          onClose={() => setSelectedBooking(null)}
+          onClose={() => {
+            setSelectedBooking(null);
+            setTimeout(() => {
+              if (lastFocusedTriggerRef.current?.isConnected) {
+                lastFocusedTriggerRef.current.focus();
+              }
+            }, 0);
+          }}
           onSave={async (updated) => {
             const res = await fetch("/api/cms/bookings", {
               method: "POST",
