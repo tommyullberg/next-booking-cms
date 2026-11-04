@@ -125,19 +125,22 @@ export function AdminLayout({
           <button
             type='button'
             onClick={handleReturnToPage}
-            className='flex items-center gap-2 text-xs font-medium text-slate-200 hover:text-white px-3.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/70 hover:bg-slate-800/80 hover:border-slate-700 transition'>
+            aria-label={locale === "sv" ? "Dölj admin / Tillbaka till sidan" : "Hide Admin / Return to Page"}
+            className='flex items-center gap-2 text-xs font-medium text-slate-200 hover:text-white px-3.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/70 hover:bg-slate-800/80 hover:border-slate-700 transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500'>
             <span>{locale === "sv" ? "Dölj admin / Tillbaka till sidan" : "Hide Admin / Return to Page"}</span>
             <ExternalLink className='w-3.5 h-3.5 text-slate-400' />
           </button>
 
           {/* Admin Language Switcher */}
-          <div className='flex items-center gap-0.5 rounded-xl border border-slate-800 bg-slate-900/80 p-0.5 text-xs'>
+          <div role='group' aria-label={locale === "sv" ? "Välj språk" : "Choose language"} className='flex items-center gap-0.5 rounded-xl border border-slate-800 bg-slate-900/80 p-0.5 text-xs'>
             <button
               type='button'
               disabled={isPending}
+              aria-pressed={locale === "en"}
               onClick={() => setLocale("en")}
               title='Switch to English'
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition ${
+              aria-label='English'
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                 locale === "en" ? "bg-sky-600 text-white shadow-sm font-semibold" : "text-slate-400 hover:text-white"
               }`}>
               <FlagIcon code='en' size='xs' />
@@ -146,9 +149,11 @@ export function AdminLayout({
             <button
               type='button'
               disabled={isPending}
+              aria-pressed={locale === "sv"}
               onClick={() => setLocale("sv")}
               title='Växla till svenska'
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition ${
+              aria-label='Svenska'
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                 locale === "sv" ? "bg-sky-600 text-white shadow-sm font-semibold" : "text-slate-400 hover:text-white"
               }`}>
               <FlagIcon code='sv' size='xs' />
@@ -160,7 +165,8 @@ export function AdminLayout({
             type='button'
             onClick={toggleTheme}
             disabled={isThemeLocked}
-            className='p-2 rounded-lg text-amber-400/90 hover:text-amber-300 hover:bg-slate-900 transition disabled:opacity-80 disabled:cursor-default'
+            className='p-2 rounded-lg text-amber-400/90 hover:text-amber-300 hover:bg-slate-900 transition disabled:opacity-80 disabled:cursor-default outline-none focus-visible:ring-2 focus-visible:ring-sky-500'
+            aria-label={isThemeLocked ? "Dark Mode locked" : theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             title={isThemeLocked ? "Dark Mode locked" : "Toggle theme"}>
             {theme === "dark" ? <Sun className='w-4 h-4' /> : <Moon className='w-4 h-4' />}
           </button>
@@ -178,7 +184,8 @@ export function AdminLayout({
             <button
               type='button'
               onClick={onLogout}
-              className='p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800/80 transition'
+              className='p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800/80 transition outline-none focus-visible:ring-2 focus-visible:ring-red-500'
+              aria-label={tCommon("signOut")}
               title={tCommon("signOut")}>
               <LogOut className='w-4 h-4' />
             </button>
@@ -189,21 +196,22 @@ export function AdminLayout({
       {/* Main Container */}
       <div className='flex-1 flex overflow-hidden'>
         {/* Left Sidebar */}
-        <aside className='w-60 border-r border-slate-800/90 bg-slate-950 flex flex-col p-4 space-y-6 overflow-y-auto shrink-0'>
+        <aside aria-label='Admin navigation' className='w-60 border-r border-slate-800/90 bg-slate-950 flex flex-col p-4 space-y-6 overflow-y-auto shrink-0'>
           {/* CMS Category */}
           <div>
             <div className='text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2'>
               {tNav("cmsManagement")}
             </div>
-            <nav className='space-y-0.5'>
+            <nav aria-label={tNav("cmsManagement")} className='space-y-0.5'>
               {cmsNavItems.map((item) => {
                 const isActive = currentTab === item.id || (item.id === "pages" && currentTab === "page-editor");
                 return (
                   <button
                     key={item.id}
                     type='button'
+                    aria-current={isActive ? "page" : undefined}
                     onClick={() => onTabChange(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                       isActive
                         ? "bg-sky-500/10 text-sky-400 border border-sky-500/30 font-semibold shadow-sm"
                         : "text-slate-400 hover:bg-slate-900 hover:text-slate-200 border border-transparent"
@@ -221,15 +229,16 @@ export function AdminLayout({
             <div className='text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2'>
               {tNav("bookingManagement")}
             </div>
-            <nav className='space-y-0.5'>
+            <nav aria-label={tNav("bookingManagement")} className='space-y-0.5'>
               {bookingNavItems.map((item) => {
                 const isActive = currentTab === item.id;
                 return (
                   <button
                     key={item.id}
                     type='button'
+                    aria-current={isActive ? "page" : undefined}
                     onClick={() => onTabChange(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                       isActive
                         ? "bg-sky-500/10 text-sky-400 border border-sky-500/30 font-semibold shadow-sm"
                         : "text-slate-400 hover:bg-slate-900 hover:text-slate-200 border border-transparent"
