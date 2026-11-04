@@ -36,6 +36,7 @@ import { AdminLanguage, DEFAULT_ACTIVE_LANGUAGES, DEFAULT_ADMIN_LANGUAGE } from 
 import { AdminIntlProvider } from "../i18n";
 import { useEditorStore } from "../state/editor-store";
 import { CMSQueryProvider } from "../booking/query-provider";
+import { ConfirmProvider } from "../components/confirm";
 
 export interface AdminAppProps {
   initialPages?: PageListItem[];
@@ -803,6 +804,7 @@ export function AdminApp({
       }}
     >
       <AdminThemeProvider>
+        <ConfirmProvider>
         <AdminLayout
           adminLanguage={adminLanguage}
           currentTab={currentTab}
@@ -1308,6 +1310,7 @@ export function AdminApp({
           />
         )}
       </AdminLayout>
+      </ConfirmProvider>
     </AdminThemeProvider>
   </AdminIntlProvider>
 </CMSQueryProvider>

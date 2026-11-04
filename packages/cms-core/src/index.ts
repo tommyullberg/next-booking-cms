@@ -23,6 +23,7 @@ export * from "./components/ui/segmented-control";
 export * from "./components/ui/tooltip";
 export * from "./components/ui/dialog";
 export * from "./components/ui/alert";
+export * from "./components/confirm";
 export * from "./components/fields";
 export * from "./components/inline-editor";
 export * from "./booking";
