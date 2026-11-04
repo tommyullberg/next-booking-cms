@@ -1,0 +1,49 @@
+/* Year Calendar Matrix Visualization - Dedicated Named Classes */
+
+@utility calendar-day {
+  @apply w-full h-6 flex items-center justify-center rounded text-[10px] transition select-none outline-none focus-visible:ring-1 focus-visible:ring-white;
+}
+
+@utility calendar-day--selected {
+  @apply bg-amber-500/60 border border-amber-400 text-slate-950 font-bold scale-105 z-10 shadow-lg shadow-amber-500/40 cursor-pointer;
+}
+
+@utility calendar-day--blocked {
+  @apply bg-rose-950/80 border border-rose-600/60 text-rose-300 font-bold hover:bg-rose-900 cursor-pointer;
+}
+
+@utility calendar-day--priced {
+  @apply bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 font-bold hover:bg-emerald-900 cursor-pointer;
+}
+
+@utility calendar-day--past {
+  @apply bg-slate-950/40 border border-slate-900 text-slate-600 cursor-pointer;
+}
+
+@utility calendar-day--closed {
+  @apply bg-slate-900/40 border border-slate-800/60 text-slate-400 hover:border-slate-700 hover:text-slate-200 cursor-pointer;
+}
+
+@utility calendar-day--today {
+  @apply ring-2 ring-white/60;
+}
+
+@utility calendar-week-number {
+  @apply w-full h-6 flex items-center justify-center rounded text-[9px] font-mono font-medium text-sky-400/70 bg-sky-950/20 border border-sky-500/20 select-none cursor-pointer hover:border-sky-400 hover:bg-sky-900/60 hover:text-white transition outline-none focus-visible:ring-1 focus-visible:ring-sky-400;
+}
+
+@utility calendar-month-card {
+  @apply rounded-xl border border-slate-800/80 bg-slate-950/50 p-3 flex flex-col justify-between;
+}
+
+@utility calendar-month-header {
+  @apply text-xs font-bold text-slate-300 pb-2 border-b border-slate-800/60 flex items-center justify-between;
+}
+
+@utility calendar-weekday-grid {
+  @apply grid grid-cols-8 gap-1 text-[10px] text-center font-medium pt-2 pb-1.5 border-b border-slate-800/40 mb-1;
+}
+
+@utility calendar-week-grid {
+  @apply grid grid-cols-8 gap-1 text-center items-center;
+}

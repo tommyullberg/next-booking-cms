@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -13,14 +13,10 @@ import {
   Calendar,
   X,
   Loader2,
-  Filter,
   Info,
   CalendarDays,
   Sparkles,
   Ban,
-  ChevronDown,
-  ChevronUp,
-  MousePointerClick,
 } from "lucide-react";
 import { BookingObjectItem } from "./booking-objects-view";
 import {
@@ -40,6 +36,9 @@ import {
 } from "../../constants/dates";
 import type { MissingWeekRange, BlockedPeriodItem } from "../../actions/price-periods";
 import { ModalPortal } from "../../components/ui/modal-portal";
+import { Card } from "../../components/ui/card";
+import { Button } from "../../components/ui/button";
+import { YearCalendar } from "../components/prices-availability-calendar";
 import { useBookingSettingsQuery } from "../../booking/hooks";
 
 export type { MissingWeekRange, BlockedPeriodItem };
@@ -216,6 +215,20 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
   const [blockedFormEndDate, setBlockedFormEndDate] = useState<string>("");
   const [isSavingBlocked, setIsSavingBlocked] = useState<boolean>(false);
   const [blockedErrorMessage, setBlockedErrorMessage] = useState<string | null>(null);
+
+  // Close modals on Escape
+  useEffect(() => {
+    if (!isModalOpen && !isBlockedModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        setIsModalOpen(false);
+        setIsBlockedModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isModalOpen, isBlockedModalOpen]);
 
   // Persist selections
   useEffect(() => {
@@ -709,7 +722,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
   return (
     <div className='space-y-6'>
       {/* Top Header Card */}
-      <div className='rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur'>
+      <Card variant="admin" className='p-6 backdrop-blur shadow-xl'>
         <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
           <div className='flex items-center gap-3'>
             <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/20'>
@@ -726,8 +739,10 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
           <div className='flex flex-wrap items-center gap-3'>
             {/* Object selector */}
             <div className='flex items-center gap-2 bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-1.5'>
-              <span className='text-xs text-slate-400'>{t("object")}</span>
+              <label htmlFor='price-object-select' className='text-xs text-slate-400 cursor-pointer'>{t("object")}</label>
               <select
+                id='price-object-select'
+                aria-label={t("object")}
                 value={selectedObjectId}
                 onChange={(e) => setSelectedObjectId(e.target.value)}
                 className='bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer'>
@@ -742,8 +757,10 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             {/* Year selector */}
             <div className='flex items-center gap-2 bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-1.5'>
               <Calendar className='w-3.5 h-3.5 text-amber-400' />
-              <span className='text-xs text-slate-400'>{t("year")}</span>
+              <label htmlFor='price-year-select' className='text-xs text-slate-400 cursor-pointer'>{t("year")}</label>
               <select
+                id='price-year-select'
+                aria-label={t("year")}
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
                 className='bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer'>
@@ -756,27 +773,28 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             </div>
 
             {/* Block Period Button */}
-            <button
+            <Button
               type='button'
+              variant='outline'
               onClick={handleOpenCreateBlocked}
               disabled={!selectedObjectId}
-              className='flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3.5 py-2 text-xs font-semibold text-rose-300 shadow-sm hover:bg-rose-500/20 transition disabled:opacity-50'>
+              className='h-auto rounded-xl border-rose-500/40 bg-rose-500/10 px-3.5 py-2 text-xs font-semibold text-rose-300 shadow-sm hover:bg-rose-500/20 hover:text-rose-200 transition disabled:opacity-50'>
               <Plus className='w-4 h-4 text-rose-400' />
               <span>{t("blockPeriod")}</span>
-            </button>
+            </Button>
 
             {/* New Price Period Button */}
-            <button
+            <Button
               type='button'
               onClick={handleOpenCreate}
               disabled={!selectedObjectId}
-              className='flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50'>
+              className='h-auto rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50 border-none'>
               <Plus className='w-4 h-4' />
               <span>{t("newPricePeriod")}</span>
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Rental Season Status Banner */}
       {selectedObjectId && (
@@ -817,7 +835,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
       )}
 
       {/* Price Periods Table */}
-      <div className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden'>
+      <Card variant="admin" className='overflow-hidden shadow-xl'>
         <div className='p-4 border-b border-slate-800 flex items-center justify-between'>
           <div className='flex items-center gap-2'>
             <CalendarDays className='w-4 h-4 text-slate-400' />
@@ -832,14 +850,14 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 plural: periods.length === 1 ? t("period") : t("periods"),
               })}
             </span>
-            <button
+            <Button
               type='button'
               onClick={handleOpenCreate}
               disabled={!selectedObjectId}
-              className='flex items-center gap-1.5 rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-md shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50'>
+              className='h-auto rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-md shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50 border-none'>
               <Plus className='w-3.5 h-3.5' />
               <span>{t("newPricePeriod")}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -855,13 +873,13 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             <p className='text-xs text-slate-500 max-w-sm mx-auto'>
               {t("noPeriodsDesc", { name: selectedObject?.name || "this object", year: selectedYear })}
             </p>
-            <button
+            <Button
               type='button'
               onClick={handleOpenCreate}
-              className='inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition'>
+              className='h-auto inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition border-none'>
               <Plus className='w-4 h-4' />
               <span>{t("newPricePeriod")}</span>
-            </button>
+            </Button>
           </div>
         ) : (
           <div className='overflow-x-auto'>
@@ -941,21 +959,24 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                           type='button'
                           onClick={() => handleOpenDuplicate(period)}
                           title={t("modal.duplicate")}
-                          className='p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition'>
+                          aria-label={t("modal.duplicate")}
+                          className='p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition outline-none focus-visible:ring-2 focus-visible:ring-amber-500'>
                           <Copy className='w-3.5 h-3.5' />
                         </button>
                         <button
                           type='button'
                           onClick={() => handleOpenEdit(period)}
                           title={t("modal.editSeasonTitle")}
-                          className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'>
+                          aria-label={t("modal.editSeasonTitle")}
+                          className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500'>
                           <Edit3 className='w-3.5 h-3.5' />
                         </button>
                         <button
                           type='button'
                           onClick={() => handleDelete(period.id, period.name)}
                           title={tCommon("delete")}
-                          className='p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition'>
+                          aria-label={tCommon("delete")}
+                          className='p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition outline-none focus-visible:ring-2 focus-visible:ring-rose-500'>
                           <Trash2 className='w-3.5 h-3.5' />
                         </button>
                       </div>
@@ -966,10 +987,10 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             </table>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Blocked Dates (Private Use & Maintenance) Section */}
-      <div className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden'>
+      <Card variant="admin" className='overflow-hidden shadow-xl'>
         <div className='p-4 border-b border-slate-800 flex items-center justify-between'>
           <div className='flex items-center gap-2'>
             <Ban className='w-4 h-4 text-rose-400' />
@@ -981,14 +1002,15 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             <span className='text-xs text-slate-400'>
               {blockedPeriods.length} {blockedPeriods.length === 1 ? t("period") : t("periods")}
             </span>
-            <button
+            <Button
               type='button'
+              variant='outline'
               onClick={handleOpenCreateBlocked}
               disabled={!selectedObjectId}
-              className='flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 transition disabled:opacity-50'>
+              className='h-auto rounded-xl border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition disabled:opacity-50'>
               <Plus className='w-3.5 h-3.5' />
               <span>{t("newBlocked")}</span>
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -1039,7 +1061,8 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                           type='button'
                           onClick={() => handleDeleteBlocked(bp.id, bp.name)}
                           title={tCommon("delete")}
-                          className='p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition'>
+                          aria-label={tCommon("delete")}
+                          className='p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition outline-none focus-visible:ring-2 focus-visible:ring-rose-500'>
                           <Trash2 className='w-3.5 h-3.5' />
                         </button>
                       </td>
@@ -1050,239 +1073,34 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
             </table>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Year Calendar Matrix Visualization */}
       {selectedObjectId && (
-        <div className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden'>
-          <div className='p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3'>
-            <div className='flex items-center gap-2'>
-              <Calendar className='w-4 h-4 text-amber-400' />
-              <h2 className='text-sm font-semibold text-white'>
-                {t("yearCalendarTitle", { name: selectedObject?.name || "Object", year: selectedYear })}
-              </h2>
-            </div>
-
-            {/* Legend & Collapse Toggle */}
-            <div className='flex flex-wrap items-center gap-3 text-xs'>
-              <div className='flex items-center gap-1.5 text-slate-300'>
-                <span className='w-2.5 h-2.5 rounded-sm bg-emerald-500 border border-emerald-400' />
-                <span>{t("legend.activePricing")}</span>
-              </div>
-              <div className='flex items-center gap-1.5 text-slate-300'>
-                <span className='w-2.5 h-2.5 rounded-sm bg-rose-600 border border-rose-500' />
-                <span>{t("legend.blocked")}</span>
-              </div>
-              <div className='flex items-center gap-1.5 text-slate-400'>
-                <span className='w-2.5 h-2.5 rounded-sm bg-slate-900 border border-slate-700' />
-                <span>{t("legend.closed")}</span>
-              </div>
-              <div className='flex items-center gap-1.5 text-sky-300/90'>
-                <span className='w-3.5 h-3.5 rounded-sm bg-sky-950/30 border border-sky-500/10 text-[9px] font-mono text-sky-400/70 flex items-center justify-center'>
-                  w
-                </span>
-                <span>{t("weekNumberLabel")}</span>
-              </div>
-
-              <button
-                type='button'
-                onClick={() => setShowYearCalendar(!showYearCalendar)}
-                className='ml-2 flex items-center gap-1 text-slate-400 hover:text-white transition'>
-                {showYearCalendar ? (
-                  <>
-                    <span>{t("hideCalendar")}</span>
-                    <ChevronUp className='w-4 h-4' />
-                  </>
-                ) : (
-                  <>
-                    <span>{t("showCalendar")}</span>
-                    <ChevronDown className='w-4 h-4' />
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Interactive Range Selection Action Bar */}
-          {effectiveRange && (
-            <div className='mx-4 mt-4 p-3 rounded-xl border border-amber-500/40 bg-amber-500/10 backdrop-blur flex flex-wrap items-center justify-between gap-3 animate-in fade-in'>
-              <div className='flex items-center gap-2.5'>
-                <div className='h-8 w-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0'>
-                  <MousePointerClick className='w-4 h-4' />
-                </div>
-                <div>
-                  <div className='text-xs font-bold text-white flex items-center gap-2'>
-                    <span>{t("selectedRangeLabel")}</span>
-                    <span className='font-mono text-amber-300'>
-                      {effectiveRange.startStr} – {effectiveRange.endStr}
-                    </span>
-                    <span className='text-[11px] font-normal text-slate-400'>
-                      ({effectiveRange.daysCount} {effectiveRange.daysCount === 1 ? t("daySingle") : t("dayPlural")},{" "}
-                      {formatWeekSpan(
-                        effectiveRange.startIso.week,
-                        effectiveRange.startIso.year,
-                        effectiveRange.endIso.week,
-                        effectiveRange.endIso.year
-                      )})
-                    </span>
-                  </div>
-                  <div className='text-[11px] text-amber-200/80 pt-0.5'>
-                    {!effectiveRange.isFinalized
-                      ? t("rangeSelectHelpClick")
-                      : t("rangeSelectedHelpAction")}
-                  </div>
-                </div>
-              </div>
-
-              <div className='flex items-center gap-2'>
-                <button
-                  type='button'
-                  onClick={() => handleOpenCreateForRange(effectiveRange.startStr, effectiveRange.endStr)}
-                  className='flex items-center gap-1.5 rounded-xl bg-amber-500 px-3.5 py-1.5 text-xs font-semibold text-slate-950 shadow-md shadow-amber-500/20 hover:bg-amber-400 transition'>
-                  <Plus className='w-3.5 h-3.5' />
-                  <span>{t("newSeason")}</span>
-                </button>
-
-                <button
-                  type='button'
-                  onClick={() => handleOpenCreateBlockedForRange(effectiveRange.startStr, effectiveRange.endStr)}
-                  className='flex items-center gap-1.5 rounded-xl border border-rose-500/40 bg-rose-500/20 px-3.5 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/30 transition'>
-                  <Ban className='w-3.5 h-3.5' />
-                  <span>{t("newBlocked")}</span>
-                </button>
-
-                <button
-                  type='button'
-                  onClick={handleClearSelection}
-                  className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'
-                  title={tCommon("cancel")}>
-                  <X className='w-4 h-4' />
-                </button>
-              </div>
-            </div>
-          )}
-
-          {showYearCalendar && (
-            <div className='p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-              {calendarMonths.map((m) => (
-                <div
-                  key={m.monthIndex}
-                  className='rounded-xl border border-slate-800/80 bg-slate-950/50 p-3 flex flex-col justify-between'>
-                  <div>
-                    <div className='text-xs font-bold text-slate-300 pb-2 border-b border-slate-800/60 flex items-center justify-between'>
-                      <span>{m.name}</span>
-                      <span className='text-[10px] text-slate-500 font-mono'>{selectedYear}</span>
-                    </div>
-
-                    <div className='grid grid-cols-8 gap-1 text-[10px] text-center font-medium pt-2 pb-1.5 border-b border-slate-800/40 mb-1'>
-                      <div className='text-sky-400/70 font-mono font-bold text-[9px] flex items-center justify-center'>
-                        {isSv ? "V." : "Wk"}
-                      </div>
-                      {(isSv ? WEEKDAY_INITIALS_SV : WEEKDAY_INITIALS_EN).map((w, idx) => (
-                        <div key={idx} className='text-slate-500'>
-                          {w}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className='space-y-1'>
-                      {m.weeks.map((week, wIdx) => (
-                        <div key={wIdx} className='grid grid-cols-8 gap-1 text-center items-center'>
-                          {/* Week Number Cell */}
-                          <div
-                            title={t("selectWeekTooltip", { week: week.weekNumber })}
-                            onClick={() => {
-                              const mon = getMondayOfISOWeek(selectedYear, week.weekNumber).toISOString().split("T")[0];
-                              const sun = getSundayOfISOWeek(selectedYear, week.weekNumber).toISOString().split("T")[0];
-                              setRangeStart(mon);
-                              setRangeEnd(sun);
-                            }}
-                            className='h-6 flex items-center justify-center rounded text-[9px] font-mono font-medium text-sky-400/70 bg-sky-950/20 border border-sky-500/20 select-none cursor-pointer hover:border-sky-400 hover:bg-sky-900/60 hover:text-white transition'>
-                            {week.weekNumber}
-                          </div>
-
-                          {/* 7 Day Cells */}
-                          {week.days.map((dayObj, dIdx) => {
-                            if (!dayObj) {
-                              return <div key={`empty-${dIdx}`} className='h-6 w-full' />;
-                            }
-
-                            const isSelected =
-                              effectiveRange &&
-                              dayObj.dateStr >= effectiveRange.startStr &&
-                              dayObj.dateStr <= effectiveRange.endStr;
-
-                            let cellClass = "";
-                            let title = "";
-
-                            if (isSelected) {
-                              cellClass =
-                                "bg-amber-500/60 border border-amber-400 text-slate-950 font-bold scale-105 z-10 shadow-lg shadow-amber-500/40 cursor-pointer";
-                              title = t("calendarDaySelected", { date: dayObj.dateStr });
-                            } else if (dayObj.blocked) {
-                              cellClass =
-                                "bg-rose-950/80 border border-rose-600/60 text-rose-300 font-bold hover:bg-rose-900 cursor-pointer";
-                              const overrideText = dayObj.period
-                                ? t("overridesPricePeriod", { name: dayObj.period.name || "Price Period" })
-                                : "";
-                              title = t("calendarDayBlocked", {
-                                date: dayObj.dateStr,
-                                name: dayObj.blocked.name,
-                                overrideText,
-                              });
-                            } else if (dayObj.period) {
-                              cellClass =
-                                "bg-emerald-950/70 border border-emerald-500/50 text-emerald-300 font-bold hover:bg-emerald-900 cursor-pointer";
-                              const pName = dayObj.period.name || "Price Period";
-                              const pPrice = dayObj.period.price_week
-                                ? `${dayObj.period.price_week} SEK/${isSv ? "v" : "wk"}`
-                                : dayObj.period.price_day
-                                  ? `${dayObj.period.price_day} SEK/${isSv ? "dag" : "day"}`
-                                  : "Priced";
-                              title = t("calendarDayPriced", {
-                                date: dayObj.dateStr,
-                                week: dayObj.isoWeek,
-                                name: pName,
-                                price: pPrice,
-                              });
-                            } else if (dayObj.isPast) {
-                              cellClass = "bg-slate-950/40 border border-slate-900 text-slate-600 cursor-pointer";
-                              title = t("calendarDayPast", { date: dayObj.dateStr });
-                            } else {
-                              // Future dates outside configured price periods (Closed / Off-Season)
-                              cellClass =
-                                "bg-slate-900/40 border border-slate-800/60 text-slate-400 hover:border-slate-700 hover:text-slate-200 cursor-pointer";
-                              title = t("calendarDayClosed", { date: dayObj.dateStr, week: dayObj.isoWeek });
-                            }
-
-                            if (dayObj.isToday && !isSelected) {
-                              cellClass += " ring-2 ring-white/60";
-                            }
-
-                            return (
-                              <div
-                                key={dayObj.dateStr}
-                                title={title}
-                                onClick={() => handleDayClick(dayObj.dateStr)}
-                                onMouseEnter={() => {
-                                  if (rangeStart && !rangeEnd) {
-                                    setHoverDate(dayObj.dateStr);
-                                  }
-                                }}
-                                className={`h-6 flex items-center justify-center rounded text-[10px] transition select-none ${cellClass}`}>
-                                {dayObj.day}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <YearCalendar
+          objectName={selectedObject?.name}
+          selectedYear={selectedYear}
+          showYearCalendar={showYearCalendar}
+          onToggleShowCalendar={() => setShowYearCalendar(!showYearCalendar)}
+          effectiveRange={effectiveRange}
+          rangeStart={rangeStart}
+          rangeEnd={rangeEnd}
+          calendarMonths={calendarMonths}
+          isSv={isSv}
+          weekdayInitials={isSv ? WEEKDAY_INITIALS_SV : WEEKDAY_INITIALS_EN}
+          onCreatePricePeriodForRange={handleOpenCreateForRange}
+          onCreateBlockedPeriodForRange={handleOpenCreateBlockedForRange}
+          onClearSelection={handleClearSelection}
+          onDayClick={handleDayClick}
+          onHoverDate={setHoverDate}
+          onSelectWeek={(weekNumber) => {
+            const mon = getMondayOfISOWeek(selectedYear, weekNumber).toISOString().split("T")[0];
+            const sun = getSundayOfISOWeek(selectedYear, weekNumber).toISOString().split("T")[0];
+            setRangeStart(mon);
+            setRangeEnd(sun);
+          }}
+          formatWeekSpan={formatWeekSpan}
+        />
       )}
 
       {/* Modal Dialog for Create & Edit Price Period */}
@@ -1307,6 +1125,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 <button
                   type='button'
                   onClick={() => setIsModalOpen(false)}
+                  aria-label={tCommon("cancel")}
                   className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'>
                   <X className='w-5 h-5' />
                 </button>
@@ -1547,19 +1366,20 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
                 {/* Modal Buttons */}
                 <div className='flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800'>
-                  <button
+                  <Button
                     type='button'
+                    variant='outline'
                     onClick={() => setIsModalOpen(false)}
-                    className='rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition'>
+                    className='h-auto rounded-xl border-slate-700 bg-transparent px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition'>
                     {tCommon("cancel")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type='submit'
                     disabled={isSaving}
-                    className='flex items-center gap-1.5 rounded-xl bg-amber-500 px-5 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50'>
+                    className='h-auto flex items-center gap-1.5 rounded-xl bg-amber-500 px-5 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50 border-none'>
                     {isSaving && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
                     <span>{editingPeriod ? tCommon("save") : t("newSeason")}</span>
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
@@ -1587,6 +1407,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 <button
                   type='button'
                   onClick={() => setIsBlockedModalOpen(false)}
+                  aria-label={tCommon("cancel")}
                   className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'>
                   <X className='w-5 h-5' />
                 </button>
@@ -1640,19 +1461,20 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 </div>
 
                 <div className='flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800'>
-                  <button
+                  <Button
                     type='button'
+                    variant='outline'
                     onClick={() => setIsBlockedModalOpen(false)}
-                    className='rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 transition'>
+                    className='h-auto rounded-xl border-slate-700 bg-transparent px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition'>
                     {tCommon("cancel")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type='submit'
                     disabled={isSavingBlocked}
-                    className='flex items-center gap-1.5 rounded-xl bg-rose-600 px-5 py-2 text-xs font-semibold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 transition disabled:opacity-50'>
+                    className='h-auto flex items-center gap-1.5 rounded-xl bg-rose-600 px-5 py-2 text-xs font-semibold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 transition disabled:opacity-50 border-none'>
                     {isSavingBlocked && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
                     <span>{tCommon("save")}</span>
-                  </button>
+                  </Button>
                 </div>
               </form>
             </div>
