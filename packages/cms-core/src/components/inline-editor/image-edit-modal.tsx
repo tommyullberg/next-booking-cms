@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useEditorStore } from "../../state/editor-store";
 import { ModalPortal } from "../ui/modal-portal";
+import { useConfirm } from "../confirm";
 import {
   X,
   Check,
@@ -39,6 +40,7 @@ export interface ImageEditModalProps {
 export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
   const t = useTranslations("inlineEditor.imageModal");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
   const { isModalOpen, selectedField, closeModal } = useEditorStore();
   const [imageUrl, setImageUrl] = useState("");
   const [ratio, setRatio] = useState("16/9");
@@ -128,41 +130,46 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
   };
 
   const handleDelete = async () => {
-    if (!confirm(t("confirmDelete"))) {
-      return;
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("confirmDelete"),
+      variant: "destructive",
+      onConfirm: async () => {
+        setIsDeleting(true);
+        setErrorMessage(null);
+        try {
+          if (onDelete) {
+            await onDelete({
+              pageId: selectedField.pageId,
+              nbr: selectedField.nbr,
+            });
+          } else {
+            const res = await fetch("/api/cms/fields/image", {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                pageId: selectedField.pageId,
+                nbr: selectedField.nbr,
+              }),
+            });
 
-    setIsDeleting(true);
-    setErrorMessage(null);
-    try {
-      if (onDelete) {
-        await onDelete({
-          pageId: selectedField.pageId,
-          nbr: selectedField.nbr,
-        });
-      } else {
-        const res = await fetch("/api/cms/fields/image", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            pageId: selectedField.pageId,
-            nbr: selectedField.nbr,
-          }),
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to delete image field");
+            if (!res.ok) {
+              throw new Error("Failed to delete image field");
+            }
+          }
+          closeModal();
+          if (typeof window !== "undefined") {
+            window.location.reload();
+          }
+        } catch {
+          const msg = t("errorClear");
+          setErrorMessage(msg);
+          throw new Error(msg);
+        } finally {
+          setIsDeleting(false);
         }
-      }
-      closeModal();
-      if (typeof window !== "undefined") {
-        window.location.reload();
-      }
-    } catch {
-      setErrorMessage(t("errorClear"));
-    } finally {
-      setIsDeleting(false);
-    }
+      },
+    });
   };
 
   const handleSave = async () => {

@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Plus, Trash2, Pencil, Check, GripVertical, Lock } from "lucide-react";
 import { FlagIcon } from "../../components/ui/flag-icon";
 import { Button } from "../../components/ui/button";
+import { useConfirm } from "../../components/confirm";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { NativeSelect } from "../../components/ui/select";
@@ -64,6 +65,7 @@ export function SectionsView({
 }: SectionsViewProps) {
   const t = useTranslations("sections");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -409,11 +411,16 @@ export function SectionsView({
                           type="button"
                           variant="adminGhost"
                           size="sm"
-                          onClick={() => {
-                            if (confirm(t("deleteConfirm"))) {
-                              onDeleteSection(sec.id);
-                              setEditingId(null);
-                            }
+                          onClick={async () => {
+                            await confirm({
+                              title: tCommon("delete"),
+                              description: t("deleteConfirm"),
+                              variant: "destructive",
+                              onConfirm: async () => {
+                                await onDeleteSection(sec.id);
+                                setEditingId(null);
+                              },
+                            });
                           }}
                           className="text-rose-400 hover:text-rose-300 hover:bg-rose-950/20"
                           aria-label={`${tCommon("delete")} ${sec.name}`}

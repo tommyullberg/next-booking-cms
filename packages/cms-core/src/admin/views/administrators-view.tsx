@@ -18,6 +18,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Badge } from "../../components/ui/badge";
+import { useConfirm } from "../../components/confirm";
 import {
   Dialog,
   DialogContent,
@@ -65,6 +66,7 @@ export function AdministratorsView({
   const formId = useId();
   const t = useTranslations("administrators");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [admins, setAdmins] = useState<AdministratorItem[]>(initialAdmins);
 
@@ -156,24 +158,24 @@ export function AdministratorsView({
 
   const handleDelete = async (admin: AdministratorItem) => {
     if (admin.role === "SUPERADMIN") return;
-    if (
-      !confirm(
-        t("deleteConfirm", {
-          name: `${admin.first_name} ${admin.last_name}`,
-          email: admin.email,
-        })
-      )
-    ) {
-      return;
-    }
-
-    setAdmins((prev) => prev.filter((a) => a.id !== admin.id));
-    if (onDeleteAdministrator) {
-      const res = await onDeleteAdministrator(admin.id);
-      if (Array.isArray(res)) {
-        setAdmins(res);
-      }
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("deleteConfirm", {
+        name: `${admin.first_name} ${admin.last_name}`,
+        email: admin.email,
+      }),
+      variant: "destructive",
+      onConfirm: async () => {
+        if (onDeleteAdministrator) {
+          const res = await onDeleteAdministrator(admin.id);
+          if (Array.isArray(res)) {
+            setAdmins(res);
+            return;
+          }
+        }
+        setAdmins((prev) => prev.filter((a) => a.id !== admin.id));
+      },
+    });
   };
 
   return (

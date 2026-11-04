@@ -20,6 +20,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { Badge } from "../../components/ui/badge";
+import { useConfirm } from "../../components/confirm";
 import { Switch } from "../../components/ui/switch";
 import { NativeSelect } from "../../components/ui/select";
 import {
@@ -68,6 +69,7 @@ export function LandlordsView({
   const formId = useId();
   const t = useTranslations("landlords");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [landlords, setLandlords] = useState<LandlordItem[]>(initialLandlords);
 
@@ -188,18 +190,24 @@ export function LandlordsView({
 
   const handleDelete = async (item: LandlordItem) => {
     const fullName = `${item.first_name} ${item.last_name}`.trim();
-    if (!confirm(t("deleteConfirm", { name: fullName }))) {
-      return;
-    }
-
-    setLandlords((prev) => prev.filter((l) => l.id !== item.id));
-    setIsModalOpen(false);
-    if (onDeleteLandlord) {
-      const res = await onDeleteLandlord(item.id);
-      if (Array.isArray(res)) {
-        setLandlords(res);
-      }
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("deleteConfirm", { name: fullName }),
+      variant: "destructive",
+      onConfirm: async () => {
+        if (onDeleteLandlord) {
+          const res = await onDeleteLandlord(item.id);
+          if (Array.isArray(res)) {
+            setLandlords(res);
+          } else {
+            setLandlords((prev) => prev.filter((l) => l.id !== item.id));
+          }
+        } else {
+          setLandlords((prev) => prev.filter((l) => l.id !== item.id));
+        }
+        setIsModalOpen(false);
+      },
+    });
   };
 
   const filteredLandlords = useMemo(() => {

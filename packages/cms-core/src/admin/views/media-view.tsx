@@ -25,6 +25,7 @@ import { Label } from "../../components/ui/label";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { NativeSelect } from "../../components/ui/select";
+import { useConfirm } from "../../components/confirm";
 import {
   Dialog,
   DialogContent,
@@ -148,6 +149,7 @@ export function MediaView({
 }: MediaViewProps) {
   const t = useTranslations("media");
   const tCommon = useTranslations("common");
+  const { confirm, inform } = useConfirm();
 
   // Navigation: "ALL" | null (Root) | folder.id
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>("ALL");
@@ -338,17 +340,29 @@ export function MediaView({
 
   const handleDeleteFile = async (item: MediaItem) => {
     if (item.is_used) {
-      alert(t("inUseCannotDeleteAlert"));
+      await inform({
+        title: tCommon("information"),
+        description: t("inUseCannotDeleteAlert"),
+        variant: "warning",
+      });
       return;
     }
-    if (!confirm(t("deleteConfirm"))) return;
 
-    setActionError(null);
-    try {
-      await onDelete(item.id);
-    } catch (err: any) {
-      setActionError(err?.message || t("errorDeleteFileFailed"));
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("deleteConfirm"),
+      variant: "destructive",
+      onConfirm: async () => {
+        setActionError(null);
+        try {
+          await onDelete(item.id);
+        } catch (err: any) {
+          const msg = err?.message || t("errorDeleteFileFailed");
+          setActionError(msg);
+          throw new Error(msg);
+        }
+      },
+    });
   };
 
   const handleOpenCreateFolder = (defaultParentId?: string | null) => {
@@ -390,29 +404,43 @@ export function MediaView({
   const handleDeleteFolder = async (folder: MediaFolderItem) => {
     const childCount = childrenByParentId.get(folder.id)?.length || 0;
     if (childCount > 0) {
-      alert(t("folderHasSubfoldersAlert", { name: folder.name, count: childCount }));
+      await inform({
+        title: tCommon("information"),
+        description: t("folderHasSubfoldersAlert", { name: folder.name, count: childCount }),
+        variant: "warning",
+      });
       return;
     }
     const count = folderCounts[folder.id] || 0;
     if (count > 0) {
-      alert(t("folderHasFilesAlert", { name: folder.name, count }));
-      return;
-    }
-    if (!confirm(t("confirmDeleteFolder", { name: folder.name }))) {
+      await inform({
+        title: tCommon("information"),
+        description: t("folderHasFilesAlert", { name: folder.name, count }),
+        variant: "warning",
+      });
       return;
     }
 
-    setActionError(null);
-    try {
-      if (onDeleteFolder) {
-        await onDeleteFolder(folder.id);
-        if (selectedFolderId === folder.id) {
-          setSelectedFolderId(folder.parent_id || "ALL");
+    await confirm({
+      title: tCommon("delete"),
+      description: t("confirmDeleteFolder", { name: folder.name }),
+      variant: "destructive",
+      onConfirm: async () => {
+        setActionError(null);
+        try {
+          if (onDeleteFolder) {
+            await onDeleteFolder(folder.id);
+            if (selectedFolderId === folder.id) {
+              setSelectedFolderId(folder.parent_id || "ALL");
+            }
+          }
+        } catch (err: any) {
+          const msg = err?.message || t("errorDeleteFolderFailed");
+          setActionError(msg);
+          throw new Error(msg);
         }
-      }
-    } catch (err: any) {
-      setActionError(err?.message || t("errorDeleteFolderFailed"));
-    }
+      },
+    });
   };
 
   const handleOpenMoveModal = (file: MediaItem) => {

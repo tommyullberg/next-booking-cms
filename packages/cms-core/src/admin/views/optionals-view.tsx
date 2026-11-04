@@ -30,6 +30,7 @@ import { Textarea } from "../../components/ui/textarea";
 import { NativeSelect } from "../../components/ui/select";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import { useConfirm } from "../../components/confirm";
 import {
   Dialog,
   DialogContent,
@@ -72,6 +73,7 @@ export function OptionalsView({
 }: OptionalsViewProps) {
   const t = useTranslations("optionals");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [optionals, setOptionals] = useState<OptionalItem[]>(initialOptionals);
 
@@ -277,18 +279,24 @@ export function OptionalsView({
   };
 
   const handleDelete = async (item: OptionalItem) => {
-    if (!confirm(t("deleteConfirm", { name: item.name }))) {
-      return;
-    }
-
-    setOptionals((prev) => prev.filter((o) => o.id !== item.id));
-    setIsModalOpen(false);
-    if (onDeleteOptional) {
-      const res = await onDeleteOptional(item.id);
-      if (Array.isArray(res)) {
-        setOptionals(res);
-      }
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("deleteConfirm", { name: item.name }),
+      variant: "destructive",
+      onConfirm: async () => {
+        if (onDeleteOptional) {
+          const res = await onDeleteOptional(item.id);
+          if (Array.isArray(res)) {
+            setOptionals(res);
+          } else {
+            setOptionals((prev) => prev.filter((o) => o.id !== item.id));
+          }
+        } else {
+          setOptionals((prev) => prev.filter((o) => o.id !== item.id));
+        }
+        setIsModalOpen(false);
+      },
+    });
   };
 
   const handleToggleActive = async (item: OptionalItem) => {

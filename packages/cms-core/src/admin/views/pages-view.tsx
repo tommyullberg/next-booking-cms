@@ -12,6 +12,7 @@ import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { NativeSelect } from "../../components/ui/select";
 import { Badge } from "../../components/ui/badge";
+import { useConfirm } from "../../components/confirm";
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,7 @@ export function PagesView({
 }: PagesViewProps) {
   const t = useTranslations("pages");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -402,10 +404,15 @@ export function PagesView({
                             type='button'
                             variant='adminGhost'
                             size='iconSm'
-                            onClick={() => {
-                              if (confirm(t("modal.deleteConfirm", { title: page.page_title }))) {
-                                onDeletePage(page.id);
-                              }
+                            onClick={async () => {
+                              await confirm({
+                                title: tCommon("delete"),
+                                description: t("modal.deleteConfirm", { title: page.page_title }),
+                                variant: "destructive",
+                                onConfirm: async () => {
+                                  await onDeletePage(page.id);
+                                },
+                              });
                             }}
                             className='text-slate-400 hover:text-red-400 hover:bg-slate-800/80'
                             title={tCommon("delete")}

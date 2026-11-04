@@ -38,6 +38,7 @@ import type { MissingWeekRange, BlockedPeriodItem } from "../../actions/price-pe
 import { ModalPortal } from "../../components/ui/modal-portal";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
+import { useConfirm } from "../../components/confirm";
 import { YearCalendar } from "../components/prices-availability-calendar";
 import { useBookingSettingsQuery } from "../../booking/hooks";
 
@@ -102,6 +103,7 @@ export type ObjectPricesViewProps = PricesAvailabilityViewProps;
 export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewProps) {
   const t = useTranslations("pricesAvailability");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
   const locale = useLocale();
   const isSv = locale === "sv";
 
@@ -545,21 +547,21 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
   // Delete handler for Price Period
   const handleDelete = async (id: string, name: string | null) => {
     const displayName = name ? `"${name}"` : t("modal.periodName");
-    if (!confirm(t("confirmDeleteSeason", { name: displayName }))) return;
-
-    try {
-      const res = await fetch(`/api/cms/price-periods/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data?.error || t("errorDeleteSeason"));
-        return;
-      }
-      await loadData();
-    } catch (err) {
-      console.error("[ObjectPricesView] Delete error:", err);
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("confirmDeleteSeason", { name: displayName }),
+      variant: "destructive",
+      onConfirm: async () => {
+        const res = await fetch(`/api/cms/price-periods/${id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.error || t("errorDeleteSeason"));
+        }
+        await loadData();
+      },
+    });
   };
 
   // Open modal for Blocked Period ("Not for Rent")
@@ -608,21 +610,21 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
   // Delete handler for Blocked Period
   const handleDeleteBlocked = async (id: string, name: string) => {
-    if (!confirm(t("confirmDeleteBlocked", { name }))) return;
-
-    try {
-      const res = await fetch(`/api/cms/price-periods/blocked/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        alert(data?.error || t("errorDeleteBlocked"));
-        return;
-      }
-      await loadData();
-    } catch (err) {
-      console.error("[ObjectPricesView] Delete blocked error:", err);
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("confirmDeleteBlocked", { name }),
+      variant: "destructive",
+      onConfirm: async () => {
+        const res = await fetch(`/api/cms/price-periods/blocked/${id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => null);
+          throw new Error(data?.error || t("errorDeleteBlocked"));
+        }
+        await loadData();
+      },
+    });
   };
 
   const formatKr = (val: number | null) => {

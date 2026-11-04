@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useEditorStore } from "../../state/editor-store";
 import { ModalPortal } from "../ui/modal-portal";
+import { useConfirm } from "../confirm";
 import { FlagIcon } from "../ui/flag-icon";
 import { LANGUAGE_META } from "../../constants/languages";
 import {
@@ -64,6 +65,7 @@ export interface GalleryEditModalProps {
 export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
   const t = useTranslations("inlineEditor.galleryModal");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
   const { isModalOpen, selectedField, closeModal } = useEditorStore();
 
   const [items, setItems] = useState<EditableGalleryItem[]>([]);
@@ -892,10 +894,15 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                 {items.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => {
-                      if (confirm(t("confirmClear"))) {
-                        setItems([]);
-                      }
+                    onClick={async () => {
+                      await confirm({
+                        title: tCommon("delete"),
+                        description: t("confirmClear"),
+                        variant: "destructive",
+                        onConfirm: () => {
+                          setItems([]);
+                        },
+                      });
                     }}
                     className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 cursor-pointer"
                   >

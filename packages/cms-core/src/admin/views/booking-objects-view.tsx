@@ -51,6 +51,7 @@ import { NativeSelect } from "../../components/ui/select";
 import { Switch } from "../../components/ui/switch";
 import { Checkbox } from "../../components/ui/checkbox";
 import { Badge } from "../../components/ui/badge";
+import { useConfirm } from "../../components/confirm";
 import { cn } from "../../utils/cn";
 import {
   Dialog,
@@ -101,6 +102,7 @@ export function BookingObjectsView({
 }: BookingObjectsViewProps) {
   const t = useTranslations("bookingObjects");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [objects, setObjects] = useState<BookingObjectItem[]>(initialObjects);
 
@@ -330,18 +332,24 @@ export function BookingObjectsView({
   };
 
   const handleDelete = async (item: BookingObjectItem) => {
-    if (!confirm(t("deleteConfirm", { name: item.name }))) {
-      return;
-    }
-
-    setObjects((prev) => prev.filter((o) => o.id !== item.id));
-    setIsModalOpen(false);
-    if (onDeleteObject) {
-      const res = await onDeleteObject(item.id);
-      if (Array.isArray(res)) {
-        setObjects(res);
-      }
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("deleteConfirm", { name: item.name }),
+      variant: "destructive",
+      onConfirm: async () => {
+        if (onDeleteObject) {
+          const res = await onDeleteObject(item.id);
+          if (Array.isArray(res)) {
+            setObjects(res);
+          } else {
+            setObjects((prev) => prev.filter((o) => o.id !== item.id));
+          }
+        } else {
+          setObjects((prev) => prev.filter((o) => o.id !== item.id));
+        }
+        setIsModalOpen(false);
+      },
+    });
   };
 
   // Drag & drop handlers
