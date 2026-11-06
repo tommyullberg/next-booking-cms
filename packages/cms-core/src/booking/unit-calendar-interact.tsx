@@ -30,7 +30,12 @@ import {
   Clock,
   Lock,
 } from "lucide-react";
-import { ModalPortal } from "../components/ui/modal-portal";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../components/ui/dialog";
 
 export interface UnitCalendarInteractProps {
   objectId: string;
@@ -904,18 +909,20 @@ export function UnitCalendarInteract({
       )}
 
       {/* Booking Modal */}
-      {isFormOpen && (
-        <ModalPortal>
-          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-150'>
-            <div className='w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white my-8 max-h-[90vh] overflow-y-auto'>
-              <div className='flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-4'>
-                <div>
-                  <h3 className='text-lg font-bold'>Slutför bokningsförfrågan</h3>
-                  <p className='text-xs text-slate-500 dark:text-slate-400 mt-0.5'>
-                    {objectName}: <span className='font-semibold text-slate-900 dark:text-white'>{startDate}</span> till{" "}
-                    <span className='font-semibold text-slate-900 dark:text-white'>{endDate}</span> ({nights} nätter)
-                  </p>
-                </div>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent
+          size="xl"
+          hideCloseButton
+          className='w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white max-h-[90vh] overflow-y-auto'
+        >
+          <div className='flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-4'>
+            <div>
+              <DialogTitle className='text-lg font-bold'>Slutför bokningsförfrågan</DialogTitle>
+              <DialogDescription className='text-xs text-slate-500 dark:text-slate-400 mt-0.5'>
+                {objectName}: <span className='font-semibold text-slate-900 dark:text-white'>{startDate}</span> till{" "}
+                <span className='font-semibold text-slate-900 dark:text-white'>{endDate}</span> ({nights} nätter)
+              </DialogDescription>
+            </div>
                 <button
                   type='button'
                   onClick={() => setIsFormOpen(false)}
@@ -1220,10 +1227,8 @@ export function UnitCalendarInteract({
                   </div>
                 </form>
               )}
-            </div>
-          </div>
-        </ModalPortal>
-      )}
+        </DialogContent>
+      </Dialog>
       {/* Admin Booking Details Modal */}
       {isAdmin && selectedAdminBooking && (
         <BookingDetailsModal
