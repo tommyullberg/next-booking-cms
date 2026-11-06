@@ -3,7 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useEditorStore } from "../../state/editor-store";
-import { ModalPortal } from "../ui/modal-portal";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { useConfirm } from "../confirm";
 import { FlagIcon } from "../ui/flag-icon";
 import { LANGUAGE_META } from "../../constants/languages";
@@ -469,30 +474,41 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
   };
 
   return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
-        <div
-          className={`rounded-2xl border border-slate-800 bg-slate-900 p-5 sm:p-6 text-slate-100 shadow-2xl my-auto flex flex-col transition-all duration-200 ${
-            isMaximized
-              ? "w-[98vw] max-w-[98vw] h-[95vh] max-h-[95vh]"
-              : "w-full max-w-5xl max-h-[92vh]"
-          }`}
-        >
-          {/* Header */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4 shrink-0">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                <Images className="w-5 h-5" />
-              </div>
-              <div>
-                <span className="text-[11px] font-mono uppercase tracking-wider text-amber-400">
-                  {t("fieldBadge", { nbr: selectedField.nbr })}
-                </span>
-                <h3 className="text-lg font-semibold text-white">
-                  {t("title", { count: items.length })}
-                </h3>
-              </div>
+    <Dialog
+      open={isModalOpen}
+      onOpenChange={(open) => {
+        if (!open) closeModal();
+      }}
+    >
+      <DialogContent
+        variant="admin"
+        size="full"
+        hideCloseButton
+        className={`border border-slate-800 bg-slate-900 p-5 sm:p-6 text-slate-100 shadow-2xl flex flex-col transition-all duration-200 ${
+          isMaximized
+            ? "!w-[98vw] !max-w-[98vw] !h-[95vh] !max-h-[95vh]"
+            : "w-full max-w-5xl max-h-[92vh]"
+        }`}
+      >
+        <DialogDescription className="sr-only">
+          {t("title", { count: items.length })}
+        </DialogDescription>
+
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4 shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <Images className="w-5 h-5" />
             </div>
+            <div>
+              <span className="text-[11px] font-mono uppercase tracking-wider text-amber-400">
+                {t("fieldBadge", { nbr: selectedField.nbr })}
+              </span>
+              <DialogTitle className="text-lg font-semibold text-white">
+                {t("title", { count: items.length })}
+              </DialogTitle>
+            </div>
+          </div>
 
             <div className="flex items-center gap-1.5">
               <button
@@ -935,9 +951,8 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
               </div>
             </div>
           </form>
-        </div>
-      </div>
-    </ModalPortal>
+      </DialogContent>
+    </Dialog>
   );
 }
 
