@@ -35,7 +35,12 @@ import {
   FUTURE_YEAR_WARNING_THRESHOLD_LABEL_SV,
 } from "../../constants/dates";
 import type { MissingWeekRange, BlockedPeriodItem } from "../../actions/price-periods";
-import { ModalPortal } from "../../components/ui/modal-portal";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../../components/ui/dialog";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { useConfirm } from "../../components/confirm";
@@ -1106,32 +1111,35 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
       )}
 
       {/* Modal Dialog for Create & Edit Price Period */}
-      {isModalOpen && (
-        <ModalPortal>
-          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto'>
-            <div className='w-full max-w-2xl rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl p-6 text-white my-8'>
-              <div className='flex items-center justify-between border-b border-slate-800 pb-4 mb-5'>
-                <div className='flex items-center gap-2.5'>
-                  <div className='h-8 w-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center'>
-                    <Coins className='w-4 h-4' />
-                  </div>
-                  <div>
-                    <h3 className='text-base font-bold text-white'>
-                      {editingPeriod ? t("modal.editSeasonTitle") : t("modal.createSeasonTitle")}
-                    </h3>
-                    <p className='text-xs text-slate-400'>
-                      {t("modalObjectLabel")} <span className='text-amber-300 font-semibold'>{selectedObject?.name}</span>
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type='button'
-                  onClick={() => setIsModalOpen(false)}
-                  aria-label={tCommon("cancel")}
-                  className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'>
-                  <X className='w-5 h-5' />
-                </button>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent
+          variant='admin'
+          size='xl'
+          className='max-w-2xl max-h-[90vh] overflow-y-auto text-white p-6'
+          hideCloseButton
+        >
+          <div className='flex items-center justify-between border-b border-slate-800 pb-4 mb-5'>
+            <div className='flex items-center gap-2.5'>
+              <div className='h-8 w-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center'>
+                <Coins className='w-4 h-4' />
               </div>
+              <div>
+                <DialogTitle className='text-base font-bold text-white'>
+                  {editingPeriod ? t("modal.editSeasonTitle") : t("modal.createSeasonTitle")}
+                </DialogTitle>
+                <DialogDescription className='text-xs text-slate-400'>
+                  {t("modalObjectLabel")} <span className='text-amber-300 font-semibold'>{selectedObject?.name}</span>
+                </DialogDescription>
+              </div>
+            </div>
+            <button
+              type='button'
+              onClick={() => setIsModalOpen(false)}
+              aria-label={tCommon("cancel")}
+              className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'>
+              <X className='w-5 h-5' />
+            </button>
+          </div>
 
               {/* Error Message if Overlap / Failure */}
               {errorMessage && (
@@ -1384,36 +1392,37 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   </Button>
                 </div>
               </form>
-            </div>
-          </div>
-        </ModalPortal>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Modal Dialog for Blocked Dates (Private & Maintenance) */}
-      {isBlockedModalOpen && (
-        <ModalPortal>
-          <div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200'>
-            <div className='relative w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4'>
-              <div className='flex items-center justify-between border-b border-slate-800 pb-3'>
-                <div className='flex items-center gap-2.5'>
-                  <div className='h-8 w-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center'>
-                    <Ban className='w-4 h-4' />
-                  </div>
-                  <div>
-                    <h3 className='text-base font-bold text-white'>{t("modal.createBlockedTitle")}</h3>
-                    <p className='text-xs text-slate-400'>
-                      {t("modalObjectLabel")} <span className='text-rose-300 font-semibold'>{selectedObject?.name}</span>
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type='button'
-                  onClick={() => setIsBlockedModalOpen(false)}
-                  aria-label={tCommon("cancel")}
-                  className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'>
-                  <X className='w-5 h-5' />
-                </button>
+      <Dialog open={isBlockedModalOpen} onOpenChange={setIsBlockedModalOpen}>
+        <DialogContent
+          variant='admin'
+          size='sm'
+          className='max-w-md text-white p-6 space-y-4'
+          hideCloseButton
+        >
+          <div className='flex items-center justify-between border-b border-slate-800 pb-3'>
+            <div className='flex items-center gap-2.5'>
+              <div className='h-8 w-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center'>
+                <Ban className='w-4 h-4' />
               </div>
+              <div>
+                <DialogTitle className='text-base font-bold text-white'>{t("modal.createBlockedTitle")}</DialogTitle>
+                <DialogDescription className='text-xs text-slate-400'>
+                  {t("modalObjectLabel")} <span className='text-rose-300 font-semibold'>{selectedObject?.name}</span>
+                </DialogDescription>
+              </div>
+            </div>
+            <button
+              type='button'
+              onClick={() => setIsBlockedModalOpen(false)}
+              aria-label={tCommon("cancel")}
+              className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'>
+              <X className='w-5 h-5' />
+            </button>
+          </div>
 
               {blockedErrorMessage && (
                 <div className='rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-300 flex items-start gap-2'>
@@ -1479,10 +1488,8 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   </Button>
                 </div>
               </form>
-            </div>
-          </div>
-        </ModalPortal>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
