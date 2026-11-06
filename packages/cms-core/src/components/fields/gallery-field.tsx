@@ -13,7 +13,12 @@ import {
 import { useCMSPage } from "./provider";
 import { useEditorStore } from "../../state/editor-store";
 import { CMSGalleryItem } from "./types";
-import { ModalPortal } from "../ui/modal-portal";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 
 export interface CMSGalleryFieldProps {
   nbr: number;
@@ -396,13 +401,27 @@ export function CMSGalleryField({
       </div>
 
       {/* FANCYBOX-STYLE LIGHTBOX MODAL */}
-      {lightboxIndex !== null && activeLightboxItem && (
-        <ModalPortal>
-          <div
-            className="fixed inset-0 z-[10000] flex flex-col justify-between bg-black/95 backdrop-blur-md select-none"
+      <Dialog
+        open={lightboxIndex !== null && Boolean(activeLightboxItem)}
+        onOpenChange={(open) => {
+          if (!open) setLightboxIndex(null);
+        }}
+      >
+        {lightboxIndex !== null && activeLightboxItem && (
+          <DialogContent
+            size="full"
+            hideCloseButton
+            className="fixed inset-0 left-0 top-0 translate-x-0 translate-y-0 w-screen h-screen max-w-none max-h-none p-0 rounded-none border-0 bg-black/95 backdrop-blur-md flex flex-col justify-between select-none z-[10000]"
             onClick={() => setLightboxIndex(null)}
           >
-            {/* Top Bar */}
+            <DialogTitle className="sr-only">
+              {activeLightboxCaption || activeLightboxItem.image?.file_name || "Gallery image"}
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              {items.length > 0 ? `Image ${lightboxIndex + 1} of ${items.length}` : "Gallery lightbox"}
+            </DialogDescription>
+
+          {/* Top Bar */}
             <div
               className="flex items-center justify-between px-5 py-4 text-white z-10"
               onClick={(e) => e.stopPropagation()}
@@ -509,9 +528,9 @@ export function CMSGalleryField({
             ) : (
               <div className="h-4" />
             )}
-          </div>
-        </ModalPortal>
-      )}
+          </DialogContent>
+        )}
+      </Dialog>
     </>
   );
 }
