@@ -52,6 +52,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { NativeSelect } from "../../components/ui/select";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
@@ -152,12 +153,10 @@ export function PageEditorView({
 
   const svTitleId = useId();
   const svLinkId = useId();
-  const slugId = useId();
-  const slugHelpId = useId();
-  const slugErrorId = useId();
+  const pubStartId = useId();
+  const pubEndId = useId();
   const svMetaTitleId = useId();
   const svMetaDescId = useId();
-  const sectionSelectId = useId();
   const templateLabelId = useId();
   const templateTriggerId = useId();
   const templateListboxId = useId();
@@ -626,52 +625,46 @@ export function PageEditorView({
             </div>
 
             {/* 3. URL Slug */}
-            <div className='space-y-1.5'>
-              <Label htmlFor={slugId} className='block text-xs font-medium text-slate-200'>
-                {t("urlSlug")}
-              </Label>
-              <div
-                className={`flex items-center rounded-xl border bg-slate-950/90 overflow-hidden transition ${
-                  !slugValidation.isValid
-                    ? "border-red-500 ring-1 ring-red-500/30"
-                    : "border-slate-800 focus-within:border-sky-500"
-                }`}>
-                <span className='px-3 py-2.5 text-xs font-mono text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
-                  /
-                </span>
-                <Input
-                  id={slugId}
-                  type='text'
-                  value={isHomepage ? "" : slug}
-                  readOnly={isHomepage}
-                  aria-describedby={!slugValidation.isValid && slugValidation.error ? slugErrorId : slugHelpId}
-                  aria-invalid={!slugValidation.isValid}
-                  onChange={(e) => {
-                    if (!isHomepage) {
-                      setSlug(cleanSlugInput(e.target.value, true));
-                    }
-                  }}
-                  onBlur={() => {
-                    if (!isHomepage) {
-                      setSlug((prev) => cleanSlugInput(prev, false));
-                    }
-                  }}
-                  placeholder={isHomepage ? "" : `${page.id}`}
-                  className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
-                />
-              </div>
-              {!slugValidation.isValid && slugValidation.error ? (
-                <p id={slugErrorId} className='text-[11px] font-medium text-red-400'>
-                  {slugValidation.error}
-                </p>
-              ) : (
-                <p id={slugHelpId} className='text-[11px] text-slate-500'>
-                  {isHomepage
-                    ? t("startpageSlugHelp")
-                    : t("slugHelp", { id: String(page.id) })}
-                </p>
+            <FormField
+              label={t("urlSlug")}
+              labelClassName='font-medium text-slate-200'
+              description={
+                isHomepage
+                  ? t("startpageSlugHelp")
+                  : t("slugHelp", { id: String(page.id) })
+              }
+              error={!slugValidation.isValid ? slugValidation.error : undefined}>
+              {(control) => (
+                <div
+                  className={`flex items-center rounded-xl border bg-slate-950/90 overflow-hidden transition ${
+                    !slugValidation.isValid
+                      ? "border-red-500 ring-1 ring-red-500/30"
+                      : "border-slate-800 focus-within:border-sky-500"
+                  }`}>
+                  <span className='px-3 py-2.5 text-xs font-mono text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
+                    /
+                  </span>
+                  <Input
+                    {...control}
+                    type='text'
+                    value={isHomepage ? "" : slug}
+                    readOnly={isHomepage}
+                    onChange={(e) => {
+                      if (!isHomepage) {
+                        setSlug(cleanSlugInput(e.target.value, true));
+                      }
+                    }}
+                    onBlur={() => {
+                      if (!isHomepage) {
+                        setSlug((prev) => cleanSlugInput(prev, false));
+                      }
+                    }}
+                    placeholder={isHomepage ? "" : `${page.id}`}
+                    className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+                  />
+                </div>
               )}
-            </div>
+            </FormField>
 
             {/* 3b. SEO & Social Sharing */}
             <div className='space-y-4 pt-2 border-t border-slate-800/70'>
@@ -976,29 +969,28 @@ export function PageEditorView({
             </div>
 
             {/* 5. Section Assignment */}
-            <div className='space-y-1.5'>
-              <Label htmlFor={sectionSelectId} className='block text-xs font-medium text-slate-200'>
-                {t("section")}
-              </Label>
-              <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
-                <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
-                  <FolderTree className='w-4 h-4' />
-                </span>
-                <NativeSelect
-                  id={sectionSelectId}
-                  value={sectionId}
-                  onChange={(e) => setSectionId(e.target.value)}
-                  className='h-auto border-0 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus-visible:ring-0 focus-visible:ring-offset-0'
-                >
-                  <option value=''>{t("noSection")}</option>
-                  {sections.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </div>
-            </div>
+            <FormField label={t("section")} labelClassName='font-medium text-slate-200'>
+              {(control) => (
+                <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                  <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
+                    <FolderTree className='w-4 h-4' />
+                  </span>
+                  <NativeSelect
+                    {...control}
+                    value={sectionId}
+                    onChange={(e) => setSectionId(e.target.value)}
+                    className='h-auto border-0 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus-visible:ring-0 focus-visible:ring-offset-0'
+                  >
+                    <option value=''>{t("noSection")}</option>
+                    {sections.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </div>
+              )}
+            </FormField>
 
             {/* 6. Categories & Types Assignment (Right before dates at the bottom) */}
             {categoryTypes.length > 0 && (
@@ -1147,7 +1139,7 @@ export function PageEditorView({
             {/* 7. Published At (Scheduled Publication Start) */}
             <div className='space-y-1.5'>
               <div className='flex items-center gap-1.5'>
-                <Label className='block text-xs font-medium text-slate-200'>{t("publishedAt")}</Label>
+                <Label htmlFor={pubStartId} className='block text-xs font-medium text-slate-200'>{t("publishedAt")}</Label>
                 <button
                   type='button'
                   onClick={() => setActiveTooltip((prev) => (prev === "pubStart" ? null : "pubStart"))}
@@ -1164,6 +1156,7 @@ export function PageEditorView({
               )}
 
               <DatePicker
+                id={pubStartId}
                 value={publicationStart}
                 onChange={setPublicationStart}
                 locale={adminLanguage}
@@ -1177,7 +1170,7 @@ export function PageEditorView({
             {/* 8. Unpublish Date */}
             <div className='space-y-1.5'>
               <div className='flex items-center gap-1.5'>
-                <Label className='block text-xs font-medium text-slate-200'>{t("unpublishDate")}</Label>
+                <Label htmlFor={pubEndId} className='block text-xs font-medium text-slate-200'>{t("unpublishDate")}</Label>
                 <button
                   type='button'
                   onClick={() => setActiveTooltip((prev) => (prev === "pubEnd" ? null : "pubEnd"))}
@@ -1196,6 +1189,7 @@ export function PageEditorView({
               <div className='flex items-center gap-2'>
                 <div className='flex-1'>
                   <DatePicker
+                    id={pubEndId}
                     value={publicationEnd}
                     onChange={setPublicationEnd}
                     locale={adminLanguage}

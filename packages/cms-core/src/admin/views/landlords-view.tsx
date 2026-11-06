@@ -19,6 +19,7 @@ import { LandlordDto } from "../../actions/landlords";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { Badge } from "../../components/ui/badge";
 import { useConfirm } from "../../components/confirm";
 import { Switch } from "../../components/ui/switch";
@@ -467,47 +468,33 @@ export function LandlordsView({
           <form onSubmit={handleSave} autoComplete="off" className="space-y-4 text-xs">
             {/* Names */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-first-name`} variant="admin" size="sm">
-                  {t("firstName")} <span className="text-rose-400">*</span>
-                </Label>
+              <FormField label={t("firstName")} required labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-first-name`}
                   variant="admin"
                   size="sm"
                   type="text"
-                  required
                   autoComplete="off"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder={t("firstNamePlaceholder")}
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-last-name`} variant="admin" size="sm">
-                  {t("lastName")} <span className="text-rose-400">*</span>
-                </Label>
+              </FormField>
+              <FormField label={t("lastName")} required labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-last-name`}
                   variant="admin"
                   size="sm"
                   type="text"
-                  required
                   autoComplete="off"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder={t("lastNamePlaceholder")}
                 />
-              </div>
+              </FormField>
             </div>
 
             {/* Address */}
-            <div className="space-y-1.5">
-              <Label htmlFor={`${formId}-address`} variant="admin" size="sm">
-                {t("address")}
-              </Label>
+            <FormField label={t("address")} labelVariant="admin" labelSize="sm">
               <Input
-                id={`${formId}-address`}
                 variant="admin"
                 size="sm"
                 type="text"
@@ -516,16 +503,12 @@ export function LandlordsView({
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder={t("addressPlaceholder")}
               />
-            </div>
+            </FormField>
 
             {/* Postal code & City */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-postal-code`} variant="admin" size="sm">
-                  {t("postalCode")}
-                </Label>
+              <FormField label={t("postalCode")} labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-postal-code`}
                   variant="admin"
                   size="sm"
                   type="text"
@@ -534,13 +517,9 @@ export function LandlordsView({
                   onChange={(e) => setPostalCode(e.target.value)}
                   placeholder={t("postalCodePlaceholder")}
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-city`} variant="admin" size="sm">
-                  {t("city")}
-                </Label>
+              </FormField>
+              <FormField label={t("city")} labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-city`}
                   variant="admin"
                   size="sm"
                   type="text"
@@ -549,71 +528,68 @@ export function LandlordsView({
                   onChange={(e) => setCity(e.target.value)}
                   placeholder={t("cityPlaceholder")}
                 />
-              </div>
+              </FormField>
             </div>
 
             {/* Email */}
-            <div className="space-y-1.5">
-              <Label htmlFor={`${formId}-email`} variant="admin" size="sm">
-                {t("email")}
-              </Label>
-              <div className="relative">
-                <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <Input
-                  id={`${formId}-email`}
-                  variant="admin"
-                  size="sm"
-                  type="email"
-                  autoComplete="off"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t("emailPlaceholder")}
-                  className="pl-9"
-                />
-              </div>
-            </div>
+            <FormField label={t("email")} labelVariant="admin" labelSize="sm">
+              {(control) => (
+                <div className="relative">
+                  <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Input
+                    {...control}
+                    variant="admin"
+                    size="sm"
+                    type="email"
+                    autoComplete="off"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t("emailPlaceholder")}
+                    className="pl-9"
+                  />
+                </div>
+              )}
+            </FormField>
 
             {/* Phone & Mobile */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-phone`} variant="admin" size="sm">
-                  {t("phone")}
-                </Label>
-                <div className="relative">
-                  <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <Input
-                    id={`${formId}-phone`}
-                    variant="admin"
-                    size="sm"
-                    type="tel"
-                    autoComplete="off"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder={t("phonePlaceholder")}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
+              <FormField label={t("phone")} labelVariant="admin" labelSize="sm">
+                {(control) => (
+                  <div className="relative">
+                    <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Input
+                      {...control}
+                      variant="admin"
+                      size="sm"
+                      type="tel"
+                      autoComplete="off"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder={t("phonePlaceholder")}
+                      className="pl-9"
+                    />
+                  </div>
+                )}
+              </FormField>
 
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-mobile`} variant="admin" size="sm">
-                  {t("mobile")}
-                </Label>
-                <div className="relative">
-                  <Smartphone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <Input
-                    id={`${formId}-mobile`}
-                    variant="admin"
-                    size="sm"
-                    type="tel"
-                    autoComplete="off"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
-                    placeholder={t("mobilePlaceholder")}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
+              <FormField label={t("mobile")} labelVariant="admin" labelSize="sm">
+                {(control) => (
+                  <div className="relative">
+                    <Smartphone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Input
+                      {...control}
+                      variant="admin"
+                      size="sm"
+                      type="tel"
+                      autoComplete="off"
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value)}
+                      placeholder={t("mobilePlaceholder")}
+                      className="pl-9"
+                    />
+                  </div>
+                )}
+              </FormField>
             </div>
 
             {/* Swish Payment Switch */}
@@ -649,12 +625,8 @@ export function LandlordsView({
             {/* Account Type & Account Number */}
             <div className="space-y-3 pt-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor={`${formId}-account-type`} variant="admin" size="sm">
-                    {t("accountType")}
-                  </Label>
+                <FormField label={t("accountType")} labelVariant="admin" labelSize="sm">
                   <NativeSelect
-                    id={`${formId}-account-type`}
                     variant="admin"
                     size="sm"
                     value={selectedAccountType}
@@ -666,15 +638,11 @@ export function LandlordsView({
                       </option>
                     ))}
                   </NativeSelect>
-                </div>
+                </FormField>
 
                 {selectedAccountType === "Other" ? (
-                  <div className="space-y-1.5">
-                    <Label htmlFor={`${formId}-custom-account-type`} variant="admin" size="sm">
-                      {t("specifyAccountType")}
-                    </Label>
+                  <FormField label={t("specifyAccountType")} labelVariant="admin" labelSize="sm">
                     <Input
-                      id={`${formId}-custom-account-type`}
                       variant="admin"
                       size="sm"
                       type="text"
@@ -683,15 +651,16 @@ export function LandlordsView({
                       onChange={(e) => setCustomAccountType(e.target.value)}
                       placeholder={t("bankNamePlaceholder")}
                     />
-                  </div>
+                  </FormField>
                 ) : null}
 
-                <div className={`space-y-1.5 ${selectedAccountType !== "Other" ? "" : "sm:col-span-2"}`}>
-                  <Label htmlFor={`${formId}-account-number`} variant="admin" size="sm">
-                    {t("accountNumber")}
-                  </Label>
+                <FormField
+                  label={t("accountNumber")}
+                  labelVariant="admin"
+                  labelSize="sm"
+                  className={selectedAccountType !== "Other" ? "" : "sm:col-span-2"}
+                >
                   <Input
-                    id={`${formId}-account-number`}
                     variant="admin"
                     size="sm"
                     type="text"
@@ -701,7 +670,7 @@ export function LandlordsView({
                     placeholder={t("accountNumberPlaceholder")}
                     className="font-mono"
                   />
-                </div>
+                </FormField>
               </div>
             </div>
 

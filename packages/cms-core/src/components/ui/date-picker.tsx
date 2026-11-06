@@ -26,6 +26,10 @@ export interface DatePickerProps {
   clearLabel?: string;
   openDirection?: "up" | "down" | "auto";
   showWeekNumbers?: boolean;
+  id?: string;
+  "aria-describedby"?: string;
+  "aria-invalid"?: boolean;
+  required?: boolean;
 }
 
 export function DatePicker({
@@ -41,6 +45,10 @@ export function DatePicker({
   clearLabel,
   openDirection = "auto",
   showWeekNumbers = true,
+  id,
+  "aria-describedby": ariaDescribedBy,
+  "aria-invalid": ariaInvalid,
+  required,
 }: DatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value || "");
@@ -302,9 +310,13 @@ export function DatePicker({
         {/* Text input */}
         <input
           ref={inputRef}
+          id={id}
           type="text"
           value={inputValue}
           disabled={disabled}
+          required={required}
+          aria-describedby={ariaDescribedBy}
+          aria-invalid={ariaInvalid}
           onChange={handleInputChange}
           onBlur={handleInputBlur}
           onKeyDown={(e) => {
