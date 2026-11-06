@@ -5,7 +5,12 @@ import { useTranslations } from "next-intl";
 import { useEditorStore } from "../../state/editor-store";
 import { Sparkles, X, Check, Loader2 } from "lucide-react";
 import { FlagIcon } from "../ui/flag-icon";
-import { ModalPortal } from "../ui/modal-portal";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { LANGUAGE_META } from "../../constants/languages";
 
 export interface TextEditModalProps {
@@ -207,15 +212,28 @@ export function TextEditModal({
       : "grid-cols-1 md:grid-cols-2 xl:grid-cols-3";
 
   return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-5xl rounded-2xl border border-slate-700/90 bg-slate-900 p-6 text-white shadow-2xl">
+    <Dialog
+      open={isModalOpen}
+      onOpenChange={(open) => {
+        if (!open) closeModal();
+      }}
+    >
+      <DialogContent
+        variant="admin"
+        size="full"
+        className="border-slate-700/90 bg-slate-900 p-6 text-white shadow-2xl"
+        hideCloseButton
+      >
+        <DialogDescription className="sr-only">
+          {t("subtitle")}
+        </DialogDescription>
+
         {/* Modal Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-white">
+            <DialogTitle className="text-lg font-semibold text-white">
               {t("title", { nbr: selectedField.nbr })}
-            </h2>
+            </DialogTitle>
             <span className="rounded-md border border-sky-500/30 bg-sky-500/15 px-2.5 py-0.5 text-[11px] font-medium text-sky-300">
               {languages.length === 1
                 ? t("activeLanguage", { count: 1 })
@@ -353,8 +371,7 @@ export function TextEditModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
-  </ModalPortal>
-);
+      </DialogContent>
+    </Dialog>
+  );
 }
