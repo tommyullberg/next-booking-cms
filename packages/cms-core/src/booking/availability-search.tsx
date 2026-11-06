@@ -20,7 +20,12 @@ import {
 } from "lucide-react";
 import { SearchMatchItem } from "./types";
 import { DatePicker } from "../components/ui/date-picker";
-import { ModalPortal } from "../components/ui/modal-portal";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../components/ui/dialog";
 import { Loader } from "../components/ui/loader";
 
 /** Minimum time (in ms) to display the search loader animation when triggered */
@@ -459,14 +464,22 @@ export function AvailabilitySearch({
       )}
 
       {/* Booking Modal */}
-      {bookingModalItem && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white">
-            <h3 className="text-lg font-bold mb-1">Bekräfta bokningsförfrågan</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+      <Dialog
+        open={Boolean(bookingModalItem)}
+        onOpenChange={(open) => {
+          if (!open) setBookingModalItem(null);
+        }}
+      >
+        {bookingModalItem && (
+          <DialogContent
+            size="sm"
+            hideCloseButton
+            className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white"
+          >
+            <DialogTitle className="text-lg font-bold mb-1">Bekräfta bokningsförfrågan</DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               {bookingModalItem.object.name}: {bookingModalItem.startDate} till {bookingModalItem.endDate} ({bookingModalItem.nights} nätter)
-            </p>
+            </DialogDescription>
 
             {bookingSuccess ? (
               <div className="flex flex-col items-center justify-center p-6 text-center text-emerald-600 dark:text-emerald-400 space-y-2">
@@ -539,10 +552,9 @@ export function AvailabilitySearch({
                 </div>
               </form>
             )}
-          </div>
-        </div>
-      </ModalPortal>
-    )}
-  </div>
-);
+          </DialogContent>
+        )}
+      </Dialog>
+    </div>
+  );
 }
