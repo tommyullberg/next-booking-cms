@@ -25,7 +25,12 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { BookingItem, BOOKING_STATUSES, BookingStatusType } from "./types";
-import { ModalPortal } from "../components/ui/modal-portal";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../components/ui/dialog";
 import { useBookingSettingsQuery } from "./hooks";
 
 export interface BookingDetailsModalProps {
@@ -206,25 +211,38 @@ export function BookingDetailsModal({
   };
 
   return (
-    <ModalPortal>
-      <div className='fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200'>
-        <div className='bg-slate-900 border border-slate-800 w-full max-w-4xl max-h-[92vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col my-auto'>
-          {/* Header */}
-          <div className='bg-slate-950 px-6 py-4 border-b border-slate-800 flex items-center justify-between shrink-0'>
-            <div className='space-y-1 min-w-0'>
-              <div className='flex items-center gap-2.5 flex-wrap'>
-                <h3 className='text-base font-bold text-white flex items-center gap-2 truncate'>
-                  {isImported ? (
-                    <Lock className='w-4 h-4 text-amber-400 shrink-0' />
-                  ) : (
-                    <CalendarIcon className='w-4 h-4 text-sky-400 shrink-0' />
-                  )}
-                  <span>
-                    {isImported
-                      ? `Extern bokning: ${booking.customerName || "Booking.com"}`
-                      : `Bokning: ${booking.customerName || "Förfrågan"}`}
-                  </span>
-                </h3>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <DialogContent
+        variant="admin"
+        size="full"
+        hideCloseButton
+        className="w-full max-w-4xl max-h-[92vh] rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col my-auto border border-slate-800 bg-slate-900"
+      >
+        <DialogDescription className="sr-only">
+          {booking.objectName}: {booking.startDate} till {booking.endDate}
+        </DialogDescription>
+
+        {/* Header */}
+        <div className='bg-slate-950 px-6 py-4 border-b border-slate-800 flex items-center justify-between shrink-0'>
+          <div className='space-y-1 min-w-0'>
+            <div className='flex items-center gap-2.5 flex-wrap'>
+              <DialogTitle className='text-base font-bold text-white flex items-center gap-2 truncate'>
+                {isImported ? (
+                  <Lock className='w-4 h-4 text-amber-400 shrink-0' />
+                ) : (
+                  <CalendarIcon className='w-4 h-4 text-sky-400 shrink-0' />
+                )}
+                <span>
+                  {isImported
+                    ? `Extern bokning: ${booking.customerName || "Booking.com"}`
+                    : `Bokning: ${booking.customerName || "Förfrågan"}`}
+                </span>
+              </DialogTitle>
 
                 {isImported ? (
                   <span className='inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-300 border border-amber-500/30'>
@@ -1279,8 +1297,7 @@ export function BookingDetailsModal({
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </ModalPortal>
+      </DialogContent>
+    </Dialog>
   );
 }
