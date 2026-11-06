@@ -9,6 +9,7 @@ import { ImageEditModal, ImageEditModalProps } from "./image-edit-modal";
 import { GalleryEditModal, GalleryEditModalProps } from "./gallery-edit-modal";
 import { AdminApp } from "../../admin/admin-app";
 import { AdminIntlProvider } from "../../i18n/provider";
+import { ConfirmProvider } from "../confirm";
 
 export interface InlineEditorProps {
   adminUrl?: string;
@@ -58,17 +59,19 @@ export function InlineEditor({
 
   return (
     <AdminIntlProvider initialLocale={adminLanguage} onLocaleChange={setAdminLanguage}>
-      <FloatingPanel adminUrl={adminUrl} />
-      <TextEditModal onSave={onSaveText} />
-      <ImageEditModal onSave={onSaveImage} onDelete={onDeleteImage} />
-      <GalleryEditModal onSave={onSaveGallery} />
-      {mode === "administration" && (
-        <AdminApp
-          isOverlay={true}
-          onHideAdmin={() => setMode("normal")}
-          adminName={session.user.name || session.user.email || "Super Admin"}
-        />
-      )}
+      <ConfirmProvider>
+        <FloatingPanel adminUrl={adminUrl} />
+        <TextEditModal onSave={onSaveText} />
+        <ImageEditModal onSave={onSaveImage} onDelete={onDeleteImage} />
+        <GalleryEditModal onSave={onSaveGallery} />
+        {mode === "administration" && (
+          <AdminApp
+            isOverlay={true}
+            onHideAdmin={() => setMode("normal")}
+            adminName={session.user.name || session.user.email || "Super Admin"}
+          />
+        )}
+      </ConfirmProvider>
     </AdminIntlProvider>
   );
 }
