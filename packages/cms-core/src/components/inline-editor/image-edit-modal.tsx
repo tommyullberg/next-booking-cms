@@ -3,7 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useEditorStore } from "../../state/editor-store";
-import { ModalPortal } from "../ui/modal-portal";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "../ui/dialog";
 import { useConfirm } from "../confirm";
 import {
   X,
@@ -221,14 +226,27 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
   };
 
   return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 p-6 text-white shadow-2xl">
+    <Dialog
+      open={isModalOpen}
+      onOpenChange={(open) => {
+        if (!open) closeModal();
+      }}
+    >
+      <DialogContent
+        variant="admin"
+        size="lg"
+        className="max-w-xl border-slate-700 bg-slate-900 p-6 text-white shadow-2xl"
+        hideCloseButton
+      >
+        <DialogDescription className="sr-only">
+          {t("title", { nbr: selectedField.nbr })}
+        </DialogDescription>
+
         <div className="flex items-center justify-between border-b border-slate-800 pb-4">
           <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold">
+            <DialogTitle className="text-lg font-semibold text-white">
               {t("title", { nbr: selectedField.nbr })}
-            </h2>
+            </DialogTitle>
           </div>
           <button
             type="button"
@@ -466,8 +484,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
             </button>
           </div>
         </div>
-      </div>
-    </div>
-  </ModalPortal>
-);
+      </DialogContent>
+    </Dialog>
+  );
 }
