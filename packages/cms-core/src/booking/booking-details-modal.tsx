@@ -26,15 +26,15 @@ import {
 } from "lucide-react";
 import { BookingItem, BOOKING_STATUSES, BookingStatusType } from "./types";
 import {
+  Alert,
+  Button,
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
-} from "../components/ui/dialog";
-import { FormField } from "../components/ui/form-field";
-import { Alert } from "../components/ui/alert";
-import { Button } from "../components/ui/button";
-import { IconButton } from "../components/ui/icon-button";
+  DialogTitle,
+  FormField,
+  IconButton,
+} from "@cms/components/ui";
 import { useBookingSettingsQuery } from "./hooks";
 
 export interface BookingDetailsModalProps {

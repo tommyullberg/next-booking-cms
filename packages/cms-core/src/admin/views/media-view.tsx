@@ -18,20 +18,20 @@ import {
   Layers,
   HardDrive,
 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { FormField } from "../../components/ui/form-field";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { NativeSelect } from "../../components/ui/select";
-import { Alert } from "../../components/ui/alert";
-import { useConfirm } from "../../components/confirm";
 import {
+  Alert,
+  Badge,
+  Button,
+  Card,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog";
+  FormField,
+  Input,
+  NativeSelect,
+} from "@cms/components/ui";
+import { useConfirm } from "../../components/confirm";
 
 export interface MediaFolderItem {
   id: string;

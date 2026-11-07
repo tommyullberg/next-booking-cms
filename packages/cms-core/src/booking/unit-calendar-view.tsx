@@ -15,7 +15,7 @@ import {
   ArrowRight,
   Search,
 } from "lucide-react";
-import { IconButton } from "../components/ui/icon-button";
+import { IconButton } from "@cms/components/ui";
 
 export interface UnitCalendarViewProps {
   objectId: string;

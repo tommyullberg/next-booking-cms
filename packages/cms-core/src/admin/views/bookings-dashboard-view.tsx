@@ -30,10 +30,7 @@ import { SyncSummaryResult, SyncObjectResult, SyncBookingItem } from "../../ical
 import { AdminTab } from "../../types/admin";
 import { BookingObjectItem } from "./booking-objects-view";
 import { PricePeriodItem } from "./prices-availability-view";
-import { Button } from "../../components/ui/button";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Alert } from "../../components/ui/alert";
+import { Alert, Badge, Button, Card } from "@cms/components/ui";
 import { cn } from "../../utils/cn";
 
 export interface BookingsDashboardViewProps {

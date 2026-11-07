@@ -16,10 +16,14 @@ import {
   Filter,
 } from "lucide-react";
 import { BookingDiscrepancy, DiscrepancyType } from "../../logging/discrepancies";
-import { Button } from "../../components/ui/button";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Alert, AlertTitle, AlertDescription } from "../../components/ui/alert";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Badge,
+  Button,
+  Card,
+} from "@cms/components/ui";
 
 export function DiscrepanciesView() {
   const [discrepancies, setDiscrepancies] = useState<BookingDiscrepancy[]>([]);

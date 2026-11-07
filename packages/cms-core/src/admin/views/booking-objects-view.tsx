@@ -43,25 +43,25 @@ import {
 import { LandlordItem } from "./landlords-view";
 import { PageListItem } from "./pages-view";
 import { useBookingSettingsQuery } from "../../booking/hooks";
-import { Button } from "../../components/ui/button";
-import { IconButton } from "../../components/ui/icon-button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { FormField } from "../../components/ui/form-field";
-import { Alert } from "../../components/ui/alert";
-import { Textarea } from "../../components/ui/textarea";
-import { NativeSelect } from "../../components/ui/select";
-import { Switch } from "../../components/ui/switch";
-import { Checkbox } from "../../components/ui/checkbox";
-import { Badge } from "../../components/ui/badge";
-import { useConfirm } from "../../components/confirm";
-import { cn } from "../../utils/cn";
 import {
+  Alert,
+  Badge,
+  Button,
+  Checkbox,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog";
+  FormField,
+  IconButton,
+  Input,
+  Label,
+  NativeSelect,
+  Switch,
+  Textarea,
+} from "@cms/components/ui";
+import { useConfirm } from "../../components/confirm";
+import { cn } from "../../utils/cn";
 
 export type BookingObjectItem = BookingObjectDetails;
 

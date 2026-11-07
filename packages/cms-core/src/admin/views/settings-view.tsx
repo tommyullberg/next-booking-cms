@@ -3,17 +3,20 @@
 import React, { useState, useEffect, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Globe, Languages, Check, Save, Lock, Images, LayoutGrid } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Label } from "../../components/ui/label";
-import { FormField } from "../../components/ui/form-field";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Checkbox } from "../../components/ui/checkbox";
-import { Switch } from "../../components/ui/switch";
-import { NativeSelect } from "../../components/ui/select";
-import { SelectableCard, SelectableCardGroup } from "../../components/ui/selectable-card";
-import { SegmentedControl } from "../../components/ui/segmented-control";
-import { FlagIcon } from "../../components/ui/flag-icon";
+import {
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  FlagIcon,
+  FormField,
+  Label,
+  NativeSelect,
+  SegmentedControl,
+  SelectableCard,
+  SelectableCardGroup,
+  Switch,
+} from "@cms/components/ui";
 import { cn } from "../../utils/cn";
 import {
   AVAILABLE_LANGUAGES,

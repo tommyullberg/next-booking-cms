@@ -4,16 +4,16 @@ import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useEditorStore } from "../../state/editor-store";
 import {
+  Alert,
+  Button,
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
-} from "../ui/dialog";
-import { FormField } from "../ui/form-field";
-import { Label } from "../ui/label";
-import { Alert } from "../ui/alert";
-import { Button } from "../ui/button";
-import { IconButton } from "../ui/icon-button";
+  DialogTitle,
+  FormField,
+  IconButton,
+  Label,
+} from "@cms/components/ui";
 import { useConfirm } from "../confirm";
 import {
   X,

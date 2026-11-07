@@ -35,15 +35,15 @@ import {
 } from "../../constants/dates";
 import type { MissingWeekRange, BlockedPeriodItem } from "../../actions/price-periods";
 import {
+  Alert,
+  Button,
+  Card,
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
-} from "../../components/ui/dialog";
-import { Card } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { FormField } from "../../components/ui/form-field";
-import { Alert } from "../../components/ui/alert";
+  DialogTitle,
+  FormField,
+} from "@cms/components/ui";
 import { useConfirm } from "../../components/confirm";
 import { YearCalendar } from "../components/prices-availability-calendar";
 import { useBookingSettingsQuery } from "../../booking/hooks";

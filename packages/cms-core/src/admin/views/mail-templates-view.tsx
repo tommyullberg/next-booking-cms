@@ -6,11 +6,7 @@ import { Mail, HelpCircle, Copy, Check, Save, ChevronDown, ChevronUp, Loader2 } 
 import { MAIL_PLACEHOLDERS } from "../../mail/types";
 import { useAdminIntl } from "../../i18n";
 import { getDefaultMailTemplate, DEFAULT_MAIL_TEMPLATES_EN, DEFAULT_MAIL_TEMPLATES_SV } from "../../constants/mail-templates";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { FormField } from "../../components/ui/form-field";
-import { Textarea } from "../../components/ui/textarea";
-import { Card } from "../../components/ui/card";
+import { Button, Card, FormField, Input, Textarea } from "@cms/components/ui";
 import { cn } from "../../utils/cn";
 
 export interface MailTemplateItem {

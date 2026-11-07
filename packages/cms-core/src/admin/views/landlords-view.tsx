@@ -16,21 +16,21 @@ import {
   Building,
 } from "lucide-react";
 import { LandlordDto } from "../../actions/landlords";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { FormField } from "../../components/ui/form-field";
-import { Alert } from "../../components/ui/alert";
-import { Badge } from "../../components/ui/badge";
-import { useConfirm } from "../../components/confirm";
-import { Switch } from "../../components/ui/switch";
-import { NativeSelect } from "../../components/ui/select";
 import {
+  Alert,
+  Badge,
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog";
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+  Switch,
+} from "@cms/components/ui";
+import { useConfirm } from "../../components/confirm";
 
 export type LandlordItem = LandlordDto;
 

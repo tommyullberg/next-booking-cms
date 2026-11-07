@@ -13,17 +13,17 @@ import {
   Box,
 } from "lucide-react";
 import { AmenityItem } from "../../booking/types";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { FormField } from "../../components/ui/form-field";
-import { Alert } from "../../components/ui/alert";
-import { Badge } from "../../components/ui/badge";
 import {
+  Alert,
+  Badge,
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog";
+  FormField,
+  Input,
+} from "@cms/components/ui";
 
 export interface AmenitiesViewProps {
   amenities?: AmenityItem[];

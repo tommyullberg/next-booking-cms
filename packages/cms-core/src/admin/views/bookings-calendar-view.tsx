@@ -20,9 +20,7 @@ import { BookingItem, BookingObjectDetails, BOOKING_STATUSES, BookingStatusType 
 import { BookingDetailsModal } from "../../booking/booking-details-modal";
 import { useBookingSettingsQuery } from "../../booking/hooks";
 import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "../../utils/weeks";
-import { Card } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+import { Badge, Button, Card } from "@cms/components/ui";
 
 export interface BookingsCalendarViewProps {
   objects?: BookingObjectDetails[];

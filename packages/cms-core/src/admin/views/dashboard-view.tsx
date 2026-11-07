@@ -4,8 +4,7 @@ import React from "react";
 import { FileText, FolderTree, Image as ImageIcon, CheckCircle2, ArrowRight } from "lucide-react";
 import { AdminTab } from "../admin-layout";
 import { useTranslations } from "next-intl";
-import { Button } from "../../components/ui/button";
-import { Card } from "../../components/ui/card";
+import { Button, Card } from "@cms/components/ui";
 
 export interface DashboardViewProps {
   totalPages: number;

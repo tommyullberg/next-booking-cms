@@ -14,19 +14,19 @@ import {
   Loader2,
   UserCheck,
 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { FormField } from "../../components/ui/form-field";
-import { Alert } from "../../components/ui/alert";
-import { Badge } from "../../components/ui/badge";
-import { useConfirm } from "../../components/confirm";
 import {
+  Alert,
+  Badge,
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog";
+  FormField,
+  Input,
+  Label,
+} from "@cms/components/ui";
+import { useConfirm } from "../../components/confirm";
 
 export interface AdministratorItem {
   id: string;

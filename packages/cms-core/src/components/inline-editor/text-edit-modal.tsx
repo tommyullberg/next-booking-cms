@@ -4,15 +4,15 @@ import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useEditorStore } from "../../state/editor-store";
 import { Sparkles, X, Check, Loader2 } from "lucide-react";
-import { FlagIcon } from "../ui/flag-icon";
 import {
+  Button,
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { IconButton } from "../ui/icon-button";
+  DialogTitle,
+  FlagIcon,
+  IconButton,
+} from "@cms/components/ui";
 import { LANGUAGE_META } from "../../constants/languages";
 
 export interface TextEditModalProps {

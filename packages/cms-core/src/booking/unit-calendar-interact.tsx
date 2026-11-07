@@ -31,15 +31,17 @@ import {
   Lock,
 } from "lucide-react";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
-} from "../components/ui/dialog";
-import { FormField } from "../components/ui/form-field";
-import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
-import { Button } from "../components/ui/button";
-import { IconButton } from "../components/ui/icon-button";
+  DialogTitle,
+  FormField,
+  IconButton,
+} from "@cms/components/ui";
 
 export interface UnitCalendarInteractProps {
   objectId: string;

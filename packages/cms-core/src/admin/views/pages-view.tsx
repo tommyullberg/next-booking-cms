@@ -5,21 +5,21 @@ import { useTranslations } from "next-intl";
 import { Plus, Edit3, Trash2, Search, Lock, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { HOMEPAGE_ID, cleanSlugInput, validateSlugInput } from "../../utils/slug";
 import { CMSTemplateOption, DEFAULT_CMS_TEMPLATES, formatTemplateLabel } from "../../templates/types";
-import { FlagIcon } from "../../components/ui/flag-icon";
 import { LANGUAGE_META } from "../../constants/languages";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { FormField } from "../../components/ui/form-field";
-import { NativeSelect } from "../../components/ui/select";
-import { Badge } from "../../components/ui/badge";
-import { useConfirm } from "../../components/confirm";
 import {
+  Badge,
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog";
+  FlagIcon,
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+} from "@cms/components/ui";
+import { useConfirm } from "../../components/confirm";
 
 export interface PageListItem {
   id: number | string;

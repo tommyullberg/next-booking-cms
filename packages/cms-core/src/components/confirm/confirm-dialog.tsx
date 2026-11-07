@@ -8,9 +8,11 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from "../ui/dialog";
-import { Button } from "../ui/button";
-import { Alert, AlertTitle, AlertDescription } from "../ui/alert";
+  Button,
+  Alert,
+  AlertTitle,
+  AlertDescription,
+} from "@cms/components/ui";
 import { Loader2, AlertTriangle, AlertCircle, Info } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { QueueItem } from "./confirm-types";

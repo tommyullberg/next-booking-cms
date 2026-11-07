@@ -19,17 +19,19 @@ import {
   Home,
 } from "lucide-react";
 import { SearchMatchItem } from "./types";
-import { DatePicker } from "../components/ui/date-picker";
-import { FormField } from "../components/ui/form-field";
 import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
+  DatePicker,
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
-} from "../components/ui/dialog";
-import { Loader } from "../components/ui/loader";
-import { Button } from "../components/ui/button";
-import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
+  DialogTitle,
+  FormField,
+  Loader,
+} from "@cms/components/ui";
 
 /** Minimum time (in ms) to display the search loader animation when triggered */
 export const MIN_SEARCH_LOADER_DURATION_MS = 900;

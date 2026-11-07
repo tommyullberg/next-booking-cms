@@ -24,8 +24,18 @@ import {
   Globe,
 } from "lucide-react";
 import { CMSPageField } from "../../components/fields/types";
-import { FlagIcon } from "../../components/ui/flag-icon";
-import { DatePicker } from "../../components/ui/date-picker";
+import {
+  Badge,
+  Button,
+  Card,
+  DatePicker,
+  FlagIcon,
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+  Textarea,
+} from "@cms/components/ui";
 import { CategoryTypeItem } from "./categories-view";
 import {
   BookingObjectDetails,
@@ -48,14 +58,6 @@ import {
 } from "../../constants/languages";
 import { formatDateInput } from "../../constants/dates";
 import { PageStatus } from "../../types/admin";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
-import { Label } from "../../components/ui/label";
-import { FormField } from "../../components/ui/form-field";
-import { NativeSelect } from "../../components/ui/select";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
 
 export type { PageStatus };
 

@@ -30,10 +30,7 @@ import {
 
 import { AdminTab } from "../types/admin";
 import { AdminLanguage, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
-import { CmsBrandLogo } from "../components/ui/cms-brand-logo";
-import { FlagIcon } from "../components/ui/flag-icon";
-import { Button } from "../components/ui/button";
-import { IconButton } from "../components/ui/icon-button";
+import { CmsBrandLogo, FlagIcon, Button, IconButton } from "@cms/components/ui";
 import { useTranslations } from "next-intl";
 import { useAdminIntl } from "../i18n";
 

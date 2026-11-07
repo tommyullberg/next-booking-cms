@@ -16,10 +16,10 @@ import { CMSGalleryItem } from "./types";
 import {
   Dialog,
   DialogContent,
-  DialogTitle,
   DialogDescription,
-} from "../ui/dialog";
-import { IconButton } from "../ui/icon-button";
+  DialogTitle,
+  IconButton,
+} from "@cms/components/ui";
 
 export interface CMSGalleryFieldProps {
   nbr: number;

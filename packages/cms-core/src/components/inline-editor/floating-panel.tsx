@@ -15,9 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
-import { Switch } from "../ui/switch";
-import { Button } from "../ui/button";
-import { IconButton } from "../ui/icon-button";
+import { Button, IconButton, Switch } from "@cms/components/ui";
 
 export type PanelOrientation = "horizontal" | "vertical";
 

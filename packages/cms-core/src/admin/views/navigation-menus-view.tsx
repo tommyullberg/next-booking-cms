@@ -3,9 +3,7 @@
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, GripVertical, Trash2 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { NativeSelect } from "../../components/ui/select";
+import { Button, Input, NativeSelect } from "@cms/components/ui";
 import { cn } from "../../utils/cn";
 import { SectionItem } from "./sections-view";
 import { PageListItem } from "./pages-view";

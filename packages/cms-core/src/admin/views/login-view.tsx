@@ -4,14 +4,16 @@ import React, { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Lock, Mail, Loader2 } from "lucide-react";
-import { CmsBrandLogo } from "../../components/ui/cms-brand-logo";
-import { FlagIcon } from "../../components/ui/flag-icon";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { FormField } from "../../components/ui/form-field";
-import { Card } from "../../components/ui/card";
-import { Alert } from "../../components/ui/alert";
-import { SegmentedControl } from "../../components/ui/segmented-control";
+import {
+  Alert,
+  Button,
+  Card,
+  CmsBrandLogo,
+  FlagIcon,
+  FormField,
+  Input,
+  SegmentedControl,
+} from "@cms/components/ui";
 import { AdminIntlProvider, useAdminIntl } from "../../i18n";
 
 export interface LoginViewProps {

@@ -15,11 +15,13 @@ import {
   CheckSquare,
   Loader2,
 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { SegmentedControl } from "../../components/ui/segmented-control";
+import {
+  Badge,
+  Button,
+  Card,
+  Input,
+  SegmentedControl,
+} from "@cms/components/ui";
 import { cn } from "../../utils/cn";
 
 export interface CategoryItem {

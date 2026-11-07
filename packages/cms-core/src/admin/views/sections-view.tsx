@@ -3,14 +3,16 @@
 import React, { useState, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2, Pencil, Check, GripVertical, Lock } from "lucide-react";
-import { FlagIcon } from "../../components/ui/flag-icon";
-import { Button } from "../../components/ui/button";
+import {
+  Button,
+  Card,
+  FlagIcon,
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+} from "@cms/components/ui";
 import { useConfirm } from "../../components/confirm";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { FormField } from "../../components/ui/form-field";
-import { NativeSelect } from "../../components/ui/select";
-import { Card } from "../../components/ui/card";
 import { cn } from "../../utils/cn";
 import { HOMEPAGE_ID } from "../../utils/slug";
 import { LANGUAGE_META } from "../../constants/languages";

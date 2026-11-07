@@ -17,16 +17,19 @@ import {
   ShieldCheck,
   Search,
 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { FormField } from "../../components/ui/form-field";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { SelectableCard, SelectableCardGroup } from "../../components/ui/selectable-card";
-import { SegmentedControl } from "../../components/ui/segmented-control";
-import { NativeSelect } from "../../components/ui/select";
-import { Alert } from "../../components/ui/alert";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+  SegmentedControl,
+  SelectableCard,
+  SelectableCardGroup,
+} from "@cms/components/ui";
 import {
   BookingSettings,
   DEFAULT_BOOKING_SETTINGS,
