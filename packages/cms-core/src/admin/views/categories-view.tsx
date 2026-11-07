@@ -278,9 +278,9 @@ export function CategoriesView({
       prev.map((t) =>
         t.id === cat.category_type_id
           ? {
-              ...t,
-              categories: (t.categories || []).map((c) => (c.id === cat.id ? { ...c, name: trimmed } : c)),
-            }
+            ...t,
+            categories: (t.categories || []).map((c) => (c.id === cat.id ? { ...c, name: trimmed } : c)),
+          }
           : t,
       ),
     );
@@ -304,9 +304,9 @@ export function CategoriesView({
       prev.map((t) =>
         t.id === cat.category_type_id
           ? {
-              ...t,
-              categories: (t.categories || []).filter((c) => c.id !== cat.id),
-            }
+            ...t,
+            categories: (t.categories || []).filter((c) => c.id !== cat.id),
+          }
           : t,
       ),
     );
@@ -412,8 +412,8 @@ export function CategoriesView({
           <span>{t("addType")}</span>
         </div>
 
-        <form onSubmit={handleCreateCategoryType} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="flex-1 min-w-0">
+        <form onSubmit={handleCreateCategoryType} className="flex flex-col lg:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex-1 w-full">
             <Input
               type="text"
               value={newTypeName}
