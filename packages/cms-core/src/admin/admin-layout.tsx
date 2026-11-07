@@ -30,9 +30,9 @@ import {
 
 import { AdminTab } from "@cms/types/admin";
 import { AdminLanguage, DEFAULT_ADMIN_LANGUAGE } from "@cms/constants/languages";
-import { CmsBrandLogo, FlagIcon, Button, IconButton } from "@cms/components/ui";
+import { CmsBrandLogo, FlagIcon, Button, IconButton, SegmentedControl } from "@cms/components/ui";
 import { useTranslations } from "next-intl";
-import { useAdminIntl } from "@cms/i18n";
+import { useAdminIntl, AdminLocale } from "@cms/i18n";
 
 export type { AdminTab };
 
@@ -135,34 +135,26 @@ export function AdminLayout({
           </Button>
 
           {/* Admin Language Switcher */}
-          <div role='group' aria-label={locale === "sv" ? "Välj språk" : "Choose language"} className='flex items-center gap-0.5 rounded-xl border border-slate-800 bg-slate-900/80 p-0.5 text-xs'>
-            <button
-              type='button'
-              disabled={isPending}
-              aria-pressed={locale === "en"}
-              onClick={() => setLocale("en")}
-              title='Switch to English'
-              aria-label='English'
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-                locale === "en" ? "bg-sky-600 text-white shadow-sm font-semibold" : "text-slate-400 hover:text-white"
-              }`}>
-              <FlagIcon code='en' size='xs' />
-              <span>English</span>
-            </button>
-            <button
-              type='button'
-              disabled={isPending}
-              aria-pressed={locale === "sv"}
-              onClick={() => setLocale("sv")}
-              title='Växla till svenska'
-              aria-label='Svenska'
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-                locale === "sv" ? "bg-sky-600 text-white shadow-sm font-semibold" : "text-slate-400 hover:text-white"
-              }`}>
-              <FlagIcon code='sv' size='xs' />
-              <span>Svenska</span>
-            </button>
-          </div>
+          <SegmentedControl<AdminLocale>
+            size="sm"
+            aria-label={locale === "sv" ? "Välj språk" : "Choose language"}
+            value={locale}
+            disabled={isPending}
+            onChange={(val) => setLocale(val)}
+            className="shrink-0"
+            options={[
+              {
+                value: "en",
+                label: "English",
+                icon: <FlagIcon code="en" size="xs" />,
+              },
+              {
+                value: "sv",
+                label: "Svenska",
+                icon: <FlagIcon code="sv" size="xs" />,
+              },
+            ]}
+          />
 
           <IconButton
             type='button'

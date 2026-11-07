@@ -23,6 +23,7 @@ import {
   Badge,
   Button,
   Card,
+  SegmentedControl,
 } from "@cms/components/ui";
 
 export function DiscrepanciesView() {
@@ -231,42 +232,29 @@ export function DiscrepanciesView() {
         </Card>
       </div>
 
-      {/* Filter Tabs */}
+      {/* Filter Mode Selector */}
       <div className="flex items-center gap-2 border-b border-admin-border pb-3">
-        <Filter className="w-3.5 h-3.5 text-admin-text-muted" />
-        <button
-          type="button"
-          onClick={() => setFilter("ACTIVE")}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-            filter === "ACTIVE"
-              ? "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-              : "text-admin-text-secondary hover:text-admin-text-primary"
-          }`}
-        >
-          Aktiva ({activeCount})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter("ALL")}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-            filter === "ALL"
-              ? "bg-sky-500/10 text-sky-500 border border-sky-500/20"
-              : "text-admin-text-secondary hover:text-admin-text-primary"
-          }`}
-        >
-          Alla ({totalCount})
-        </button>
-        <button
-          type="button"
-          onClick={() => setFilter("ACKNOWLEDGED")}
-          className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-            filter === "ACKNOWLEDGED"
-              ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-              : "text-admin-text-secondary hover:text-admin-text-primary"
-          }`}
-        >
-          Kvitterade ({acknowledgedCount})
-        </button>
+        <Filter className="w-3.5 h-3.5 text-admin-text-muted shrink-0" />
+        <SegmentedControl<"ACTIVE" | "ALL" | "ACKNOWLEDGED">
+          size="sm"
+          value={filter}
+          onChange={(val) => setFilter(val)}
+          aria-label="Filtrera avvikelser efter status"
+          options={[
+            {
+              value: "ACTIVE",
+              label: `Aktiva (${activeCount})`,
+            },
+            {
+              value: "ALL",
+              label: `Alla (${totalCount})`,
+            },
+            {
+              value: "ACKNOWLEDGED",
+              label: `Kvitterade (${acknowledgedCount})`,
+            },
+          ]}
+        />
       </div>
 
       {/* List of Discrepancies */}
