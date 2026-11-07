@@ -95,12 +95,12 @@ describe("Booking Seed Helpers & Idempotency", () => {
     };
 
     // First run
-    const map1 = await seedAmenities(mockPrisma, ["WiFi", "Bastu", "Kök"]);
+    const map1 = await seedAmenities(mockPrisma, ["WiFi", "Bastu", "KÃ¶k"]);
     assert.equal(store.size, 3);
     assert.ok(map1.has("WiFi"));
 
     // Second run: duplicate call should not add any rows
-    const map2 = await seedAmenities(mockPrisma, ["WiFi", "Bastu", "Kök"]);
+    const map2 = await seedAmenities(mockPrisma, ["WiFi", "Bastu", "KÃ¶k"]);
     assert.equal(store.size, 3);
     assert.equal(map2.get("WiFi"), map1.get("WiFi"));
   });
@@ -252,17 +252,17 @@ describe("Booking Seed Helpers & Idempotency", () => {
     const bundle: SeedBookingBundleInput = {
       landlords: [{ first_name: "Demo", last_name: "Host", email: "demo@host.se" }],
       amenities: ["WiFi", "Bastu"],
-      objects: [{ name: "Sjöstugan", landlord_email: "demo@host.se" }],
+      objects: [{ name: "SjÃ¶stugan", landlord_email: "demo@host.se" }],
       optionals: [{ name: "Barnstol", price_day: 15 }],
       price_periods: [{
-        object_name: "Sjöstugan",
+        object_name: "SjÃ¶stugan",
         name: "Sommar 2026",
         start_date: "2026-06-01",
         end_date: "2026-08-31",
         price_week: 15000,
       }],
       bookings: [{
-        object_name: "Sjöstugan",
+        object_name: "SjÃ¶stugan",
         customer_name: "Test Person",
         customer_email: "test@example.com",
         start_date: "2026-07-01",

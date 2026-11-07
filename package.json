@@ -12,7 +12,8 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "check-types": "turbo run check-types",
-    "seed:demo": "npm --workspace=demo run seed"
+    "seed:demo": "npm --workspace=demo run seed",
+    "seed:lullyhill": "npm --workspace=lullyhill run seed"
   },
   "devDependencies": {
     "turbo": "^2.11.10"

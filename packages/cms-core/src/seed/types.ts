@@ -1,4 +1,5 @@
 import { FieldType, PageStatus } from "@prisma/client";
+import type { SeedBookingBundleInput } from "./booking-seed-helpers";
 
 export interface SeedLinkConfig {
   link_text: string;
@@ -56,4 +57,5 @@ export interface SeedPageConfig {
 export interface SeedConfig {
   section: SeedSectionConfig;
   page: SeedPageConfig;
+  bundle?: SeedBookingBundleInput;
 }

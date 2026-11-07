@@ -13,15 +13,37 @@ export * from "./types";
 
 function readLocalIcs(relativeOrPath: string): string {
   const cleanPath = relativeOrPath.replace(/^\//, "");
-  const candidates = [
+  const candidates: string[] = [
     path.resolve(process.cwd(), cleanPath),
     path.resolve(process.cwd(), "public", cleanPath),
-    path.resolve(process.cwd(), "apps", "lullyhill", "public", cleanPath),
-    path.resolve(process.cwd(), "apps", "demo", "public", cleanPath),
     path.resolve(process.cwd(), "mock-ical", path.basename(cleanPath)),
     path.resolve(process.cwd(), "..", "..", "mock-ical", path.basename(cleanPath)),
-    path.resolve(process.cwd(), "..", "..", "apps", "lullyhill", "public", cleanPath),
   ];
+
+  if (process.env.APP_NAME) {
+    candidates.push(
+      path.resolve(process.cwd(), "apps", process.env.APP_NAME, "public", cleanPath),
+      path.resolve(process.cwd(), "..", "..", "apps", process.env.APP_NAME, "public", cleanPath)
+    );
+  }
+
+  // Scan apps directory dynamically if running from monorepo root or package
+  const appsDirCandidates = [
+    path.resolve(process.cwd(), "apps"),
+    path.resolve(process.cwd(), "..", "..", "apps"),
+  ];
+  for (const appsDir of appsDirCandidates) {
+    if (fs.existsSync(appsDir)) {
+      try {
+        const appFolders = fs.readdirSync(appsDir);
+        for (const folder of appFolders) {
+          candidates.push(path.resolve(appsDir, folder, "public", cleanPath));
+        }
+      } catch {
+        // Ignore folder read errors
+      }
+    }
+  }
 
   for (const candidate of candidates) {
     if (fs.existsSync(candidate)) {
