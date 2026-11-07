@@ -82,13 +82,20 @@ export function calculatePeriodPrice(
   startDate: Date,
   endDate: Date
 ): PeriodPriceResult {
-  const nights = Math.max(
-    1,
-    Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
-  );
+  const startMs = Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate());
+  const endMs = Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate());
+  const nights = Math.round((endMs - startMs) / (1000 * 60 * 60 * 24));
 
-  const startDow = startDate.getDay();
-  const endDow = endDate.getDay();
+  if (nights <= 0) {
+    return {
+      totalPrice: 0,
+      isPriced: false,
+      error: "End date must be strictly after start date.",
+    };
+  }
+
+  const startDow = startDate.getUTCDay();
+  const endDow = endDate.getUTCDay();
   const sStr = startDate.toISOString().split("T")[0];
   const eStr = endDate.toISOString().split("T")[0];
 
@@ -164,11 +171,11 @@ export function calculatePeriodPrice(
     }
   }
 
-  // 2. Night-by-night calculation (for split periods or fallback to base_night_price)
+  // 2. Night-by-night calculation (for split periods, boundary crossings, or fallback to base_night_price)
   let calculatedTotal = 0;
-  const curr = new Date(startDate);
   for (let i = 0; i < nights; i++) {
-    const dayStr = curr.toISOString().split("T")[0];
+    const nightDate = new Date(startMs + i * 86400000);
+    const dayStr = nightDate.toISOString().split("T")[0];
     const periodForNight = (pricePeriods || []).find((p) => {
       const bounds = getPeriodDateBounds(p);
       return bounds && dayStr >= bounds.startStr && dayStr <= bounds.endStr;
@@ -187,12 +194,11 @@ export function calculatePeriodPrice(
       return {
         totalPrice: 0,
         isPriced: false,
-        error: `Prissättning saknas för natten ${dayStr}.`,
+        error: `Pricing is missing for night ${dayStr}.`,
       };
     }
 
     calculatedTotal += nightPrice;
-    curr.setDate(curr.getDate() + 1);
   }
 
   return {
@@ -286,7 +292,7 @@ export async function getBookingsAction(params?: {
     await recordBookingDiscrepancy({
       type: "TECHNICAL_DATABASE_ERROR",
       objectId: params?.objectId,
-      message: `Misslyckades med att hämta bokningar från databasen: ${error?.message || String(error)}`,
+      message: `Failed to fetch bookings from database: ${error?.message || String(error)}`,
     });
     throw error;
   }
@@ -330,7 +336,7 @@ export async function searchAvailabilityAction(params: {
           type: "OBJECT_NOT_FOUND",
           objectId,
           period: { startDate, endDate },
-          message: `Bokningsobjekt med identifierare '${objectId}' kunde inte hittas vid tillgänglighetssökning.`,
+          message: `Booking object with identifier '${objectId}' could not be resolved during availability search.`,
         });
         return {
           exactMatches: [],
@@ -449,7 +455,7 @@ export async function searchAvailabilityAction(params: {
           objectId: obj.id,
           objectName: obj.name,
           period: { startDate, endDate },
-          message: `Objekt '${obj.name}' saknar giltig prissättning för ${startDate} till ${endDate}: ${priceResult.error}`,
+          message: `Object '${obj.name}' (${obj.id}) lacks valid pricing for ${startDate} to ${endDate}: ${priceResult.error}`,
         });
       }
 
@@ -534,7 +540,7 @@ export async function searchAvailabilityAction(params: {
     await recordBookingDiscrepancy({
       type: "TECHNICAL_DATABASE_ERROR",
       period: { startDate, endDate },
-      message: `Databasfel vid sökning av tillgänglighet: ${error?.message || String(error)}`,
+      message: `Database error during availability search: ${error?.message || String(error)}`,
     });
     return {
       exactMatches: [],
@@ -551,7 +557,7 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
       type: "OBJECT_NOT_FOUND",
       objectId: data.objectId,
       period: { startDate: data.startDate, endDate: data.endDate },
-      message: `Bokningsförfrågan avbröts: objektet med identifierare '${data.objectId}' kunde inte hittas.`,
+      message: `Booking request rejected: booking object with identifier '${data.objectId}' could not be resolved.`,
     });
     throw new Error("Det angivna bokningsobjektet kunde inte hittas eller är ogiltigt.");
   }
@@ -585,7 +591,7 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
     await recordBookingDiscrepancy({
       type: "OBJECT_NOT_FOUND",
       objectId: resolvedObjectId,
-      message: `Bokningsobjekt '${resolvedObjectId}' kunde inte laddas ur databasen.`,
+      message: `Booking object with ID '${resolvedObjectId}' could not be loaded from database.`,
     });
     throw new Error("Bokningsobjektet kunde inte hittas.");
   }
@@ -602,7 +608,7 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
       objectId: resolvedObjectId,
       objectName: obj.name,
       period: { startDate: data.startDate, endDate: data.endDate },
-      message: `Bokning nekad: giltig prissättning saknas för objekt '${obj.name}' under perioden ${data.startDate} till ${data.endDate}.`,
+      message: `Booking request rejected: valid pricing is missing for object '${obj.name}' (${resolvedObjectId}) during ${data.startDate} to ${data.endDate}.`,
     });
     throw new Error(
       priceResult.error ||

@@ -115,9 +115,26 @@ import {
 } from "../actions/bookings";
 import {
   getBookingDiscrepanciesAction,
+  acknowledgeBookingDiscrepancyAction,
   clearBookingDiscrepanciesAction,
 } from "../logging/discrepancies";
+import { getToken } from "next-auth/jwt";
 import { prisma } from "../db";
+
+async function verifyAdminAuth(req: NextRequest): Promise<{ authorized: boolean; email?: string }> {
+  try {
+    const token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET || "development-secret-change-in-production",
+    });
+    if (!token || !["SUPERADMIN", "ADMIN", "EDITOR"].includes((token as any).role)) {
+      return { authorized: false };
+    }
+    return { authorized: true, email: token.email || undefined };
+  } catch {
+    return { authorized: false };
+  }
+}
 
 export async function handleSaveTextField(req: NextRequest) {
   try {
@@ -555,6 +572,23 @@ export async function handleCmsApiRoute(
         );
       }
     }
+    if (path === "bookings/discrepancies/acknowledge" || path === "bookings/discrepancies") {
+      const auth = await verifyAdminAuth(req);
+      if (!auth.authorized) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      try {
+        const body = await req.json().catch(() => ({}));
+        const result = await acknowledgeBookingDiscrepancyAction({
+          id: body.id,
+          acknowledged: body.acknowledged !== false,
+          adminEmail: auth.email,
+        });
+        return NextResponse.json(result);
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
+    }
     if (path === "settings") {
       const body = await req.json();
       const result = await saveCmsSettingsAction(body);
@@ -749,6 +783,10 @@ export async function handleCmsApiRoute(
     }
 
     if (path === "bookings/discrepancies") {
+      const auth = await verifyAdminAuth(req);
+      if (!auth.authorized) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
       try {
         const discrepancies = await getBookingDiscrepanciesAction();
         return NextResponse.json(discrepancies, { headers: NO_CACHE_HEADERS });
@@ -968,6 +1006,10 @@ export async function handleCmsApiRoute(
     }
 
     if (path === "bookings/discrepancies" || path.startsWith("bookings/discrepancies/")) {
+      const auth = await verifyAdminAuth(req);
+      if (!auth.authorized) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
       try {
         const id = path.startsWith("bookings/discrepancies/")
           ? path.replace("bookings/discrepancies/", "")

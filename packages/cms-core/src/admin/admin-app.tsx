@@ -22,6 +22,7 @@ import { MediaView, MediaItem, MediaFolderItem } from "./views/media-view";
 import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view";
 import { SettingsView } from "./views/settings-view";
 import { BookingSettingsView } from "./views/booking-settings-view";
+import { DiscrepanciesView } from "./views/discrepancies-view";
 import { CMSTemplateOption } from "../templates/types";
 import { AmenityItem } from "../booking/types";
 import { AdminTab } from "../types/admin";
@@ -1308,6 +1309,10 @@ export function AdminApp({
               }
             }}
           />
+        )}
+
+        {currentTab === "discrepancies" && (
+          <DiscrepanciesView />
         )}
       </AdminLayout>
       </ConfirmProvider>

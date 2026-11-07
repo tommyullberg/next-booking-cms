@@ -25,6 +25,7 @@ import {
   Sparkles,
   Coins,
   Sliders,
+  AlertTriangle,
 } from "lucide-react";
 
 import { AdminTab } from "../types/admin";
@@ -85,6 +86,7 @@ export function AdminLayout({
     { id: "amenities", label: tNav("amenities"), icon: <Tag className='w-4 h-4' /> },
     { id: "mail-templates", label: tNav("mailTemplates"), icon: <Mail className='w-4 h-4' /> },
     { id: "booking-settings", label: tNav("bookingSettings"), icon: <Sliders className='w-4 h-4' /> },
+    { id: "discrepancies", label: "Avvikelser", icon: <AlertTriangle className='w-4 h-4 text-amber-500' /> },
   ];
 
   const initials =

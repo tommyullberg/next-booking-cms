@@ -17,6 +17,7 @@ export * from "./views/amenities-view";
 export * from "./views/navigation-menus-view";
 export * from "./views/booking-settings-view";
 export * from "./views/settings-view";
+export * from "./views/discrepancies-view";
 export * from "./views/media-view";
 export * from "./views/mail-templates-view";
 export * from "./views/login-view";
