@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { NativeSelect } from "../../components/ui/select";
@@ -175,8 +175,6 @@ export function MediaView({
   const [isDropzoneActive, setIsDropzoneActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number } | null>(null);
 
-  const parentFolderSelectId = useId();
-  const folderNameInputId = useId();
   const searchInputId = useId();
 
   // Filtered files based on active folder selection and search
@@ -1026,12 +1024,8 @@ export function MediaView({
           </DialogHeader>
 
           <form onSubmit={handleCreateFolder} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor={parentFolderSelectId} className="text-xs font-medium text-slate-300">
-                {t("parentFolderLabel")}
-              </Label>
+            <FormField label={t("parentFolderLabel")} labelVariant="admin">
               <NativeSelect
-                id={parentFolderSelectId}
                 variant="admin"
                 size="sm"
                 value={newFolderParentId || ""}
@@ -1044,28 +1038,25 @@ export function MediaView({
                   </option>
                 ))}
               </NativeSelect>
-            </div>
+            </FormField>
 
-            <div className="space-y-1.5">
-              <Label htmlFor={folderNameInputId} className="text-xs font-medium text-slate-300">
-                {t("folderNameLabel")} <span className="text-rose-400">*</span>
-              </Label>
+            <FormField
+              label={t("folderNameLabel")}
+              required
+              labelVariant="admin"
+              description={t("folderNameHelp")}
+            >
               <Input
-                id={folderNameInputId}
                 type="text"
                 variant="admin"
                 size="sm"
-                required
                 placeholder={t("folderNamePlaceholder")}
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(sanitizeFolderInput(e.target.value))}
                 className="font-mono text-xs"
                 autoFocus
               />
-              <p className="text-[11px] text-slate-500">
-                {t("folderNameHelp")}
-              </p>
-            </div>
+            </FormField>
 
             <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
               <Button

@@ -46,6 +46,7 @@ import { useBookingSettingsQuery } from "../../booking/hooks";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { Textarea } from "../../components/ui/textarea";
 import { NativeSelect } from "../../components/ui/select";
 import { Switch } from "../../components/ui/switch";
@@ -167,11 +168,7 @@ export function BookingObjectsView({
   const [isSaving, setIsSaving] = useState(false);
 
   const landlordFieldId = useId();
-  const nameFieldId = useId();
   const pageFieldId = useId();
-  const descFieldId = useId();
-  const typeFieldId = useId();
-  const sizeFieldId = useId();
   const roomCountFieldId = useId();
   const roomTypeFieldId = useId();
   const bedCountFieldId = useId();
@@ -751,29 +748,24 @@ export function BookingObjectsView({
 
             {/* Object Name & Page in CMS */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor={nameFieldId} className="text-[11px] font-semibold text-slate-300">
-                  {t("objectName")} <span className="text-rose-400">*</span>
-                </Label>
+              <FormField label={t("objectName")} required labelVariant="admin" labelSize="sm" labelClassName="font-semibold">
                 <Input
-                  id={nameFieldId}
                   type="text"
-                  required
                   variant="admin"
                   size="sm"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder='e.g. Stuga "Storstugan"'
                 />
-              </div>
+              </FormField>
 
               <div className="space-y-1.5">
-                <Label htmlFor={pageFieldId} className="text-[11px] font-semibold text-slate-300 flex items-center justify-between">
+                <Label htmlFor={pageFieldId} variant="admin" size="sm" className="font-semibold flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <FileText className="w-3.5 h-3.5 text-sky-400" />
                     <span>{t("pageInCms")}</span>
                   </span>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[0.625rem] text-slate-500">
                     {t("pageInCmsDesc")}
                   </span>
                 </Label>
@@ -795,12 +787,8 @@ export function BookingObjectsView({
             </div>
 
             {/* Short Description */}
-            <div className="space-y-1.5">
-              <Label htmlFor={descFieldId} className="text-[11px] font-semibold text-slate-300">
-                {t("shortDescription")}
-              </Label>
+            <FormField label={t("shortDescription")} labelVariant="admin" labelSize="sm" labelClassName="font-semibold">
               <Textarea
-                id={descFieldId}
                 variant="admin"
                 size="sm"
                 rows={4}
@@ -808,16 +796,12 @@ export function BookingObjectsView({
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder={t("shortDescriptionPlaceholder")}
               />
-            </div>
+            </FormField>
 
             {/* Type & Size */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor={typeFieldId} className="text-[11px] font-semibold text-slate-300">
-                  {t("type")}
-                </Label>
+              <FormField label={t("type")} labelVariant="admin" labelSize="sm" labelClassName="font-semibold">
                 <NativeSelect
-                  id={typeFieldId}
                   variant="admin"
                   size="sm"
                   value={type}
@@ -829,14 +813,10 @@ export function BookingObjectsView({
                     </option>
                   ))}
                 </NativeSelect>
-              </div>
+              </FormField>
 
-              <div className="space-y-1.5">
-                <Label htmlFor={sizeFieldId} className="text-[11px] font-semibold text-slate-300">
-                  {t("size")}
-                </Label>
+              <FormField label={t("size")} labelVariant="admin" labelSize="sm" labelClassName="font-semibold">
                 <Input
-                  id={sizeFieldId}
                   type="number"
                   step="0.5"
                   variant="admin"
@@ -846,7 +826,7 @@ export function BookingObjectsView({
                   placeholder="e.g. 66"
                   className="font-mono"
                 />
-              </div>
+              </FormField>
             </div>
 
             {/* Rooms & Bed Counts */}

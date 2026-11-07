@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useId } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Mail, HelpCircle, Copy, Check, Save, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import { MAIL_PLACEHOLDERS } from "../../mail/types";
@@ -8,7 +8,7 @@ import { useAdminIntl } from "../../i18n";
 import { getDefaultMailTemplate, DEFAULT_MAIL_TEMPLATES_EN, DEFAULT_MAIL_TEMPLATES_SV } from "../../constants/mail-templates";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { Textarea } from "../../components/ui/textarea";
 import { Card } from "../../components/ui/card";
 import { cn } from "../../utils/cn";
@@ -56,7 +56,6 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
   const [savingType, setSavingType] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState<string | null>(null);
-  const baseId = useId();
 
   const templateConfigs = useMemo(
     () => [
@@ -243,8 +242,6 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
           const state = formState[cfg.type] || { subject: cfg.defaultSubject, body: cfg.defaultBody };
           const isSaving = savingType === cfg.type;
           const isSuccess = saveSuccess === cfg.type;
-          const subjectFieldId = `${baseId}-${cfg.type}-subject`;
-          const bodyFieldId = `${baseId}-${cfg.type}-body`;
 
           return (
             <Card
@@ -282,12 +279,8 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
                 </Button>
               </div>
 
-              <div>
-                <Label htmlFor={subjectFieldId} className="block text-xs font-medium text-slate-300 mb-1.5">
-                  {t("subject")}
-                </Label>
+              <FormField label={t("subject")} labelVariant="admin">
                 <Input
-                  id={subjectFieldId}
                   type="text"
                   variant="admin"
                   size="sm"
@@ -299,14 +292,10 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
                     }))
                   }
                 />
-              </div>
+              </FormField>
 
-              <div>
-                <Label htmlFor={bodyFieldId} className="block text-xs font-medium text-slate-300 mb-1.5">
-                  {t("body")}
-                </Label>
+              <FormField label={t("body")} labelVariant="admin">
                 <Textarea
-                  id={bodyFieldId}
                   variant="admin"
                   rows={7}
                   value={state.body}
@@ -318,7 +307,7 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
                   }
                   className="font-sans leading-relaxed text-xs"
                 />
-              </div>
+              </FormField>
             </Card>
           );
         })}

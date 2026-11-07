@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Globe, Languages, Check, Save, Lock, Images, LayoutGrid } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Checkbox } from "../../components/ui/checkbox";
@@ -44,7 +45,6 @@ export function SettingsView({
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
 
-  const captionPositionId = useId();
   const showThumbnailsId = useId();
 
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
@@ -429,16 +429,13 @@ export function SettingsView({
             })()}
 
             {/* Caption Position */}
-            <div>
-              <Label
-                htmlFor={captionPositionId}
-                variant="admin"
-                className="block mb-2 font-semibold text-slate-300"
-              >
-                {t("captionVisibility")}
-              </Label>
+            <FormField
+              label={t("captionVisibility")}
+              labelVariant="admin"
+              labelClassName="font-semibold"
+              description={t("captionHelp")}
+            >
               <NativeSelect
-                id={captionPositionId}
                 value={selectedGallerySettings.captionPosition}
                 onChange={(e) =>
                   setSelectedGallerySettings((prev) => ({
@@ -456,10 +453,7 @@ export function SettingsView({
                 <option value="lightbox">{t("captionLightbox")}</option>
                 <option value="hidden">{t("captionHidden")}</option>
               </NativeSelect>
-              <p className="mt-1.5 text-[11px] text-slate-500">
-                {t("captionHelp")}
-              </p>
-            </div>
+            </FormField>
           </div>
 
           {/* Lightbox Thumbnail Strip */}

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useId } from "react";
+import React, { useState, useEffect } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Lock, Mail, Loader2 } from "lucide-react";
@@ -8,7 +8,7 @@ import { CmsBrandLogo } from "../../components/ui/cms-brand-logo";
 import { FlagIcon } from "../../components/ui/flag-icon";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { Card } from "../../components/ui/card";
 import { SegmentedControl } from "../../components/ui/segmented-control";
 import { AdminIntlProvider, useAdminIntl } from "../../i18n";
@@ -26,9 +26,6 @@ function LoginContent({ callbackUrl = "/admin" }: LoginViewProps) {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const emailFieldId = useId();
-  const passwordFieldId = useId();
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -117,45 +114,43 @@ function LoginContent({ callbackUrl = "/admin" }: LoginViewProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor={emailFieldId} className="block text-xs font-medium text-slate-300 mb-1.5">
-              {t("email")}
-            </Label>
-            <div className="relative">
-              <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-              <Input
-                id={emailFieldId}
-                type="email"
-                variant="admin"
-                size="default"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
-                className="pl-10 text-xs"
-              />
-            </div>
-          </div>
+          <FormField label={t("email")} labelVariant="admin">
+            {(control) => (
+              <div className="relative">
+                <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                <Input
+                  {...control}
+                  type="email"
+                  variant="admin"
+                  size="default"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@example.com"
+                  className="pl-10 text-xs"
+                />
+              </div>
+            )}
+          </FormField>
 
-          <div>
-            <Label htmlFor={passwordFieldId} className="block text-xs font-medium text-slate-300 mb-1.5">
-              {t("password")}
-            </Label>
-            <div className="relative">
-              <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
-              <Input
-                id={passwordFieldId}
-                type="password"
-                variant="admin"
-                size="default"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="pl-10 text-xs"
-              />
-            </div>
-          </div>
+          <FormField label={t("password")} labelVariant="admin">
+            {(control) => (
+              <div className="relative">
+                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                <Input
+                  {...control}
+                  type="password"
+                  variant="admin"
+                  size="default"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="pl-10 text-xs"
+                />
+              </div>
+            )}
+          </FormField>
 
           <Button
             type="submit"

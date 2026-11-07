@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
@@ -43,6 +43,7 @@ import {
 } from "../../components/ui/dialog";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
+import { FormField } from "../../components/ui/form-field";
 import { useConfirm } from "../../components/confirm";
 import { YearCalendar } from "../components/prices-availability-calendar";
 import { useBookingSettingsQuery } from "../../booking/hooks";
@@ -1190,8 +1191,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 )}
 
                 {/* Name */}
-                <div>
-                  <label className='block text-xs font-semibold text-slate-300 mb-1.5'>{t("modal.periodName")}</label>
+                <FormField label={t("modal.periodName")} labelVariant="admin" labelClassName="font-semibold">
                   <input
                     type='text'
                     value={formName}
@@ -1199,12 +1199,12 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                     placeholder={t("modal.periodNamePlaceholder")}
                     className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none'
                   />
-                </div>
+                </FormField>
 
                 {/* Date Span */}
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                  <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>{t("modal.startDate")}</label>
+                  {/* required={false}: the inputs keep their native required attribute but no asterisk is shown, as before */}
+                  <FormField label={t("modal.startDate")} required={false} labelVariant="admin" labelClassName="font-semibold">
                     <input
                       type='date'
                       required
@@ -1212,9 +1212,8 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       onChange={(e) => setFormStartDate(e.target.value)}
                       className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                     />
-                  </div>
-                  <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>{t("modal.endDate")}</label>
+                  </FormField>
+                  <FormField label={t("modal.endDate")} required={false} labelVariant="admin" labelClassName="font-semibold">
                     <input
                       type='date'
                       required
@@ -1222,7 +1221,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       onChange={(e) => setFormEndDate(e.target.value)}
                       className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                     />
-                  </div>
+                  </FormField>
                 </div>
 
                 {formDateSpanInfo && (
@@ -1233,7 +1232,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         {t("modal.durationDays", { days: formDateSpanInfo.days })}
                       </strong>
                     </span>
-                    <span className='font-mono text-[11px] bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30'>
+                    <span className='font-mono text-[0.6875rem] bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30'>
                       {formDateSpanInfo.weekLabel}
                     </span>
                   </div>
@@ -1242,8 +1241,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 {/* Base Prices: Daily & Weekly */}
                 <div className={`grid gap-3 pt-2 border-t border-slate-800 ${isCustomDaysAllowed ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
                   {isCustomDaysAllowed && (
-                    <div>
-                      <label className='block text-xs font-semibold text-slate-300 mb-1.5'>{t("modal.dailyBasePrice")}</label>
+                    <FormField label={t("modal.dailyBasePrice")} labelVariant="admin" labelClassName="font-semibold">
                       <input
                         type='number'
                         step='any'
@@ -1252,10 +1250,9 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         onChange={(e) => setFormPriceDay(e.target.value)}
                         className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
                       />
-                    </div>
+                    </FormField>
                   )}
-                  <div>
-                    <label className='block text-xs font-semibold text-amber-300 mb-1.5'>{t("modal.priceWeek")}</label>
+                  <FormField label={t("modal.priceWeek")} labelVariant="admin" labelClassName="font-semibold text-amber-300">
                     <input
                       type='number'
                       step='any'
@@ -1264,15 +1261,12 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       onChange={(e) => setFormPriceWeek(e.target.value)}
                       className='w-full rounded-xl border border-amber-500/50 bg-slate-950 px-3 py-2 text-xs text-amber-200 placeholder-slate-600 focus:border-amber-400 focus:outline-none'
                     />
-                  </div>
+                  </FormField>
                 </div>
 
                 {/* Weekend / Midweek Rates */}
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                  <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>
-                      {t("modal.priceSunThu")}
-                    </label>
+                  <FormField label={t("modal.priceSunThu")} labelVariant="admin" labelClassName="font-semibold">
                     <input
                       type='number'
                       step='any'
@@ -1281,11 +1275,8 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       onChange={(e) => setFormPriceSunThu(e.target.value)}
                       className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
                     />
-                  </div>
-                  <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1.5'>
-                      {t("modal.priceThuSun")}
-                    </label>
+                  </FormField>
+                  <FormField label={t("modal.priceThuSun")} labelVariant="admin" labelClassName="font-semibold">
                     <input
                       type='number'
                       step='any'
@@ -1294,7 +1285,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       onChange={(e) => setFormPriceThuSun(e.target.value)}
                       className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
                     />
-                  </div>
+                  </FormField>
                 </div>
 
                 {/* Custom Days Toggle & Tiered Prices (only if custom days are enabled for this unit) */}
@@ -1432,8 +1423,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               )}
 
               <form onSubmit={handleSaveBlocked} className='space-y-4'>
-                <div>
-                  <label className='block text-xs font-semibold text-slate-300 mb-1'>{t("modal.reason")}</label>
+                <FormField label={t("modal.reason")} labelVariant="admin" labelClassName="font-semibold">
                   <input
                     type='text'
                     value={blockedFormName}
@@ -1441,11 +1431,10 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                     placeholder={t("modal.reasonPlaceholder")}
                     className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none'
                   />
-                </div>
+                </FormField>
 
                 <div className='grid grid-cols-2 gap-3'>
-                  <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1'>{t("modal.startDate")}</label>
+                  <FormField label={t("modal.startDate")} required={false} labelVariant="admin" labelClassName="font-semibold">
                     <input
                       type='date'
                       required
@@ -1453,10 +1442,9 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       onChange={(e) => setBlockedFormStartDate(e.target.value)}
                       className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white focus:border-rose-500 focus:outline-none'
                     />
-                  </div>
+                  </FormField>
 
-                  <div>
-                    <label className='block text-xs font-semibold text-slate-300 mb-1'>{t("modal.endDate")}</label>
+                  <FormField label={t("modal.endDate")} required={false} labelVariant="admin" labelClassName="font-semibold">
                     <input
                       type='date'
                       required
@@ -1464,10 +1452,10 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       onChange={(e) => setBlockedFormEndDate(e.target.value)}
                       className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white focus:border-rose-500 focus:outline-none'
                     />
-                  </div>
+                  </FormField>
                 </div>
 
-                <div className='rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-[11px] text-slate-400 leading-relaxed'>
+                <div className='rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-[0.6875rem] text-slate-400 leading-relaxed'>
                   {t("modal.blockedHelpP1")}
                 </div>
 

@@ -10,6 +10,7 @@ import { LANGUAGE_META } from "../../constants/languages";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { NativeSelect } from "../../components/ui/select";
 import { Badge } from "../../components/ui/badge";
 import { useConfirm } from "../../components/confirm";
@@ -76,9 +77,6 @@ export function PagesView({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createTitleId = useId();
-  const createSlugId = useId();
-  const createSectionId = useId();
-  const createTemplateId = useId();
 
   const [sortField, setSortField] = useState<PageSortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -495,40 +493,37 @@ export function PagesView({
               </div>
             </div>
 
-            <div>
-              <Label htmlFor={createSlugId} className='block text-xs font-medium text-slate-300 mb-1'>
-                {t("modal.slugLabel")}
-              </Label>
-              <div
-                className={`flex items-center rounded-xl border bg-admin-field overflow-hidden transition ${
-                  !newSlugValidation.isValid
-                    ? "border-red-500 ring-1 ring-red-500/30"
-                    : "border-admin-border focus-within:border-admin-accent"
-                }`}>
-                <span className='px-3 py-2.5 text-xs font-mono text-slate-500 bg-admin-surface-subtle border-r border-admin-border'>
-                  /
-                </span>
-                <input
-                  id={createSlugId}
-                  type='text'
-                  placeholder={`${nextIdPreview}`}
-                  value={newSlug}
-                  onChange={(e) => setNewSlug(cleanSlugInput(e.target.value, true))}
-                  onBlur={() => setNewSlug((prev) => cleanSlugInput(prev, false))}
-                  className='w-full bg-transparent p-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none'
-                />
-              </div>
-              {!newSlugValidation.isValid && newSlugValidation.error && (
-                <p className='mt-1 text-[11px] font-medium text-red-400'>{newSlugValidation.error}</p>
+            <FormField
+              label={t("modal.slugLabel")}
+              labelVariant='admin'
+              error={!newSlugValidation.isValid ? newSlugValidation.error : undefined}>
+              {(control) => (
+                <div
+                  className={`flex items-center rounded-xl border bg-admin-field overflow-hidden transition ${
+                    !newSlugValidation.isValid
+                      ? "border-red-500 ring-1 ring-red-500/30"
+                      : "border-admin-border focus-within:border-admin-accent"
+                  }`}>
+                  <span className='px-3 py-2.5 text-xs font-mono text-slate-500 bg-admin-surface-subtle border-r border-admin-border'>
+                    /
+                  </span>
+                  <input
+                    {...control}
+                    type='text'
+                    placeholder={`${nextIdPreview}`}
+                    value={newSlug}
+                    onChange={(e) => setNewSlug(cleanSlugInput(e.target.value, true))}
+                    onBlur={() => setNewSlug((prev) => cleanSlugInput(prev, false))}
+                    className='w-full bg-transparent p-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none'
+                  />
+                </div>
               )}
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor={createSectionId} className='block text-xs font-medium text-slate-300 mb-1'>
-                {t("modal.sectionLabel")}
-              </Label>
+            <FormField
+              label={t("modal.sectionLabel")}
+              labelVariant='admin'>
               <NativeSelect
-                id={createSectionId}
                 variant='admin'
                 size='sm'
                 value={newSectionId}
@@ -542,14 +537,12 @@ export function PagesView({
                     </option>
                   ))}
               </NativeSelect>
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor={createTemplateId} className='block text-xs font-medium text-slate-300 mb-1'>
-                {t("modal.templateLabel")}
-              </Label>
+            <FormField
+              label={t("modal.templateLabel")}
+              labelVariant='admin'>
               <NativeSelect
-                id={createTemplateId}
                 variant='admin'
                 size='sm'
                 value={newTemplate}
@@ -562,7 +555,7 @@ export function PagesView({
                     </option>
                   ))}
               </NativeSelect>
-            </div>
+            </FormField>
 
             <div className='flex items-center justify-end gap-2 pt-2'>
               <Button

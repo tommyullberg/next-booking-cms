@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useId } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import {
   Plus,
@@ -17,6 +17,7 @@ import {
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { Badge } from "../../components/ui/badge";
 import { useConfirm } from "../../components/confirm";
 import {
@@ -63,7 +64,6 @@ export function AdministratorsView({
   onSaveAdministrator,
   onDeleteAdministrator,
 }: AdministratorsViewProps) {
-  const formId = useId();
   const t = useTranslations("administrators");
   const tCommon = useTranslations("common");
   const { confirm } = useConfirm();
@@ -403,63 +403,44 @@ export function AdministratorsView({
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor={`${formId}-first-name`} variant="admin" className="mb-1">
-                  {t("firstName")} <span className="text-rose-400">*</span>
-                </Label>
+              <FormField label={t("firstName")} required labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-first-name`}
                   variant="admin"
                   size="sm"
                   type="text"
-                  required
                   autoComplete="off"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Anna"
                 />
-              </div>
-              <div>
-                <Label htmlFor={`${formId}-last-name`} variant="admin" className="mb-1">
-                  {t("lastName")} <span className="text-rose-400">*</span>
-                </Label>
+              </FormField>
+              <FormField label={t("lastName")} required labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-last-name`}
                   variant="admin"
                   size="sm"
                   type="text"
-                  required
                   autoComplete="off"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Andersson"
                 />
-              </div>
+              </FormField>
             </div>
 
-            <div>
-              <Label htmlFor={`${formId}-email`} variant="admin" className="mb-1">
-                {t("email")} <span className="text-rose-400">*</span>
-              </Label>
+            <FormField label={t("email")} required labelVariant="admin" labelSize="sm">
               <Input
-                id={`${formId}-email`}
                 variant="admin"
                 size="sm"
                 type="email"
-                required
                 autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="anna@example.com"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor={`${formId}-mobile`} variant="admin" className="mb-1">
-                {t("mobile")}
-              </Label>
+            <FormField label={t("mobile")} labelVariant="admin" labelSize="sm">
               <Input
-                id={`${formId}-mobile`}
                 variant="admin"
                 size="sm"
                 type="tel"
@@ -468,24 +449,18 @@ export function AdministratorsView({
                 onChange={(e) => setMobile(e.target.value)}
                 placeholder="+46 70 123 45 67"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor={`${formId}-password`} variant="admin" className="mb-1">
-                {editingAdmin ? (
-                  t("newPassword")
-                ) : (
-                  <>
-                    {t("password")} <span className="text-rose-400">*</span>
-                  </>
-                )}
-              </Label>
+            <FormField
+              label={editingAdmin ? t("newPassword") : t("password")}
+              required={!editingAdmin}
+              labelVariant="admin"
+              labelSize="sm"
+            >
               <Input
-                id={`${formId}-password`}
                 variant="admin"
                 size="sm"
                 type="password"
-                required={!editingAdmin}
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -493,7 +468,7 @@ export function AdministratorsView({
                   editingAdmin ? "••••••••" : t("passwordMinPlaceholder")
                 }
               />
-            </div>
+            </FormField>
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button

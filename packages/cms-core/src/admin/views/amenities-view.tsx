@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useId } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import {
   Plus,
@@ -16,7 +16,7 @@ import {
 import { AmenityItem } from "../../booking/types";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { Badge } from "../../components/ui/badge";
 import {
   Dialog,
@@ -42,7 +42,6 @@ export function AmenitiesView({
   onDeleteAmenity,
   onReorderAmenities,
 }: AmenitiesViewProps) {
-  const formId = useId();
   const t = useTranslations("amenities");
   const tCommon = useTranslations("common");
 
@@ -375,21 +374,16 @@ export function AmenitiesView({
               </div>
             )}
 
-            <div className="space-y-1.5">
-              <Label htmlFor={`${formId}-name`} variant="admin">
-                {t("name")} <span className="text-rose-400">*</span>
-              </Label>
+            <FormField label={t("name")} required labelVariant="admin">
               <Input
-                id={`${formId}-name`}
                 variant="admin"
                 size="sm"
                 type="text"
-                required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder={t("namePlaceholder")}
               />
-            </div>
+            </FormField>
 
             {/* Action Buttons */}
             <div className="pt-4 border-t border-slate-800 flex items-center justify-between gap-3">

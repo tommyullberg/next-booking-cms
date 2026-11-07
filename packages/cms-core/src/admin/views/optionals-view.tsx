@@ -26,6 +26,7 @@ import { MediaItem } from "./media-view";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { Textarea } from "../../components/ui/textarea";
 import { NativeSelect } from "../../components/ui/select";
 import { Card } from "../../components/ui/card";
@@ -110,16 +111,8 @@ export function OptionalsView({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const nameFieldId = useId();
-  const descFieldId = useId();
-  const objectSelectId = useId();
   const statusSwitchId = useId();
   const manualUrlId = useId();
-  const priceHourId = useId();
-  const priceDayId = useId();
-  const priceSunThuId = useId();
-  const priceThuSunId = useId();
-  const priceWeekId = useId();
 
   // Drag & drop handlers
   const handleDragStart = (e: React.DragEvent, id: string) => {
@@ -631,47 +624,34 @@ export function OptionalsView({
               <form onSubmit={handleSave} className="space-y-4 text-xs">
                 {/* Name & Active Switch */}
                 <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor={nameFieldId} className="text-[11px] font-semibold text-slate-300">
-                      {t("name")} <span className="text-rose-400">*</span>
-                    </Label>
+                  <FormField label={t("name")} required labelVariant="admin" labelSize="sm" labelClassName="font-semibold">
                     <Input
-                      id={nameFieldId}
                       type="text"
                       variant="admin"
                       size="sm"
-                      required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder={t("namePlaceholder")}
                     />
-                  </div>
+                  </FormField>
 
                   {/* Description */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor={descFieldId} className="text-[11px] font-semibold text-slate-300">
-                      {t("description")}
-                    </Label>
+                  <FormField label={t("description")} labelVariant="admin" labelSize="sm" labelClassName="font-semibold">
                     <Textarea
-                      id={descFieldId}
                       variant="admin"
                       rows={3}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder={t("descriptionPlaceholder")}
                     />
-                  </div>
+                  </FormField>
                 </div>
 
                 {/* Locked to Object & Active Switch */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Locked to Object */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor={objectSelectId} className="text-[11px] font-semibold text-slate-300">
-                      {t("colLocked")}
-                    </Label>
+                  <FormField label={t("colLocked")} labelVariant="admin" labelSize="sm" labelClassName="font-semibold">
                     <NativeSelect
-                      id={objectSelectId}
                       variant="admin"
                       size="sm"
                       value={objectId}
@@ -684,15 +664,15 @@ export function OptionalsView({
                         </option>
                       ))}
                     </NativeSelect>
-                  </div>
+                  </FormField>
 
                   {/* Active / Hidden Switch */}
                   <div className="space-y-1.5">
-                    <Label htmlFor={statusSwitchId} className="text-[11px] font-semibold text-slate-300">
+                    <Label htmlFor={statusSwitchId} variant="admin" size="sm" className="font-semibold">
                       {t("status")}
                     </Label>
                     <div className="rounded-admin-button border border-admin-border bg-admin-field px-3 py-1.5 flex items-center justify-between h-[38px]">
-                      <span className="text-[11px] text-slate-300">
+                      <span className="text-[0.6875rem] text-slate-300">
                         {isActive ? t("statusActive") : t("statusHidden")}
                       </span>
                       <button
@@ -902,16 +882,12 @@ export function OptionalsView({
 
                 {/* Pricing Breakdown */}
                 <div className="space-y-2 pt-2 border-t border-slate-800">
-                  <Label className="text-[11px] font-semibold text-slate-300 block">
+                  <Label variant="admin" size="sm" className="font-semibold block">
                     {t("pricingTitle")}
                   </Label>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                    <div className="space-y-1">
-                      <Label htmlFor={priceHourId} className="text-[10px] text-slate-400 font-normal">
-                        {t("hourlyRate")}
-                      </Label>
+                    <FormField label={t("hourlyRate")} labelVariant="muted" labelSize="xs">
                       <Input
-                        id={priceHourId}
                         type="number"
                         variant="admin"
                         size="sm"
@@ -920,14 +896,10 @@ export function OptionalsView({
                         onChange={(e) => setPriceHour(Number(e.target.value))}
                         className="text-center font-mono"
                       />
-                    </div>
+                    </FormField>
 
-                    <div className="space-y-1">
-                      <Label htmlFor={priceDayId} className="text-[10px] text-slate-400 font-normal">
-                        {t("dailyRate")}
-                      </Label>
+                    <FormField label={t("dailyRate")} labelVariant="muted" labelSize="xs">
                       <Input
-                        id={priceDayId}
                         type="number"
                         variant="admin"
                         size="sm"
@@ -936,14 +908,10 @@ export function OptionalsView({
                         onChange={(e) => setPriceDay(Number(e.target.value))}
                         className="text-center font-mono"
                       />
-                    </div>
+                    </FormField>
 
-                    <div className="space-y-1">
-                      <Label htmlFor={priceSunThuId} className="text-[10px] text-slate-400 font-normal">
-                        {t("sunThuRate")}
-                      </Label>
+                    <FormField label={t("sunThuRate")} labelVariant="muted" labelSize="xs">
                       <Input
-                        id={priceSunThuId}
                         type="number"
                         variant="admin"
                         size="sm"
@@ -952,14 +920,10 @@ export function OptionalsView({
                         onChange={(e) => setPriceSunThu(Number(e.target.value))}
                         className="text-center font-mono"
                       />
-                    </div>
+                    </FormField>
 
-                    <div className="space-y-1">
-                      <Label htmlFor={priceThuSunId} className="text-[10px] text-slate-400 font-normal">
-                        {t("thuSunRate")}
-                      </Label>
+                    <FormField label={t("thuSunRate")} labelVariant="muted" labelSize="xs">
                       <Input
-                        id={priceThuSunId}
                         type="number"
                         variant="admin"
                         size="sm"
@@ -968,14 +932,16 @@ export function OptionalsView({
                         onChange={(e) => setPriceThuSun(Number(e.target.value))}
                         className="text-center font-mono"
                       />
-                    </div>
+                    </FormField>
 
-                    <div className="space-y-1 sm:col-span-1 col-span-2">
-                      <Label htmlFor={priceWeekId} className="text-[10px] text-sky-400 font-semibold">
-                        {t("weeklyRate")}
-                      </Label>
+                    <FormField
+                      label={t("weeklyRate")}
+                      labelVariant="muted"
+                      labelSize="xs"
+                      labelClassName="text-sky-400 font-semibold"
+                      className="sm:col-span-1 col-span-2"
+                    >
                       <Input
-                        id={priceWeekId}
                         type="number"
                         variant="admin"
                         size="sm"
@@ -984,7 +950,7 @@ export function OptionalsView({
                         onChange={(e) => setPriceWeek(Number(e.target.value))}
                         className="text-center font-mono font-bold border-sky-500/40"
                       />
-                    </div>
+                    </FormField>
                   </div>
                 </div>
 

@@ -8,6 +8,7 @@ import { Button } from "../../components/ui/button";
 import { useConfirm } from "../../components/confirm";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { NativeSelect } from "../../components/ui/select";
 import { Card } from "../../components/ui/card";
 import { cn } from "../../utils/cn";
@@ -621,12 +622,14 @@ export function SectionsView({
                 })}
               </div>
 
-              <div className="lg:col-span-3">
-                <Label htmlFor={`${baseFieldId}-new-startpage`} className="block text-[11px] font-medium text-slate-400 mb-1.5">
-                  {t("sectionStartPage")}
-                </Label>
+              <FormField
+                label={t("sectionStartPage")}
+                labelVariant="muted"
+                labelSize="sm"
+                labelClassName="font-medium"
+                className="lg:col-span-3"
+              >
                 <NativeSelect
-                  id={`${baseFieldId}-new-startpage`}
                   variant="admin"
                   size="sm"
                   value={editStartPageId}
@@ -639,7 +642,7 @@ export function SectionsView({
                     </option>
                   ))}
                 </NativeSelect>
-              </div>
+              </FormField>
 
               <div className="lg:col-span-3 flex flex-col items-end justify-center gap-2.5">
                 <div className="flex items-center gap-2">

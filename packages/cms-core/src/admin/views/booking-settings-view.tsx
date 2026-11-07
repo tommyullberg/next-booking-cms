@@ -20,6 +20,7 @@ import {
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
+import { FormField } from "../../components/ui/form-field";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { SelectableCard, SelectableCardGroup } from "../../components/ui/selectable-card";
@@ -50,7 +51,6 @@ export function BookingSettingsView({
 
   const checkInTimeId = useId();
   const checkOutTimeId = useId();
-  const searchPageId = useId();
 
   const [turnoverDay, setTurnoverDay] = useState<DefaultTurnoverDay>(
     bookingSettings?.defaultTurnoverDay || "SUNDAY"
@@ -548,16 +548,18 @@ export function BookingSettingsView({
           </p>
         </div>
 
-        <div className="max-w-md space-y-1.5">
-          <Label
-            htmlFor={searchPageId}
-            variant="admin"
-            className="font-semibold text-slate-200"
-          >
-            {t("searchPageSelectLabel")}
-          </Label>
+        <FormField
+          label={t("searchPageSelectLabel")}
+          labelVariant="admin"
+          labelClassName="font-semibold text-slate-200"
+          className="max-w-md"
+          description={
+            bookingSearchPageSlug
+              ? `Aktiv länk: ${bookingSearchPageSlug.startsWith("/") ? bookingSearchPageSlug : `/${bookingSearchPageSlug}`}`
+              : "Ingen sida vald – sökknapp och länk döljs i kalendern"
+          }
+        >
           <NativeSelect
-            id={searchPageId}
             value={bookingSearchPageSlug}
             onChange={(e) => setBookingSearchPageSlug(e.target.value)}
             size="sm"
@@ -574,12 +576,7 @@ export function BookingSettingsView({
               );
             })}
           </NativeSelect>
-          <p className="text-[11px] text-slate-500">
-            {bookingSearchPageSlug
-              ? `Aktiv länk: ${bookingSearchPageSlug.startsWith("/") ? bookingSearchPageSlug : `/${bookingSearchPageSlug}`}`
-              : "Ingen sida vald – sökknapp och länk döljs i kalendern"}
-          </p>
-        </div>
+        </FormField>
       </Card>
 
       {/* Live Preview Card */}
