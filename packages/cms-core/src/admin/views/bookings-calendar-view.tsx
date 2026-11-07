@@ -20,7 +20,7 @@ import { BookingItem, BookingObjectDetails, BOOKING_STATUSES, BookingStatusType 
 import { BookingDetailsModal } from "@cms/booking/booking-details-modal";
 import { useBookingSettingsQuery } from "@cms/booking/hooks";
 import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "@cms/utils/weeks";
-import { Badge, Button, Card } from "@cms/components/ui";
+import { Badge, Button, Card, IconButton, Tabs, TabsList, TabsTrigger, TabsContent } from "@cms/components/ui";
 
 export interface BookingsCalendarViewProps {
   objects?: BookingObjectDetails[];
@@ -538,7 +538,11 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
   };
 
   return (
-    <div className='space-y-6'>
+    <Tabs
+      value={viewMode}
+      onValueChange={(val) => setViewMode(val as "calendar" | "list")}
+      className='space-y-6'
+    >
       {/* Top Header Card */}
       <Card variant="admin" className='p-6 backdrop-blur shadow-xl'>
         <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
@@ -555,68 +559,39 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
           {/* View Mode & Date Switchers */}
           <div className='flex flex-wrap items-center gap-2.5'>
             {/* View Mode Tabs */}
-            <div
-              role='tablist'
+            <TabsList
               aria-label={t("title")}
-              className='inline-flex rounded-xl bg-slate-950/70 p-1 border border-slate-800 text-xs'
+              className='h-auto p-1 bg-slate-950/70 border-slate-800 rounded-xl'
             >
-              <button
-                type='button'
-                role='tab'
-                id='tab-view-calendar'
-                aria-selected={viewMode === "calendar"}
-                aria-controls='view-calendar-panel'
-                tabIndex={viewMode === "calendar" ? 0 : -1}
-                onClick={() => setViewMode("calendar")}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "End") {
-                    e.preventDefault();
-                    setViewMode("list");
-                    document.getElementById("tab-view-list")?.focus();
-                  }
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-                  viewMode === "calendar" ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-white"
-                }`}>
+              <TabsTrigger
+                value='calendar'
+                className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium cursor-pointer'
+              >
                 <CalendarIcon className='w-3.5 h-3.5' />
                 <span>{t("calendarView")}</span>
-              </button>
-              <button
-                type='button'
-                role='tab'
-                id='tab-view-list'
-                aria-selected={viewMode === "list"}
-                aria-controls='view-list-panel'
-                tabIndex={viewMode === "list" ? 0 : -1}
-                onClick={() => setViewMode("list")}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "Home") {
-                    e.preventDefault();
-                    setViewMode("calendar");
-                    document.getElementById("tab-view-calendar")?.focus();
-                  }
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-                  viewMode === "list" ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-white"
-                }`}>
+              </TabsTrigger>
+              <TabsTrigger
+                value='list'
+                className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium cursor-pointer'
+              >
                 <List className='w-3.5 h-3.5' />
                 <span>{t("listView")}</span>
-              </button>
-            </div>
+              </TabsTrigger>
+            </TabsList>
 
             {/* Calendar Month Controls (shown in calendar mode) */}
             {viewMode === "calendar" && (
               <div className='flex items-center gap-1.5 bg-slate-950/70 border border-slate-800 rounded-xl px-2 py-1'>
-                <Button
+                <IconButton
                   type='button'
                   variant='ghost'
-                  size='icon'
+                  size='xs'
                   onClick={handlePrevMonth}
-                  className='h-7 w-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800'
                   aria-label={t("prevMonth")}
-                  title={t("prevMonth")}>
+                  className='rounded-lg text-slate-400 hover:text-white hover:bg-slate-800'
+                >
                   <ChevronLeft className='w-4 h-4' />
-                </Button>
+                </IconButton>
                 <Button
                   type='button'
                   variant='ghost'
@@ -629,16 +604,16 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                 <span className='text-xs font-bold text-white min-w-32 text-center capitalize' aria-live='polite'>
                   {currentMonthName} {year}
                 </span>
-                <Button
+                <IconButton
                   type='button'
                   variant='ghost'
-                  size='icon'
+                  size='xs'
                   onClick={handleNextMonth}
-                  className='h-7 w-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800'
                   aria-label={t("nextMonth")}
-                  title={t("nextMonth")}>
+                  className='rounded-lg text-slate-400 hover:text-white hover:bg-slate-800'
+                >
                   <ChevronRight className='w-4 h-4' />
-                </Button>
+                </IconButton>
               </div>
             )}
           </div>
@@ -741,12 +716,8 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
       </Card>
 
       {/* Main View: Calendar or List */}
-      {viewMode === "calendar" ? (
-        <div
-          id='view-calendar-panel'
-          role='tabpanel'
-          aria-labelledby='tab-view-calendar'
-          className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-2xl'>
+      <TabsContent value='calendar' className='mt-0 focus-visible:ring-0'>
+        <div className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-2xl'>
           {/* Weekday headers with Wk column */}
           <div className='grid grid-cols-[44px_repeat(7,1fr)] border-b border-slate-800 bg-slate-950/80 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-2.5'>
             <span className='text-slate-500 font-mono text-[10px]'>{t("colWk")}</span>
@@ -890,12 +861,11 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
             })}
           </div>
         </div>
-      ) : (
-        /* List View */
+      </TabsContent>
+
+      {/* List View */}
+      <TabsContent value='list' className='mt-0 focus-visible:ring-0'>
         <Card
-          id='view-list-panel'
-          role='tabpanel'
-          aria-labelledby='tab-view-list'
           variant="admin"
           className='overflow-hidden shadow-xl'
         >
@@ -1088,7 +1058,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
             </div>
           )}
         </Card>
-      )}
+      </TabsContent>
 
       {/* Booking Details & Administration Modal Dialog */}
       {selectedBooking && (
@@ -1120,6 +1090,6 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
           locale={locale === "en" ? "en" : "sv"}
         />
       )}
-    </div>
+    </Tabs>
   );
 }
