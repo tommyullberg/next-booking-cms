@@ -18,6 +18,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { FormField } from "../../components/ui/form-field";
+import { Alert } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
 import { useConfirm } from "../../components/confirm";
 import {
@@ -382,9 +383,9 @@ export function AdministratorsView({
           </DialogHeader>
 
           {errorMsg && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-300">
+            <Alert variant="destructive" className="mb-4">
               {errorMsg}
-            </div>
+            </Alert>
           )}
 
           <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">

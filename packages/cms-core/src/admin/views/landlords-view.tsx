@@ -20,6 +20,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { FormField } from "../../components/ui/form-field";
+import { Alert } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
 import { useConfirm } from "../../components/confirm";
 import { Switch } from "../../components/ui/switch";
@@ -459,9 +460,9 @@ export function LandlordsView({
           </DialogHeader>
 
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+            <Alert variant="destructive" className="mb-4">
               {errorMsg}
-            </div>
+            </Alert>
           )}
 
           {/* Modal Form */}

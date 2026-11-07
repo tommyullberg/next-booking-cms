@@ -8,7 +8,6 @@ import {
   Trash2,
   Copy,
   Coins,
-  AlertTriangle,
   CheckCircle2,
   Calendar,
   X,
@@ -44,6 +43,7 @@ import {
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import { FormField } from "../../components/ui/form-field";
+import { Alert } from "../../components/ui/alert";
 import { useConfirm } from "../../components/confirm";
 import { YearCalendar } from "../components/prices-availability-calendar";
 import { useBookingSettingsQuery } from "../../booking/hooks";
@@ -1144,10 +1144,9 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
               {/* Error Message if Overlap / Failure */}
               {errorMessage && (
-                <div className='mb-4 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3.5 text-rose-300 flex items-start gap-2.5 text-xs'>
-                  <AlertTriangle className='w-4 h-4 text-rose-400 shrink-0 mt-0.5' />
-                  <span>{errorMessage}</span>
-                </div>
+                <Alert variant="destructive" className="mb-4">
+                  {errorMessage}
+                </Alert>
               )}
 
               <form onSubmit={handleSave} className='space-y-5'>
@@ -1416,10 +1415,9 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
           </div>
 
               {blockedErrorMessage && (
-                <div className='rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-300 flex items-start gap-2'>
-                  <AlertTriangle className='w-4 h-4 shrink-0 text-rose-400 mt-0.5' />
-                  <span>{blockedErrorMessage}</span>
-                </div>
+                <Alert variant="destructive" className="mb-4">
+                  {blockedErrorMessage}
+                </Alert>
               )}
 
               <form onSubmit={handleSaveBlocked} className='space-y-4'>

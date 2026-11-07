@@ -8,7 +8,6 @@ import {
   Trash2,
   Tag,
   Search,
-  XCircle,
   Loader2,
   GripVertical,
   Box,
@@ -17,6 +16,7 @@ import { AmenityItem } from "../../booking/types";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { FormField } from "../../components/ui/form-field";
+import { Alert } from "../../components/ui/alert";
 import { Badge } from "../../components/ui/badge";
 import {
   Dialog,
@@ -368,10 +368,9 @@ export function AmenitiesView({
 
           <form onSubmit={handleSave} className="p-6 space-y-4">
             {errorMsg && (
-              <div className="flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">
-                <XCircle className="w-4 h-4 shrink-0 text-red-400" />
-                <span>{errorMsg}</span>
-              </div>
+              <Alert variant="destructive">
+                {errorMsg}
+              </Alert>
             )}
 
             <FormField label={t("name")} required labelVariant="admin">

@@ -27,6 +27,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { FormField } from "../../components/ui/form-field";
+import { Alert } from "../../components/ui/alert";
 import { Textarea } from "../../components/ui/textarea";
 import { NativeSelect } from "../../components/ui/select";
 import { Card } from "../../components/ui/card";
@@ -615,9 +616,9 @@ export function OptionalsView({
           </DialogHeader>
 
           {errorMsg && (
-            <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+            <Alert variant="destructive" className="mb-4">
               {errorMsg}
-            </div>
+            </Alert>
           )}
 
               {/* Form */}
