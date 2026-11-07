@@ -11,12 +11,14 @@ const labelVariants = cva(
         default:
           "block text-xs font-semibold text-slate-400 uppercase tracking-wider",
         admin: "block text-xs font-medium text-slate-300",
+        booking: "block text-xs font-medium text-slate-700 dark:text-slate-300",
         inline: "text-sm font-medium text-slate-300",
-        muted: "text-xs font-normal text-slate-500",
+        muted: "block text-xs font-normal text-slate-400",
       },
       size: {
         default: "",
-        sm: "text-[11px]",
+        sm: "text-[0.6875rem]",
+        xs: "text-[0.625rem]",
       },
     },
     defaultVariants: {
