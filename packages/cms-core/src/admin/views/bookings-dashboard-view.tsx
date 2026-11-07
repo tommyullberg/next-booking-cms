@@ -33,6 +33,7 @@ import { PricePeriodItem } from "./prices-availability-view";
 import { Button } from "../../components/ui/button";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import { Alert } from "../../components/ui/alert";
 import { cn } from "../../utils/cn";
 
 export interface BookingsDashboardViewProps {
@@ -235,10 +236,9 @@ export function BookingsDashboardView({
       </Card>
 
       {errorMsg && (
-        <div role="alert" className="p-3.5 rounded-xl border border-rose-500/30 bg-rose-950/20 text-xs text-rose-300 flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-          <span>{errorMsg}</span>
-        </div>
+        <Alert variant="destructive">
+          {errorMsg}
+        </Alert>
       )}
 
       {/* Primary KPI Metrics */}

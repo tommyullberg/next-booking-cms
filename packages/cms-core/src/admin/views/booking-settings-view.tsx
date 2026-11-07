@@ -26,6 +26,7 @@ import { Badge } from "../../components/ui/badge";
 import { SelectableCard, SelectableCardGroup } from "../../components/ui/selectable-card";
 import { SegmentedControl } from "../../components/ui/segmented-control";
 import { NativeSelect } from "../../components/ui/select";
+import { Alert } from "../../components/ui/alert";
 import {
   BookingSettings,
   DEFAULT_BOOKING_SETTINGS,
@@ -188,17 +189,15 @@ export function BookingSettingsView({
 
       {/* Success / Error notification banner */}
       {savedSuccess && (
-        <div className="flex items-center gap-2 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-          <span className="font-medium">{t("saveSuccess")}</span>
-        </div>
+        <Alert variant="success" className="animate-in fade-in">
+          {t("saveSuccess")}
+        </Alert>
       )}
 
       {errorMsg && (
-        <div className="flex items-center gap-2 p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
-          <Info className="w-4 h-4 shrink-0 text-rose-400" />
-          <span>{errorMsg}</span>
-        </div>
+        <Alert variant="destructive">
+          {errorMsg}
+        </Alert>
       )}
 
       {/* Section 1: Default turnover day */}

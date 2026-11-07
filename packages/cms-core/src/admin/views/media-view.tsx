@@ -15,7 +15,6 @@ import {
   Lock,
   Search,
   FileText,
-  X,
   Layers,
   HardDrive,
 } from "lucide-react";
@@ -25,6 +24,7 @@ import { FormField } from "../../components/ui/form-field";
 import { Card } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { NativeSelect } from "../../components/ui/select";
+import { Alert } from "../../components/ui/alert";
 import { useConfirm } from "../../components/confirm";
 import {
   Dialog,
@@ -547,19 +547,13 @@ export function MediaView({
       </div>
 
       {actionError && (
-        <div role="alert" className="rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-xs text-red-300 flex items-center justify-between">
-          <span>{actionError}</span>
-          <Button
-            type="button"
-            variant="adminGhost"
-            size="xs"
-            onClick={() => setActionError(null)}
-            className="text-red-400 hover:text-red-200"
-            aria-label={tCommon("close")}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
+        <Alert
+          variant="destructive"
+          onClose={() => setActionError(null)}
+          closeLabel={tCommon("close")}
+        >
+          {actionError}
+        </Alert>
       )}
 
       {/* Main Layout: Sidebar Folders + Files Display */}

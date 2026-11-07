@@ -10,6 +10,7 @@ import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { FormField } from "../../components/ui/form-field";
 import { Card } from "../../components/ui/card";
+import { Alert } from "../../components/ui/alert";
 import { SegmentedControl } from "../../components/ui/segmented-control";
 import { AdminIntlProvider, useAdminIntl } from "../../i18n";
 
@@ -108,9 +109,9 @@ function LoginContent({ callbackUrl = "/admin" }: LoginViewProps) {
         </div>
 
         {error && (
-          <div role="alert" className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs text-red-400">
+          <Alert variant="destructive" className="mb-4">
             {error}
-          </div>
+          </Alert>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
