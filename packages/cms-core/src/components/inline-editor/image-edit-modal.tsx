@@ -11,6 +11,7 @@ import {
 } from "../ui/dialog";
 import { FormField } from "../ui/form-field";
 import { Label } from "../ui/label";
+import { Alert } from "../ui/alert";
 import { useConfirm } from "../confirm";
 import {
   X,
@@ -433,7 +434,9 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
           </div>
 
           {errorMessage && (
-            <p className="text-xs text-red-400">{errorMessage}</p>
+            <Alert variant="destructive" className="mt-3">
+              {errorMessage}
+            </Alert>
           )}
         </div>
 

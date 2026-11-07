@@ -10,6 +10,7 @@ import {
   DialogDescription,
 } from "../ui/dialog";
 import { useConfirm } from "../confirm";
+import { Alert } from "../ui/alert";
 import { FlagIcon } from "../ui/flag-icon";
 import { LANGUAGE_META } from "../../constants/languages";
 import {
@@ -899,9 +900,9 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
             </div>
 
             {errorMessage && (
-              <div className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs text-rose-300">
+              <Alert variant="destructive" className="mt-3">
                 {errorMessage}
-              </div>
+              </Alert>
             )}
 
             {/* Footer */}
