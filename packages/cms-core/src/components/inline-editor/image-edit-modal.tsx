@@ -9,6 +9,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
+import { FormField } from "../ui/form-field";
+import { Label } from "../ui/label";
 import { useConfirm } from "../confirm";
 import {
   X,
@@ -361,10 +363,15 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
             )}
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
-              {t("imageUrlLabel")}
-            </label>
+          <FormField
+            label={t("imageUrlLabel")}
+            labelVariant="admin"
+            description={
+              /^https?:\/\//i.test(imageUrl.trim()) ? (
+                <span className="text-amber-300/90">{t("externalUrlNotice")}</span>
+              ) : undefined
+            }
+          >
             <input
               type="text"
               value={imageUrl}
@@ -372,17 +379,12 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
               className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-slate-100 placeholder-slate-500 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
               placeholder={t("imageUrlPlaceholder")}
             />
-            {/^https?:\/\//i.test(imageUrl.trim()) && (
-              <p className="mt-1.5 text-[11px] text-amber-300/90">
-                {t("externalUrlNotice")}
-              </p>
-            )}
-          </div>
+          </FormField>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300 mb-1.5">
+            <Label variant="admin" className="mb-1.5 block">
               {t("orUploadLocal")}
-            </label>
+            </Label>
             <label className="flex items-center justify-center gap-2 cursor-pointer rounded-xl border border-slate-700 bg-slate-800 p-2.5 text-xs font-medium text-slate-200 hover:bg-slate-700">
               {isUploading ? (
                 <Loader2 className="w-4 h-4 animate-spin text-amber-400" />
@@ -403,10 +405,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                {t("aspectRatio")}
-              </label>
+            <FormField label={t("aspectRatio")} labelVariant="admin">
               <select
                 value={ratio}
                 onChange={(e) => setRatio(e.target.value)}
@@ -418,12 +417,9 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                 <option value="3/2">{t("aspectRatio32")}</option>
                 <option value="auto">{t("aspectRatioAuto")}</option>
               </select>
-            </div>
+            </FormField>
 
-            <div>
-              <label className="block text-xs font-medium text-slate-300 mb-1.5">
-                {t("maxWidth")}
-              </label>
+            <FormField label={t("maxWidth")} labelVariant="admin">
               <input
                 type="number"
                 value={maxWidth}
@@ -433,7 +429,7 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                 placeholder={t("maxWidthPlaceholder")}
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2 text-xs text-slate-100 focus:border-amber-500 focus:outline-none"
               />
-            </div>
+            </FormField>
           </div>
 
           {errorMessage && (
