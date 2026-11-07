@@ -36,6 +36,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../components/ui/dialog";
+import { FormField } from "../components/ui/form-field";
 
 export interface UnitCalendarInteractProps {
   objectId: string;
@@ -1023,10 +1024,7 @@ export function UnitCalendarInteract({
                     </label>
 
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          För- och efternamn *
-                        </label>
+                      <FormField label='För- och efternamn' required labelVariant="booking">
                         <input
                           type='text'
                           required
@@ -1035,12 +1033,9 @@ export function UnitCalendarInteract({
                           placeholder='Anna Andersson'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          E-postadress *
-                        </label>
+                      <FormField label='E-postadress' required labelVariant="booking">
                         <input
                           type='email'
                           required
@@ -1049,12 +1044,9 @@ export function UnitCalendarInteract({
                           placeholder='anna@example.com'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Mobilnummer
-                        </label>
+                      <FormField label='Mobilnummer' labelVariant="booking">
                         <input
                           type='tel'
                           value={customerMobile}
@@ -1062,12 +1054,9 @@ export function UnitCalendarInteract({
                           placeholder='+46 70 123 4567'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Fast telefon (valfritt)
-                        </label>
+                      <FormField label='Fast telefon (valfritt)' labelVariant="booking">
                         <input
                           type='tel'
                           value={customerPhone}
@@ -1075,12 +1064,12 @@ export function UnitCalendarInteract({
                           placeholder='+46 8 123 456'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div className='sm:col-span-2'>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Gatuadress (Adressrad 1)
-                        </label>
+                      <FormField
+                        label='Gatuadress (Adressrad 1)'
+                        labelVariant="booking"
+                        className='sm:col-span-2'>
                         <input
                           type='text'
                           value={addressLine1}
@@ -1088,12 +1077,9 @@ export function UnitCalendarInteract({
                           placeholder='Storgatan 12'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Postnummer
-                        </label>
+                      <FormField label='Postnummer' labelVariant="booking">
                         <input
                           type='text'
                           value={postalCode}
@@ -1101,12 +1087,9 @@ export function UnitCalendarInteract({
                           placeholder='123 45'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Ort
-                        </label>
+                      <FormField label='Ort' labelVariant="booking">
                         <input
                           type='text'
                           value={city}
@@ -1114,12 +1097,9 @@ export function UnitCalendarInteract({
                           placeholder='Stockholm'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div className='sm:col-span-2'>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Land
-                        </label>
+                      <FormField label='Land' labelVariant="booking" className='sm:col-span-2'>
                         <input
                           type='text'
                           value={country}
@@ -1127,7 +1107,7 @@ export function UnitCalendarInteract({
                           placeholder='Sverige'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
                     </div>
                   </div>
 
@@ -1138,10 +1118,7 @@ export function UnitCalendarInteract({
                     </label>
 
                     <div className='grid grid-cols-3 gap-3'>
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Antal vuxna
-                        </label>
+                      <FormField label='Antal vuxna' labelVariant="booking">
                         <input
                           type='number'
                           min={1}
@@ -1150,12 +1127,9 @@ export function UnitCalendarInteract({
                           onChange={(e) => setAdultsCount(Number(e.target.value))}
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Antal barn
-                        </label>
+                      <FormField label='Antal barn' labelVariant="booking">
                         <input
                           type='number'
                           min={0}
@@ -1164,12 +1138,9 @@ export function UnitCalendarInteract({
                           onChange={(e) => setChildrenCount(Number(e.target.value))}
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Husdjur
-                        </label>
+                      <FormField label='Husdjur' labelVariant="booking">
                         <input
                           type='number'
                           min={0}
@@ -1178,15 +1149,14 @@ export function UnitCalendarInteract({
                           onChange={(e) => setPetsCount(Number(e.target.value))}
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
                     </div>
                   </div>
 
                   {/* Guest message / special requests */}
-                  <div>
-                    <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                      Meddelande eller särskilda önskemål till hyresvärden
-                    </label>
+                  <FormField
+                    label='Meddelande eller särskilda önskemål till hyresvärden'
+                    labelVariant="booking">
                     <textarea
                       rows={3}
                       value={customerNotes}
@@ -1194,7 +1164,7 @@ export function UnitCalendarInteract({
                       placeholder='T.ex. ankomsttid, frågor om barnsäng, sänglinne eller specifika önskemål...'
                       className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none resize-none'
                     />
-                  </div>
+                  </FormField>
 
                   {/* Summary & Price */}
                   <div className='border-t border-slate-200 dark:border-slate-800 pt-3 flex items-center justify-between'>

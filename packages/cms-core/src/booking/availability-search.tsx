@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { SearchMatchItem } from "./types";
 import { DatePicker } from "../components/ui/date-picker";
+import { FormField } from "../components/ui/form-field";
 import {
   Dialog,
   DialogContent,
@@ -491,8 +492,8 @@ export function AvailabilitySearch({
               </div>
             ) : (
               <form onSubmit={handleConfirmBooking} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Namn</label>
+                {/* required={false}: inputs keep their native required attribute but no asterisk is shown, as before */}
+                <FormField label="Namn" required={false} labelVariant="booking">
                   <input
                     type="text"
                     required
@@ -501,10 +502,9 @@ export function AvailabilitySearch({
                     placeholder="För- och efternamn"
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">E-postadress</label>
+                <FormField label="E-postadress" required={false} labelVariant="booking">
                   <input
                     type="email"
                     required
@@ -513,10 +513,9 @@ export function AvailabilitySearch({
                     placeholder="namn@example.com"
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Telefon</label>
+                <FormField label="Telefon" labelVariant="booking">
                   <input
                     type="tel"
                     value={customerPhone}
@@ -524,7 +523,7 @@ export function AvailabilitySearch({
                     placeholder="+46 70 123 4567"
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
                   />
-                </div>
+                </FormField>
 
                 <div className="border-t border-slate-200 dark:border-slate-800 pt-3 flex items-center justify-between">
                   <span className="text-xs text-slate-500">Totalt:</span>

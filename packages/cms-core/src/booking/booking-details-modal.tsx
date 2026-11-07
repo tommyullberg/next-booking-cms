@@ -31,6 +31,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../components/ui/dialog";
+import { FormField } from "../components/ui/form-field";
 import { useBookingSettingsQuery } from "./hooks";
 
 export interface BookingDetailsModalProps {
@@ -806,24 +807,22 @@ export function BookingDetailsModal({
                       </div>
 
                       <div className='grid grid-cols-2 gap-3 text-xs'>
-                        <div>
-                          <label className='block text-[11px] text-slate-400 mb-1'>Ankomst (Incheckning)</label>
+                        <FormField label='Ankomst (Incheckning)' labelVariant="muted" labelSize="sm">
                           <input
                             type='date'
                             value={editForm.startDate || ""}
                             onChange={(e) => setEditForm({ ...editForm, startDate: e.target.value })}
                             className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                           />
-                        </div>
-                        <div>
-                          <label className='block text-[11px] text-slate-400 mb-1'>Avresa (Utcheckning)</label>
+                        </FormField>
+                        <FormField label='Avresa (Utcheckning)' labelVariant="muted" labelSize="sm">
                           <input
                             type='date'
                             value={editForm.endDate || ""}
                             onChange={(e) => setEditForm({ ...editForm, endDate: e.target.value })}
                             className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                           />
-                        </div>
+                        </FormField>
                       </div>
                     </div>
 
@@ -833,26 +832,26 @@ export function BookingDetailsModal({
                         Kontrakt och betalning
                       </span>
 
-                      <div>
-                        <label className='block text-[11px] text-slate-400 mb-1'>
-                          Överenskommet totalpris (SEK)
-                        </label>
-                        <div className='relative'>
-                          <input
-                            type='number'
-                            value={editForm.price ?? ""}
-                            onChange={(e) =>
-                              setEditForm({
-                                ...editForm,
-                                price: e.target.value ? Number(e.target.value) : null,
-                              })
-                            }
-                            placeholder='t.ex. 13000'
-                            className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 pr-12 text-xs text-white font-mono focus:border-sky-500 focus:outline-none'
-                          />
-                          <span className='absolute right-3 top-2 text-xs text-slate-500'>SEK</span>
-                        </div>
-                      </div>
+                      <FormField label='Överenskommet totalpris (SEK)' labelVariant="muted" labelSize="sm">
+                        {(control) => (
+                          <div className='relative'>
+                            <input
+                              {...control}
+                              type='number'
+                              value={editForm.price ?? ""}
+                              onChange={(e) =>
+                                setEditForm({
+                                  ...editForm,
+                                  price: e.target.value ? Number(e.target.value) : null,
+                                })
+                              }
+                              placeholder='t.ex. 13000'
+                              className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 pr-12 text-xs text-white font-mono focus:border-sky-500 focus:outline-none'
+                            />
+                            <span className='absolute right-3 top-2 text-xs text-slate-500'>SEK</span>
+                          </div>
+                        )}
+                      </FormField>
 
                       {/* Deposition */}
                       <div className='border-t border-slate-800/80 pt-3'>
@@ -868,8 +867,7 @@ export function BookingDetailsModal({
                           )}
                         </div>
                         <div className='grid grid-cols-3 gap-2 text-xs'>
-                          <div>
-                            <label className='block text-[10px] text-slate-400 mb-0.5'>Belopp (kr)</label>
+                          <FormField label='Belopp (kr)' labelVariant="muted" labelSize="xs">
                             <input
                               type='number'
                               value={editForm.depositAmount ?? ""}
@@ -882,16 +880,15 @@ export function BookingDetailsModal({
                               placeholder='0'
                               className='w-full rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-xs text-white focus:border-sky-500 focus:outline-none'
                             />
-                          </div>
-                          <div>
-                            <label className='block text-[10px] text-slate-400 mb-0.5'>Förfallodag</label>
+                          </FormField>
+                          <FormField label='Förfallodag' labelVariant="muted" labelSize="xs">
                             <input
                               type='date'
                               value={editForm.depositDueDate || ""}
                               onChange={(e) => setEditForm({ ...editForm, depositDueDate: e.target.value })}
                               className='w-full rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-xs text-white focus:border-sky-500 focus:outline-none'
                             />
-                          </div>
+                          </FormField>
                           <div>
                             <div className='flex items-center justify-between mb-0.5'>
                               <label className='block text-[10px] text-slate-400'>Betald datum</label>
@@ -930,8 +927,7 @@ export function BookingDetailsModal({
                           )}
                         </div>
                         <div className='grid grid-cols-3 gap-2 text-xs'>
-                          <div>
-                            <label className='block text-[10px] text-slate-400 mb-0.5'>Belopp (kr)</label>
+                          <FormField label='Belopp (kr)' labelVariant="muted" labelSize="xs">
                             <input
                               type='number'
                               value={
@@ -949,16 +945,15 @@ export function BookingDetailsModal({
                               placeholder='0'
                               className='w-full rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-xs text-white focus:border-sky-500 focus:outline-none'
                             />
-                          </div>
-                          <div>
-                            <label className='block text-[10px] text-slate-400 mb-0.5'>Förfallodag</label>
+                          </FormField>
+                          <FormField label='Förfallodag' labelVariant="muted" labelSize="xs">
                             <input
                               type='date'
                               value={editForm.finalPaymentDueDate || ""}
                               onChange={(e) => setEditForm({ ...editForm, finalPaymentDueDate: e.target.value })}
                               className='w-full rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-xs text-white focus:border-sky-500 focus:outline-none'
                             />
-                          </div>
+                          </FormField>
                           <div>
                             <div className='flex items-center justify-between mb-0.5'>
                               <label className='block text-[10px] text-slate-400'>Betald datum</label>
@@ -1068,8 +1063,7 @@ export function BookingDetailsModal({
                       </span>
 
                       <div className='space-y-2 text-xs'>
-                        <div>
-                          <label className='block text-[11px] text-slate-400 mb-1'>Namn</label>
+                        <FormField label='Namn' labelVariant="muted" labelSize="sm">
                           <input
                             type='text'
                             value={editForm.customerName || ""}
@@ -1077,10 +1071,9 @@ export function BookingDetailsModal({
                             placeholder='För- och efternamn'
                             className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                           />
-                        </div>
+                        </FormField>
 
-                        <div>
-                          <label className='block text-[11px] text-slate-400 mb-1'>Adress 1 (Gatuadress)</label>
+                        <FormField label='Adress 1 (Gatuadress)' labelVariant="muted" labelSize="sm">
                           <input
                             type='text'
                             value={editForm.addressLine1 || ""}
@@ -1088,10 +1081,9 @@ export function BookingDetailsModal({
                             placeholder='Arenanders Promenad 37'
                             className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                           />
-                        </div>
+                        </FormField>
 
-                        <div>
-                          <label className='block text-[11px] text-slate-400 mb-1'>Adress 2 (c/o, lgh)</label>
+                        <FormField label='Adress 2 (c/o, lgh)' labelVariant="muted" labelSize="sm">
                           <input
                             type='text'
                             value={editForm.addressLine2 || ""}
@@ -1099,11 +1091,10 @@ export function BookingDetailsModal({
                             placeholder='Lgh 1201'
                             className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                           />
-                        </div>
+                        </FormField>
 
                         <div className='grid grid-cols-2 gap-2'>
-                          <div>
-                            <label className='block text-[11px] text-slate-400 mb-1'>Postnummer</label>
+                          <FormField label='Postnummer' labelVariant="muted" labelSize="sm">
                             <input
                               type='text'
                               value={editForm.postalCode || ""}
@@ -1111,9 +1102,8 @@ export function BookingDetailsModal({
                               placeholder='191 37'
                               className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                             />
-                          </div>
-                          <div>
-                            <label className='block text-[11px] text-slate-400 mb-1'>Ort</label>
+                          </FormField>
+                          <FormField label='Ort' labelVariant="muted" labelSize="sm">
                             <input
                               type='text'
                               value={editForm.city || ""}
@@ -1121,11 +1111,10 @@ export function BookingDetailsModal({
                               placeholder='Sollentuna'
                               className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                             />
-                          </div>
+                          </FormField>
                         </div>
 
-                        <div>
-                          <label className='block text-[11px] text-slate-400 mb-1'>Land</label>
+                        <FormField label='Land' labelVariant="muted" labelSize="sm">
                           <input
                             type='text'
                             value={editForm.country || ""}
@@ -1133,11 +1122,10 @@ export function BookingDetailsModal({
                             placeholder='Sverige'
                             className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                           />
-                        </div>
+                        </FormField>
 
                         <div className='grid grid-cols-2 gap-2'>
-                          <div>
-                            <label className='text-[11px] text-slate-400 mb-1 block'>Fast telefon</label>
+                          <FormField label='Fast telefon' labelVariant="muted" labelSize="sm">
                             <input
                               type='tel'
                               value={editForm.customerPhone || ""}
@@ -1145,10 +1133,9 @@ export function BookingDetailsModal({
                               placeholder='08-123 45'
                               className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                             />
-                          </div>
+                          </FormField>
 
-                          <div>
-                            <label className='text-[11px] text-slate-400 mb-1 block'>Mobiltelefon</label>
+                          <FormField label='Mobiltelefon' labelVariant="muted" labelSize="sm">
                             <input
                               type='tel'
                               value={editForm.customerMobile || ""}
@@ -1156,11 +1143,10 @@ export function BookingDetailsModal({
                               placeholder='070-123 45 67'
                               className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                             />
-                          </div>
+                          </FormField>
                         </div>
 
-                        <div>
-                          <label className='text-[11px] text-slate-400 mb-1 block'>E-postadress</label>
+                        <FormField label='E-postadress' labelVariant="muted" labelSize="sm">
                           <input
                             type='email'
                             value={editForm.customerEmail || ""}
@@ -1168,7 +1154,7 @@ export function BookingDetailsModal({
                             placeholder='namn@example.com'
                             className='w-full rounded-lg border border-slate-700 bg-slate-900 p-2 text-xs text-white focus:border-sky-500 focus:outline-none'
                           />
-                        </div>
+                        </FormField>
                       </div>
                     </div>
 
@@ -1178,8 +1164,7 @@ export function BookingDetailsModal({
                         Sällskapets sammansättning
                       </span>
                       <div className='grid grid-cols-3 gap-2 text-xs'>
-                        <div>
-                          <label className='block text-[10px] text-slate-400 mb-0.5'>Antal vuxna</label>
+                        <FormField label='Antal vuxna' labelVariant="muted" labelSize="xs">
                           <input
                             type='number'
                             min={1}
@@ -1187,9 +1172,8 @@ export function BookingDetailsModal({
                             onChange={(e) => setEditForm({ ...editForm, adultsCount: Number(e.target.value) })}
                             className='w-full rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-xs text-white focus:border-sky-500 focus:outline-none'
                           />
-                        </div>
-                        <div>
-                          <label className='block text-[10px] text-slate-400 mb-0.5'>Antal barn</label>
+                        </FormField>
+                        <FormField label='Antal barn' labelVariant="muted" labelSize="xs">
                           <input
                             type='number'
                             min={0}
@@ -1197,9 +1181,8 @@ export function BookingDetailsModal({
                             onChange={(e) => setEditForm({ ...editForm, childrenCount: Number(e.target.value) })}
                             className='w-full rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-xs text-white focus:border-sky-500 focus:outline-none'
                           />
-                        </div>
-                        <div>
-                          <label className='block text-[10px] text-slate-400 mb-0.5'>Husdjur</label>
+                        </FormField>
+                        <FormField label='Husdjur' labelVariant="muted" labelSize="xs">
                           <input
                             type='number'
                             min={0}
@@ -1207,7 +1190,7 @@ export function BookingDetailsModal({
                             onChange={(e) => setEditForm({ ...editForm, petsCount: Number(e.target.value) })}
                             className='w-full rounded-lg border border-slate-700 bg-slate-900 p-1.5 text-xs text-white focus:border-sky-500 focus:outline-none'
                           />
-                        </div>
+                        </FormField>
                       </div>
                     </div>
 
