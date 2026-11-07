@@ -113,6 +113,10 @@ import {
   createBookingRequestAction,
   updateBookingAction,
 } from "../actions/bookings";
+import {
+  getBookingDiscrepanciesAction,
+  clearBookingDiscrepanciesAction,
+} from "../logging/discrepancies";
 import { prisma } from "../db";
 
 export async function handleSaveTextField(req: NextRequest) {
@@ -744,6 +748,15 @@ export async function handleCmsApiRoute(
       }
     }
 
+    if (path === "bookings/discrepancies") {
+      try {
+        const discrepancies = await getBookingDiscrepanciesAction();
+        return NextResponse.json(discrepancies, { headers: NO_CACHE_HEADERS });
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
+    }
+
     if (path === "ical/sync" || path === "ical/sync-all") {
       try {
         const force = req.nextUrl.searchParams.get("force") === "true";
@@ -951,6 +964,18 @@ export async function handleCmsApiRoute(
           { error: err?.message || "Failed to delete media" },
           { status: 400 }
         );
+      }
+    }
+
+    if (path === "bookings/discrepancies" || path.startsWith("bookings/discrepancies/")) {
+      try {
+        const id = path.startsWith("bookings/discrepancies/")
+          ? path.replace("bookings/discrepancies/", "")
+          : req.nextUrl.searchParams.get("id") || undefined;
+        const result = await clearBookingDiscrepanciesAction(id);
+        return NextResponse.json(result);
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
       }
     }
   }

@@ -28,6 +28,7 @@ import {
   DialogDescription,
 } from "../components/ui/dialog";
 import { Loader } from "../components/ui/loader";
+import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
 
 /** Minimum time (in ms) to display the search loader animation when triggered */
 export const MIN_SEARCH_LOADER_DURATION_MS = 900;
@@ -332,6 +333,14 @@ export function AvailabilitySearch({
       {/* Results Presentation View */}
       {searchTriggered && (
         <div className="space-y-8">
+          {/* Error Banner */}
+          {!isSearching && data?.error && (
+            <Alert variant="destructive">
+              <AlertTitle>Fel vid sökning</AlertTitle>
+              <AlertDescription>{data.error}</AlertDescription>
+            </Alert>
+          )}
+
           {/* 1. Exact Matches */}
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">
@@ -376,15 +385,23 @@ export function AvailabilitySearch({
                     <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
                       <div>
                         <span className="text-xs text-slate-500 dark:text-slate-400">Totalpris:</span>
-                        <div className="text-base font-bold text-sky-700 dark:text-sky-400 font-mono">
-                          {item.totalPrice.toLocaleString("sv-SE")} SEK
-                        </div>
+                        {item.hasPriceError ? (
+                          <div className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                            {item.priceErrorMessage || "Prisuppgift saknas"}
+                          </div>
+                        ) : (
+                          <div className="text-base font-bold text-sky-700 dark:text-sky-400 font-mono">
+                            {item.totalPrice.toLocaleString("sv-SE")} SEK
+                          </div>
+                        )}
                       </div>
 
                       <button
                         type="button"
                         onClick={() => handleBookItem(item)}
-                        className="flex items-center gap-1.5 rounded-xl bg-sky-700 px-4 py-2 text-xs font-semibold text-white hover:bg-sky-600 transition shadow-md shadow-sky-700/20"
+                        disabled={item.hasPriceError}
+                        title={item.hasPriceError ? (item.priceErrorMessage || "Kan ej bokas utan prissättning") : undefined}
+                        className="flex items-center gap-1.5 rounded-xl bg-sky-700 px-4 py-2 text-xs font-semibold text-white hover:bg-sky-600 transition shadow-md shadow-sky-700/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <span>Boka nu</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -441,15 +458,23 @@ export function AvailabilitySearch({
                       <div className="flex items-center justify-between border-t border-amber-500/20 dark:border-slate-800 pt-3">
                         <div>
                           <span className="text-xs text-slate-500 dark:text-slate-400">Totalpris:</span>
-                          <div className="text-base font-bold text-slate-900 dark:text-white font-mono">
-                            {item.totalPrice.toLocaleString("sv-SE")} SEK
-                          </div>
+                          {item.hasPriceError ? (
+                            <div className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                              {item.priceErrorMessage || "Prisuppgift saknas"}
+                            </div>
+                          ) : (
+                            <div className="text-base font-bold text-slate-900 dark:text-white font-mono">
+                              {item.totalPrice.toLocaleString("sv-SE")} SEK
+                            </div>
+                          )}
                         </div>
 
                         <button
                           type="button"
                           onClick={() => handleBookItem(item)}
-                          className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-500 transition shadow-md shadow-amber-600/20"
+                          disabled={item.hasPriceError}
+                          title={item.hasPriceError ? (item.priceErrorMessage || "Kan ej väljas utan prissättning") : undefined}
+                          className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-500 transition shadow-md shadow-amber-600/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           <span>Välj datum</span>
                           <ArrowRight className="w-3.5 h-3.5" />

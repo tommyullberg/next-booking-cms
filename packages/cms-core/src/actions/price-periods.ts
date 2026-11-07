@@ -99,7 +99,13 @@ export async function getPricePeriodsAction(params?: {
   year?: number;
 }) {
   try {
-    const resolvedObjectId = await resolveBookingObjectId(params?.objectId);
+    let resolvedObjectId: string | undefined = undefined;
+    if (params?.objectId) {
+      resolvedObjectId = await resolveBookingObjectId(params.objectId);
+      if (!resolvedObjectId) {
+        return [];
+      }
+    }
     const where: any = {};
     if (resolvedObjectId) {
       where.object_id = resolvedObjectId;
@@ -300,7 +306,10 @@ export async function getBlockedPeriodsAction(
   year?: number
 ): Promise<BlockedPeriodItem[]> {
   try {
-    const resolvedObjectId = (await resolveBookingObjectId(objectId)) || objectId;
+    const resolvedObjectId = await resolveBookingObjectId(objectId);
+    if (!resolvedObjectId) {
+      return [];
+    }
     const where: any = {
       object_id: resolvedObjectId,
       status: "APPROVED",
@@ -344,7 +353,10 @@ export async function createBlockedPeriodAction(data: {
   startDate: string;
   endDate: string;
 }) {
-  const resolvedObjectId = (await resolveBookingObjectId(data.objectId)) || data.objectId;
+  const resolvedObjectId = await resolveBookingObjectId(data.objectId);
+  if (!resolvedObjectId) {
+    throw new Error("Bokningsobjektet kunde inte hittas eller är ogiltigt.");
+  }
   const start = new Date(data.startDate + "T12:00:00Z");
   const end = new Date(data.endDate + "T12:00:00Z");
 

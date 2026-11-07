@@ -5,38 +5,200 @@ import { sendBookingEmail } from "../mail";
 import { getMondayOfISOWeek, getSundayOfISOWeek } from "../utils/weeks";
 import { getCmsSettingsAction } from "./settings";
 import { AllowedBookingPeriods } from "../types/settings";
+import { recordBookingDiscrepancy } from "../logging/discrepancies";
 
 export async function resolveBookingObjectId(idOrAlias?: string): Promise<string | undefined> {
-  if (!idOrAlias) return undefined;
+  if (!idOrAlias || typeof idOrAlias !== "string") return undefined;
+  const trimmed = idOrAlias.trim();
+  if (!trimmed) return undefined;
 
-  // 1. Direct match on BookingObject ID
+  // 1. Exact match on BookingObject primary key
   const exact = await prisma.bookingObject.findUnique({
-    where: { id: idOrAlias },
+    where: { id: trimmed },
     select: { id: true },
   });
   if (exact) return exact.id;
 
-  // 2. Match by page ID (e.g. "lullyhill-unit-1003", "unit-1003", or "1003")
-  const numMatch = idOrAlias.match(/(\d+)$/);
-  if (numMatch) {
-    const pageId = parseInt(numMatch[1], 10);
-    const byPage = await prisma.bookingObject.findFirst({
+  // Clean leading slash for page slug checks
+  const cleanSlug = trimmed.replace(/^\//, "");
+
+  // 2. Strict match via associated page slug
+  const bySlug = await prisma.bookingObject.findFirst({
+    where: {
+      page: {
+        slug: {
+          in: [cleanSlug, `/${cleanSlug}`],
+        },
+      },
+    },
+    select: { id: true },
+  });
+  if (bySlug) return bySlug.id;
+
+  // 3. Exact match if numeric page_id was provided (pure digits only)
+  if (/^\d+$/.test(trimmed)) {
+    const pageId = parseInt(trimmed, 10);
+    const byPageId = await prisma.bookingObject.findFirst({
       where: { page_id: pageId },
       select: { id: true },
     });
-    if (byPage) return byPage.id;
+    if (byPageId) return byPageId.id;
   }
 
-  // 3. Match by name or alias
-  if (idOrAlias.toLowerCase().includes("villa") || idOrAlias.toLowerCase().includes("huset")) {
-    const byVilla = await prisma.bookingObject.findFirst({
-      where: { name: { contains: "Huset", mode: "insensitive" } },
-      select: { id: true },
+  return undefined;
+}
+
+export interface PeriodPriceResult {
+  totalPrice: number;
+  isPriced: boolean;
+  error?: string;
+}
+
+function getPeriodDateBounds(p: any): { startStr: string; endStr: string } | null {
+  let startStr: string | null = null;
+  let endStr: string | null = null;
+  if (p.start_date && p.end_date) {
+    startStr =
+      typeof p.start_date === "string"
+        ? p.start_date.slice(0, 10)
+        : new Date(p.start_date).toISOString().split("T")[0];
+    endStr =
+      typeof p.end_date === "string"
+        ? p.end_date.slice(0, 10)
+        : new Date(p.end_date).toISOString().split("T")[0];
+  } else if (p.start_year && p.start_week && p.end_year && p.end_week) {
+    startStr = getMondayOfISOWeek(p.start_year, p.start_week).toISOString().split("T")[0];
+    endStr = getSundayOfISOWeek(p.end_year, p.end_week).toISOString().split("T")[0];
+  }
+  if (startStr && endStr) {
+    return { startStr, endStr };
+  }
+  return null;
+}
+
+export function calculatePeriodPrice(
+  obj: any,
+  pricePeriods: any[],
+  startDate: Date,
+  endDate: Date
+): PeriodPriceResult {
+  const nights = Math.max(
+    1,
+    Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+  );
+
+  const startDow = startDate.getDay();
+  const endDow = endDate.getDay();
+  const sStr = startDate.toISOString().split("T")[0];
+  const eStr = endDate.toISOString().split("T")[0];
+
+  const baseNightPrice =
+    typeof (obj?.price_matrix as any)?.base_night_price === "number" &&
+    (obj?.price_matrix as any)?.base_night_price > 0
+      ? (obj.price_matrix as any).base_night_price
+      : 0;
+
+  // 1. Check if the entire requested range falls within a single seasonal period
+  const matchingPeriod = (pricePeriods || []).find((p) => {
+    const bounds = getPeriodDateBounds(p);
+    return bounds && sStr >= bounds.startStr && eStr <= bounds.endStr;
+  });
+
+  if (matchingPeriod) {
+    if (nights % 7 === 0 && matchingPeriod.price_week && matchingPeriod.price_week > 0) {
+      return {
+        totalPrice: Math.round((nights / 7) * matchingPeriod.price_week),
+        isPriced: true,
+      };
+    }
+    if (
+      nights === 3 &&
+      startDow === 4 &&
+      endDow === 0 &&
+      matchingPeriod.price_thu_sun &&
+      matchingPeriod.price_thu_sun > 0
+    ) {
+      return {
+        totalPrice: Math.round(matchingPeriod.price_thu_sun),
+        isPriced: true,
+      };
+    }
+    if (
+      nights === 4 &&
+      startDow === 0 &&
+      endDow === 4 &&
+      matchingPeriod.price_sun_thu &&
+      matchingPeriod.price_sun_thu > 0
+    ) {
+      return {
+        totalPrice: Math.round(matchingPeriod.price_sun_thu),
+        isPriced: true,
+      };
+    }
+    if (nights === 2 && matchingPeriod.price_2_days && matchingPeriod.price_2_days > 0) {
+      return { totalPrice: Math.round(matchingPeriod.price_2_days), isPriced: true };
+    }
+    if (nights === 3 && matchingPeriod.price_3_days && matchingPeriod.price_3_days > 0) {
+      return { totalPrice: Math.round(matchingPeriod.price_3_days), isPriced: true };
+    }
+    if (nights === 4 && matchingPeriod.price_4_days && matchingPeriod.price_4_days > 0) {
+      return { totalPrice: Math.round(matchingPeriod.price_4_days), isPriced: true };
+    }
+    if (nights === 5 && matchingPeriod.price_5_days && matchingPeriod.price_5_days > 0) {
+      return { totalPrice: Math.round(matchingPeriod.price_5_days), isPriced: true };
+    }
+    if (nights === 6 && matchingPeriod.price_6_days && matchingPeriod.price_6_days > 0) {
+      return { totalPrice: Math.round(matchingPeriod.price_6_days), isPriced: true };
+    }
+    if (matchingPeriod.price_day && matchingPeriod.price_day > 0) {
+      return {
+        totalPrice: Math.round(matchingPeriod.price_day * nights),
+        isPriced: true,
+      };
+    }
+    if (matchingPeriod.price_week && matchingPeriod.price_week > 0) {
+      return {
+        totalPrice: Math.round((matchingPeriod.price_week / 7) * nights),
+        isPriced: true,
+      };
+    }
+  }
+
+  // 2. Night-by-night calculation (for split periods or fallback to base_night_price)
+  let calculatedTotal = 0;
+  const curr = new Date(startDate);
+  for (let i = 0; i < nights; i++) {
+    const dayStr = curr.toISOString().split("T")[0];
+    const periodForNight = (pricePeriods || []).find((p) => {
+      const bounds = getPeriodDateBounds(p);
+      return bounds && dayStr >= bounds.startStr && dayStr <= bounds.endStr;
     });
-    if (byVilla) return byVilla.id;
+
+    let nightPrice = 0;
+    if (periodForNight?.price_day && periodForNight.price_day > 0) {
+      nightPrice = periodForNight.price_day;
+    } else if (periodForNight?.price_week && periodForNight.price_week > 0) {
+      nightPrice = periodForNight.price_week / 7;
+    } else if (baseNightPrice > 0) {
+      nightPrice = baseNightPrice;
+    }
+
+    if (nightPrice <= 0) {
+      return {
+        totalPrice: 0,
+        isPriced: false,
+        error: `Prissättning saknas för natten ${dayStr}.`,
+      };
+    }
+
+    calculatedTotal += nightPrice;
+    curr.setDate(curr.getDate() + 1);
   }
 
-  return idOrAlias;
+  return {
+    totalPrice: Math.round(calculatedTotal),
+    isPriced: true,
+  };
 }
 
 export async function getBookingsAction(params?: {
@@ -45,7 +207,18 @@ export async function getBookingsAction(params?: {
   endDate?: Date;
 }) {
   try {
-    const resolvedObjectId = await resolveBookingObjectId(params?.objectId);
+    let resolvedObjectId: string | undefined = undefined;
+    if (params?.objectId) {
+      resolvedObjectId = await resolveBookingObjectId(params.objectId);
+      if (!resolvedObjectId) {
+        await recordBookingDiscrepancy({
+          type: "OBJECT_NOT_FOUND",
+          objectId: params.objectId,
+          message: `getBookingsAction anropades med okänt eller ogiltigt objekt-ID: '${params.objectId}'.`,
+        });
+        return [];
+      }
+    }
     const where: any = {};
     if (resolvedObjectId) where.object_id = resolvedObjectId;
     if (params?.startDate || params?.endDate) {
@@ -74,7 +247,7 @@ export async function getBookingsAction(params?: {
     return raw.map((b) => ({
       id: b.id,
       objectId: b.object_id,
-      objectName: b.object?.name || "Unknown Object",
+      objectName: b.object?.name || "Okänt boende",
       startDate: b.start_date.toISOString().split("T")[0],
       endDate: b.end_date.toISOString().split("T")[0],
       status: b.status,
@@ -108,9 +281,14 @@ export async function getBookingsAction(params?: {
       createdAt: b.created_at.toISOString(),
       updatedAt: b.updated_at.toISOString(),
     }));
-  } catch (error) {
+  } catch (error: any) {
     console.error("[cms-core] Failed to fetch bookings:", error);
-    return [];
+    await recordBookingDiscrepancy({
+      type: "TECHNICAL_DATABASE_ERROR",
+      objectId: params?.objectId,
+      message: `Misslyckades med att hämta bokningar från databasen: ${error?.message || String(error)}`,
+    });
+    throw error;
   }
 }
 
@@ -127,6 +305,14 @@ export async function searchAvailabilityAction(params: {
   try {
     const targetStart = new Date(startDate);
     const targetEnd = new Date(endDate);
+    if (isNaN(targetStart.getTime()) || isNaN(targetEnd.getTime()) || targetStart >= targetEnd) {
+      return {
+        exactMatches: [],
+        alternatives: [],
+        error: "Ogiltigt datumintervall angivet.",
+      };
+    }
+
     const nights = Math.max(
       1,
       Math.round((targetEnd.getTime() - targetStart.getTime()) / (1000 * 60 * 60 * 24))
@@ -136,19 +322,28 @@ export async function searchAvailabilityAction(params: {
     const cmsSettings = await getCmsSettingsAction();
     const bookingSettings = cmsSettings?.bookingSettings;
 
-    const cleanObjId = objectId?.replace(/^\//, "");
+    let targetObjectId: string | undefined = undefined;
+    if (objectId && objectId !== "all" && objectId !== "ALL") {
+      targetObjectId = await resolveBookingObjectId(objectId);
+      if (!targetObjectId) {
+        await recordBookingDiscrepancy({
+          type: "OBJECT_NOT_FOUND",
+          objectId,
+          period: { startDate, endDate },
+          message: `Bokningsobjekt med identifierare '${objectId}' kunde inte hittas vid tillgänglighetssökning.`,
+        });
+        return {
+          exactMatches: [],
+          alternatives: [],
+          error: "Det angivna bokningsobjektet kunde inte hittas.",
+        };
+      }
+    }
 
     // Fetch matching object(s) meeting capacity and pet criteria
     const objects = await prisma.bookingObject.findMany({
       where: {
-        ...(objectId && objectId !== "all" && objectId !== "ALL"
-          ? {
-              OR: [
-                { id: objectId },
-                ...(cleanObjId ? [{ page: { slug: cleanObjId } }] : []),
-              ],
-            }
-          : {}),
+        ...(targetObjectId ? { id: targetObjectId } : {}),
         bed_count: { gte: Math.min(guests, 10) },
         ...(pets > 0 ? { pets_allowed: true } : {}),
       },
@@ -177,11 +372,6 @@ export async function searchAvailabilityAction(params: {
       return !conflict;
     }
 
-    function calculatePrice(obj: any, n: number): number {
-      const basePrice = (obj.price_matrix as any)?.base_night_price || 2500;
-      return basePrice * n;
-    }
-
     for (const obj of objects) {
       // 1. Resolve effective turnover day for this unit
       const turnoverScope = bookingSettings?.turnoverDayScope ?? "GLOBAL";
@@ -190,7 +380,7 @@ export async function searchAvailabilityAction(params: {
         (turnoverScope === "PER_OBJECT" && objCustom?.defaultTurnoverDay) ||
         bookingSettings?.defaultTurnoverDay ||
         "SUNDAY";
-      const turnoverDayOfWeek = turnoverDayName === "SATURDAY" ? 6 : 0; // 6 = Saturday, 0 = Sunday
+      const turnoverDayOfWeek = turnoverDayName === "SATURDAY" ? 6 : 0;
 
       // 2. Resolve effective allowed booking periods for this unit
       const customDaysScope = bookingSettings?.customDaysScope ?? "GLOBAL";
@@ -217,11 +407,10 @@ export async function searchAvailabilityAction(params: {
         const endDow = eDate.getDay();
 
         if (allowedPeriods === "ALL") {
-          return true; // Any number of contiguous nights is permitted
+          return true;
         }
 
         if (allowedPeriods === "FULL_WEEKS_ONLY") {
-          // Must start on turnover day, end on turnover day, and be an exact multiple of 7 nights
           const startsOnTurnover = startDow === turnoverDayOfWeek;
           const endsOnTurnover = endDow === turnoverDayOfWeek;
           const isMultipleOf7 = periodNights % 7 === 0 && periodNights >= 7;
@@ -229,10 +418,6 @@ export async function searchAvailabilityAction(params: {
         }
 
         if (allowedPeriods === "PERIODS_AND_WEEKS") {
-          // Allowed:
-          // 1. Full weeks: multiple of 7 starting/ending on turnover day
-          // 2. 3 nights: Thursday (4) to Sunday (0)
-          // 3. 4 nights: Sunday (0) to Thursday (4)
           const isFullWeek =
             periodNights % 7 === 0 &&
             startDow === turnoverDayOfWeek &&
@@ -251,26 +436,20 @@ export async function searchAvailabilityAction(params: {
         const sStr = sDate.toISOString().split("T")[0];
         const eStr = eDate.toISOString().split("T")[0];
         return pricePeriods.some((p: any) => {
-          let pStart: string | null = null;
-          let pEnd: string | null = null;
-          if (p.start_date && p.end_date) {
-            pStart =
-              typeof p.start_date === "string"
-                ? p.start_date.slice(0, 10)
-                : new Date(p.start_date).toISOString().split("T")[0];
-            pEnd =
-              typeof p.end_date === "string"
-                ? p.end_date.slice(0, 10)
-                : new Date(p.end_date).toISOString().split("T")[0];
-          } else if (p.start_year && p.start_week && p.end_year && p.end_week) {
-            pStart = getMondayOfISOWeek(p.start_year, p.start_week)
-              .toISOString()
-              .split("T")[0];
-            pEnd = getSundayOfISOWeek(p.end_year, p.end_week)
-              .toISOString()
-              .split("T")[0];
-          }
-          return pStart && pEnd && sStr >= pStart && eStr <= pEnd;
+          const bounds = getPeriodDateBounds(p);
+          return bounds && sStr >= bounds.startStr && eStr <= bounds.endStr;
+        });
+      }
+
+      // Calculate price strictly
+      const priceResult = calculatePeriodPrice(obj, pricePeriods, targetStart, targetEnd);
+      if (!priceResult.isPriced) {
+        await recordBookingDiscrepancy({
+          type: "OBJECT_MISSING_PRICE",
+          objectId: obj.id,
+          objectName: obj.name,
+          period: { startDate, endDate },
+          message: `Objekt '${obj.name}' saknar giltig prissättning för ${startDate} till ${endDate}: ${priceResult.error}`,
         });
       }
 
@@ -293,15 +472,17 @@ export async function searchAvailabilityAction(params: {
         startDate,
         endDate,
         nights,
-        totalPrice: calculatePrice(obj, nights),
+        totalPrice: priceResult.totalPrice,
+        hasPriceError: !priceResult.isPriced,
+        priceErrorMessage: priceResult.error,
       };
 
       const periodMatches = isValidPeriodForObject(targetStart, targetEnd);
       const seasonMatches = isInActiveSeason(targetStart, targetEnd);
-      const exactOk =
-        periodMatches &&
-        seasonMatches &&
-        (await isAvailable(obj.id, targetStart, targetEnd));
+      const isAvailableForDates = await isAvailable(obj.id, targetStart, targetEnd);
+
+      // An exact match must be valid period, in season, available, AND have valid price
+      const exactOk = periodMatches && seasonMatches && isAvailableForDates && priceResult.isPriced;
 
       if (exactOk) {
         exactMatches.push(item);
@@ -324,15 +505,20 @@ export async function searchAvailabilityAction(params: {
                   const altNights = Math.round(
                     (altEnd.getTime() - altStart.getTime()) / 86400000
                   );
-                  alternatives.push({
-                    ...item,
-                    startDate: altStart.toISOString().split("T")[0],
-                    endDate: altEnd.toISOString().split("T")[0],
-                    nights: altNights,
-                    totalPrice: calculatePrice(obj, altNights),
-                    offsetDays: shiftDays,
-                  });
-                  break;
+                  const altPriceResult = calculatePeriodPrice(obj, pricePeriods, altStart, altEnd);
+                  if (altPriceResult.isPriced) {
+                    alternatives.push({
+                      ...item,
+                      startDate: altStart.toISOString().split("T")[0],
+                      endDate: altEnd.toISOString().split("T")[0],
+                      nights: altNights,
+                      totalPrice: altPriceResult.totalPrice,
+                      offsetDays: shiftDays,
+                      hasPriceError: false,
+                      priceErrorMessage: undefined,
+                    });
+                    break;
+                  }
                 }
               }
             }
@@ -343,49 +529,39 @@ export async function searchAvailabilityAction(params: {
     }
 
     return { exactMatches, alternatives };
-  } catch {
-    // Graceful offline mock fallback
+  } catch (error: any) {
+    console.error("[cms-core] searchAvailabilityAction error:", error);
+    await recordBookingDiscrepancy({
+      type: "TECHNICAL_DATABASE_ERROR",
+      period: { startDate, endDate },
+      message: `Databasfel vid sökning av tillgänglighet: ${error?.message || String(error)}`,
+    });
     return {
-      exactMatches: [
-        {
-          object: {
-            id: "lullyhill-villa",
-            name: "Villa Lullyhill",
-            description: "Exklusiv gotländsk kalkstensvilla vid Tofta strand.",
-            size_sqm: 220,
-            bed_count: 8,
-            extra_bed_count: 2,
-            pets_allowed: true,
-            galleries: [
-              {
-                id: "g1",
-                image: {
-                  file_url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
-                  file_name: "villa-exterior.jpg",
-                },
-              },
-            ],
-            amenities: [
-              { id: "a1", name: "Havsutsikt" },
-              { id: "a2", name: "Kalkstensgolv" },
-              { id: "a3", name: "Terrass" },
-            ],
-          },
-          startDate,
-          endDate,
-          nights: 3,
-          totalPrice: 10500,
-        },
-      ],
+      exactMatches: [],
       alternatives: [],
+      error: "Ett tekniskt fel uppstod vid hämtning av tillgängliga boenden.",
     };
   }
 }
 
 export async function createBookingRequestAction(data: CreateBookingRequest) {
-  const resolvedObjectId = (await resolveBookingObjectId(data.objectId)) || data.objectId;
+  const resolvedObjectId = await resolveBookingObjectId(data.objectId);
+  if (!resolvedObjectId) {
+    await recordBookingDiscrepancy({
+      type: "OBJECT_NOT_FOUND",
+      objectId: data.objectId,
+      period: { startDate: data.startDate, endDate: data.endDate },
+      message: `Bokningsförfrågan avbröts: objektet med identifierare '${data.objectId}' kunde inte hittas.`,
+    });
+    throw new Error("Det angivna bokningsobjektet kunde inte hittas eller är ogiltigt.");
+  }
+
   const start = new Date(data.startDate);
   const end = new Date(data.endDate);
+
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) {
+    throw new Error("Ogiltigt datumintervall för bokningsförfrågan.");
+  }
 
   // Verify availability before booking
   const conflict = await prisma.booking.findFirst({
@@ -401,42 +577,40 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
     throw new Error("De valda datumen är tyvärr redan upptagna.");
   }
 
-  // Verify that all nights are within active configured price periods
-  const periods = await prisma.objectPricePeriod.findMany({
-    where: { object_id: resolvedObjectId },
-  });
-
-  if (periods.length > 0) {
-    let curr = new Date(start);
-    while (curr < end) {
-      const dayStr = curr.toISOString().split("T")[0];
-      const inSeason = periods.some((p) => {
-        let s = p.start_date ? p.start_date.toISOString().split("T")[0] : null;
-        let e = p.end_date ? p.end_date.toISOString().split("T")[0] : null;
-        if (!s && p.start_year && p.start_week) {
-          s = getMondayOfISOWeek(p.start_year, p.start_week).toISOString().split("T")[0];
-        }
-        if (!e && p.end_year && p.end_week) {
-          e = getSundayOfISOWeek(p.end_year, p.end_week).toISOString().split("T")[0];
-        }
-        return s && e && dayStr >= s && dayStr <= e;
-      });
-
-      if (!inSeason) {
-        throw new Error("De valda datumen ligger utanför objektets bokningsbara prisperioder.");
-      }
-      curr.setDate(curr.getDate() + 1);
-    }
-  }
-
   const obj = await prisma.bookingObject.findUnique({
     where: { id: resolvedObjectId },
   });
 
-  const nights = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
-  const baseNightPrice = (obj?.price_matrix as any)?.base_night_price || 2500;
-  const totalPrice = baseNightPrice * nights;
+  if (!obj) {
+    await recordBookingDiscrepancy({
+      type: "OBJECT_NOT_FOUND",
+      objectId: resolvedObjectId,
+      message: `Bokningsobjekt '${resolvedObjectId}' kunde inte laddas ur databasen.`,
+    });
+    throw new Error("Bokningsobjektet kunde inte hittas.");
+  }
 
+  const periods = await prisma.objectPricePeriod.findMany({
+    where: { object_id: resolvedObjectId },
+  });
+
+  // Verify price strictly
+  const priceResult = calculatePeriodPrice(obj, periods, start, end);
+  if (!priceResult.isPriced || priceResult.totalPrice <= 0) {
+    await recordBookingDiscrepancy({
+      type: "PERIOD_MISSING_PRICE",
+      objectId: resolvedObjectId,
+      objectName: obj.name,
+      period: { startDate: data.startDate, endDate: data.endDate },
+      message: `Bokning nekad: giltig prissättning saknas för objekt '${obj.name}' under perioden ${data.startDate} till ${data.endDate}.`,
+    });
+    throw new Error(
+      priceResult.error ||
+        "Bokningen kan inte genomföras eftersom giltig prissättning saknas för den valda perioden."
+    );
+  }
+
+  const totalPrice = priceResult.totalPrice;
   const isPreliminary = Boolean(data.isPreliminary);
 
   // Create booking (status PENDING blocks calendar)
@@ -475,12 +649,12 @@ export async function createBookingRequestAction(data: CreateBookingRequest) {
       customer_name: data.customerName,
       customer_email: data.customerEmail,
       customer_phone: data.customerPhone || data.customerMobile || "Ej angivet",
-      object_name: obj?.name || "Boende",
+      object_name: obj.name || "Boende",
       start_date: data.startDate,
       end_date: data.endDate,
       guests_count: data.guestsCount || ((data.adultsCount || 1) + (data.childrenCount || 0)),
       pets_count: data.petsCount || 0,
-      price: `${totalPrice} SEK`,
+      price: `${totalPrice.toLocaleString("sv-SE")} SEK`,
       deeplink,
       status: isPreliminary ? "PRELIMINARY" : "PENDING",
     };
