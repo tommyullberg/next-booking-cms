@@ -32,6 +32,7 @@ import {
   DialogDescription,
 } from "../components/ui/dialog";
 import { FormField } from "../components/ui/form-field";
+import { Alert } from "../components/ui/alert";
 import { useBookingSettingsQuery } from "./hooks";
 
 export interface BookingDetailsModalProps {
@@ -315,17 +316,21 @@ export function BookingDetailsModal({
 
           {/* Feedback messages */}
           {saveSuccess && (
-            <div className='bg-emerald-950/40 border-b border-emerald-800/50 px-6 py-2.5 text-xs text-emerald-300 flex items-center gap-2'>
-              <CheckCircle2 className='w-4 h-4 text-emerald-400 shrink-0' />
-              <span>Bokningsuppgifterna har sparats!</span>
-            </div>
+            <Alert
+              variant="success"
+              className="rounded-none border-x-0 border-t-0 px-6 py-2.5"
+            >
+              Bokningsuppgifterna har sparats!
+            </Alert>
           )}
 
           {saveError && (
-            <div className='bg-rose-950/40 border-b border-rose-800/50 px-6 py-2.5 text-xs text-rose-300 flex items-center gap-2'>
-              <AlertCircle className='w-4 h-4 text-rose-400 shrink-0' />
-              <span>{saveError}</span>
-            </div>
+            <Alert
+              variant="destructive"
+              className="rounded-none border-x-0 border-t-0 px-6 py-2.5"
+            >
+              {saveError}
+            </Alert>
           )}
 
           {/* Body */}

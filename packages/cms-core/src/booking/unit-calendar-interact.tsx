@@ -37,6 +37,7 @@ import {
   DialogDescription,
 } from "../components/ui/dialog";
 import { FormField } from "../components/ui/form-field";
+import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
 
 export interface UnitCalendarInteractProps {
   objectId: string;
@@ -944,22 +945,18 @@ export function UnitCalendarInteract({
               ) : (
                 <form onSubmit={handleSubmitBooking} className='space-y-5'>
                   {bookingError && (
-                    <div className='flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-600 dark:bg-rose-950/20 dark:text-rose-400'>
-                      <AlertCircle className='w-4 h-4 shrink-0' />
-                      <span>{bookingError}</span>
-                    </div>
+                    <Alert variant="destructive">
+                      {bookingError}
+                    </Alert>
                   )}
 
                   {/* Informational Disclaimer regarding Booking.com sync */}
-                  <div className='flex items-start gap-3 p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 text-xs text-sky-900 dark:text-sky-200'>
-                    <Info className='w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5' />
-                    <div className='space-y-1'>
-                      <span className='font-semibold block'>Manuell avstämning mot externa bokningskanaler</span>
-                      <p className='text-[11px] leading-relaxed text-sky-800/90 dark:text-sky-300/80'>
-                        Boendet hyrs även ut via externa kanaler såsom Booking.com. Alla bokningar granskas och bekräftas manuellt av hyresvärden innan bindande avtal och betalningsinstruktioner utfärdas, för att säkerställa att inga dubbelbokningar sker.
-                      </p>
-                    </div>
-                  </div>
+                  <Alert variant="info">
+                    <AlertTitle>Manuell avstämning mot externa bokningskanaler</AlertTitle>
+                    <AlertDescription className="text-[0.6875rem] leading-relaxed text-sky-800/90 dark:text-sky-300/80">
+                      Boendet hyrs även ut via externa kanaler såsom Booking.com. Alla bokningar granskas och bekräftas manuellt av hyresvärden innan bindande avtal och betalningsinstruktioner utfärdas, för att säkerställa att inga dubbelbokningar sker.
+                    </AlertDescription>
+                  </Alert>
 
                   {/* Booking Flow Choice: Preliminary Reservation vs General Inquiry */}
                   <div className='space-y-2'>
