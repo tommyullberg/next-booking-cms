@@ -121,19 +121,24 @@ import {
 import { getToken } from "next-auth/jwt";
 import { prisma } from "../db";
 
-export async function verifyAdminAuth(req: NextRequest): Promise<{ authorized: boolean; identity?: string }> {
+export async function verifyAdminAuth(
+  req: NextRequest
+): Promise<{ authorized: boolean; identity?: string; status?: 401 | 403 }> {
   try {
     const token = await getToken({
       req,
       secret: process.env.NEXTAUTH_SECRET || "development-secret-change-in-production",
     });
-    if (!token || !["SUPERADMIN", "ADMIN", "EDITOR"].includes((token as any).role)) {
-      return { authorized: false };
+    if (!token) {
+      return { authorized: false, status: 401 };
+    }
+    if (!["SUPERADMIN", "ADMIN", "EDITOR"].includes((token as any).role)) {
+      return { authorized: false, status: 403 };
     }
     const identity = token.email || (token as any).name || (token as any).id || "admin";
     return { authorized: true, identity };
   } catch {
-    return { authorized: false };
+    return { authorized: false, status: 401 };
   }
 }
 
@@ -576,7 +581,10 @@ export async function handleCmsApiRoute(
     if (path === "bookings/discrepancies/acknowledge" || path === "bookings/discrepancies") {
       const auth = await verifyAdminAuth(req);
       if (!auth.authorized) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json(
+          { error: auth.status === 403 ? "Forbidden" : "Unauthorized" },
+          { status: auth.status || 401 }
+        );
       }
       try {
         const body = await req.json().catch(() => ({}));
@@ -786,7 +794,10 @@ export async function handleCmsApiRoute(
     if (path === "bookings/discrepancies") {
       const auth = await verifyAdminAuth(req);
       if (!auth.authorized) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json(
+          { error: auth.status === 403 ? "Forbidden" : "Unauthorized" },
+          { status: auth.status || 401 }
+        );
       }
       try {
         const discrepancies = await getBookingDiscrepanciesAction();
@@ -1009,7 +1020,10 @@ export async function handleCmsApiRoute(
     if (path === "bookings/discrepancies" || path.startsWith("bookings/discrepancies/")) {
       const auth = await verifyAdminAuth(req);
       if (!auth.authorized) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json(
+          { error: auth.status === 403 ? "Forbidden" : "Unauthorized" },
+          { status: auth.status || 401 }
+        );
       }
       try {
         const id = path.startsWith("bookings/discrepancies/")

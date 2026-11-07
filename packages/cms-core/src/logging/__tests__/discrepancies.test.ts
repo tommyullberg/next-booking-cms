@@ -269,10 +269,11 @@ describe("Discrepancy Logging & Lifecycle", () => {
   });
 
   it("7. should reject unauthorized requests and verify administrator identity", async () => {
-    // Test that verifyAdminAuth rejects requests without a valid session token
+    // Test that verifyAdminAuth returns status 401 when unauthenticated (no session)
     const unauthenticatedReq = new NextRequest("http://localhost:3000/api/cms/bookings/discrepancies");
     const unauthResult = await verifyAdminAuth(unauthenticatedReq);
     assert.equal(unauthResult.authorized, false);
+    assert.equal(unauthResult.status, 401);
     assert.equal(unauthResult.identity, undefined);
   });
 });
