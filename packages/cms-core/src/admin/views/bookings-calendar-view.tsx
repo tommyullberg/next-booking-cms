@@ -623,66 +623,76 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
         <div className='mt-5 pt-4 border-t border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs'>
           {/* Source toggles (Local vs Booking.com) */}
           <div className='flex flex-wrap items-center gap-2'>
-            <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1'>
+            <span className='text-[0.6875rem] font-semibold text-slate-400 uppercase tracking-wider mr-1'>
               {t("source")}
             </span>
 
             {/* Local bookings toggle */}
-            <button
+            <Button
               type='button'
+              variant='outline'
+              size='sm'
               aria-pressed={showLocalBookings}
               onClick={() => setShowLocalBookings((prev) => !prev)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+              className={`h-8 gap-1.5 px-3 rounded-xl border text-xs font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                 showLocalBookings
-                  ? "bg-sky-500/15 border-sky-500/40 text-sky-200 shadow-sm"
-                  : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300"
+                  ? "bg-sky-500/15 border-sky-500/40 text-sky-200 shadow-sm hover:bg-sky-500/25 hover:text-white"
+                  : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300 hover:bg-slate-900"
               }`}>
               <span className={`w-2 h-2 rounded-full ${showLocalBookings ? "bg-sky-400" : "bg-slate-600"}`} />
               <span>{t("localBookings")}</span>
-              <span className='ml-1 px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-slate-300'>
+              <span className='ml-1 px-1.5 py-0.5 rounded-full bg-slate-800 text-[10px] text-slate-300'>
                 {localCount}
               </span>
-            </button>
+            </Button>
 
             {/* Booking.com toggle */}
-            <button
+            <Button
               type='button'
+              variant='outline'
+              size='sm'
               aria-pressed={showImportedBookings}
               onClick={() => setShowImportedBookings((prev) => !prev)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+              className={`h-8 gap-1.5 px-3 rounded-xl border text-xs font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                 showImportedBookings
-                  ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-200 shadow-sm"
-                  : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300"
+                  ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-200 shadow-sm hover:bg-indigo-500/25 hover:text-white"
+                  : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300 hover:bg-slate-900"
               }`}>
               <Globe className={`w-3.5 h-3.5 ${showImportedBookings ? "text-indigo-400" : "text-slate-600"}`} />
               <span>{t("bookingComIcal")}</span>
-              <span className='ml-1 px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-slate-300'>
+              <span className='ml-1 px-1.5 py-0.5 rounded-full bg-slate-800 text-[10px] text-slate-300'>
                 {importedCount}
               </span>
-            </button>
+            </Button>
           </div>
 
           {/* Quick object selection actions */}
           <div className='flex items-center gap-2'>
-            <button
+            <Button
               type='button'
+              variant='link'
+              size='sm'
               onClick={handleSelectAllObjects}
-              className='text-[11px] text-slate-400 hover:text-white underline decoration-slate-600 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded'>
+              className='h-auto p-0 text-[0.6875rem] text-slate-400 hover:text-white underline decoration-slate-600 font-normal'
+            >
               {t("showAllUnits")}
-            </button>
+            </Button>
             <span className='text-slate-700'>•</span>
-            <button
+            <Button
               type='button'
+              variant='link'
+              size='sm'
               onClick={handleDeselectAllObjects}
-              className='text-[11px] text-slate-400 hover:text-white underline decoration-slate-600 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded'>
+              className='h-auto p-0 text-[0.6875rem] text-slate-400 hover:text-white underline decoration-slate-600 font-normal'
+            >
               {t("hideAllUnits")}
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Rental Objects Filter Badges */}
         <div className='mt-3 flex flex-wrap items-center gap-2'>
-          <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1'>
+          <span className='text-[0.6875rem] font-semibold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1'>
             <Box className='w-3.5 h-3.5 text-slate-500' />
             <span>{t("units")}</span>
           </span>
