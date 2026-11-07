@@ -11,6 +11,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
+import { Button } from "../ui/button";
+import { IconButton } from "../ui/icon-button";
 import { LANGUAGE_META } from "../../constants/languages";
 
 export interface TextEditModalProps {
@@ -243,34 +245,33 @@ export function TextEditModal({
 
           <div className="flex items-center gap-2">
             {languages.length > 1 && (
-              <button
+              <Button
                 type="button"
+                variant="adminSecondary"
+                size="xs"
                 onClick={handleTranslateAll}
                 disabled={
                   translatingLocale !== null || !(valuesByLocale.sv || "").trim()
                 }
-                className="flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-xs font-medium text-sky-300 hover:bg-slate-800 hover:text-sky-200 disabled:opacity-50 transition"
+                loading={translatingLocale === "all"}
+                loadingText={t("translatingAll")}
+                className="text-sky-300 hover:text-sky-200"
               >
-                {translatingLocale === "all" ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                )}
-                <span>
-                  {translatingLocale === "all"
-                    ? t("translatingAll")
-                    : t("translateAll")}
-                </span>
-              </button>
+                <Sparkles className="w-3.5 h-3.5 text-sky-400" />
+                <span>{t("translateAll")}</span>
+              </Button>
             )}
 
-            <button
+            <IconButton
               type="button"
+              variant="ghost"
+              size="xs"
+              aria-label={tCommon("cancel")}
               onClick={closeModal}
-              className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition"
+              className="text-slate-400 hover:bg-slate-800 hover:text-white"
             >
-              <X className="w-5 h-5" />
-            </button>
+              <X className="w-4 h-4" />
+            </IconButton>
           </div>
         </div>
 
@@ -305,23 +306,22 @@ export function TextEditModal({
                   </label>
 
                   {!isPrimary && (
-                    <button
+                    <Button
                       type="button"
+                      variant="adminSecondary"
+                      size="xs"
                       onClick={() => handleTranslateLocale(loc)}
                       disabled={
                         translatingLocale !== null ||
                         !(valuesByLocale.sv || "").trim()
                       }
-                      className="inline-flex items-center gap-1 rounded-md border border-slate-700/80 bg-slate-800/80 px-2 py-1 text-[10px] font-medium text-sky-300 hover:bg-slate-800 hover:text-sky-200 disabled:opacity-40 transition"
+                      loading={isThisTranslating}
+                      className="h-6 px-2 text-[10px] text-sky-300 hover:text-sky-200"
                       title={t("translateSingleTooltip", { language: meta.label })}
                     >
-                      {isThisTranslating ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                      ) : (
-                        <Sparkles className="w-3 h-3 text-sky-400" />
-                      )}
+                      <Sparkles className="w-3 h-3 text-sky-400" />
                       <span>{t("aiTranslate")}</span>
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -349,26 +349,25 @@ export function TextEditModal({
           </div>
 
           <div className="flex items-center justify-end gap-2">
-            <button
+            <Button
               type="button"
+              variant="adminSecondary"
+              size="sm"
               onClick={closeModal}
-              className="rounded-lg border border-slate-700 bg-slate-800/80 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 hover:text-white transition"
             >
               {tCommon("cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="adminPrimary"
+              size="sm"
               onClick={handleSave}
-              disabled={isSaving}
-              className="flex items-center gap-1.5 rounded-lg bg-sky-600 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-sky-500 disabled:opacity-50 transition"
+              loading={isSaving}
+              loadingText={tCommon("loading")}
             >
-              {isSaving ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Check className="w-3.5 h-3.5" />
-              )}
-              <span>{isSaving ? tCommon("loading") : tCommon("save")}</span>
-            </button>
+              <Check className="w-3.5 h-3.5" />
+              <span>{tCommon("save")}</span>
+            </Button>
           </div>
         </div>
       </DialogContent>

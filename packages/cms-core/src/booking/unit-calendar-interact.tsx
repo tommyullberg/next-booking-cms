@@ -38,6 +38,8 @@ import {
 } from "../components/ui/dialog";
 import { FormField } from "../components/ui/form-field";
 import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
+import { Button } from "../components/ui/button";
+import { IconButton } from "../components/ui/icon-button";
 
 export interface UnitCalendarInteractProps {
   objectId: string;
@@ -471,21 +473,29 @@ export function UnitCalendarInteract({
         </div>
 
         <div className='flex items-center gap-2'>
-          <button
+          <IconButton
             type='button'
+            size='sm'
+            variant='outline'
             onClick={handlePrevMonth}
-            className='p-2 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-200/70 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-800 text-neutral-800 dark:text-slate-300 transition shadow-xs cursor-pointer'>
+            aria-label='Föregående månad'
+            className='rounded-xl border-neutral-300 bg-white hover:bg-neutral-200/70 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-800 text-neutral-800 dark:text-slate-300 shadow-xs'
+          >
             <ChevronLeft className='w-4 h-4' />
-          </button>
+          </IconButton>
           <span className='text-xs font-bold text-neutral-900 dark:text-slate-200 min-w-28 text-center'>
             {monthNames[month]} {year}
           </span>
-          <button
+          <IconButton
             type='button'
+            size='sm'
+            variant='outline'
             onClick={handleNextMonth}
-            className='p-2 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-200/70 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-800 text-neutral-800 dark:text-slate-300 transition shadow-xs cursor-pointer'>
+            aria-label='Nästa månad'
+            className='rounded-xl border-neutral-300 bg-white hover:bg-neutral-200/70 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-800 text-neutral-800 dark:text-slate-300 shadow-xs'
+          >
             <ChevronRight className='w-4 h-4' />
-          </button>
+          </IconButton>
         </div>
       </div>
 
@@ -1178,19 +1188,22 @@ export function UnitCalendarInteract({
 
                   {/* Actions */}
                   <div className='flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800'>
-                    <button
+                    <Button
                       type='button'
+                      variant='secondary'
+                      size='sm'
                       onClick={() => setIsFormOpen(false)}
-                      className='px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition'>
+                    >
                       Avbryt
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type='submit'
-                      disabled={createMutation.isPending}
-                      className='flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold rounded-xl bg-sky-600 text-white hover:bg-sky-500 shadow-lg shadow-sky-600/25 transition'>
-                      {createMutation.isPending && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
+                      variant='default'
+                      size='default'
+                      loading={createMutation.isPending}
+                    >
                       <span>{isPreliminary ? "Skicka preliminär reservation" : "Skicka bokningsförfrågan"}</span>
-                    </button>
+                    </Button>
                   </div>
                 </form>
               )}

@@ -12,6 +12,8 @@ import {
   getISOWeekNumber,
 } from "../../constants/dates";
 import { AdminLanguage } from "../../constants/languages";
+import { Button } from "./button";
+import { IconButton } from "./icon-button";
 
 export interface DatePickerProps {
   value: string; // ISO string "YYYY-MM-DD" or ""
@@ -334,14 +336,17 @@ export function DatePicker({
 
         {/* Clear Button if value present */}
         {allowClear && Boolean(value) && !disabled && (
-          <button
+          <IconButton
             type="button"
+            size="xs"
+            variant="ghost"
             onClick={handleClear}
-            title={effectiveClearLabel}
-            className="flex items-center justify-center p-1.5 mr-2 rounded-lg text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition"
+            aria-label={effectiveClearLabel}
+            tooltip={effectiveClearLabel}
+            className="p-1.5 mr-2 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
           >
             <X className="w-3.5 h-3.5" />
-          </button>
+          </IconButton>
         )}
       </div>
 
@@ -361,22 +366,26 @@ export function DatePicker({
             </span>
 
             <div className="flex items-center gap-1">
-              <button
+              <IconButton
                 type="button"
+                size="xs"
+                variant="ghost"
                 onClick={handlePrevMonth}
-                className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
                 aria-label="Previous month"
               >
                 <ChevronLeft className="w-3.5 h-3.5" />
-              </button>
-              <button
+              </IconButton>
+              <IconButton
                 type="button"
+                size="xs"
+                variant="ghost"
                 onClick={handleNextMonth}
-                className="w-7 h-7 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
                 aria-label="Next month"
               >
                 <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+              </IconButton>
             </div>
           </div>
 
@@ -456,22 +465,26 @@ export function DatePicker({
 
           {/* Footer with Today and Clear shortcuts */}
           <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-slate-100 dark:border-slate-800/80 px-1">
-            <button
+            <Button
               type="button"
+              variant="link"
+              size="xs"
               onClick={handleSelectToday}
-              className="text-[11px] font-medium text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300 transition"
+              className="h-auto p-0 text-[11px] font-medium text-sky-600 dark:text-sky-400 hover:text-sky-500 dark:hover:text-sky-300"
             >
               {todayLabel}
-            </button>
+            </Button>
 
             {allowClear && (
-              <button
+              <Button
                 type="button"
+                variant="link"
+                size="xs"
                 onClick={handleClear}
-                className="text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition"
+                className="h-auto p-0 text-[11px] font-medium text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400"
               >
                 {effectiveClearLabel}
-              </button>
+              </Button>
             )}
           </div>
         </div>

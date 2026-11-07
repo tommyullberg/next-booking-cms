@@ -11,6 +11,8 @@ import {
 } from "../ui/dialog";
 import { useConfirm } from "../confirm";
 import { Alert } from "../ui/alert";
+import { Button } from "../ui/button";
+import { IconButton } from "../ui/icon-button";
 import { FlagIcon } from "../ui/flag-icon";
 import { LANGUAGE_META } from "../../constants/languages";
 import {
@@ -512,11 +514,13 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
           </div>
 
             <div className="flex items-center gap-1.5">
-              <button
+              <IconButton
                 type="button"
+                variant="ghost"
+                size="xs"
                 onClick={() => setIsMaximized((prev) => !prev)}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
-                title={isMaximized ? t("restoreSize") : t("maximize")}
+                className="text-slate-400 hover:bg-slate-800 hover:text-white"
+                tooltip={isMaximized ? t("restoreSize") : t("maximize")}
                 aria-label={isMaximized ? t("restoreSize") : t("maximize")}
               >
                 {isMaximized ? (
@@ -524,16 +528,18 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                 ) : (
                   <Maximize2 className="h-4 w-4" />
                 )}
-              </button>
-              <button
+              </IconButton>
+              <IconButton
                 type="button"
+                variant="ghost"
+                size="xs"
                 onClick={closeModal}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer"
-                title={t("close")}
+                className="text-slate-400 hover:bg-slate-800 hover:text-white"
+                tooltip={t("close")}
                 aria-label={t("close")}
               >
-                <X className="h-5 w-5" />
-              </button>
+                <X className="h-4 w-4" />
+              </IconButton>
             </div>
           </div>
 
@@ -909,8 +915,10 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
             <div className="mt-5 flex items-center justify-between gap-2 border-t border-slate-800 pt-4 shrink-0">
               <div>
                 {items.length > 0 && (
-                  <button
+                  <Button
                     type="button"
+                    variant="adminOutlineDestructive"
+                    size="sm"
                     onClick={async () => {
                       await confirm({
                         title: tCommon("delete"),
@@ -921,34 +929,33 @@ export function GalleryEditModal({ onSave }: GalleryEditModalProps) {
                         },
                       });
                     }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 cursor-pointer"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                     <span>{t("clearGallery")}</span>
-                  </button>
+                  </Button>
                 )}
               </div>
 
               <div className="flex items-center gap-2">
-                <button
+                <Button
                   type="button"
+                  variant="adminSecondary"
+                  size="sm"
                   onClick={closeModal}
-                  className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-700 cursor-pointer"
                 >
                   {tCommon("cancel")}
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
-                  disabled={isSaving || isUploading}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-sky-600 px-5 py-2 text-xs font-semibold text-white hover:bg-sky-500 disabled:opacity-50 cursor-pointer"
+                  variant="adminPrimary"
+                  size="sm"
+                  loading={isSaving}
+                  loadingText={tCommon("loading")}
+                  disabled={isUploading}
                 >
-                  {isSaving ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Check className="h-3.5 w-3.5" />
-                  )}
-                  <span>{isSaving ? tCommon("loading") : t("saveGallery")}</span>
-                </button>
+                  <Check className="h-3.5 w-3.5" />
+                  <span>{t("saveGallery")}</span>
+                </Button>
               </div>
             </div>
           </form>

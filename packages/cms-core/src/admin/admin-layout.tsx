@@ -32,6 +32,8 @@ import { AdminTab } from "../types/admin";
 import { AdminLanguage, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
 import { CmsBrandLogo } from "../components/ui/cms-brand-logo";
 import { FlagIcon } from "../components/ui/flag-icon";
+import { Button } from "../components/ui/button";
+import { IconButton } from "../components/ui/icon-button";
 import { useTranslations } from "next-intl";
 import { useAdminIntl } from "../i18n";
 
@@ -124,14 +126,16 @@ export function AdminLayout({
         </div>
 
         <div className='flex items-center gap-3'>
-          <button
+          <Button
             type='button'
+            variant='adminOutline'
+            size='xs'
             onClick={handleReturnToPage}
             aria-label={locale === "sv" ? "Dölj admin / Tillbaka till sidan" : "Hide Admin / Return to Page"}
-            className='flex items-center gap-2 text-xs font-medium text-slate-200 hover:text-white px-3.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/70 hover:bg-slate-800/80 hover:border-slate-700 transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500'>
+          >
             <span>{locale === "sv" ? "Dölj admin / Tillbaka till sidan" : "Hide Admin / Return to Page"}</span>
             <ExternalLink className='w-3.5 h-3.5 text-slate-400' />
-          </button>
+          </Button>
 
           {/* Admin Language Switcher */}
           <div role='group' aria-label={locale === "sv" ? "Välj språk" : "Choose language"} className='flex items-center gap-0.5 rounded-xl border border-slate-800 bg-slate-900/80 p-0.5 text-xs'>
@@ -163,15 +167,18 @@ export function AdminLayout({
             </button>
           </div>
 
-          <button
+          <IconButton
             type='button'
+            size='xs'
+            variant='ghost'
             onClick={toggleTheme}
             disabled={isThemeLocked}
-            className='p-2 rounded-lg text-amber-400/90 hover:text-amber-300 hover:bg-slate-900 transition disabled:opacity-80 disabled:cursor-default outline-none focus-visible:ring-2 focus-visible:ring-sky-500'
+            className='text-amber-400/90 hover:text-amber-300 hover:bg-slate-900'
             aria-label={isThemeLocked ? "Dark Mode locked" : theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            title={isThemeLocked ? "Dark Mode locked" : "Toggle theme"}>
+            tooltip={isThemeLocked ? "Dark Mode locked" : "Toggle theme"}
+          >
             {theme === "dark" ? <Sun className='w-4 h-4' /> : <Moon className='w-4 h-4' />}
-          </button>
+          </IconButton>
 
           <div className='h-5 w-px bg-slate-800' />
 
@@ -183,14 +190,16 @@ export function AdminLayout({
           </div>
 
           {onLogout && (
-            <button
+            <IconButton
               type='button'
+              size='xs'
+              variant='adminGhostDestructive'
               onClick={onLogout}
-              className='p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800/80 transition outline-none focus-visible:ring-2 focus-visible:ring-red-500'
               aria-label={tCommon("signOut")}
-              title={tCommon("signOut")}>
+              tooltip={tCommon("signOut")}
+            >
               <LogOut className='w-4 h-4' />
-            </button>
+            </IconButton>
           )}
         </div>
       </header>

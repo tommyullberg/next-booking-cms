@@ -44,6 +44,7 @@ import { LandlordItem } from "./landlords-view";
 import { PageListItem } from "./pages-view";
 import { useBookingSettingsQuery } from "../../booking/hooks";
 import { Button } from "../../components/ui/button";
+import { IconButton } from "../../components/ui/icon-button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { FormField } from "../../components/ui/form-field";
@@ -991,16 +992,18 @@ export function BookingObjectsView({
                     <Calendar className="w-3.5 h-3.5 text-sky-400" />
                     <span>{t("icalUrl")}</span>
                   </Label>
-                  <button
+                  <IconButton
                     type="button"
+                    size="xs"
+                    variant="ghost"
                     onClick={() => setShowIcalHelp(!showIcalHelp)}
-                    className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-800 hover:bg-sky-500/20 text-slate-400 hover:text-sky-300 border border-slate-700 transition"
-                    title="Click for information about iCal sync"
+                    className="w-4 h-4 p-0 rounded-full bg-slate-800 hover:bg-sky-500/20 text-slate-400 hover:text-sky-300 border border-slate-700"
+                    tooltip="Click for information about iCal sync"
                     aria-label="Click for information about iCal sync"
                     aria-expanded={showIcalHelp}
                   >
                     <HelpCircle className="w-3 h-3" />
-                  </button>
+                  </IconButton>
                 </div>
                 {icalUrl && (
                   <Badge variant="adminSuccess" size="xs">

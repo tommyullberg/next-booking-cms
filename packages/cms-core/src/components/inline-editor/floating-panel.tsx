@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { Switch } from "../ui/switch";
+import { Button } from "../ui/button";
+import { IconButton } from "../ui/icon-button";
 
 export type PanelOrientation = "horizontal" | "vertical";
 
@@ -58,6 +60,7 @@ const defaultConfig: ToolbarConfig = {
 
 export function FloatingPanel({ className = "" }: FloatingPanelProps) {
   const t = useTranslations("inlineEditor.panel");
+  const tCommon = useTranslations("common");
   const { mode, setMode } = useEditorStore();
   const [config, setConfig] = useState<ToolbarConfig>(defaultConfig);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -385,13 +388,16 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                   {t("popoverTitle")}
                 </span>
               </div>
-              <button
+              <IconButton
                 type="button"
+                size="xs"
+                variant="ghost"
+                aria-label={tCommon("cancel")}
                 onClick={() => setIsSettingsOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+                className="text-slate-400 hover:bg-slate-800 hover:text-white"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </IconButton>
             </div>
 
             {/* Orientation choice */}
@@ -670,14 +676,15 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
 
             <div className="mt-3.5 pt-2.5 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
               <span>{t("savedInBrowser")}</span>
-              <button
+              <Button
                 type="button"
+                size="xs"
+                variant="adminPrimary"
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-1 rounded-lg bg-sky-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-sky-500 shadow"
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>{t("done")}</span>
-              </button>
+              </Button>
             </div>
           </div>
         )}

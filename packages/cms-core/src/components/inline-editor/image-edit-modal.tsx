@@ -12,6 +12,8 @@ import {
 import { FormField } from "../ui/form-field";
 import { Label } from "../ui/label";
 import { Alert } from "../ui/alert";
+import { Button } from "../ui/button";
+import { IconButton } from "../ui/icon-button";
 import { useConfirm } from "../confirm";
 import {
   X,
@@ -251,13 +253,16 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
               {t("title", { nbr: selectedField.nbr })}
             </DialogTitle>
           </div>
-          <button
+          <IconButton
             type="button"
+            variant="ghost"
+            size="xs"
+            aria-label={tCommon("cancel")}
             onClick={closeModal}
-            className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+            className="text-slate-400 hover:bg-slate-800 hover:text-white"
           >
-            <X className="w-5 h-5" />
-          </button>
+            <X className="w-4 h-4" />
+          </IconButton>
         </div>
 
         <div className="mt-4 space-y-4">
@@ -269,15 +274,17 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
                 className="max-h-48 w-auto rounded object-cover"
                 style={{ aspectRatio: ratio }}
               />
-              <button
+              <Button
                 type="button"
+                variant="adminOutlineDestructive"
+                size="xs"
                 onClick={() => setImageUrl("")}
-                className="absolute top-3 right-3 flex items-center gap-1.5 rounded-lg bg-slate-900/90 border border-slate-700/80 px-2.5 py-1 text-xs text-slate-300 hover:border-red-500/60 hover:bg-red-600 hover:text-white transition shadow-lg backdrop-blur-sm"
+                className="absolute top-3 right-3 shadow-lg backdrop-blur-sm"
                 title={t("clearSelectedTooltip")}
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>{t("clearBtn")}</span>
-              </button>
+              </Button>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-800 bg-slate-950 p-6 text-slate-500">
@@ -443,44 +450,42 @@ export function ImageEditModal({ onSave, onDelete }: ImageEditModalProps) {
         <div className="mt-6 flex items-center justify-between border-t border-slate-800 pt-4">
           <div>
             {selectedField.imageUrl ? (
-              <button
+              <Button
                 type="button"
+                variant="adminOutlineDestructive"
+                size="sm"
                 onClick={handleDelete}
-                disabled={isDeleting || isSaving || isUploading}
-                className="flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-xs font-medium text-red-400 hover:border-red-500/60 hover:bg-red-600 hover:text-white transition disabled:opacity-50"
+                loading={isDeleting}
+                disabled={isSaving || isUploading}
                 title={t("removeImageTooltip")}
               >
-                {isDeleting ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <Trash2 className="w-3.5 h-3.5" />
-                )}
+                <Trash2 className="w-3.5 h-3.5" />
                 <span>{t("removeImageBtn")}</span>
-              </button>
+              </Button>
             ) : null}
           </div>
 
           <div className="flex items-center gap-2">
-            <button
+            <Button
               type="button"
+              variant="adminSecondary"
+              size="sm"
               onClick={closeModal}
-              className="rounded-lg px-4 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800"
             >
               {tCommon("cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="adminPrimary"
+              size="sm"
               onClick={handleSave}
-              disabled={isSaving || isUploading || isDeleting}
-              className="flex items-center gap-1.5 rounded-lg bg-amber-600 px-4 py-2 text-xs font-medium text-white shadow-lg shadow-amber-600/20 hover:bg-amber-500 disabled:opacity-50"
+              loading={isSaving}
+              loadingText={tCommon("loading")}
+              disabled={isUploading || isDeleting}
             >
-              {isSaving ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Check className="w-3.5 h-3.5" />
-              )}
-              <span>{isSaving ? tCommon("loading") : tCommon("save")}</span>
-            </button>
+              <Check className="w-3.5 h-3.5" />
+              <span>{tCommon("save")}</span>
+            </Button>
           </div>
         </div>
       </DialogContent>

@@ -19,6 +19,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "../ui/dialog";
+import { IconButton } from "../ui/icon-button";
 
 export interface CMSGalleryFieldProps {
   nbr: number;
@@ -365,30 +366,32 @@ export function CMSGalleryField({
 
             {items.length > 1 && (
               <>
-                <button
+                <IconButton
                   type="button"
+                  variant="ghost"
+                  aria-label="Previous slide"
                   onClick={(e) => {
                     e.stopPropagation();
                     setCarouselIndex(
                       (prev) => (prev - 1 + items.length) % items.length
                     );
                   }}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/55 p-2.5 text-white hover:bg-black/75 transition cursor-pointer"
-                  aria-label="Previous slide"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/55 p-2.5 text-white hover:bg-black/75 hover:text-white"
                 >
                   <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
+                </IconButton>
+                <IconButton
                   type="button"
+                  variant="ghost"
+                  aria-label="Next slide"
                   onClick={(e) => {
                     e.stopPropagation();
                     setCarouselIndex((prev) => (prev + 1) % items.length);
                   }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/55 p-2.5 text-white hover:bg-black/75 transition cursor-pointer"
-                  aria-label="Next slide"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/55 p-2.5 text-white hover:bg-black/75 hover:text-white"
                 >
                   <ChevronRight className="w-5 h-5" />
-                </button>
+                </IconButton>
 
                 <div className="absolute top-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
                   {Math.min(carouselIndex, items.length - 1) + 1} /{" "}
@@ -431,30 +434,32 @@ export function CMSGalleryField({
                   {lightboxIndex + 1} / {items.length}
                 </span>
               </div>
-              <button
+              <IconButton
                 type="button"
+                variant="ghost"
                 onClick={() => setLightboxIndex(null)}
-                className="rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 transition cursor-pointer"
+                className="rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20 hover:text-white"
                 aria-label="Close gallery"
               >
                 <X className="w-5 h-5" />
-              </button>
+              </IconButton>
             </div>
 
             {/* Main Image Stage */}
             <div className="relative flex-1 flex flex-col items-center justify-center px-4 sm:px-16 min-h-0">
               {items.length > 1 && (
-                <button
+                <IconButton
                   type="button"
+                  variant="ghost"
                   onClick={(e) => {
                     e.stopPropagation();
                     handlePrevLightbox();
                   }}
-                  className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 rounded-full bg-white/10 p-3 text-white hover:bg-white/25 transition cursor-pointer"
+                  className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-20 rounded-full bg-white/10 p-3 text-white hover:bg-white/25 hover:text-white h-auto w-auto"
                   aria-label="Previous image"
                 >
                   <ChevronLeft className="w-6 h-6" />
-                </button>
+                </IconButton>
               )}
 
               <div
@@ -481,17 +486,18 @@ export function CMSGalleryField({
               </div>
 
               {items.length > 1 && (
-                <button
+                <IconButton
                   type="button"
+                  variant="ghost"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleNextLightbox();
                   }}
-                  className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 rounded-full bg-white/10 p-3 text-white hover:bg-white/25 transition cursor-pointer"
+                  className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-20 rounded-full bg-white/10 p-3 text-white hover:bg-white/25 hover:text-white h-auto w-auto"
                   aria-label="Next image"
                 >
                   <ChevronRight className="w-6 h-6" />
-                </button>
+                </IconButton>
               )}
             </div>
 

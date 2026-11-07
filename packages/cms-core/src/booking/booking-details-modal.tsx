@@ -33,6 +33,8 @@ import {
 } from "../components/ui/dialog";
 import { FormField } from "../components/ui/form-field";
 import { Alert } from "../components/ui/alert";
+import { Button } from "../components/ui/button";
+import { IconButton } from "../components/ui/icon-button";
 import { useBookingSettingsQuery } from "./hooks";
 
 export interface BookingDetailsModalProps {
@@ -287,30 +289,38 @@ export function BookingDetailsModal({
 
             <div className='flex items-center gap-2 shrink-0 ml-3'>
               {!isImported && mode === "view" && (
-                <button
+                <Button
                   type='button'
+                  variant='adminOutline'
+                  size='xs'
                   onClick={() => setMode("edit")}
-                  className='flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-sky-600 bg-sky-950/40 hover:bg-sky-900/60 text-sky-200 text-xs font-semibold transition cursor-pointer'>
+                >
                   <Edit3 className='w-3.5 h-3.5' />
                   <span>Redigera bokning</span>
-                </button>
+                </Button>
               )}
 
               {!isImported && mode === "edit" && (
-                <button
+                <Button
                   type='button'
+                  variant='adminSecondary'
+                  size='xs'
                   onClick={() => setMode("view")}
-                  className='px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold transition cursor-pointer'>
+                >
                   Visa-läge
-                </button>
+                </Button>
               )}
 
-              <button
+              <IconButton
                 type='button'
+                variant='ghost'
+                size='xs'
+                aria-label='Stäng'
                 onClick={onClose}
-                className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer'>
+                className='text-slate-400 hover:text-white hover:bg-slate-800'
+              >
                 <X className='w-4 h-4' />
-              </button>
+              </IconButton>
             </div>
           </div>
 
@@ -1257,31 +1267,35 @@ export function BookingDetailsModal({
             {/* In Edit Mode: Save buttons */}
             {mode === "edit" && !isImported && (
               <div className='flex items-center gap-2'>
-                <button
+                <Button
                   type='button'
+                  variant='adminSecondary'
+                  size='sm'
                   onClick={() => setMode("view")}
-                  className='rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer'>
+                >
                   Avbryt
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type='button'
-                  disabled={isSaving}
+                  variant='adminOutline'
+                  size='sm'
                   onClick={() => handleSave(false)}
-                  className='flex items-center gap-1.5 rounded-xl border border-sky-600 bg-sky-950/50 hover:bg-sky-900/60 px-4 py-2 text-xs font-semibold text-sky-200 transition cursor-pointer'>
-                  {isSaving && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
+                  loading={isSaving}
+                >
                   <Save className='w-3.5 h-3.5' />
                   <span>Spara</span>
-                </button>
+                </Button>
 
-                <button
+                <Button
                   type='button'
-                  disabled={isSaving}
+                  variant='adminPrimary'
+                  size='sm'
                   onClick={() => handleSave(true)}
-                  className='flex items-center gap-1.5 rounded-xl bg-sky-600 hover:bg-sky-500 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 transition cursor-pointer'>
-                  {isSaving && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
+                  loading={isSaving}
+                >
                   <span>Spara & Stäng</span>
-                </button>
+                </Button>
               </div>
             )}
           </div>

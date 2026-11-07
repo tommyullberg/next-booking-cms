@@ -28,6 +28,7 @@ import {
   DialogDescription,
 } from "../components/ui/dialog";
 import { Loader } from "../components/ui/loader";
+import { Button } from "../components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "../components/ui/alert";
 
 /** Minimum time (in ms) to display the search loader animation when triggered */
@@ -558,21 +559,22 @@ export function AvailabilitySearch({
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setBookingModalItem(null)}
-                    className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
                   >
                     Avbryt
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
-                    disabled={createMutation.isPending}
-                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-sky-700 text-white hover:bg-sky-600"
+                    variant="default"
+                    size="sm"
+                    loading={createMutation.isPending}
                   >
-                    {createMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>Skicka förfrågan</span>
-                  </button>
+                  </Button>
                 </div>
               </form>
             )}
