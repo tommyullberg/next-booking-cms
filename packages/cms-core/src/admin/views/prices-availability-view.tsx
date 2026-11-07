@@ -43,6 +43,7 @@ import {
   DialogDescription,
   DialogTitle,
   FormField,
+  IconButton,
 } from "@cms/components/ui";
 import { useConfirm } from "@cms/components/confirm";
 import { YearCalendar } from "../components/prices-availability-calendar";
@@ -218,6 +219,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
   // Blocked period ("Not for rent") modal states
   const [isBlockedModalOpen, setIsBlockedModalOpen] = useState<boolean>(false);
+  const [editingBlockedPeriod, setEditingBlockedPeriod] = useState<BlockedPeriodItem | null>(null);
   const [blockedFormName, setBlockedFormName] = useState<string>("");
   const [blockedFormStartDate, setBlockedFormStartDate] = useState<string>("");
   const [blockedFormEndDate, setBlockedFormEndDate] = useState<string>("");
@@ -416,9 +418,20 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
   // Open modal for Create Blocked Period targeting a specific date range
   const handleOpenCreateBlockedForRange = (startDate: string, endDate: string) => {
+    setEditingBlockedPeriod(null);
     setBlockedFormName("");
     setBlockedFormStartDate(startDate);
     setBlockedFormEndDate(endDate);
+    setBlockedErrorMessage(null);
+    setIsBlockedModalOpen(true);
+  };
+
+  // Open modal for Edit Blocked Period
+  const handleOpenEditBlocked = (bp: BlockedPeriodItem) => {
+    setEditingBlockedPeriod(bp);
+    setBlockedFormName(bp.name || "");
+    setBlockedFormStartDate(bp.startDate);
+    setBlockedFormEndDate(bp.endDate);
     setBlockedErrorMessage(null);
     setIsBlockedModalOpen(true);
   };
@@ -572,6 +585,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
   // Open modal for Blocked Period ("Not for Rent")
   const handleOpenCreateBlocked = () => {
+    setEditingBlockedPeriod(null);
     setBlockedFormName("");
     const today = new Date().toISOString().split("T")[0];
     const defaultStart = selectedYear === currentActualYear ? today : `${selectedYear}-01-01`;
@@ -593,6 +607,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          ...(editingBlockedPeriod ? { id: editingBlockedPeriod.id } : {}),
           objectId: selectedObjectId,
           name: blockedFormName.trim() || t("defaultBlockedReason"),
           startDate: blockedFormStartDate,
@@ -606,6 +621,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
       }
 
       setIsBlockedModalOpen(false);
+      setEditingBlockedPeriod(null);
       await loadData();
     } catch (err: any) {
       setBlockedErrorMessage(err.message || t("errorUnexpected"));
@@ -1065,14 +1081,28 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         {t("blockedStatusHelp")}
                       </td>
                       <td className='py-3.5 px-4 text-center'>
-                        <button
-                          type='button'
-                          onClick={() => handleDeleteBlocked(bp.id, bp.name)}
-                          title={tCommon("delete")}
-                          aria-label={tCommon("delete")}
-                          className='p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition outline-none focus-visible:ring-2 focus-visible:ring-rose-500'>
-                          <Trash2 className='w-3.5 h-3.5' />
-                        </button>
+                        <div className='flex items-center justify-center gap-1.5'>
+                          <IconButton
+                            type='button'
+                            variant='adminGhost'
+                            size='sm'
+                            onClick={() => handleOpenEditBlocked(bp)}
+                            title={t("modal.editBlockedTitle")}
+                            aria-label={`${t("modal.editBlockedTitle")}: ${bp.name}`}
+                          >
+                            <Edit3 className='w-3.5 h-3.5' />
+                          </IconButton>
+                          <IconButton
+                            type='button'
+                            variant='adminGhostDestructive'
+                            size='sm'
+                            onClick={() => handleDeleteBlocked(bp.id, bp.name)}
+                            title={tCommon("delete")}
+                            aria-label={`${tCommon("delete")}: ${bp.name}`}
+                          >
+                            <Trash2 className='w-3.5 h-3.5' />
+                          </IconButton>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1399,19 +1429,24 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 <Ban className='w-4 h-4' />
               </div>
               <div>
-                <DialogTitle className='text-base font-bold text-white'>{t("modal.createBlockedTitle")}</DialogTitle>
+                <DialogTitle className='text-base font-bold text-white'>
+                  {editingBlockedPeriod ? t("modal.editBlockedTitle") : t("modal.createBlockedTitle")}
+                </DialogTitle>
                 <DialogDescription className='text-xs text-slate-400'>
                   {t("modalObjectLabel")} <span className='text-rose-300 font-semibold'>{selectedObject?.name}</span>
                 </DialogDescription>
               </div>
             </div>
-            <button
+            <IconButton
               type='button'
+              variant='adminGhost'
+              size='sm'
               onClick={() => setIsBlockedModalOpen(false)}
               aria-label={tCommon("cancel")}
-              className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'>
-              <X className='w-5 h-5' />
-            </button>
+              title={tCommon("cancel")}
+            >
+              <X className='w-4 h-4' />
+            </IconButton>
           </div>
 
               {blockedErrorMessage && (

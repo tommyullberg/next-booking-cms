@@ -1378,9 +1378,10 @@ export function PageEditorView({
             <div className='pt-2'>
               <Button
                 type='button'
+                variant='adminPrimary'
                 onClick={() => handleSave()}
                 disabled={isSaving || !slugValidation.isValid}
-                className='w-full h-10 font-semibold text-xs shadow-lg shadow-sky-600/20'
+                className='w-full h-10 font-semibold text-xs'
               >
                 {isSaving ? (
                   <Loader2 className='w-4 h-4 animate-spin' />

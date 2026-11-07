@@ -348,6 +348,7 @@ export async function getBlockedPeriodsAction(
 }
 
 export async function createBlockedPeriodAction(data: {
+  id?: string;
   objectId: string;
   name?: string;
   startDate: string;
@@ -362,6 +363,19 @@ export async function createBlockedPeriodAction(data: {
 
   if (start > end) {
     throw new Error("Start date cannot be later than end date.");
+  }
+
+  if (data.id) {
+    const updated = await prisma.booking.update({
+      where: { id: data.id },
+      data: {
+        object_id: resolvedObjectId,
+        customer_name: data.name?.trim() || "Not for rent",
+        start_date: start,
+        end_date: end,
+      },
+    });
+    return updated;
   }
 
   const created = await prisma.booking.create({

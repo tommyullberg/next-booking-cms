@@ -19,6 +19,7 @@ import {
   Badge,
   Button,
   Card,
+  IconButton,
   Input,
   SegmentedControl,
 } from "@cms/components/ui";
@@ -411,8 +412,8 @@ export function CategoriesView({
           <span>{t("addType")}</span>
         </div>
 
-        <form onSubmit={handleCreateCategoryType} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-          <div className="md:col-span-6">
+        <form onSubmit={handleCreateCategoryType} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex-1 min-w-0">
             <Input
               type="text"
               value={newTypeName}
@@ -425,7 +426,7 @@ export function CategoriesView({
           </div>
 
           {/* Selection Mode Toggle: Radio vs Checkbox */}
-          <div className="md:col-span-4 flex items-center">
+          <div className="shrink-0 flex items-center">
             <SegmentedControl
               size="sm"
               aria-label={`${t("addType")}: ${t("singleRadio")} / ${t("multipleCheckbox")}`}
@@ -443,22 +444,20 @@ export function CategoriesView({
                   icon: <CheckSquare className="w-3.5 h-3.5" />,
                 },
               ]}
-              className="w-full justify-between"
+              className="w-full sm:w-auto"
             />
           </div>
 
-          <div className="md:col-span-2">
-            <Button
-              type="submit"
-              variant="adminPrimary"
-              size="sm"
-              disabled={isCreatingType || !newTypeName.trim()}
-              className="w-full"
-            >
-              {isCreatingType ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              <span>{t("addType")}</span>
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            variant="adminPrimary"
+            size="sm"
+            disabled={isCreatingType || !newTypeName.trim()}
+            className="w-full sm:w-auto shrink-0"
+          >
+            {isCreatingType ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            <span>{t("addType")}</span>
+          </Button>
         </form>
       </Card>
 
@@ -505,14 +504,14 @@ export function CategoriesView({
                     </span>
 
                     {isEditingThisType ? (
-                      <div className="flex flex-wrap items-center gap-2 flex-1">
+                      <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
                         <Input
                           type="text"
                           value={editTypeName}
                           onChange={(e) => setEditTypeName(e.target.value)}
                           size="sm"
                           variant="admin"
-                          className="w-48"
+                          className="flex-1 min-w-[140px] max-w-xs"
                           aria-label="Category type name"
                           autoFocus
                         />
@@ -525,32 +524,35 @@ export function CategoriesView({
                             { value: "single", label: t("radio"), icon: <CircleDot className="w-3 h-3" /> },
                             { value: "multiple", label: t("checkbox"), icon: <CheckSquare className="w-3 h-3" /> },
                           ]}
+                          className="shrink-0"
                         />
-                        <Button
-                          type="button"
-                          variant="adminPrimary"
-                          size="iconSm"
-                          onClick={() => handleSaveEditType(typeItem)}
-                          title={tCommon("save")}
-                          aria-label={tCommon("save")}
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="adminSecondary"
-                          size="iconSm"
-                          onClick={() => setEditingTypeId(null)}
-                          title={tCommon("cancel")}
-                          aria-label={tCommon("cancel")}
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </Button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <IconButton
+                            type="button"
+                            variant="adminPrimary"
+                            size="sm"
+                            onClick={() => handleSaveEditType(typeItem)}
+                            title={tCommon("save")}
+                            aria-label={tCommon("save")}
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                          </IconButton>
+                          <IconButton
+                            type="button"
+                            variant="adminSecondary"
+                            size="sm"
+                            onClick={() => setEditingTypeId(null)}
+                            title={tCommon("cancel")}
+                            aria-label={tCommon("cancel")}
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </IconButton>
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="text-sm font-semibold text-white">{typeItem.name}</span>
-                        <Badge variant="adminMuted" size="sm" className="font-mono">
+                      <div className="flex items-center gap-3 flex-wrap min-w-0">
+                        <span className="text-sm font-semibold text-white truncate">{typeItem.name}</span>
+                        <Badge variant="adminMuted" size="sm" className="font-mono shrink-0">
                           {categories.length} {categories.length === 1 ? t("categorySingle") : t("categoryPlural")}
                         </Badge>
                       </div>
@@ -559,7 +561,7 @@ export function CategoriesView({
 
                   {/* Quick Mode Selector & Actions */}
                   {!isEditingThisType && (
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
                       <SegmentedControl
                         size="sm"
                         aria-label={`${typeItem.name} ${t("singleRadio")} / ${t("multipleCheckbox")}`}
@@ -569,29 +571,30 @@ export function CategoriesView({
                           { value: "single", label: t("singleRadio"), icon: <CircleDot className="w-3 h-3" /> },
                           { value: "multiple", label: t("multipleCheckbox"), icon: <CheckSquare className="w-3 h-3" /> },
                         ]}
+                        className="shrink-0"
                       />
 
-                      <Button
+                      <IconButton
                         type="button"
                         variant="adminGhost"
-                        size="iconSm"
+                        size="sm"
                         onClick={() => startEditingType(typeItem)}
                         title={t("renameTypeTooltip")}
                         aria-label={`${t("renameTypeTooltip")}: ${typeItem.name}`}
                       >
                         <Edit2 className="w-3.5 h-3.5" />
-                      </Button>
+                      </IconButton>
 
-                      <Button
+                      <IconButton
                         type="button"
                         variant="adminGhostDestructive"
-                        size="iconSm"
+                        size="sm"
                         onClick={() => handleDeleteType(typeItem.id)}
                         title={t("deleteTypeTooltip")}
                         aria-label={`${t("deleteTypeTooltip")}: ${typeItem.name}`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                      </IconButton>
                     </div>
                   )}
                 </div>
