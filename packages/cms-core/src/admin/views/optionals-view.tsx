@@ -24,6 +24,7 @@ import { BookingOptionalItem } from "../../booking/types";
 import { BookingObjectItem } from "./booking-objects-view";
 import { MediaItem } from "./media-view";
 import { Button } from "../../components/ui/button";
+import { Switch } from "../../components/ui/switch";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
 import { FormField } from "../../components/ui/form-field";
@@ -464,23 +465,13 @@ export function OptionalsView({
 
                     {/* Active Switch Toggle */}
                     <td className="py-3.5 px-3 text-center">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={opt.is_active}
+                      <Switch
+                        checked={opt.is_active}
+                        onCheckedChange={() => handleToggleActive(opt)}
+                        variant="success"
                         aria-label={opt.is_active ? t("statusActiveTooltip") : t("statusHiddenTooltip")}
-                        onClick={() => handleToggleActive(opt)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
-                          opt.is_active ? "bg-emerald-500" : "bg-slate-700"
-                        }`}
                         title={opt.is_active ? t("statusActiveTooltip") : t("statusHiddenTooltip")}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                            opt.is_active ? "translate-x-4" : "translate-x-0"
-                          }`}
-                        />
-                      </button>
+                      />
                     </td>
 
                     {/* Optional Name, Description & Image */}
@@ -676,23 +667,13 @@ export function OptionalsView({
                       <span className="text-[0.6875rem] text-slate-300">
                         {isActive ? t("statusActive") : t("statusHidden")}
                       </span>
-                      <button
+                      <Switch
                         id={statusSwitchId}
-                        type="button"
-                        role="switch"
-                        aria-checked={isActive}
+                        checked={isActive}
+                        onCheckedChange={setIsActive}
+                        variant="success"
                         aria-label={t("status")}
-                        onClick={() => setIsActive(!isActive)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
-                          isActive ? "bg-emerald-500" : "bg-slate-700"
-                        }`}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                            isActive ? "translate-x-4" : "translate-x-0"
-                          }`}
-                        />
-                      </button>
+                      />
                     </div>
                   </div>
                 </div>
