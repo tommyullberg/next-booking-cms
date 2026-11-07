@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { resolveBookingObjectId } from "../../actions/bookings";
-import { prisma } from "../../db";
+import { resolveBookingObjectId } from "@cms/actions/bookings";
+import { prisma } from "@cms/db";
 
 describe("Booking Object Resolution Rules (resolveBookingObjectId)", () => {
   it("1. should return undefined for undefined, null, or empty string input", async () => {

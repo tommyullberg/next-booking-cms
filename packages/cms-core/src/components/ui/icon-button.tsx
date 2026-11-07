@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Button, type ButtonProps } from "./button";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 
 export interface IconButtonProps extends Omit<ButtonProps, "size"> {
   "aria-label": string;

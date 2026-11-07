@@ -1,5 +1,5 @@
-import { prisma } from "../db";
-import { BookingOptionalItem } from "../booking/types";
+import { prisma } from "@cms/db";
+import { BookingOptionalItem } from "@cms/booking/types";
 import { ensureLocalMediaFromUrl } from "./media";
 
 export async function getBookingOptionalsAction(objectId?: string): Promise<BookingOptionalItem[]> {

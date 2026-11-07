@@ -3,9 +3,9 @@ import { ResendEmailAdapter } from "./adapters/resend-adapter";
 import { SendGridEmailAdapter } from "./adapters/sendgrid-adapter";
 import { ConsoleEmailAdapter } from "./adapters/console-adapter";
 import { renderMailTemplate } from "./template-engine";
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 import { MailTemplateType } from "@prisma/client";
-import { getDefaultMailTemplate } from "../constants/mail-templates";
+import { getDefaultMailTemplate } from "@cms/constants/mail-templates";
 
 export * from "./types";
 export * from "./template-engine";

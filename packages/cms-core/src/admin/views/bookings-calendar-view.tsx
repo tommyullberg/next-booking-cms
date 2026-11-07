@@ -16,10 +16,10 @@ import {
   ArrowDown,
   Lock,
 } from "lucide-react";
-import { BookingItem, BookingObjectDetails, BOOKING_STATUSES, BookingStatusType } from "../../booking/types";
-import { BookingDetailsModal } from "../../booking/booking-details-modal";
-import { useBookingSettingsQuery } from "../../booking/hooks";
-import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "../../utils/weeks";
+import { BookingItem, BookingObjectDetails, BOOKING_STATUSES, BookingStatusType } from "@cms/booking/types";
+import { BookingDetailsModal } from "@cms/booking/booking-details-modal";
+import { useBookingSettingsQuery } from "@cms/booking/hooks";
+import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "@cms/utils/weeks";
 import { Badge, Button, Card } from "@cms/components/ui";
 
 export interface BookingsCalendarViewProps {

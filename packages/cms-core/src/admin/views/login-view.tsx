@@ -14,7 +14,7 @@ import {
   Input,
   SegmentedControl,
 } from "@cms/components/ui";
-import { AdminIntlProvider, useAdminIntl } from "../../i18n";
+import { AdminIntlProvider, useAdminIntl } from "@cms/i18n";
 
 export interface LoginViewProps {
   callbackUrl?: string;

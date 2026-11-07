@@ -1,14 +1,14 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/auth-options";
-import { prisma } from "../db";
-import { DEFAULT_ACTIVE_LANGUAGES } from "../constants/languages";
+import { authOptions } from "@cms/auth/auth-options";
+import { prisma } from "@cms/db";
+import { DEFAULT_ACTIVE_LANGUAGES } from "@cms/constants/languages";
 import {
   CmsSettingsData,
   DEFAULT_GALLERY_SETTINGS,
   GallerySettings,
   BookingSettings,
   DEFAULT_BOOKING_SETTINGS,
-} from "../types/settings";
+} from "@cms/types/settings";
 
 export type { CmsSettingsData, GallerySettings, BookingSettings };
 

@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Mail, HelpCircle, Copy, Check, Save, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
-import { MAIL_PLACEHOLDERS } from "../../mail/types";
-import { useAdminIntl } from "../../i18n";
-import { getDefaultMailTemplate, DEFAULT_MAIL_TEMPLATES_EN, DEFAULT_MAIL_TEMPLATES_SV } from "../../constants/mail-templates";
+import { MAIL_PLACEHOLDERS } from "@cms/mail/types";
+import { useAdminIntl } from "@cms/i18n";
+import { getDefaultMailTemplate, DEFAULT_MAIL_TEMPLATES_EN, DEFAULT_MAIL_TEMPLATES_SV } from "@cms/constants/mail-templates";
 import { Button, Card, FormField, Input, Textarea } from "@cms/components/ui";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 
 export interface MailTemplateItem {
   id: string;

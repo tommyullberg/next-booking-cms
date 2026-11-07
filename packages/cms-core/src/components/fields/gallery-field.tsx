@@ -11,7 +11,7 @@ import {
   Grid,
 } from "lucide-react";
 import { useCMSPage } from "./provider";
-import { useEditorStore } from "../../state/editor-store";
+import { useEditorStore } from "@cms/state/editor-store";
 import { CMSGalleryItem } from "./types";
 import {
   Dialog,

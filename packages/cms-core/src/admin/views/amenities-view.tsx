@@ -12,7 +12,7 @@ import {
   GripVertical,
   Box,
 } from "lucide-react";
-import { AmenityItem } from "../../booking/types";
+import { AmenityItem } from "@cms/booking/types";
 import {
   Alert,
   Badge,

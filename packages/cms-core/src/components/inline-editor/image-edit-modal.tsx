@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useEditorStore } from "../../state/editor-store";
+import { useEditorStore } from "@cms/state/editor-store";
 import {
   Alert,
   Button,

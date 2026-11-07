@@ -26,7 +26,7 @@ import {
   Input,
   Label,
 } from "@cms/components/ui";
-import { useConfirm } from "../../components/confirm";
+import { useConfirm } from "@cms/components/confirm";
 
 export interface AdministratorItem {
   id: string;

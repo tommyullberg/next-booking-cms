@@ -39,10 +39,10 @@ import {
   formatBookingRoomType,
   formatBookingRoomTypeShort,
   AmenityItem,
-} from "../../booking/types";
+} from "@cms/booking/types";
 import { LandlordItem } from "./landlords-view";
 import { PageListItem } from "./pages-view";
-import { useBookingSettingsQuery } from "../../booking/hooks";
+import { useBookingSettingsQuery } from "@cms/booking/hooks";
 import {
   Alert,
   Badge,
@@ -60,8 +60,8 @@ import {
   Switch,
   Textarea,
 } from "@cms/components/ui";
-import { useConfirm } from "../../components/confirm";
-import { cn } from "../../utils/cn";
+import { useConfirm } from "@cms/components/confirm";
+import { cn } from "@cms/utils/cn";
 
 export type BookingObjectItem = BookingObjectDetails;
 

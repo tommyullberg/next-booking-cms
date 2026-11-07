@@ -1,9 +1,9 @@
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 import { Prisma } from "@prisma/client";
 import {
   BookingObjectDetails,
   formatBookingObjectType,
-} from "../booking/types";
+} from "@cms/booking/types";
 
 export async function getBookingObjectsAction(): Promise<BookingObjectDetails[]> {
   try {

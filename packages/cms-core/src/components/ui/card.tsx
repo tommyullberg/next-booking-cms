@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 
 const cardVariants = cva(
   "text-card-foreground transition-all",

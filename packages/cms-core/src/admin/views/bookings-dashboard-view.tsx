@@ -26,12 +26,12 @@ import {
   Plus,
   Tag,
 } from "lucide-react";
-import { SyncSummaryResult, SyncObjectResult, SyncBookingItem } from "../../ical/types";
-import { AdminTab } from "../../types/admin";
+import { SyncSummaryResult, SyncObjectResult, SyncBookingItem } from "@cms/ical/types";
+import { AdminTab } from "@cms/types/admin";
 import { BookingObjectItem } from "./booking-objects-view";
 import { PricePeriodItem } from "./prices-availability-view";
 import { Alert, Badge, Button, Card } from "@cms/components/ui";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 
 export interface BookingsDashboardViewProps {
   initialSyncData?: SyncSummaryResult | null;

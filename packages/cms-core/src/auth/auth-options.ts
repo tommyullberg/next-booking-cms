@@ -1,6 +1,6 @@
 import type { AuthOptions, DefaultSession } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 import { verifyPassword } from "./password";
 
 declare module "next-auth" {

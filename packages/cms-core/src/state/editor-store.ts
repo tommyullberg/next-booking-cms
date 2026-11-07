@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { CMSGalleryItem } from "../components/fields/types";
-import { AdminLanguage } from "../constants/languages";
+import { CMSGalleryItem } from "@cms/components/fields/types";
+import { AdminLanguage } from "@cms/constants/languages";
 
 export type EditorMode = "normal" | "text" | "image" | "administration";
 

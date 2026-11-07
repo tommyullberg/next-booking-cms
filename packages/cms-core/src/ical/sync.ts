@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 import { parseICalFeed, validateICalFeed, ParsedICalEvent } from "./parser";
 import { BookingStatus } from "@prisma/client";
 import {

@@ -7,8 +7,8 @@ import {
   clearBookingDiscrepanciesAction,
   BookingDiscrepancy,
 } from "../discrepancies";
-import { prisma } from "../../db";
-import { verifyAdminAuth } from "../../server/api-handlers";
+import { prisma } from "@cms/db";
+import { verifyAdminAuth } from "@cms/server/api-handlers";
 import { NextRequest } from "next/server";
 
 describe("Discrepancy Logging & Lifecycle", () => {

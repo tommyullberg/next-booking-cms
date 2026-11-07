@@ -22,7 +22,7 @@ import {
   saveImageFieldAction,
   deleteImageFieldAction,
   saveGalleryFieldAction,
-} from "../actions/fields";
+} from "@cms/actions/fields";
 import {
   getMediaFilesAction,
   getMediaFoldersAction,
@@ -31,21 +31,21 @@ import {
   uploadMediaAction,
   moveMediaFileAction,
   deleteMediaAction,
-} from "../actions/media";
-import { translateText } from "../ai";
+} from "@cms/actions/media";
+import { translateText } from "@cms/ai";
 import {
   getPageByIdAction,
   savePageAction,
   deletePageAction,
   loadAdminInitialData,
-} from "../actions/pages";
+} from "@cms/actions/pages";
 import {
   saveSectionAction,
   deleteSectionAction,
   reorderSectionsAction,
   updateNavigationMenuItemAction,
   reorderNavigationMenuItemsAction,
-} from "../actions/sections";
+} from "@cms/actions/sections";
 import {
   getCategoryTypesAction,
   saveCategoryTypeAction,
@@ -54,7 +54,7 @@ import {
   saveCategoryAction,
   deleteCategoryAction,
   reorderCategoriesAction,
-} from "../actions/categories";
+} from "@cms/actions/categories";
 import {
   getAdministratorsAction,
   createAdministratorAction,
@@ -62,34 +62,34 @@ import {
   deleteAdministratorAction,
   updateCurrentAdminLocaleAction,
   getCurrentAdminLocaleAction,
-} from "../actions/administrators";
+} from "@cms/actions/administrators";
 import {
   getLandlordsAction,
   createLandlordAction,
   updateLandlordAction,
   deleteLandlordAction,
-} from "../actions/landlords";
+} from "@cms/actions/landlords";
 import {
   getBookingObjectsAction,
   createBookingObjectAction,
   updateBookingObjectAction,
   deleteBookingObjectAction,
   reorderBookingObjectsAction,
-} from "../actions/booking-objects";
+} from "@cms/actions/booking-objects";
 import {
   getBookingOptionalsAction,
   createBookingOptionalAction,
   updateBookingOptionalAction,
   deleteBookingOptionalAction,
   reorderBookingOptionalsAction,
-} from "../actions/optionals";
+} from "@cms/actions/optionals";
 import {
   getAmenitiesAction,
   createAmenityAction,
   updateAmenityAction,
   deleteAmenityAction,
   reorderAmenitiesAction,
-} from "../actions/amenities";
+} from "@cms/actions/amenities";
 import {
   getPricePeriodsAction,
   createPricePeriodAction,
@@ -99,27 +99,27 @@ import {
   getBlockedPeriodsAction,
   createBlockedPeriodAction,
   deleteBlockedPeriodAction,
-} from "../actions/price-periods";
+} from "@cms/actions/price-periods";
 import {
   getCmsSettingsAction,
   saveCmsSettingsAction,
-} from "../actions/settings";
-import { saveMailTemplateAction } from "../mail";
-import { syncICalBackgroundJob, syncAllBookingObjects } from "../ical";
-import { generateICalFeed } from "../ical/generator";
+} from "@cms/actions/settings";
+import { saveMailTemplateAction } from "@cms/mail";
+import { syncICalBackgroundJob, syncAllBookingObjects } from "@cms/ical";
+import { generateICalFeed } from "@cms/ical/generator";
 import {
   getBookingsAction,
   searchAvailabilityAction,
   createBookingRequestAction,
   updateBookingAction,
-} from "../actions/bookings";
+} from "@cms/actions/bookings";
 import {
   getBookingDiscrepanciesAction,
   acknowledgeBookingDiscrepancyAction,
   clearBookingDiscrepanciesAction,
-} from "../logging/discrepancies";
+} from "@cms/logging/discrepancies";
 import { getToken } from "next-auth/jwt";
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 
 export async function verifyAdminAuth(
   req: NextRequest

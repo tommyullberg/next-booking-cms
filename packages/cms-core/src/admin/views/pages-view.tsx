@@ -3,9 +3,9 @@
 import React, { useState, useMemo, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Edit3, Trash2, Search, Lock, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import { HOMEPAGE_ID, cleanSlugInput, validateSlugInput } from "../../utils/slug";
-import { CMSTemplateOption, DEFAULT_CMS_TEMPLATES, formatTemplateLabel } from "../../templates/types";
-import { LANGUAGE_META } from "../../constants/languages";
+import { HOMEPAGE_ID, cleanSlugInput, validateSlugInput } from "@cms/utils/slug";
+import { CMSTemplateOption, DEFAULT_CMS_TEMPLATES, formatTemplateLabel } from "@cms/templates/types";
+import { LANGUAGE_META } from "@cms/constants/languages";
 import {
   Badge,
   Button,
@@ -19,7 +19,7 @@ import {
   Label,
   NativeSelect,
 } from "@cms/components/ui";
-import { useConfirm } from "../../components/confirm";
+import { useConfirm } from "@cms/components/confirm";
 
 export interface PageListItem {
   id: number | string;

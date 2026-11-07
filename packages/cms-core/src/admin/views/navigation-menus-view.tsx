@@ -4,10 +4,10 @@ import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, GripVertical, Trash2 } from "lucide-react";
 import { Button, Input, NativeSelect } from "@cms/components/ui";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 import { SectionItem } from "./sections-view";
 import { PageListItem } from "./pages-view";
-import { HOMEPAGE_ID } from "../../utils/slug";
+import { HOMEPAGE_ID } from "@cms/utils/slug";
 
 export interface NavigationMenusViewProps {
   sections: SectionItem[];

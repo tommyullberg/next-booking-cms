@@ -11,7 +11,7 @@ import {
 } from "./hooks";
 import { BookingDetailsModal } from "./booking-details-modal";
 import { BookingItem } from "./types";
-import { getISOWeekNumber, getMondayOfISOWeek, getSundayOfISOWeek } from "../utils/weeks";
+import { getISOWeekNumber, getMondayOfISOWeek, getSundayOfISOWeek } from "@cms/utils/weeks";
 import {
   ChevronLeft,
   ChevronRight,

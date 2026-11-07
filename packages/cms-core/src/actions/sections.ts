@@ -1,4 +1,4 @@
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 import { HOMEPAGE_ID } from "./pages";
 
 export async function getSectionsAction() {

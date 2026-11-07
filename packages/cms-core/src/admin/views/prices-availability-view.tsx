@@ -23,7 +23,7 @@ import {
   getISOWeek,
   getMondayOfISOWeek,
   getSundayOfISOWeek,
-} from "../../utils/weeks";
+} from "@cms/utils/weeks";
 import {
   MONTH_NAMES_EN,
   MONTH_NAMES_SV,
@@ -32,8 +32,8 @@ import {
   isFutureYearWarningActive,
   FUTURE_YEAR_WARNING_THRESHOLD_LABEL_EN,
   FUTURE_YEAR_WARNING_THRESHOLD_LABEL_SV,
-} from "../../constants/dates";
-import type { MissingWeekRange, BlockedPeriodItem } from "../../actions/price-periods";
+} from "@cms/constants/dates";
+import type { MissingWeekRange, BlockedPeriodItem } from "@cms/actions/price-periods";
 import {
   Alert,
   Button,
@@ -44,9 +44,9 @@ import {
   DialogTitle,
   FormField,
 } from "@cms/components/ui";
-import { useConfirm } from "../../components/confirm";
+import { useConfirm } from "@cms/components/confirm";
 import { YearCalendar } from "../components/prices-availability-calendar";
-import { useBookingSettingsQuery } from "../../booking/hooks";
+import { useBookingSettingsQuery } from "@cms/booking/hooks";
 
 export type { MissingWeekRange, BlockedPeriodItem };
 

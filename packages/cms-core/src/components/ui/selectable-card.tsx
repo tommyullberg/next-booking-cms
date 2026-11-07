@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Check } from "lucide-react";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 
 interface CardRegistryItem {
   value: string;

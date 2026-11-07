@@ -8,7 +8,7 @@ import {
   HelpCircle,
   X,
 } from "lucide-react";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 
 const alertVariants = cva(
   "relative w-full rounded-admin-card p-4 text-xs transition-all flex items-start gap-3 border border-admin-border border-l-4 shadow-sm",

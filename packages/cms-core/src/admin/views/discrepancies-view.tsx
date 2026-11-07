@@ -15,7 +15,7 @@ import {
   HelpCircle,
   Filter,
 } from "lucide-react";
-import { BookingDiscrepancy, DiscrepancyType } from "../../logging/discrepancies";
+import { BookingDiscrepancy, DiscrepancyType } from "@cms/logging/discrepancies";
 import {
   Alert,
   AlertDescription,

@@ -36,7 +36,7 @@ import {
   DefaultTurnoverDay,
   BookingSettingScope,
   AllowedBookingPeriods,
-} from "../../types/settings";
+} from "@cms/types/settings";
 
 export interface BookingSettingsViewProps {
   bookingSettings?: BookingSettings;

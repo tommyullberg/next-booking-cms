@@ -1,4 +1,4 @@
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 
 export async function getCategoryTypesAction() {
   return prisma.categoryType.findMany({

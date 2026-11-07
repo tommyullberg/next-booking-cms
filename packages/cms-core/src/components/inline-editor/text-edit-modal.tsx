@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useEditorStore } from "../../state/editor-store";
+import { useEditorStore } from "@cms/state/editor-store";
 import { Sparkles, X, Check, Loader2 } from "lucide-react";
 import {
   Button,
@@ -13,7 +13,7 @@ import {
   FlagIcon,
   IconButton,
 } from "@cms/components/ui";
-import { LANGUAGE_META } from "../../constants/languages";
+import { LANGUAGE_META } from "@cms/constants/languages";
 
 export interface TextEditModalProps {
   activeLanguages?: string[];

@@ -23,7 +23,7 @@ import {
   UserCheck,
   Globe,
 } from "lucide-react";
-import { CMSPageField } from "../../components/fields/types";
+import { CMSPageField } from "@cms/components/fields/types";
 import {
   Badge,
   Button,
@@ -40,24 +40,24 @@ import { CategoryTypeItem } from "./categories-view";
 import {
   BookingObjectDetails,
   formatBookingObjectType,
-} from "../../booking/types";
+} from "@cms/booking/types";
 import {
   cleanSlugInput,
   validateSlugInput,
   isDefaultIdOrRootSlug,
-} from "../../utils/slug";
+} from "@cms/utils/slug";
 import {
   CMSTemplateOption,
   DEFAULT_CMS_TEMPLATES,
   resolveTemplateOption,
-} from "../../templates/types";
+} from "@cms/templates/types";
 import {
   LANGUAGE_META,
   getLanguageMeta,
   AdminLanguage,
-} from "../../constants/languages";
-import { formatDateInput } from "../../constants/dates";
-import { PageStatus } from "../../types/admin";
+} from "@cms/constants/languages";
+import { formatDateInput } from "@cms/constants/dates";
+import { PageStatus } from "@cms/types/admin";
 
 export type { PageStatus };
 

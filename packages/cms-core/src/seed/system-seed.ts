@@ -2,7 +2,7 @@ import { PrismaClient, AdminRole, FieldType } from "@prisma/client";
 import pg from "pg";
 import bcrypt from "bcryptjs";
 import { resolveSeedConfig } from "./loader";
-import { HOMEPAGE_ID } from "../utils/slug";
+import { HOMEPAGE_ID } from "@cms/utils/slug";
 
 export async function ensureIntegerPageIdSchema(pool: pg.Pool): Promise<void> {
   const colCheck = await pool.query(`

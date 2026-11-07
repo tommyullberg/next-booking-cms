@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { syncICalFromUrl } from "../sync";
-import { prisma } from "../../db";
+import { prisma } from "@cms/db";
 import { BookingStatus } from "@prisma/client";
 
 interface MockBooking {

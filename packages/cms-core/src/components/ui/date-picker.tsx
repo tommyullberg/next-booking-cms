@@ -10,8 +10,8 @@ import {
   toISODateString,
   parseISODate,
   getISOWeekNumber,
-} from "../../constants/dates";
-import { AdminLanguage } from "../../constants/languages";
+} from "@cms/constants/dates";
+import { AdminLanguage } from "@cms/constants/languages";
 import { Button } from "./button";
 import { IconButton } from "./icon-button";
 

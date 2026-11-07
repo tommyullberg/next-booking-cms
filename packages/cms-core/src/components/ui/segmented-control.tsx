@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 
 export interface SegmentedControlOption<T extends string | number = string | number> {
   value: T;

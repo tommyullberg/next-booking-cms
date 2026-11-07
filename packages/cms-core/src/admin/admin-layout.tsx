@@ -28,11 +28,11 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-import { AdminTab } from "../types/admin";
-import { AdminLanguage, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
+import { AdminTab } from "@cms/types/admin";
+import { AdminLanguage, DEFAULT_ADMIN_LANGUAGE } from "@cms/constants/languages";
 import { CmsBrandLogo, FlagIcon, Button, IconButton } from "@cms/components/ui";
 import { useTranslations } from "next-intl";
-import { useAdminIntl } from "../i18n";
+import { useAdminIntl } from "@cms/i18n";
 
 export type { AdminTab };
 

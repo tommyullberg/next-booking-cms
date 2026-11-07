@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import type { VariantProps } from "class-variance-authority";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 import { Input } from "./input";
 import { DatePicker } from "./date-picker";
 import { Label, labelVariants } from "./label";

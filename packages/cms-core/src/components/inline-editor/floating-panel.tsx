@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { useEditorStore, EditorMode } from "../../state/editor-store";
+import { useEditorStore, EditorMode } from "@cms/state/editor-store";
 import {
   Eye,
   Type,

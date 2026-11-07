@@ -17,16 +17,16 @@ import {
   SelectableCardGroup,
   Switch,
 } from "@cms/components/ui";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 import {
   AVAILABLE_LANGUAGES,
   ADMIN_LANGUAGES,
   AdminLanguage,
-} from "../../constants/languages";
+} from "@cms/constants/languages";
 import {
   GallerySettings,
   DEFAULT_GALLERY_SETTINGS,
-} from "../../types/settings";
+} from "@cms/types/settings";
 
 export interface SettingsViewProps {
   activeLanguages: string[];

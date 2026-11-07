@@ -20,7 +20,7 @@ import {
   Check,
   GripVertical,
 } from "lucide-react";
-import { BookingOptionalItem } from "../../booking/types";
+import { BookingOptionalItem } from "@cms/booking/types";
 import { BookingObjectItem } from "./booking-objects-view";
 import { MediaItem } from "./media-view";
 import {
@@ -40,7 +40,7 @@ import {
   Switch,
   Textarea,
 } from "@cms/components/ui";
-import { useConfirm } from "../../components/confirm";
+import { useConfirm } from "@cms/components/confirm";
 
 export type OptionalItem = BookingOptionalItem;
 

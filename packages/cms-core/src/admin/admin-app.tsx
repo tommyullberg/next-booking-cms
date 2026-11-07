@@ -23,21 +23,21 @@ import { MailTemplatesView, MailTemplateItem } from "./views/mail-templates-view
 import { SettingsView } from "./views/settings-view";
 import { BookingSettingsView } from "./views/booking-settings-view";
 import { DiscrepanciesView } from "./views/discrepancies-view";
-import { CMSTemplateOption } from "../templates/types";
-import { AmenityItem } from "../booking/types";
-import { AdminTab } from "../types/admin";
+import { CMSTemplateOption } from "@cms/templates/types";
+import { AmenityItem } from "@cms/booking/types";
+import { AdminTab } from "@cms/types/admin";
 import {
   CmsSettingsData,
   DEFAULT_GALLERY_SETTINGS,
   GallerySettings,
   BookingSettings,
   DEFAULT_BOOKING_SETTINGS,
-} from "../types/settings";
-import { AdminLanguage, DEFAULT_ACTIVE_LANGUAGES, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
-import { AdminIntlProvider } from "../i18n";
-import { useEditorStore } from "../state/editor-store";
-import { CMSQueryProvider } from "../booking/query-provider";
-import { ConfirmProvider } from "../components/confirm";
+} from "@cms/types/settings";
+import { AdminLanguage, DEFAULT_ACTIVE_LANGUAGES, DEFAULT_ADMIN_LANGUAGE } from "@cms/constants/languages";
+import { AdminIntlProvider } from "@cms/i18n";
+import { useEditorStore } from "@cms/state/editor-store";
+import { CMSQueryProvider } from "@cms/booking/query-provider";
+import { ConfirmProvider } from "@cms/components/confirm";
 
 export interface AdminAppProps {
   initialPages?: PageListItem[];

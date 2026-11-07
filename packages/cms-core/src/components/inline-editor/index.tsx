@@ -2,13 +2,13 @@
 
 import React, { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useEditorStore } from "../../state/editor-store";
+import { useEditorStore } from "@cms/state/editor-store";
 import { FloatingPanel, FloatingPanelProps } from "./floating-panel";
 import { TextEditModal, TextEditModalProps } from "./text-edit-modal";
 import { ImageEditModal, ImageEditModalProps } from "./image-edit-modal";
 import { GalleryEditModal, GalleryEditModalProps } from "./gallery-edit-modal";
-import { AdminApp } from "../../admin/admin-app";
-import { AdminIntlProvider } from "../../i18n/provider";
+import { AdminApp } from "@cms/admin/admin-app";
+import { AdminIntlProvider } from "@cms/i18n/provider";
 import { ConfirmProvider } from "../confirm";
 
 export interface InlineEditorProps {

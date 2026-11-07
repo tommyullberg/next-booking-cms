@@ -3,7 +3,7 @@
 import React from "react";
 import { useSession } from "next-auth/react";
 import { useCMSPage } from "./provider";
-import { useEditorStore } from "../../state/editor-store";
+import { useEditorStore } from "@cms/state/editor-store";
 import { CMSPageField } from "./types";
 
 export interface CMSImageFieldProps {

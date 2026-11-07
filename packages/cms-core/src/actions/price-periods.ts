@@ -1,4 +1,4 @@
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 import { revalidatePath } from "next/cache";
 import { resolveBookingObjectId } from "./bookings";
 import {
@@ -7,8 +7,8 @@ import {
   getISOWeek,
   getMondayOfISOWeek,
   getSundayOfISOWeek,
-} from "../utils/weeks";
-import { isFutureYearWarningActive } from "../constants/dates";
+} from "@cms/utils/weeks";
+import { isFutureYearWarningActive } from "@cms/constants/dates";
 export { getWeeksInYear };
 
 export interface CreatePricePeriodInput {

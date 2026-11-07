@@ -22,7 +22,7 @@ import {
   Input,
   SegmentedControl,
 } from "@cms/components/ui";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 
 export interface CategoryItem {
   id: string;

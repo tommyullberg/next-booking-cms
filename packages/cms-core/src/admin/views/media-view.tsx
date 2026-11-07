@@ -31,7 +31,7 @@ import {
   Input,
   NativeSelect,
 } from "@cms/components/ui";
-import { useConfirm } from "../../components/confirm";
+import { useConfirm } from "@cms/components/confirm";
 
 export interface MediaFolderItem {
   id: string;

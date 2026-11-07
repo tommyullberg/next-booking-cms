@@ -1,4 +1,4 @@
-import { AdminLanguage, SupportedLocale } from "../constants/languages";
+import { AdminLanguage, SupportedLocale } from "@cms/constants/languages";
 
 export interface GallerySettings {
   layout: "grid" | "bento" | "carousel";

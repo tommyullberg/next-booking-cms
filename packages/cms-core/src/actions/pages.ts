@@ -1,18 +1,18 @@
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 import { PageStatus } from "@prisma/client";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth";
+import { authOptions } from "@cms/auth";
 import {
   HOMEPAGE_ID,
   cleanSlugInput,
   validateSlugInput,
   isDefaultIdOrRootSlug,
   RESERVED_SLUG_PREFIXES,
-} from "../utils/slug";
+} from "@cms/utils/slug";
 import {
   DEFAULT_ACTIVE_LANGUAGES,
   DEFAULT_ADMIN_LANGUAGE,
-} from "../constants/languages";
+} from "@cms/constants/languages";
 
 export { HOMEPAGE_ID };
 

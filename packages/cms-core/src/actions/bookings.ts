@@ -1,11 +1,11 @@
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 import { BookingStatus } from "@prisma/client";
-import { AvailabilitySearchResult, CreateBookingRequest, SearchMatchItem } from "../booking/types";
-import { sendBookingEmail } from "../mail";
-import { getMondayOfISOWeek, getSundayOfISOWeek } from "../utils/weeks";
+import { AvailabilitySearchResult, CreateBookingRequest, SearchMatchItem } from "@cms/booking/types";
+import { sendBookingEmail } from "@cms/mail";
+import { getMondayOfISOWeek, getSundayOfISOWeek } from "@cms/utils/weeks";
 import { getCmsSettingsAction } from "./settings";
-import { AllowedBookingPeriods } from "../types/settings";
-import { recordBookingDiscrepancy } from "../logging/discrepancies";
+import { AllowedBookingPeriods } from "@cms/types/settings";
+import { recordBookingDiscrepancy } from "@cms/logging/discrepancies";
 
 export async function resolveBookingObjectId(idOrAlias?: string): Promise<string | undefined> {
   if (!idOrAlias || typeof idOrAlias !== "string") return undefined;

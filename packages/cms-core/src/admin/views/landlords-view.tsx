@@ -15,7 +15,7 @@ import {
   Search,
   Building,
 } from "lucide-react";
-import { LandlordDto } from "../../actions/landlords";
+import { LandlordDto } from "@cms/actions/landlords";
 import {
   Alert,
   Badge,
@@ -30,7 +30,7 @@ import {
   NativeSelect,
   Switch,
 } from "@cms/components/ui";
-import { useConfirm } from "../../components/confirm";
+import { useConfirm } from "@cms/components/confirm";
 
 export type LandlordItem = LandlordDto;
 

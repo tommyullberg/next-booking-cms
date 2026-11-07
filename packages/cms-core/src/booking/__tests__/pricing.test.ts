@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { calculatePeriodPrice } from "../../actions/bookings";
+import { calculatePeriodPrice } from "@cms/actions/bookings";
 
 describe("Pricing Engine & Business Rules (calculatePeriodPrice)", () => {
   it("1. should calculate price from base_night_price when no season prices are defined", () => {

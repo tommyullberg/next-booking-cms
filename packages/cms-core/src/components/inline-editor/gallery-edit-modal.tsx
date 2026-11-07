@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useEditorStore } from "../../state/editor-store";
+import { useEditorStore } from "@cms/state/editor-store";
 import {
   Alert,
   Button,
@@ -14,7 +14,7 @@ import {
   IconButton,
 } from "@cms/components/ui";
 import { useConfirm } from "../confirm";
-import { LANGUAGE_META } from "../../constants/languages";
+import { LANGUAGE_META } from "@cms/constants/languages";
 import {
   X,
   Check,

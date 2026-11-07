@@ -12,10 +12,10 @@ import {
   Label,
   NativeSelect,
 } from "@cms/components/ui";
-import { useConfirm } from "../../components/confirm";
-import { cn } from "../../utils/cn";
-import { HOMEPAGE_ID } from "../../utils/slug";
-import { LANGUAGE_META } from "../../constants/languages";
+import { useConfirm } from "@cms/components/confirm";
+import { cn } from "@cms/utils/cn";
+import { HOMEPAGE_ID } from "@cms/utils/slug";
+import { LANGUAGE_META } from "@cms/constants/languages";
 
 export interface SectionItem {
   id: string;
