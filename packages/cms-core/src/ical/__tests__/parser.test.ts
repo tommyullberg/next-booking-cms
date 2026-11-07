@@ -77,8 +77,26 @@ END:VCALENDAR`;
     assert.equal(events[0].uid, "valid-evt@example.com");
   });
 
-  it("4. should safely return empty array on empty input or feed without VEVENT", () => {
-    assert.deepEqual(parseICalFeed(""), []);
-    assert.deepEqual(parseICalFeed("BEGIN:VCALENDAR\nVERSION:2.0\nEND:VCALENDAR"), []);
+  it("4. should parse valid empty feed without VEVENT and reject invalid or empty input", () => {
+    assert.deepEqual(
+      parseICalFeed("BEGIN:VCALENDAR\nVERSION:2.0\nEND:VCALENDAR"),
+      []
+    );
+    assert.throws(() => parseICalFeed(""), /Empty iCalendar content/);
+    assert.throws(
+      () => parseICalFeed("<!DOCTYPE html><html><body>Error</body></html>"),
+      /received HTML\/XML\/JSON response/
+    );
+    assert.throws(
+      () => parseICalFeed("BEGIN:VCALENDAR\nVERSION:2.0"),
+      /missing or truncated END:VCALENDAR/
+    );
+    assert.throws(
+      () =>
+        parseICalFeed(
+          "BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nUID:unclosed@example.com\nEND:VCALENDAR"
+        ),
+      /truncated feed with unclosed BEGIN:VEVENT/
+    );
   });
 });

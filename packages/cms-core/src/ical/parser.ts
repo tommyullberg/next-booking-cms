@@ -6,6 +6,54 @@ export interface ParsedICalEvent {
   description?: string;
 }
 
+export function validateICalFeed(content: string): void {
+  if (!content || typeof content !== "string" || content.trim().length === 0) {
+    throw new Error("Empty iCalendar content received");
+  }
+
+  const trimmed = content.trim();
+
+  // Reject HTML / XML error pages or JSON API error payloads
+  const lower = trimmed.toLowerCase();
+  if (
+    lower.startsWith("<!doctype") ||
+    lower.startsWith("<html") ||
+    lower.startsWith("<?xml") ||
+    lower.startsWith("{") ||
+    lower.startsWith("[") ||
+    lower.includes("<body") ||
+    lower.includes("<head")
+  ) {
+    throw new Error("Invalid iCalendar content: received HTML/XML/JSON response instead of iCalendar data");
+  }
+
+  // Must contain RFC 5545 VCALENDAR envelope
+  const lines = trimmed.split(/\r\n|\n|\r/);
+  let hasBeginVCalendar = false;
+  let hasEndVCalendar = false;
+
+  for (const line of lines) {
+    const l = line.trim().toUpperCase();
+    if (l === "BEGIN:VCALENDAR") {
+      hasBeginVCalendar = true;
+    }
+    if (l === "END:VCALENDAR") {
+      if (!hasBeginVCalendar) {
+        throw new Error("Invalid iCalendar structure: END:VCALENDAR encountered before BEGIN:VCALENDAR");
+      }
+      hasEndVCalendar = true;
+    }
+  }
+
+  if (!hasBeginVCalendar) {
+    throw new Error("Invalid iCalendar structure: missing BEGIN:VCALENDAR");
+  }
+
+  if (!hasEndVCalendar) {
+    throw new Error("Invalid iCalendar structure: missing or truncated END:VCALENDAR");
+  }
+}
+
 function parseICalDate(dateStr: string): Date {
   const clean = dateStr.replace(/^.*:/, "").trim();
 
@@ -32,6 +80,8 @@ function parseICalDate(dateStr: string): Date {
 }
 
 export function parseICalFeed(icsContent: string): ParsedICalEvent[] {
+  validateICalFeed(icsContent);
+
   const lines = icsContent.split(/\r\n|\n|\r/);
   const events: ParsedICalEvent[] = [];
 
@@ -52,12 +102,18 @@ export function parseICalFeed(icsContent: string): ParsedICalEvent[] {
     const trimmed = line.trim();
 
     if (trimmed === "BEGIN:VEVENT") {
+      if (inEvent) {
+        throw new Error("Invalid iCalendar structure: nested or unclosed BEGIN:VEVENT detected");
+      }
       inEvent = true;
       currentEvent = {};
       continue;
     }
 
     if (trimmed === "END:VEVENT") {
+      if (!inEvent) {
+        throw new Error("Invalid iCalendar structure: unexpected END:VEVENT without BEGIN:VEVENT");
+      }
       if (currentEvent.uid && currentEvent.startDate && currentEvent.endDate) {
         events.push({
           uid: currentEvent.uid,
@@ -84,6 +140,10 @@ export function parseICalFeed(icsContent: string): ParsedICalEvent[] {
         currentEvent.endDate = parseICalDate(trimmed);
       }
     }
+  }
+
+  if (inEvent) {
+    throw new Error("Invalid iCalendar structure: truncated feed with unclosed BEGIN:VEVENT");
   }
 
   return events;

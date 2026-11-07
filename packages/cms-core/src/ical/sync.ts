@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { prisma } from "../db";
-import { parseICalFeed } from "./parser";
+import { parseICalFeed, validateICalFeed, ParsedICalEvent } from "./parser";
 import { BookingStatus } from "@prisma/client";
 import {
   SyncBookingItem,
@@ -81,7 +81,7 @@ const ONE_HOUR_MS = 60 * 60 * 1000;
 export async function syncICalFromUrl(
   icalUrl: string,
   objectId: string,
-  options?: { force?: boolean }
+  options?: { force?: boolean; timeoutMs?: number }
 ): Promise<SyncObjectResult> {
   const obj = await prisma.bookingObject.findUnique({
     where: { id: objectId },
@@ -121,33 +121,52 @@ export async function syncICalFromUrl(
     };
   }
 
-  // 2. Fetch fresh iCal data
-  let icsText = "";
+  // 2. Fetch fresh iCal data and parse with strict fail-safe validation
+  let events: ParsedICalEvent[] = [];
   try {
+    let icsText = "";
     if (icalUrl.startsWith("http://") || icalUrl.startsWith("https://")) {
+      const timeout = options?.timeoutMs ?? 10000;
       const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 8000);
-      const res = await fetch(icalUrl, {
-        headers: {
-          "User-Agent": "NextBooking-CMS-iCal-Sync/1.0",
-        },
-        signal: controller.signal,
-      });
-      clearTimeout(timer);
+      const timer = setTimeout(() => controller.abort(), timeout);
+      let res: Response;
+      try {
+        res = await fetch(icalUrl, {
+          headers: {
+            "User-Agent": "NextBooking-CMS-iCal-Sync/1.0",
+            Accept: "text/calendar, text/plain, */*",
+          },
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status} from ${icalUrl}`);
+        throw new Error(`HTTP ${res.status} ${res.statusText || ""}`.trim());
       }
+
+      const contentType = res.headers.get("content-type") || "";
+      if (
+        contentType.includes("text/html") ||
+        contentType.includes("application/xhtml+xml")
+      ) {
+        throw new Error(`Invalid content-type: ${contentType}. Expected text/calendar.`);
+      }
+
       icsText = await res.text();
     } else {
       // Local mock feed or relative path
       icsText = readLocalIcs(icalUrl);
     }
+
+    validateICalFeed(icsText);
+    events = parseICalFeed(icsText);
   } catch (err: any) {
-    // 3. Persistent fallback on network/fetch failure:
-    // Retain previously imported bookings so availability is NEVER broken
+    // 3. Persistent fallback on network, validation, or parser failure:
+    // Retain previously imported bookings so existing reservations and availability are NEVER deleted
     console.warn(
-      `[iCal Sync] Warning: Could not fetch ${icalUrl} for object "${objectName}": ${err?.message}. Using persistent cached data.`
+      `[iCal Sync] Warning: Could not fetch or parse iCal feed from ${icalUrl} for object "${objectName}": ${err?.message}. Using persistent cached data.`
     );
 
     const fallbackRows = await prisma.booking.findMany({
@@ -167,13 +186,12 @@ export async function syncICalFromUrl(
       totalEvents: fallbackRows.length,
       cached: true,
       persistentFallback: true,
-      warning: `Kunde inte hämta kalenderdata (${err?.message || "nätverksfel"}). Befintliga sparade datum behålls för att förhindra dubbelbokning.`,
+      warning: `Kunde inte hämta eller tolka kalenderdata (${err?.message || "ogiltigt format"}). Befintliga sparade datum behålls för att förhindra radering och dubbelbokning.`,
       bookings: fallbackRows.map(mapBookingRowToItem),
     };
   }
 
-  // 4. Parse incoming iCal events
-  const events = parseICalFeed(icsText);
+  // 4. Update / upsert parsed iCal events
   const activeEventUids = new Set<string>();
   let importedCount = 0;
 
