@@ -121,7 +121,7 @@ import {
 import { getToken } from "next-auth/jwt";
 import { prisma } from "../db";
 
-async function verifyAdminAuth(req: NextRequest): Promise<{ authorized: boolean; email?: string }> {
+export async function verifyAdminAuth(req: NextRequest): Promise<{ authorized: boolean; identity?: string }> {
   try {
     const token = await getToken({
       req,
@@ -130,7 +130,8 @@ async function verifyAdminAuth(req: NextRequest): Promise<{ authorized: boolean;
     if (!token || !["SUPERADMIN", "ADMIN", "EDITOR"].includes((token as any).role)) {
       return { authorized: false };
     }
-    return { authorized: true, email: token.email || undefined };
+    const identity = token.email || (token as any).name || (token as any).id || "admin";
+    return { authorized: true, identity };
   } catch {
     return { authorized: false };
   }
@@ -582,7 +583,7 @@ export async function handleCmsApiRoute(
         const result = await acknowledgeBookingDiscrepancyAction({
           id: body.id,
           acknowledged: body.acknowledged !== false,
-          adminEmail: auth.email,
+          adminEmail: auth.identity,
         });
         return NextResponse.json(result);
       } catch (err: any) {
