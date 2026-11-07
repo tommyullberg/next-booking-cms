@@ -557,28 +557,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
           </div>
 
           {/* View Mode & Date Switchers */}
-          <div className='flex flex-wrap items-center gap-2.5'>
-            {/* View Mode Tabs */}
-            <TabsList
-              aria-label={t("title")}
-              className='h-auto p-1 bg-slate-950/70 border-slate-800 rounded-xl'
-            >
-              <TabsTrigger
-                value='calendar'
-                className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium cursor-pointer'
-              >
-                <CalendarIcon className='w-3.5 h-3.5' />
-                <span>{t("calendarView")}</span>
-              </TabsTrigger>
-              <TabsTrigger
-                value='list'
-                className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium cursor-pointer'
-              >
-                <List className='w-3.5 h-3.5' />
-                <span>{t("listView")}</span>
-              </TabsTrigger>
-            </TabsList>
-
+          <div className='flex items-center gap-2.5 justify-end ml-auto min-h-[42px]'>
             {/* Calendar Month Controls (shown in calendar mode) */}
             {viewMode === "calendar" && (
               <div className='flex items-center gap-1.5 bg-slate-950/70 border border-slate-800 rounded-xl px-2 py-1'>
@@ -616,6 +595,27 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                 </IconButton>
               </div>
             )}
+
+            {/* View Mode Tabs */}
+            <TabsList
+              aria-label={t("title")}
+              className='h-auto p-1 bg-slate-950/70 border-slate-800 rounded-xl shrink-0'
+            >
+              <TabsTrigger
+                value='calendar'
+                className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium cursor-pointer'
+              >
+                <CalendarIcon className='w-3.5 h-3.5' />
+                <span>{t("calendarView")}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value='list'
+                className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium cursor-pointer'
+              >
+                <List className='w-3.5 h-3.5' />
+                <span>{t("listView")}</span>
+              </TabsTrigger>
+            </TabsList>
           </div>
         </div>
 
