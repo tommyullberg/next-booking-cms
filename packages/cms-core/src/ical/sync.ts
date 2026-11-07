@@ -13,21 +13,35 @@ export * from "./types";
 
 function readLocalIcs(relativeOrPath: string): string {
   const cleanPath = relativeOrPath.replace(/^\//, "");
-  const candidates: string[] = [
+
+  // 1. If an explicit APP_NAME is defined, prioritize that app's public directory
+  if (process.env.APP_NAME) {
+    const appCandidates = [
+      path.resolve(process.cwd(), "apps", process.env.APP_NAME, "public", cleanPath),
+      path.resolve(process.cwd(), "..", "..", "apps", process.env.APP_NAME, "public", cleanPath),
+    ];
+    for (const cand of appCandidates) {
+      if (fs.existsSync(cand)) {
+        return fs.readFileSync(cand, "utf-8");
+      }
+    }
+  }
+
+  // 2. Direct paths relative to process.cwd() or root
+  const directCandidates = [
     path.resolve(process.cwd(), cleanPath),
     path.resolve(process.cwd(), "public", cleanPath),
     path.resolve(process.cwd(), "mock-ical", path.basename(cleanPath)),
     path.resolve(process.cwd(), "..", "..", "mock-ical", path.basename(cleanPath)),
   ];
-
-  if (process.env.APP_NAME) {
-    candidates.push(
-      path.resolve(process.cwd(), "apps", process.env.APP_NAME, "public", cleanPath),
-      path.resolve(process.cwd(), "..", "..", "apps", process.env.APP_NAME, "public", cleanPath)
-    );
+  for (const cand of directCandidates) {
+    if (fs.existsSync(cand)) {
+      return fs.readFileSync(cand, "utf-8");
+    }
   }
 
-  // Scan apps directory dynamically if running from monorepo root or package
+  // 3. Scan apps directory dynamically if running without APP_NAME
+  const appMatches: string[] = [];
   const appsDirCandidates = [
     path.resolve(process.cwd(), "apps"),
     path.resolve(process.cwd(), "..", "..", "apps"),
@@ -37,7 +51,10 @@ function readLocalIcs(relativeOrPath: string): string {
       try {
         const appFolders = fs.readdirSync(appsDir);
         for (const folder of appFolders) {
-          candidates.push(path.resolve(appsDir, folder, "public", cleanPath));
+          const cand = path.resolve(appsDir, folder, "public", cleanPath);
+          if (fs.existsSync(cand) && !appMatches.includes(cand)) {
+            appMatches.push(cand);
+          }
         }
       } catch {
         // Ignore folder read errors
@@ -45,10 +62,15 @@ function readLocalIcs(relativeOrPath: string): string {
     }
   }
 
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) {
-      return fs.readFileSync(candidate, "utf-8");
-    }
+  if (appMatches.length === 1) {
+    return fs.readFileSync(appMatches[0], "utf-8");
+  }
+  if (appMatches.length > 1) {
+    throw new Error(
+      `Ambiguous local iCal file: multiple matches found for '${cleanPath}' across apps: ${appMatches.join(
+        ", "
+      )}. Specify APP_NAME or use an explicit path.`
+    );
   }
 
   throw new Error(`Local iCal file not found at any candidate path: ${cleanPath}`);

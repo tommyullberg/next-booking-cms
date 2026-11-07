@@ -16,6 +16,9 @@ export function resolveSeedConfig(): { config: SeedConfig; source: string } {
   if (process.env.SEED_CONFIG_JSON) {
     try {
       const parsed = JSON.parse(process.env.SEED_CONFIG_JSON) as Partial<SeedConfig>;
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("Expected a JSON object with section and page configuration");
+      }
       if (parsed.section) {
         config.section = {
           ...config.section,
@@ -34,11 +37,11 @@ export function resolveSeedConfig(): { config: SeedConfig; source: string } {
       }
       source = "environment variable: SEED_CONFIG_JSON";
     } catch (err: any) {
-      console.warn("[seed] Failed to parse SEED_CONFIG_JSON:", err.message);
+      throw new Error(`[seed] Invalid SEED_CONFIG_JSON environment variable: ${err.message}`);
     }
   }
 
-  // 2. Check for override file (if SEED_CONFIG_JSON was not used or as fallback)
+  // 2. Check for override file (if SEED_CONFIG_JSON was not used)
   if (source === "cms-core defaults") {
     let overrideFilePath: string | null = null;
     const repoRoot = path.resolve(__dirname, "../../..");
@@ -54,6 +57,11 @@ export function resolveSeedConfig(): { config: SeedConfig; source: string } {
           overrideFilePath = cand;
           break;
         }
+      }
+      if (!overrideFilePath) {
+        throw new Error(
+          `[seed] SEED_CONFIG_FILE specified ('${rawPath}') but file does not exist at any resolved path.`
+        );
       }
     } else {
       // Check standard locations relative to process.cwd() and repo root
@@ -89,6 +97,10 @@ export function resolveSeedConfig(): { config: SeedConfig; source: string } {
         const rawContent = fs.readFileSync(overrideFilePath, "utf-8");
         const fileData = JSON.parse(rawContent) as Partial<SeedConfig>;
 
+        if (!fileData || typeof fileData !== "object" || Array.isArray(fileData)) {
+          throw new Error("Expected a JSON object with section and page configuration");
+        }
+
         if (fileData.section) {
           config.section = {
             ...config.section,
@@ -110,7 +122,9 @@ export function resolveSeedConfig(): { config: SeedConfig; source: string } {
 
         source = `override file: ${path.relative(process.cwd(), overrideFilePath)}`;
       } catch (err: any) {
-        console.warn(`[seed] Failed to parse override file ${overrideFilePath}:`, err.message);
+        throw new Error(
+          `[seed] Invalid JSON syntax in seed configuration file '${overrideFilePath}': ${err.message}`
+        );
       }
     }
   }
