@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 import { cn } from "../../utils/cn";
 
 const buttonVariants = cva(
@@ -64,17 +65,81 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  loading?: boolean;
+  loadingText?: React.ReactNode;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  (
+    {
+      className,
+      variant,
+      size,
+      asChild = false,
+      loading = false,
+      loadingText,
+      disabled,
+      children,
+      onClick,
+      ...props
+    },
+    ref
+  ) => {
     const Comp = asChild ? Slot : "button";
+    const spinnerSize =
+      size === "xs" || size === "sm" || size === "iconSm" || size === "tableIcon"
+        ? "h-3.5 w-3.5"
+        : "h-4 w-4";
+
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (loading) {
+        e.preventDefault();
+        e.stopPropagation();
+        return;
+      }
+      onClick?.(e);
+    };
+
+    let renderedChildren = children;
+    if (loading) {
+      if (asChild && React.isValidElement(children)) {
+        const childElement = children as React.ReactElement<{
+          children?: React.ReactNode;
+        }>;
+        renderedChildren = React.cloneElement(childElement, {
+          children: (
+            <>
+              <Loader2 className={cn("animate-spin shrink-0", spinnerSize)} />
+              {loadingText !== undefined ? loadingText : childElement.props.children}
+            </>
+          ),
+        });
+      } else {
+        renderedChildren = (
+          <>
+            <Loader2 className={cn("animate-spin shrink-0", spinnerSize)} />
+            {loadingText !== undefined ? loadingText : children}
+          </>
+        );
+      }
+    }
+
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          loading && "pointer-events-none opacity-50 cursor-not-allowed"
+        )}
         ref={ref}
+        disabled={asChild ? undefined : (disabled || loading)}
+        aria-busy={loading ? true : undefined}
+        aria-disabled={loading ? true : undefined}
+        tabIndex={loading ? -1 : props.tabIndex}
+        onClick={handleClick}
         {...props}
-      />
+      >
+        {renderedChildren}
+      </Comp>
     );
   }
 );
