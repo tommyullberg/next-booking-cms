@@ -692,10 +692,10 @@ export function MediaView({
                         {canDeleteTop && onDeleteFolder && (
                           <Button
                             type="button"
-                            variant="adminGhost"
+                            variant="adminGhostDestructive"
                             size="xs"
                             onClick={() => handleDeleteFolder(folder)}
-                            className="opacity-0 group-hover:opacity-100 p-1 h-auto text-slate-400 hover:text-red-400 hover:bg-slate-800"
+                            className="opacity-0 group-hover:opacity-100 p-1 h-auto"
                             title={t("deleteEmptyFolderTooltip")}
                             aria-label={t("deleteEmptyFolderTooltip")}
                           >
@@ -753,10 +753,10 @@ export function MediaView({
                             {childCount === 0 && onDeleteFolder && (
                               <Button
                                 type="button"
-                                variant="adminGhost"
+                                variant="adminGhostDestructive"
                                 size="xs"
                                 onClick={() => handleDeleteFolder(child)}
-                                className="opacity-0 group-hover:opacity-100 p-1 h-auto text-slate-400 hover:text-red-400 hover:bg-slate-800"
+                                className="opacity-0 group-hover:opacity-100 p-1 h-auto"
                                 title={t("deleteEmptyFolderTooltip")}
                                 aria-label={t("deleteEmptyFolderTooltip")}
                               >
@@ -964,15 +964,11 @@ export function MediaView({
                         {/* Delete file */}
                         <Button
                           type="button"
-                          variant="adminGhost"
+                          variant="adminGhostDestructive"
                           size="xs"
                           disabled={item.is_used}
                           onClick={() => handleDeleteFile(item)}
-                          className={`p-1 h-auto ${
-                            item.is_used
-                              ? "text-slate-600 cursor-not-allowed"
-                              : "text-slate-400 hover:text-red-400"
-                          }`}
+                          className="p-1 h-auto"
                           title={
                             item.is_used
                               ? t("inUseCannotDeleteTooltip")
