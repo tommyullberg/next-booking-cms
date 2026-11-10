@@ -1,0 +1,36 @@
+/* CMS Semantic Classes - Shared UI Layer */
+
+@utility cms-icon-xs {
+  @apply size-3 shrink-0;
+}
+
+@utility cms-icon-sm {
+  @apply size-3.5 shrink-0;
+}
+
+@utility cms-icon-md {
+  @apply size-4 shrink-0;
+}
+
+@utility cms-icon-lg {
+  @apply size-5 shrink-0;
+}
+
+@utility cms-text-meta {
+  @apply text-[0.6875rem] text-muted-foreground leading-normal;
+}
+
+@utility cms-text-caption {
+  @apply text-[0.625rem];
+}
+
+@utility cms-text-code {
+  @apply text-[0.6875rem] font-mono text-slate-400;
+}
+
+@layer components {
+  .cms-table-header {
+    @apply border-b border-admin-border bg-slate-900/80 text-[0.6875rem] font-semibold uppercase tracking-wider text-slate-400;
+  }
+}
+
