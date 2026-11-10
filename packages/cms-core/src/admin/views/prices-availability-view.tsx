@@ -44,6 +44,12 @@ import {
   DialogTitle,
   FormField,
   IconButton,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@cms/components/ui";
 import { useConfirm } from "@cms/components/confirm";
 import { YearCalendar } from "../components/prices-availability-calendar";
@@ -204,6 +210,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
   const [formPrice4Days, setFormPrice4Days] = useState<string>("");
   const [formPrice5Days, setFormPrice5Days] = useState<string>("");
   const [formPrice6Days, setFormPrice6Days] = useState<string>("");
+  const [copyPeriodId, setCopyPeriodId] = useState<string>("");
 
   const formDateSpanInfo = useMemo(() => {
     if (!formStartDate || !formEndDate) return null;
@@ -762,38 +769,38 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
           <div className='flex flex-wrap items-center gap-3'>
             {/* Object selector */}
-            <div className='flex items-center gap-2 bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-1.5'>
+            <div className='flex items-center gap-2'>
               <label htmlFor='price-object-select' className='text-xs text-slate-400 cursor-pointer'>{t("object")}</label>
-              <select
-                id='price-object-select'
-                aria-label={t("object")}
-                value={selectedObjectId}
-                onChange={(e) => setSelectedObjectId(e.target.value)}
-                className='bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer'>
-                {objects.map((obj) => (
-                  <option key={obj.id} value={obj.id} className='bg-slate-900 text-white'>
-                    {obj.name}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedObjectId || undefined} onValueChange={(val) => setSelectedObjectId(val)}>
+                <SelectTrigger id='price-object-select' aria-label={t("object")} variant="admin" size="sm" className="w-[180px]">
+                  <SelectValue placeholder={t("object")} />
+                </SelectTrigger>
+                <SelectContent variant="admin">
+                  {objects.map((obj) => (
+                    <SelectItem key={obj.id} value={obj.id} className="py-1.5 text-xs">
+                      {obj.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Year selector */}
-            <div className='flex items-center gap-2 bg-slate-950/70 border border-slate-800 rounded-xl px-3 py-1.5'>
+            <div className='flex items-center gap-2'>
               <Calendar className='w-3.5 h-3.5 text-amber-400' />
               <label htmlFor='price-year-select' className='text-xs text-slate-400 cursor-pointer'>{t("year")}</label>
-              <select
-                id='price-year-select'
-                aria-label={t("year")}
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                className='bg-transparent text-xs font-semibold text-white focus:outline-none cursor-pointer'>
-                {availableYears.map((y) => (
-                  <option key={y} value={y} className='bg-slate-900 text-white'>
-                    {y}
-                  </option>
-                ))}
-              </select>
+              <Select value={selectedYear ? String(selectedYear) : undefined} onValueChange={(val) => setSelectedYear(parseInt(val, 10))}>
+                <SelectTrigger id='price-year-select' aria-label={t("year")} variant="admin" size="sm" className="w-[100px]">
+                  <SelectValue placeholder={t("year")} />
+                </SelectTrigger>
+                <SelectContent variant="admin">
+                  {availableYears.map((y) => (
+                    <SelectItem key={y} value={String(y)} className="py-1.5 text-xs">
+                      {y}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Block Period Button */}
@@ -1187,46 +1194,52 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       <Sparkles className='w-3.5 h-3.5 text-amber-400' />
                       <span>{t("modal.copyFromExisting")}</span>
                     </label>
-                    <select
-                      defaultValue=''
-                      onChange={(e) => {
-                        if (e.target.value) handleCopyFromPeriod(e.target.value);
+                    <Select
+                      value={copyPeriodId}
+                      onValueChange={(val) => {
+                        if (val) {
+                          handleCopyFromPeriod(val);
+                          setCopyPeriodId("");
+                        }
                       }}
-                      className='w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-200 focus:border-amber-400 focus:outline-none'>
-                      <option value='' disabled>
-                        {t("modal.copyPlaceholder")}
-                      </option>
-                      {allPeriodsForCopy.map((p) => {
-                        const objName = p.object?.name || "Unknown object";
-                        const sStr = p.start_date
-                          ? new Date(p.start_date).toISOString().split("T")[0]
-                          : p.start_week
-                          ? `w.${p.start_week}`
-                          : "";
-                        const eStr = p.end_date
-                          ? new Date(p.end_date).toISOString().split("T")[0]
-                          : p.end_week
-                          ? `w.${p.end_week}`
-                          : "";
-                        const dateSpan = sStr && eStr ? ` (${sStr} to ${eStr})` : "";
-                        return (
-                          <option key={p.id} value={p.id}>
-                            {objName}: {p.name || "Period"}{dateSpan}
-                          </option>
-                        );
-                      })}
-                    </select>
+                    >
+                      <SelectTrigger variant="admin" size="sm" className="w-full">
+                        <SelectValue placeholder={t("modal.copyPlaceholder")} />
+                      </SelectTrigger>
+                      <SelectContent variant="admin">
+                        {allPeriodsForCopy.map((p) => {
+                          const objName = p.object?.name || "Unknown object";
+                          const sStr = p.start_date
+                            ? new Date(p.start_date).toISOString().split("T")[0]
+                            : p.start_week
+                            ? `w.${p.start_week}`
+                            : "";
+                          const eStr = p.end_date
+                            ? new Date(p.end_date).toISOString().split("T")[0]
+                            : p.end_week
+                            ? `w.${p.end_week}`
+                            : "";
+                          const dateSpan = sStr && eStr ? ` (${sStr} to ${eStr})` : "";
+                          return (
+                            <SelectItem key={p.id} value={p.id} className="py-1.5 text-xs">
+                              {objName}: {p.name || "Period"}{dateSpan}
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
                   </div>
                 )}
 
                 {/* Name */}
                 <FormField label={t("modal.periodName")} labelVariant="admin" labelClassName="font-semibold">
-                  <input
+                  <Input
+                    variant="admin"
+                    size="sm"
                     type='text'
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
                     placeholder={t("modal.periodNamePlaceholder")}
-                    className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none'
                   />
                 </FormField>
 
@@ -1234,21 +1247,23 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                   {/* required={false}: the inputs keep their native required attribute but no asterisk is shown, as before */}
                   <FormField label={t("modal.startDate")} required={false} labelVariant="admin" labelClassName="font-semibold">
-                    <input
+                    <Input
+                      variant="admin"
+                      size="sm"
                       type='date'
                       required
                       value={formStartDate}
                       onChange={(e) => setFormStartDate(e.target.value)}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                     />
                   </FormField>
                   <FormField label={t("modal.endDate")} required={false} labelVariant="admin" labelClassName="font-semibold">
-                    <input
+                    <Input
+                      variant="admin"
+                      size="sm"
                       type='date'
                       required
                       value={formEndDate}
                       onChange={(e) => setFormEndDate(e.target.value)}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                     />
                   </FormField>
                 </div>
@@ -1271,24 +1286,27 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 <div className={`grid gap-3 pt-2 border-t border-slate-800 ${isCustomDaysAllowed ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1"}`}>
                   {isCustomDaysAllowed && (
                     <FormField label={t("modal.dailyBasePrice")} labelVariant="admin" labelClassName="font-semibold">
-                      <input
+                      <Input
+                        variant="admin"
+                        size="sm"
                         type='number'
                         step='any'
                         placeholder={t("modal.priceOptionalPlaceholder", { amount: "1500" })}
                         value={formPriceDay}
                         onChange={(e) => setFormPriceDay(e.target.value)}
-                        className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
                       />
                     </FormField>
                   )}
                   <FormField label={t("modal.priceWeek")} labelVariant="admin" labelClassName="font-semibold text-amber-300">
-                    <input
+                    <Input
+                      variant="admin"
+                      size="sm"
                       type='number'
                       step='any'
                       placeholder='e.g. 8500'
                       value={formPriceWeek}
                       onChange={(e) => setFormPriceWeek(e.target.value)}
-                      className='w-full rounded-xl border border-amber-500/50 bg-slate-950 px-3 py-2 text-xs text-amber-200 placeholder-slate-600 focus:border-amber-400 focus:outline-none'
+                      className='border-amber-500/50 text-amber-200 focus:border-amber-400 focus:ring-amber-500/30'
                     />
                   </FormField>
                 </div>
@@ -1296,23 +1314,25 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 {/* Weekend / Midweek Rates */}
                 <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
                   <FormField label={t("modal.priceSunThu")} labelVariant="admin" labelClassName="font-semibold">
-                    <input
+                    <Input
+                      variant="admin"
+                      size="sm"
                       type='number'
                       step='any'
                       placeholder={t("modal.priceOptionalPlaceholder", { amount: "4500" })}
                       value={formPriceSunThu}
                       onChange={(e) => setFormPriceSunThu(e.target.value)}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
                     />
                   </FormField>
                   <FormField label={t("modal.priceThuSun")} labelVariant="admin" labelClassName="font-semibold">
-                    <input
+                    <Input
+                      variant="admin"
+                      size="sm"
                       type='number'
                       step='any'
                       placeholder={t("modal.priceOptionalPlaceholder", { amount: "4900" })}
                       value={formPriceThuSun}
                       onChange={(e) => setFormPriceThuSun(e.target.value)}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder-slate-600 focus:border-amber-400 focus:outline-none'
                     />
                   </FormField>
                 </div>
@@ -1340,52 +1360,57 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         <div className='grid grid-cols-2 sm:grid-cols-5 gap-2.5'>
                           <div>
                             <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 2 })}</label>
-                            <input
+                            <Input
+                              variant="admin"
+                              size="sm"
                               type='number'
                               step='any'
                               value={formPrice2Days}
                               onChange={(e) => setFormPrice2Days(e.target.value)}
-                              className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                             />
                           </div>
                           <div>
                             <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 3 })}</label>
-                            <input
+                            <Input
+                              variant="admin"
+                              size="sm"
                               type='number'
                               step='any'
                               value={formPrice3Days}
                               onChange={(e) => setFormPrice3Days(e.target.value)}
-                              className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                             />
                           </div>
                           <div>
                             <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 4 })}</label>
-                            <input
+                            <Input
+                              variant="admin"
+                              size="sm"
                               type='number'
                               step='any'
                               value={formPrice4Days}
                               onChange={(e) => setFormPrice4Days(e.target.value)}
-                              className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                             />
                           </div>
                           <div>
                             <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 5 })}</label>
-                            <input
+                            <Input
+                              variant="admin"
+                              size="sm"
                               type='number'
                               step='any'
                               value={formPrice5Days}
                               onChange={(e) => setFormPrice5Days(e.target.value)}
-                              className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                             />
                           </div>
                           <div>
                             <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 6 })}</label>
-                            <input
+                            <Input
+                              variant="admin"
+                              size="sm"
                               type='number'
                               step='any'
                               value={formPrice6Days}
                               onChange={(e) => setFormPrice6Days(e.target.value)}
-                              className='w-full rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none'
                             />
                           </div>
                         </div>
@@ -1457,33 +1482,36 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
               <form onSubmit={handleSaveBlocked} className='space-y-4'>
                 <FormField label={t("modal.reason")} labelVariant="admin" labelClassName="font-semibold">
-                  <input
+                  <Input
+                    variant="admin"
+                    size="sm"
                     type='text'
                     value={blockedFormName}
                     onChange={(e) => setBlockedFormName(e.target.value)}
                     placeholder={t("modal.reasonPlaceholder")}
-                    className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:border-rose-500 focus:outline-none'
                   />
                 </FormField>
 
                 <div className='grid grid-cols-2 gap-3'>
                   <FormField label={t("modal.startDate")} required={false} labelVariant="admin" labelClassName="font-semibold">
-                    <input
+                    <Input
+                      variant="admin"
+                      size="sm"
                       type='date'
                       required
                       value={blockedFormStartDate}
                       onChange={(e) => setBlockedFormStartDate(e.target.value)}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white focus:border-rose-500 focus:outline-none'
                     />
                   </FormField>
 
                   <FormField label={t("modal.endDate")} required={false} labelVariant="admin" labelClassName="font-semibold">
-                    <input
+                    <Input
+                      variant="admin"
+                      size="sm"
                       type='date'
                       required
                       value={blockedFormEndDate}
                       onChange={(e) => setBlockedFormEndDate(e.target.value)}
-                      className='w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white focus:border-rose-500 focus:outline-none'
                     />
                   </FormField>
                 </div>
