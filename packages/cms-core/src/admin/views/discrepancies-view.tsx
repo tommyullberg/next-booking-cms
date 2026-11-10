@@ -154,11 +154,11 @@ export function DiscrepanciesView() {
       {/* Header and Summary Bar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-admin-border">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-admin-text-primary flex items-center gap-2">
+          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
             <span>System- och bokningsavvikelser</span>
           </h2>
-          <p className="text-xs text-admin-text-secondary mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Övervaka och åtgärda avvikelser i prissättning, objektrelationer och tekniska anrop.
           </p>
         </div>
@@ -198,43 +198,43 @@ export function DiscrepanciesView() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="p-4 bg-admin-card-bg border border-admin-border rounded-xl">
+        <Card className="p-4 bg-admin-surface border border-admin-border rounded-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-admin-text-secondary">Aktiva avvikelser</span>
+            <span className="text-xs font-semibold text-muted-foreground">Aktiva avvikelser</span>
             <AlertCircle className="w-4 h-4 text-rose-500" />
           </div>
-          <div className="text-2xl font-bold text-admin-text-primary mt-2">
+          <div className="text-2xl font-bold text-foreground mt-2">
             {activeCount}
           </div>
-          <p className="text-[11px] text-admin-text-muted mt-1">Kräver uppföljning</p>
+          <p className="text-[11px] text-muted-foreground mt-1">Kräver uppföljning</p>
         </Card>
 
-        <Card className="p-4 bg-admin-card-bg border border-admin-border rounded-xl">
+        <Card className="p-4 bg-admin-surface border border-admin-border rounded-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-admin-text-secondary">Kvitterade</span>
+            <span className="text-xs font-semibold text-muted-foreground">Kvitterade</span>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </div>
-          <div className="text-2xl font-bold text-admin-text-primary mt-2">
+          <div className="text-2xl font-bold text-foreground mt-2">
             {acknowledgedCount}
           </div>
-          <p className="text-[11px] text-admin-text-muted mt-1">Markerade som åtgärdade</p>
+          <p className="text-[11px] text-muted-foreground mt-1">Markerade som åtgärdade</p>
         </Card>
 
-        <Card className="p-4 bg-admin-card-bg border border-admin-border rounded-xl">
+        <Card className="p-4 bg-admin-surface border border-admin-border rounded-xl">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-admin-text-secondary">Totalt i historik</span>
+            <span className="text-xs font-semibold text-muted-foreground">Totalt i historik</span>
             <Hash className="w-4 h-4 text-sky-500" />
           </div>
-          <div className="text-2xl font-bold text-admin-text-primary mt-2">
+          <div className="text-2xl font-bold text-foreground mt-2">
             {totalCount}
           </div>
-          <p className="text-[11px] text-admin-text-muted mt-1">Max 50 deduplicerade poster</p>
+          <p className="text-[11px] text-muted-foreground mt-1">Max 50 deduplicerade poster</p>
         </Card>
       </div>
 
       {/* Filter Mode Selector */}
       <div className="flex items-center gap-2 border-b border-admin-border pb-3">
-        <Filter className="w-3.5 h-3.5 text-admin-text-muted shrink-0" />
+        <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         <SegmentedControl<"ACTIVE" | "ALL" | "ACKNOWLEDGED">
           size="sm"
           value={filter}
@@ -259,14 +259,14 @@ export function DiscrepanciesView() {
 
       {/* List of Discrepancies */}
       {isLoading ? (
-        <div className="p-8 text-center text-xs text-admin-text-muted">
+        <div className="p-8 text-center text-xs text-muted-foreground">
           Laddar systemavvikelser...
         </div>
       ) : filteredDiscrepancies.length === 0 ? (
-        <div className="p-8 rounded-xl border border-dashed border-admin-border bg-admin-card-bg/40 text-center">
+        <div className="p-8 rounded-xl border border-dashed border-admin-border bg-admin-surface/40 text-center">
           <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-          <h4 className="text-sm font-semibold text-admin-text-primary">Inga avvikelser att visa</h4>
-          <p className="text-xs text-admin-text-muted mt-1">
+          <h4 className="text-sm font-semibold text-foreground">Inga avvikelser att visa</h4>
+          <p className="text-xs text-muted-foreground mt-1">
             {filter === "ACTIVE"
               ? "Alla registrerade avvikelser är åtgärdade och kvitterade."
               : "Inga poster matchar det valda filtret."}
@@ -281,8 +281,8 @@ export function DiscrepanciesView() {
                 key={item.id}
                 className={`p-4 border rounded-xl transition-all ${
                   item.acknowledged
-                    ? "bg-admin-card-bg/50 border-admin-border opacity-75"
-                    : "bg-admin-card-bg border-rose-500/30 shadow-sm"
+                    ? "bg-admin-surface/50 border-admin-border opacity-75"
+                    : "bg-admin-surface border-rose-500/30 shadow-sm"
                 }`}
               >
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-3">
@@ -301,40 +301,40 @@ export function DiscrepanciesView() {
                       )}
 
                       {item.occurrences > 1 && (
-                        <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold bg-slate-200 dark:bg-slate-800 text-admin-text-primary">
+                        <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold bg-slate-200 dark:bg-slate-800 text-foreground">
                           {item.occurrences} förekomster
                         </span>
                       )}
                     </div>
 
-                    <div className="text-xs font-mono font-medium text-admin-text-primary mt-1 break-words">
+                    <div className="text-xs font-mono font-medium text-foreground mt-1 break-words">
                       {item.message}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-admin-text-secondary pt-1">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground pt-1">
                       {item.objectName && (
                         <span className="flex items-center gap-1">
-                          <Box className="w-3 h-3 text-admin-text-muted" />
-                          <span>Boende: <strong className="text-admin-text-primary">{item.objectName}</strong></span>
+                          <Box className="w-3 h-3 text-muted-foreground" />
+                          <span>Boende: <strong className="text-foreground">{item.objectName}</strong></span>
                         </span>
                       )}
 
                       {item.objectId && (
                         <span className="flex items-center gap-1">
-                          <Hash className="w-3 h-3 text-admin-text-muted" />
+                          <Hash className="w-3 h-3 text-muted-foreground" />
                           <span>ID: <code className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{item.objectId}</code></span>
                         </span>
                       )}
 
                       {item.period?.startDate && item.period?.endDate && (
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-admin-text-muted" />
+                          <Calendar className="w-3 h-3 text-muted-foreground" />
                           <span>Period: {item.period.startDate} till {item.period.endDate}</span>
                         </span>
                       )}
 
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-admin-text-muted" />
+                        <Clock className="w-3 h-3 text-muted-foreground" />
                         <span>Senast: {formatTimestamp(item.lastOccurredAt)}</span>
                       </span>
 
@@ -361,7 +361,7 @@ export function DiscrepanciesView() {
                       size="sm"
                       onClick={() => handleDelete(item.id)}
                       title="Radera permanent"
-                      className="text-admin-text-muted hover:text-rose-500"
+                      className="text-muted-foreground hover:text-rose-500"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
