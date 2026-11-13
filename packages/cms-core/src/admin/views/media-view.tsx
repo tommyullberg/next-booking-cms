@@ -514,16 +514,16 @@ export function MediaView({
               onClick={() => handleOpenCreateFolder()}
               className="gap-1.5"
             >
-              <FolderPlus className="w-4 h-4 text-sky-400" />
+              <FolderPlus className="cms-icon-md text-sky-400" />
               <span>{t("createFolder")}</span>
             </Button>
           )}
 
           <label className="inline-flex items-center gap-2 cursor-pointer rounded-admin-button bg-admin-accent px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-sky-600/20 hover:bg-admin-accent-hover transition">
             {isUploading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="cms-icon-md animate-spin" />
             ) : (
-              <Upload className="w-4 h-4" />
+              <Upload className="cms-icon-md" />
             )}
             <span>
               {isUploading
@@ -562,7 +562,7 @@ export function MediaView({
         <div className="w-full lg:w-64 shrink-0 space-y-3">
           <Card variant="admin" className="p-3 shadow-sm">
             <div className="flex items-center justify-between px-2 py-1 mb-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <span className="cms-text-meta font-semibold uppercase tracking-wider text-slate-400">
                 {t("folders")}
               </span>
               {onCreateFolder && (
@@ -575,7 +575,7 @@ export function MediaView({
                   title={t("createNewFolderTooltip")}
                   aria-label={t("createNewFolderTooltip")}
                 >
-                  <FolderPlus className="w-3.5 h-3.5" />
+                  <FolderPlus className="cms-icon-sm" />
                 </Button>
               )}
             </div>
@@ -592,10 +592,10 @@ export function MediaView({
                 }`}
               >
                 <div className="flex items-center gap-2.5 truncate">
-                  <Layers className="w-4 h-4 text-sky-400 shrink-0" />
+                  <Layers className="cms-icon-md text-sky-400" />
                   <span className="truncate">{t("allFiles")}</span>
                 </div>
-                <Badge variant="adminMuted" className="text-[11px] font-mono px-2 py-0.5 rounded-full shrink-0">
+                <Badge variant="adminMuted" className="cms-text-code px-2 py-0.5 rounded-full shrink-0">
                   {folderCounts.ALL || 0}
                 </Badge>
               </button>
@@ -622,13 +622,13 @@ export function MediaView({
               >
                 <div className="flex items-center gap-2.5 truncate">
                   {selectedFolderId === null ? (
-                    <FolderOpen className="w-4 h-4 text-sky-400 shrink-0" />
+                    <FolderOpen className="cms-icon-md text-sky-400" />
                   ) : (
-                    <Folder className="w-4 h-4 text-slate-400 shrink-0" />
+                    <Folder className="cms-icon-md text-slate-400" />
                   )}
                   <span className="truncate">{t("mediafolder")}</span>
                 </div>
-                <Badge variant="adminMuted" className="text-[11px] font-mono px-2 py-0.5 rounded-full shrink-0">
+                <Badge variant="adminMuted" className="cms-text-code px-2 py-0.5 rounded-full shrink-0">
                   {folderCounts.ROOT || 0}
                 </Badge>
               </div>
@@ -666,9 +666,9 @@ export function MediaView({
                       <div className="flex items-center gap-1.5 truncate">
                         <FolderTreeBranchIcon isLast={isLastTop} />
                         {isSelected ? (
-                          <FolderOpen className="w-4 h-4 text-sky-400 shrink-0" />
+                          <FolderOpen className="cms-icon-md text-sky-400" />
                         ) : (
-                          <Folder className="w-4 h-4 text-slate-400 group-hover:text-sky-300 shrink-0" />
+                          <Folder className="cms-icon-md text-slate-400 group-hover:text-sky-300" />
                         )}
                         <span className="truncate pl-0.5" title={folder.name}>
                           {folder.name}
@@ -686,7 +686,7 @@ export function MediaView({
                             title={t("createSubfolderTooltip", { name: folder.name })}
                             aria-label={t("createSubfolderTooltip", { name: folder.name })}
                           >
-                            <FolderPlus className="w-3.5 h-3.5" />
+                            <FolderPlus className="cms-icon-sm" />
                           </Button>
                         )}
                         {canDeleteTop && onDeleteFolder && (
@@ -699,10 +699,10 @@ export function MediaView({
                             title={t("deleteEmptyFolderTooltip")}
                             aria-label={t("deleteEmptyFolderTooltip")}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="cms-icon-sm" />
                           </Button>
                         )}
-                        <Badge variant="adminMuted" className="text-[11px] font-mono px-2 py-0.5 rounded-full">
+                        <Badge variant="adminMuted" className="cms-text-code px-2 py-0.5 rounded-full">
                           {count}
                         </Badge>
                       </div>
@@ -740,9 +740,9 @@ export function MediaView({
                             <FolderTreePipeIcon showLine={!isLastTop} />
                             <FolderTreeBranchIcon isLast={isLastChild} />
                             {isChildSelected ? (
-                              <FolderOpen className="w-4 h-4 text-sky-400 shrink-0" />
+                              <FolderOpen className="cms-icon-md text-sky-400" />
                             ) : (
-                              <Folder className="w-4 h-4 text-slate-400 group-hover:text-sky-300 shrink-0" />
+                              <Folder className="cms-icon-md text-slate-400 group-hover:text-sky-300" />
                             )}
                             <span className="truncate pl-0.5" title={`${folder.name}/${child.name}`}>
                               {child.name}
@@ -760,10 +760,10 @@ export function MediaView({
                                 title={t("deleteEmptyFolderTooltip")}
                                 aria-label={t("deleteEmptyFolderTooltip")}
                               >
-                                <Trash2 className="w-3.5 h-3.5" />
+                                <Trash2 className="cms-icon-sm" />
                               </Button>
                             )}
-                            <Badge variant="adminMuted" className="text-[11px] font-mono px-2 py-0.5 rounded-full">
+                            <Badge variant="adminMuted" className="cms-text-code px-2 py-0.5 rounded-full">
                               {childCount}
                             </Badge>
                           </div>
@@ -791,13 +791,13 @@ export function MediaView({
               <span className="font-semibold text-white">
                 {activeFolderBreadcrumb}
               </span>
-              <span className="text-slate-600 font-mono">
+              <span className="text-slate-600 cms-text-code">
                 ({displayedFiles.length} {displayedFiles.length === 1 ? t("file") : t("files")})
               </span>
             </div>
 
             <div className="relative w-full sm:w-64">
-              <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
+              <Search className="cms-icon-sm absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none z-10" />
               <Input
                 id={searchInputId}
                 type="text"
@@ -847,7 +847,7 @@ export function MediaView({
                 <>
                   <Upload
                     className={`${
-                      displayedFiles.length === 0 ? "w-7 h-7" : "w-5 h-5"
+                      displayedFiles.length === 0 ? "w-7 h-7" : "cms-icon-lg"
                     } ${isDropzoneActive ? "text-sky-400" : "text-slate-500"}`}
                   />
                   {displayedFiles.length === 0 && (
@@ -855,7 +855,7 @@ export function MediaView({
                       {t("noFilesInFolder")}
                     </div>
                   )}
-                  <div className="text-[11px] text-slate-500">
+                  <div className="cms-text-meta text-slate-500">
                     {t("dragAndDropHelp")}
                   </div>
                 </>
@@ -886,7 +886,7 @@ export function MediaView({
                       {isPdf ? (
                         <div className="flex flex-col items-center justify-center text-slate-400 gap-1.5">
                           <FileText className="w-8 h-8 text-rose-400" />
-                          <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
+                          <span className="cms-text-code uppercase tracking-wider text-slate-500">
                             {t("pdfDocument")}
                           </span>
                         </div>
@@ -905,7 +905,7 @@ export function MediaView({
                           className="absolute top-2 left-2 gap-1 backdrop-blur shadow"
                           title={t("usedOnPagesTooltip", { count: item.usage_count || 1 })}
                         >
-                          <Lock className="w-2.5 h-2.5" />
+                          <Lock className="cms-icon-xs" />
                           <span>{t("inUse")}</span>
                         </Badge>
                       )}
@@ -916,7 +916,7 @@ export function MediaView({
                           variant="adminMuted"
                           className="absolute bottom-2 left-2 gap-1 backdrop-blur shadow max-w-[140px] truncate"
                         >
-                          <Folder className="w-2.5 h-2.5 text-sky-400 shrink-0" />
+                          <Folder className="cms-icon-xs text-sky-400 shrink-0" />
                           <span className="truncate">{item.folder.slug || item.folder.name}</span>
                         </Badge>
                       )}
@@ -940,9 +940,9 @@ export function MediaView({
                           aria-label={`${t("copyUrlTooltip")}: ${item.file_name}`}
                         >
                           {copiedId === item.id ? (
-                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <Check className="cms-icon-sm text-emerald-400" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5" />
+                            <Copy className="cms-icon-sm" />
                           )}
                         </Button>
 
@@ -957,7 +957,7 @@ export function MediaView({
                             title={t("moveFileTooltip")}
                             aria-label={`${t("moveFileTooltip")}: ${item.file_name}`}
                           >
-                            <FolderInput className="w-3.5 h-3.5" />
+                            <FolderInput className="cms-icon-sm" />
                           </Button>
                         )}
 
@@ -976,7 +976,7 @@ export function MediaView({
                           }
                           aria-label={`${t("deleteFileTooltip")}: ${item.file_name}`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="cms-icon-sm" />
                         </Button>
                       </div>
                     </div>
@@ -1008,7 +1008,7 @@ export function MediaView({
         >
           <DialogHeader className="border-b border-slate-800 pb-3 mb-0">
             <DialogTitle variant="admin" size="sm" className="flex items-center gap-2">
-              <FolderPlus className="w-5 h-5 text-sky-400" />
+              <FolderPlus className="cms-icon-lg text-sky-400" />
               <span>{t("createNewFolderModalTitle")}</span>
             </DialogTitle>
           </DialogHeader>
@@ -1043,7 +1043,7 @@ export function MediaView({
                 placeholder={t("folderNamePlaceholder")}
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(sanitizeFolderInput(e.target.value))}
-                className="font-mono text-xs"
+                className="cms-text-code"
                 autoFocus
               />
             </FormField>
@@ -1065,7 +1065,7 @@ export function MediaView({
                 disabled={isCreatingFolder || !sanitizeFolderSlug(newFolderName)}
                 className="gap-1.5"
               >
-                {isCreatingFolder && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                {isCreatingFolder && <Loader2 className="cms-icon-sm animate-spin" />}
                 <span>{t("createFolderBtn")}</span>
               </Button>
             </div>
@@ -1093,7 +1093,7 @@ export function MediaView({
         >
           <DialogHeader className="border-b border-slate-800 pb-3 mb-0">
             <DialogTitle variant="admin" size="sm" className="flex items-center gap-2">
-              <FolderInput className="w-5 h-5 text-sky-400" />
+              <FolderInput className="cms-icon-lg text-sky-400" />
               <span>{t("moveFileModalTitle")}</span>
             </DialogTitle>
           </DialogHeader>
@@ -1119,9 +1119,9 @@ export function MediaView({
                   >
                     <div className="flex items-center gap-2">
                       {targetFolderChoice === null ? (
-                        <FolderOpen className="w-4 h-4 text-sky-400" />
+                        <FolderOpen className="cms-icon-md text-sky-400" />
                       ) : (
-                        <Folder className="w-4 h-4 text-slate-400" />
+                        <Folder className="cms-icon-md text-slate-400" />
                       )}
                       <span>{t("mediafolder")}</span>
                     </div>
@@ -1150,7 +1150,7 @@ export function MediaView({
                         >
                           <div className="flex items-center gap-1.5">
                             <FolderTreeBranchIcon isLast={isLastTop} />
-                            <Folder className="w-4 h-4 text-sky-400 shrink-0" />
+                            <Folder className="cms-icon-md text-sky-400 shrink-0" />
                             <span className="pl-0.5">{f.name}</span>
                           </div>
                           <input
@@ -1176,7 +1176,7 @@ export function MediaView({
                               <div className="flex items-center gap-1.5">
                                 <FolderTreePipeIcon showLine={!isLastTop} />
                                 <FolderTreeBranchIcon isLast={isLastChild} />
-                                <Folder className="w-4 h-4 text-sky-400 shrink-0" />
+                                <Folder className="cms-icon-md text-sky-400 shrink-0" />
                                 <span className="pl-0.5">{child.name}</span>
                               </div>
                               <input
@@ -1194,7 +1194,7 @@ export function MediaView({
                   })}
                 </div>
 
-                <p className="text-[11px] text-slate-500">
+                <p className="cms-text-meta text-slate-500">
                   {t("moveFileHelp")}
                 </p>
 
@@ -1216,7 +1216,7 @@ export function MediaView({
                     onClick={handleConfirmMove}
                     className="gap-1.5"
                   >
-                    {isMoving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    {isMoving && <Loader2 className="cms-icon-sm animate-spin" />}
                     <span>{t("moveFileBtn")}</span>
                   </Button>
                 </div>

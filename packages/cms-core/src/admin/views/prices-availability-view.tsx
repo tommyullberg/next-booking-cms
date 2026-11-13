@@ -757,7 +757,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
         <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
           <div className='flex items-center gap-3'>
             <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 flex items-center justify-center text-white shadow-lg shadow-amber-500/20'>
-              <Coins className='w-5 h-5' />
+              <Coins className='cms-icon-lg' />
             </div>
             <div>
               <h1 className='text-xl font-bold text-white tracking-tight'>{t("title")}</h1>
@@ -787,7 +787,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
             {/* Year selector */}
             <div className='flex items-center gap-2'>
-              <Calendar className='w-3.5 h-3.5 text-amber-400' />
+              <Calendar className='cms-icon-sm text-amber-400' />
               <label htmlFor='price-year-select' className='text-xs text-slate-400 cursor-pointer'>{t("year")}</label>
               <Select value={selectedYear ? String(selectedYear) : undefined} onValueChange={(val) => setSelectedYear(parseInt(val, 10))}>
                 <SelectTrigger id='price-year-select' aria-label={t("year")} variant="admin" size="sm" className="w-[100px]">
@@ -810,7 +810,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               onClick={handleOpenCreateBlocked}
               disabled={!selectedObjectId}
               className='h-auto rounded-xl border-rose-500/40 bg-rose-500/10 px-3.5 py-2 text-xs font-semibold text-rose-300 shadow-sm hover:bg-rose-500/20 hover:text-rose-200 transition disabled:opacity-50'>
-              <Plus className='w-4 h-4 text-rose-400' />
+              <Plus className='cms-icon-md text-rose-400' />
               <span>{t("blockPeriod")}</span>
             </Button>
 
@@ -820,7 +820,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               onClick={handleOpenCreate}
               disabled={!selectedObjectId}
               className='h-auto rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50 border-none'>
-              <Plus className='w-4 h-4' />
+              <Plus className='cms-icon-md' />
               <span>{t("newPricePeriod")}</span>
             </Button>
           </div>
@@ -832,7 +832,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
         <>
           {periods.length === 0 ? (
             <div className='rounded-xl border border-slate-700/60 bg-slate-900/60 p-4 text-slate-300 flex items-start gap-3'>
-              <Info className='w-5 h-5 text-slate-400 shrink-0 mt-0.5' />
+              <Info className='cms-icon-lg text-slate-400 mt-0.5' />
               <div className='text-xs space-y-1'>
                 <div className='font-semibold text-white'>
                   {t("noSeasonConfigured", { name: selectedObject?.name || "this object", year: selectedYear })}
@@ -845,7 +845,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
           ) : (
             <div className='rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-emerald-300 flex items-center justify-between gap-3 text-xs'>
               <div className='flex items-center gap-2.5'>
-                <CheckCircle2 className='w-4 h-4 text-emerald-400 shrink-0' />
+                <CheckCircle2 className='cms-icon-md text-emerald-400' />
                 <span>
                   {t("rentalSeasonActive", {
                     year: selectedYear,
@@ -869,7 +869,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
       <Card variant="admin" className='overflow-hidden shadow-xl'>
         <div className='p-4 border-b border-slate-800 flex items-center justify-between'>
           <div className='flex items-center gap-2'>
-            <CalendarDays className='w-4 h-4 text-slate-400' />
+            <CalendarDays className='cms-icon-md text-slate-400' />
             <h2 className='text-sm font-semibold text-white'>
               {t("periodsTitle", { name: selectedObject?.name || "Object", year: selectedYear })}
             </h2>
@@ -886,7 +886,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               onClick={handleOpenCreate}
               disabled={!selectedObjectId}
               className='h-auto rounded-xl bg-amber-500 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-md shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50 border-none'>
-              <Plus className='w-3.5 h-3.5' />
+              <Plus className='cms-icon-sm' />
               <span>{t("newPricePeriod")}</span>
             </Button>
           </div>
@@ -894,7 +894,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
         {isLoading ? (
           <div className='p-12 text-center text-slate-400 flex items-center justify-center gap-2'>
-            <Loader2 className='w-5 h-5 animate-spin text-amber-400' />
+            <Loader2 className='cms-icon-lg animate-spin text-amber-400' />
             <span className='text-xs'>{t("loading")}</span>
           </div>
         ) : periods.length === 0 ? (
@@ -908,14 +908,14 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               type='button'
               onClick={handleOpenCreate}
               className='h-auto inline-flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition border-none'>
-              <Plus className='w-4 h-4' />
+              <Plus className='cms-icon-md' />
               <span>{t("newPricePeriod")}</span>
             </Button>
           </div>
         ) : (
           <div className='overflow-x-auto'>
             <table className='w-full text-left text-xs'>
-              <thead className='bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[10px]'>
+              <thead className='cms-table-header'>
                 <tr>
                   <th className='py-3 px-4'>{t("colPeriodName")}</th>
                   <th className='py-3 px-4 text-center'>{t("colDateRange")}</th>
@@ -939,7 +939,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         {period.name || <span className='text-slate-500 italic'>{t("unnamedPeriod")}</span>}
                       </div>
                       {period.allow_custom_days && (
-                        <div className='text-[10px] text-slate-400 pt-0.5'>
+                        <div className='cms-text-meta pt-0.5'>
                           {period.price_2_days ? `2d: ${formatKr(period.price_2_days)} • ` : ""}
                           {period.price_3_days ? `3d: ${formatKr(period.price_3_days)} • ` : ""}
                           {period.price_4_days ? `4d: ${formatKr(period.price_4_days)}` : ""}
@@ -950,15 +950,15 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                       <div className='flex flex-col items-center gap-0.5'>
                         {period.start_date && period.end_date ? (
                           <>
-                            <span className='font-mono text-white text-[11px] font-medium'>
+                            <span className='cms-text-code text-white font-medium'>
                               {new Date(period.start_date).toISOString().split("T")[0]} – {new Date(period.end_date).toISOString().split("T")[0]}
                             </span>
-                            <span className='inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-[10px]'>
+                            <span className='inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-amber-300 cms-text-code'>
                               {formatWeekSpan(period.start_week, period.start_year, period.end_week, period.end_year)}
                             </span>
                           </>
                         ) : (
-                          <span className='inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 font-mono text-[11px]'>
+                          <span className='inline-flex items-center px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 cms-text-code'>
                             {formatWeekSpan(period.start_week, period.start_year, period.end_week, period.end_year)}
                           </span>
                         )}
@@ -967,12 +967,12 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                     {isCustomDaysAllowed && (
                       <td className='py-3.5 px-4 text-center'>
                         {period.allow_custom_days ? (
-                          <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 text-[11px] font-medium border border-emerald-500/30'>
-                            <CheckCircle2 className='w-3 h-3' />
+                          <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 cms-text-caption font-medium border border-emerald-500/30'>
+                            <CheckCircle2 className='cms-icon-xs' />
                             <span>{t("allowed")}</span>
                           </span>
                         ) : (
-                          <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 text-[11px] font-medium border border-slate-700'>
+                          <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800 text-slate-400 cms-text-caption font-medium border border-slate-700'>
                             <span>{t("fullWeekOnly")}</span>
                           </span>
                         )}
@@ -992,7 +992,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                           title={t("modal.duplicate")}
                           aria-label={t("modal.duplicate")}
                           className='p-1.5 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition outline-none focus-visible:ring-2 focus-visible:ring-amber-500'>
-                          <Copy className='w-3.5 h-3.5' />
+                          <Copy className='cms-icon-sm' />
                         </button>
                         <button
                           type='button'
@@ -1000,7 +1000,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                           title={t("modal.editSeasonTitle")}
                           aria-label={t("modal.editSeasonTitle")}
                           className='p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500'>
-                          <Edit3 className='w-3.5 h-3.5' />
+                          <Edit3 className='cms-icon-sm' />
                         </button>
                         <button
                           type='button'
@@ -1008,7 +1008,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                           title={tCommon("delete")}
                           aria-label={tCommon("delete")}
                           className='p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition outline-none focus-visible:ring-2 focus-visible:ring-rose-500'>
-                          <Trash2 className='w-3.5 h-3.5' />
+                          <Trash2 className='cms-icon-sm' />
                         </button>
                       </div>
                     </td>
@@ -1024,7 +1024,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
       <Card variant="admin" className='overflow-hidden shadow-xl'>
         <div className='p-4 border-b border-slate-800 flex items-center justify-between'>
           <div className='flex items-center gap-2'>
-            <Ban className='w-4 h-4 text-rose-400' />
+            <Ban className='cms-icon-md text-rose-400' />
             <h2 className='text-sm font-semibold text-white'>
               {t("blockedTab")} ({selectedObject?.name || "Object"} – {selectedYear})
             </h2>
@@ -1039,7 +1039,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               onClick={handleOpenCreateBlocked}
               disabled={!selectedObjectId}
               className='h-auto rounded-xl border-rose-500/40 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 hover:text-rose-200 transition disabled:opacity-50'>
-              <Plus className='w-3.5 h-3.5' />
+              <Plus className='cms-icon-sm' />
               <span>{t("newBlocked")}</span>
             </Button>
           </div>
@@ -1049,14 +1049,14 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
           <div className='p-8 text-center text-slate-400 space-y-2'>
             <Ban className='w-7 h-7 mx-auto text-slate-600' />
             <div className='text-xs font-medium text-slate-300'>{t("noBlockedRegistered", { year: selectedYear })}</div>
-            <p className='text-[11px] text-slate-500 max-w-md mx-auto'>
+            <p className='cms-text-meta text-slate-500 max-w-md mx-auto'>
               {t("blockedHelpDesc")}
             </p>
           </div>
         ) : (
           <div className='overflow-x-auto'>
             <table className='w-full text-left text-xs'>
-              <thead className='bg-slate-950/60 text-slate-400 font-semibold border-b border-slate-800 uppercase tracking-wider text-[10px]'>
+              <thead className='cms-table-header'>
                 <tr>
                   <th className='py-3 px-4'>{t("blockedTable.reason")}</th>
                   <th className='py-3 px-4'>{t("blockedTable.dates")}</th>
@@ -1076,15 +1076,15 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         <span className='w-2 h-2 rounded-full bg-rose-500' />
                         <span>{bp.name}</span>
                       </td>
-                      <td className='py-3.5 px-4 font-mono text-slate-300'>
+                      <td className='py-3.5 px-4 cms-text-code text-slate-300'>
                         {bp.startDate} – {bp.endDate}
                       </td>
                       <td className='py-3.5 px-4 text-center'>
-                        <span className='inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 text-[11px] font-mono'>
+                        <span className='inline-flex items-center px-2 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/30 text-rose-300 cms-text-code'>
                           {days} {days === 1 ? t("daySingle") : t("dayPlural")}
                         </span>
                       </td>
-                      <td className='py-3.5 px-4 text-slate-400 text-[11px]'>
+                      <td className='py-3.5 px-4 cms-text-meta'>
                         {t("blockedStatusHelp")}
                       </td>
                       <td className='py-3.5 px-4 text-center'>
@@ -1097,7 +1097,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                             title={t("modal.editBlockedTitle")}
                             aria-label={`${t("modal.editBlockedTitle")}: ${bp.name}`}
                           >
-                            <Edit3 className='w-3.5 h-3.5' />
+                            <Edit3 className='cms-icon-sm' />
                           </IconButton>
                           <IconButton
                             type='button'
@@ -1107,7 +1107,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                             title={tCommon("delete")}
                             aria-label={`${tCommon("delete")}: ${bp.name}`}
                           >
-                            <Trash2 className='w-3.5 h-3.5' />
+                            <Trash2 className='cms-icon-sm' />
                           </IconButton>
                         </div>
                       </td>
@@ -1159,7 +1159,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
           <div className='flex items-center justify-between border-b border-slate-800 pb-4 mb-5'>
             <div className='flex items-center gap-2.5'>
               <div className='h-8 w-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center'>
-                <Coins className='w-4 h-4' />
+                <Coins className='cms-icon-md' />
               </div>
               <div>
                 <DialogTitle className='text-base font-bold text-white'>
@@ -1175,7 +1175,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               onClick={() => setIsModalOpen(false)}
               aria-label={tCommon("cancel")}
               className='p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition'>
-              <X className='w-5 h-5' />
+              <X className='cms-icon-lg' />
             </button>
           </div>
 
@@ -1191,7 +1191,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                 {allPeriodsForCopy.length > 0 && (
                   <div className='p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-1.5'>
                     <label className='block text-xs font-semibold text-slate-300 flex items-center gap-1.5'>
-                      <Sparkles className='w-3.5 h-3.5 text-amber-400' />
+                      <Sparkles className='cms-icon-sm text-amber-400' />
                       <span>{t("modal.copyFromExisting")}</span>
                     </label>
                     <Select
@@ -1276,7 +1276,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                         {t("modal.durationDays", { days: formDateSpanInfo.days })}
                       </strong>
                     </span>
-                    <span className='font-mono text-[0.6875rem] bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30'>
+                    <span className='cms-text-code bg-amber-500/20 px-2 py-0.5 rounded border border-amber-500/30'>
                       {formDateSpanInfo.weekLabel}
                     </span>
                   </div>
@@ -1356,10 +1356,10 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
 
                     {formAllowCustomDays && (
                       <div className='p-3.5 rounded-xl border border-slate-800 bg-slate-950/60 space-y-3'>
-                        <div className='text-[11px] font-semibold text-slate-300'>{t("modal.tieredPricesTitle")}</div>
+                        <div className='cms-text-meta font-semibold text-slate-300'>{t("modal.tieredPricesTitle")}</div>
                         <div className='grid grid-cols-2 sm:grid-cols-5 gap-2.5'>
                           <div>
-                            <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 2 })}</label>
+                            <label className='block cms-text-meta mb-1'>{t("modal.daysCount", { count: 2 })}</label>
                             <Input
                               variant="admin"
                               size="sm"
@@ -1370,7 +1370,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                             />
                           </div>
                           <div>
-                            <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 3 })}</label>
+                            <label className='block cms-text-meta mb-1'>{t("modal.daysCount", { count: 3 })}</label>
                             <Input
                               variant="admin"
                               size="sm"
@@ -1381,7 +1381,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                             />
                           </div>
                           <div>
-                            <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 4 })}</label>
+                            <label className='block cms-text-meta mb-1'>{t("modal.daysCount", { count: 4 })}</label>
                             <Input
                               variant="admin"
                               size="sm"
@@ -1392,7 +1392,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                             />
                           </div>
                           <div>
-                            <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 5 })}</label>
+                            <label className='block cms-text-meta mb-1'>{t("modal.daysCount", { count: 5 })}</label>
                             <Input
                               variant="admin"
                               size="sm"
@@ -1403,7 +1403,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                             />
                           </div>
                           <div>
-                            <label className='block text-[10px] text-slate-400 mb-1'>{t("modal.daysCount", { count: 6 })}</label>
+                            <label className='block cms-text-meta mb-1'>{t("modal.daysCount", { count: 6 })}</label>
                             <Input
                               variant="admin"
                               size="sm"
@@ -1432,7 +1432,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                     type='submit'
                     disabled={isSaving}
                     className='h-auto flex items-center gap-1.5 rounded-xl bg-amber-500 px-5 py-2 text-xs font-semibold text-slate-950 shadow-lg shadow-amber-500/20 hover:bg-amber-400 transition disabled:opacity-50 border-none'>
-                    {isSaving && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
+                    {isSaving && <Loader2 className='cms-icon-sm animate-spin' />}
                     <span>{editingPeriod ? tCommon("save") : t("newSeason")}</span>
                   </Button>
                 </div>
@@ -1451,7 +1451,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
           <div className='flex items-center justify-between border-b border-slate-800 pb-3'>
             <div className='flex items-center gap-2.5'>
               <div className='h-8 w-8 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center'>
-                <Ban className='w-4 h-4' />
+                <Ban className='cms-icon-md' />
               </div>
               <div>
                 <DialogTitle className='text-base font-bold text-white'>
@@ -1470,7 +1470,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
               aria-label={tCommon("cancel")}
               title={tCommon("cancel")}
             >
-              <X className='w-4 h-4' />
+              <X className='cms-icon-md' />
             </IconButton>
           </div>
 
@@ -1516,7 +1516,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                   </FormField>
                 </div>
 
-                <div className='rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-[0.6875rem] text-slate-400 leading-relaxed'>
+                <div className='rounded-xl border border-slate-800 bg-slate-950/60 p-3 cms-text-meta leading-relaxed'>
                   {t("modal.blockedHelpP1")}
                 </div>
 
@@ -1532,7 +1532,7 @@ export function PricesAvailabilityView({ objects = [] }: PricesAvailabilityViewP
                     type='submit'
                     disabled={isSavingBlocked}
                     className='h-auto flex items-center gap-1.5 rounded-xl bg-rose-600 px-5 py-2 text-xs font-semibold text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500 transition disabled:opacity-50 border-none'>
-                    {isSavingBlocked && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
+                    {isSavingBlocked && <Loader2 className='cms-icon-sm animate-spin' />}
                     <span>{tCommon("save")}</span>
                   </Button>
                 </div>

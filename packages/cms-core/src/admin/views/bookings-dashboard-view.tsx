@@ -146,12 +146,12 @@ export function BookingsDashboardView({
 
   // Quick navigation tabs for the booking subsystem
   const navTabs: Array<{ id: AdminTab; label: string; icon: React.ReactNode }> = [
-    { id: "bookings-dashboard", label: tNav("bookingsDashboard"), icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: "bookings", label: tNav("bookings"), icon: <Calendar className="w-4 h-4" /> },
-    { id: "prices-availability", label: tNav("pricesAvailability"), icon: <Coins className="w-4 h-4" /> },
-    { id: "objects", label: tNav("bookingObjects"), icon: <Box className="w-4 h-4" /> },
-    { id: "optionals", label: tNav("optionals"), icon: <Sparkles className="w-4 h-4" /> },
-    { id: "amenities", label: tNav("amenities"), icon: <Tag className="w-4 h-4" /> },
+    { id: "bookings-dashboard", label: tNav("bookingsDashboard"), icon: <LayoutDashboard className="cms-icon-md" /> },
+    { id: "bookings", label: tNav("bookings"), icon: <Calendar className="cms-icon-md" /> },
+    { id: "prices-availability", label: tNav("pricesAvailability"), icon: <Coins className="cms-icon-md" /> },
+    { id: "objects", label: tNav("bookingObjects"), icon: <Box className="cms-icon-md" /> },
+    { id: "optionals", label: tNav("optionals"), icon: <Sparkles className="cms-icon-md" /> },
+    { id: "amenities", label: tNav("amenities"), icon: <Tag className="cms-icon-md" /> },
   ];
 
   const totalUnitsCount = bookingObjects.length || syncData?.totalObjects || 0;
@@ -205,7 +205,7 @@ export function BookingsDashboardView({
             onClick={() => onNavigateTab?.("prices-availability")}
             className="border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
           >
-            <Coins className="w-4 h-4 text-amber-400" />
+            <Coins className="cms-icon-md text-amber-400" />
             <span>{t("pricesAvailabilityBtn")}</span>
           </Button>
 
@@ -215,7 +215,7 @@ export function BookingsDashboardView({
             size="sm"
             onClick={() => onNavigateTab?.("bookings")}
           >
-            <Calendar className="w-4 h-4 text-slate-300" />
+            <Calendar className="cms-icon-md text-slate-300" />
             <span>{t("calendarBtn")}</span>
           </Button>
 
@@ -226,7 +226,7 @@ export function BookingsDashboardView({
             onClick={() => fetchSyncData(true)}
             disabled={isRefreshing || isLoading}
           >
-            <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+            <RefreshCw className={cn("cms-icon-md", isRefreshing && "animate-spin")} />
             <span>{isRefreshing ? t("syncing") : t("syncChannels")}</span>
           </Button>
         </div>
@@ -241,39 +241,39 @@ export function BookingsDashboardView({
       {/* Primary KPI Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card variant="adminSubtle" className="p-4 space-y-1">
-          <span className="text-[11px] font-medium text-slate-400">{t("rentalUnits")}</span>
-          <p className="text-2xl font-bold text-white font-mono">{totalUnitsCount}</p>
-          <span className="text-[10px] text-slate-500 block">{t("managedAccommodations")}</span>
+          <span className="cms-text-meta">{t("rentalUnits")}</span>
+          <p className="text-2xl font-bold text-white cms-text-code">{totalUnitsCount}</p>
+          <span className="cms-text-meta block">{t("managedAccommodations")}</span>
         </Card>
 
         <Card variant="adminSubtle" className="p-4 space-y-1">
-          <span className="text-[11px] font-medium text-slate-400">{t("configuredSeasons")}</span>
-          <p className="text-2xl font-bold text-amber-400 font-mono">{pricePeriods.length}</p>
-          <span className="text-[10px] text-slate-500 block">{t("activePricingPeriods")}</span>
+          <span className="cms-text-meta">{t("configuredSeasons")}</span>
+          <p className="text-2xl font-bold text-amber-400 cms-text-code">{pricePeriods.length}</p>
+          <span className="cms-text-meta block">{t("activePricingPeriods")}</span>
         </Card>
 
         <Card variant="adminSubtle" className="p-4 space-y-1">
-          <span className="text-[11px] font-medium text-slate-400">{t("reservationsAndStays")}</span>
-          <p className="text-2xl font-bold text-emerald-400 font-mono">
+          <span className="cms-text-meta">{t("reservationsAndStays")}</span>
+          <p className="text-2xl font-bold text-emerald-400 cms-text-code">
             {bookingsCount + (syncData?.totalImportedBookings || 0)}
           </p>
-          <span className="text-[10px] text-slate-500 block">
+          <span className="cms-text-meta block">
             {t("directAndExternal", { direct: bookingsCount, external: syncData?.totalImportedBookings || 0 })}
           </span>
         </Card>
 
         <Card variant="adminSubtle" className="p-4 space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-medium text-slate-400">{t("channelFeeds")}</span>
+            <span className="cms-text-meta">{t("channelFeeds")}</span>
             <Badge variant="adminAccent" size="xs">
               <span className="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse" />
               <span>{t("healthy")}</span>
             </Badge>
           </div>
-          <p className="text-2xl font-bold text-sky-400 font-mono">
+          <p className="text-2xl font-bold text-sky-400 cms-text-code">
             {syncData ? syncData.activeFeedsCount : "—"}
           </p>
-          <span className="text-[10px] text-slate-500 block truncate" title={syncData?.lastSynced ? formatDateTime(syncData.lastSynced) : undefined}>
+          <span className="cms-text-meta block truncate" title={syncData?.lastSynced ? formatDateTime(syncData.lastSynced) : undefined}>
             {t("synced", { time: syncData?.lastSynced ? formatDateTime(syncData.lastSynced) : t("never") })}
           </span>
         </Card>
@@ -283,7 +283,7 @@ export function BookingsDashboardView({
       <Card variant="admin" className="overflow-hidden">
         <div className="p-4 border-b border-admin-border flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Box className="w-4 h-4 text-sky-400" />
+            <Box className="cms-icon-md text-sky-400" />
             <h2 className="text-sm font-semibold text-white">{t("unitsOverview")}</h2>
           </div>
           <button
@@ -292,7 +292,7 @@ export function BookingsDashboardView({
             className="text-xs text-sky-400 hover:text-sky-300 transition flex items-center gap-1"
           >
             <span>{t("manageAllUnits")}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <ArrowRight className="cms-icon-sm" />
           </button>
         </div>
 
@@ -330,7 +330,7 @@ export function BookingsDashboardView({
                     <div className="flex items-center gap-2.5 flex-wrap">
                       <h3 className="text-sm font-bold text-white truncate">{obj.name}</h3>
                       {obj.page?.slug && (
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
+                        <span className="cms-text-code px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">
                           /{obj.page.slug}
                         </span>
                       )}
@@ -344,7 +344,7 @@ export function BookingsDashboardView({
                     <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
                       {obj.bed_count > 0 && (
                         <span className="flex items-center gap-1">
-                          <Bed className="w-3.5 h-3.5 text-slate-500" />
+                          <Bed className="cms-icon-sm text-slate-500" />
                           <span>{obj.bed_count} {obj.bed_count === 1 ? t("bed") : t("beds")}</span>
                         </span>
                       )}
@@ -363,7 +363,7 @@ export function BookingsDashboardView({
                     <div className="flex items-center gap-2 pt-1 flex-wrap">
                       {activePeriod ? (
                         <Badge variant="adminSuccess" size="xs">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                          <CheckCircle2 className="cms-icon-xs text-emerald-400" />
                           <span>
                             {t("seasonActive", {
                               name: activePeriod.name || "Season",
@@ -373,7 +373,7 @@ export function BookingsDashboardView({
                         </Badge>
                       ) : nextPeriod ? (
                         <Badge variant="adminAccent" size="xs">
-                          <Clock className="w-3 h-3 text-sky-400" />
+                          <Clock className="cms-icon-xs text-sky-400" />
                           <span>
                             {t("upcomingSeason", {
                               name: nextPeriod.name || "Season",
@@ -414,7 +414,7 @@ export function BookingsDashboardView({
                       className="border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300"
                       aria-label={`${t("pricesAvailabilityBtn")} - ${obj.name}`}
                     >
-                      <Coins className="w-3.5 h-3.5 text-amber-400" />
+                      <Coins className="cms-icon-sm text-amber-400" />
                       <span>{t("pricesAvailabilityBtn")}</span>
                     </Button>
 
@@ -425,7 +425,7 @@ export function BookingsDashboardView({
                       onClick={() => handleJumpToCalendar(obj.id)}
                       aria-label={`${t("calendarBtn")} - ${obj.name}`}
                     >
-                      <Calendar className="w-3.5 h-3.5" />
+                      <Calendar className="cms-icon-sm" />
                       <span>{t("calendarBtn")}</span>
                     </Button>
                   </div>
@@ -440,12 +440,12 @@ export function BookingsDashboardView({
       <Card variant="admin" className="overflow-hidden shadow-lg">
         <div className="p-4 border-b border-admin-border flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <RefreshCw className="w-4 h-4 text-sky-400" />
+            <RefreshCw className="cms-icon-md text-sky-400" />
             <div>
               <h2 className="text-sm font-semibold text-white">
                 {t("syncSectionTitle")}
               </h2>
-              <p className="text-[11px] text-slate-400">
+              <p className="cms-text-meta">
                 {t("syncSectionDesc")}
               </p>
             </div>
@@ -460,7 +460,7 @@ export function BookingsDashboardView({
               disabled={isRefreshing || isLoading}
               className="border-sky-500/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20"
             >
-              <RefreshCw className={cn("w-3.5 h-3.5", isRefreshing && "animate-spin")} />
+              <RefreshCw className={cn("cms-icon-sm", isRefreshing && "animate-spin")} />
               <span>{t("syncNow")}</span>
             </Button>
 
@@ -473,7 +473,7 @@ export function BookingsDashboardView({
               aria-label="Toggle channel details"
               aria-expanded={showIcalDetails}
             >
-              {showIcalDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              {showIcalDetails ? <ChevronUp className="cms-icon-md" /> : <ChevronDown className="cms-icon-md" />}
             </Button>
           </div>
         </div>
@@ -481,15 +481,15 @@ export function BookingsDashboardView({
         {showIcalDetails && (
           <div className="p-4 space-y-4">
             <div className="p-3.5 rounded-xl border border-sky-500/20 bg-sky-950/20 text-xs text-slate-300 flex items-start gap-2.5">
-              <ShieldCheck className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
-              <div className="text-[11px] text-slate-400 leading-relaxed">
+              <ShieldCheck className="cms-icon-md text-sky-400 mt-0.5" />
+              <div className="cms-text-meta leading-relaxed">
                 {t("syncHelpText")}
               </div>
             </div>
 
             {isLoading && !syncData ? (
               <div className="py-12 text-center text-slate-400 space-y-2">
-                <RefreshCw className="w-5 h-5 animate-spin mx-auto text-sky-400" />
+                <RefreshCw className="cms-icon-lg animate-spin mx-auto text-sky-400" />
                 <p className="text-xs">{t("loadingChannelData")}</p>
               </div>
             ) : (
@@ -507,10 +507,10 @@ export function BookingsDashboardView({
                       className="w-full text-left p-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-800/50 transition select-none outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <Box className="w-4 h-4 text-sky-400 shrink-0" />
+                        <Box className="cms-icon-md text-sky-400" />
                         <div className="min-w-0">
                           <h4 className="text-xs font-bold text-white truncate">{res.objectName}</h4>
-                          <span className="font-mono text-[10px] text-slate-400 truncate max-w-xs sm:max-w-md block">
+                          <span className="cms-text-code text-slate-400 truncate max-w-xs sm:max-w-md block">
                             {res.icalUrl || t("noFeedRegistered")}
                           </span>
                         </div>
@@ -535,7 +535,7 @@ export function BookingsDashboardView({
                         )}
 
                         <span className="text-slate-400 p-0.5" aria-hidden="true">
-                          {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+                          {isCollapsed ? <ChevronDown className="cms-icon-sm" /> : <ChevronUp className="cms-icon-sm" />}
                         </span>
                       </div>
                     </button>
@@ -543,8 +543,8 @@ export function BookingsDashboardView({
                     {!isCollapsed && (
                       <div className="border-t border-admin-border p-3 bg-slate-950/40">
                         {res.warning && (
-                          <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[11px] flex items-center gap-2 mb-3">
-                            <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                          <div className="p-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 cms-text-meta flex items-center gap-2 mb-3">
+                            <AlertTriangle className="cms-icon-sm shrink-0" />
                             <span>{res.warning}</span>
                           </div>
                         )}
@@ -559,7 +559,7 @@ export function BookingsDashboardView({
                           <div className="overflow-x-auto rounded-lg border border-admin-border">
                             <table className="w-full text-left border-collapse text-xs">
                               <thead>
-                                <tr className="border-b border-admin-border bg-admin-surface-subtle text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                <tr className="cms-table-header">
                                   <th className="py-2 px-3">{t("colCheckIn")}</th>
                                   <th className="py-2 px-3">{t("colCheckOut")}</th>
                                   <th className="py-2 px-3 text-center">{t("colNights")}</th>
@@ -567,7 +567,7 @@ export function BookingsDashboardView({
                                   <th className="py-2 px-3 font-mono">{t("colUid")}</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-800/60 font-mono text-[11px]">
+                              <tbody className="divide-y divide-slate-800/60 cms-text-code">
                                 {res.bookings.map((b) => (
                                   <tr key={b.id} className="hover:bg-slate-900/60 transition text-slate-200">
                                     <td className="py-2 px-3 font-semibold text-white">{b.startDate}</td>
@@ -583,7 +583,7 @@ export function BookingsDashboardView({
                                         <span>{b.summary}</span>
                                       </span>
                                     </td>
-                                    <td className="py-2 px-3 text-slate-400 text-[10px] truncate max-w-[180px]" title={b.sourceId}>
+                                    <td className="py-2 px-3 cms-text-code text-slate-400 truncate max-w-[180px]" title={b.sourceId}>
                                       {b.sourceId}
                                     </td>
                                   </tr>

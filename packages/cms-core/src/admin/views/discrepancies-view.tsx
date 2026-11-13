@@ -155,7 +155,7 @@ export function DiscrepanciesView() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-admin-border">
         <div>
           <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            <AlertTriangle className="cms-icon-lg text-amber-500" />
             <span>System- och bokningsavvikelser</span>
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
@@ -171,7 +171,7 @@ export function DiscrepanciesView() {
               onClick={handleAcknowledgeAll}
               className="text-xs flex items-center gap-1.5"
             >
-              <Check className="w-3.5 h-3.5 text-emerald-500" />
+              <Check className="cms-icon-sm text-emerald-500" />
               <span>Kvittera alla aktiva</span>
             </Button>
           )}
@@ -183,7 +183,7 @@ export function DiscrepanciesView() {
             disabled={isRefreshing}
             className="text-xs flex items-center gap-1.5"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-sky-500" : ""}`} />
+            <RefreshCw className={`cms-icon-sm ${isRefreshing ? "animate-spin text-sky-500" : ""}`} />
             <span>Uppdatera</span>
           </Button>
         </div>
@@ -201,40 +201,40 @@ export function DiscrepanciesView() {
         <Card className="p-4 bg-admin-surface border border-admin-border rounded-xl">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Aktiva avvikelser</span>
-            <AlertCircle className="w-4 h-4 text-rose-500" />
+            <AlertCircle className="cms-icon-md text-rose-500" />
           </div>
           <div className="text-2xl font-bold text-foreground mt-2">
             {activeCount}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Kräver uppföljning</p>
+          <p className="cms-text-meta mt-1">Kräver uppföljning</p>
         </Card>
 
         <Card className="p-4 bg-admin-surface border border-admin-border rounded-xl">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Kvitterade</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+            <CheckCircle2 className="cms-icon-md text-emerald-500" />
           </div>
           <div className="text-2xl font-bold text-foreground mt-2">
             {acknowledgedCount}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Markerade som åtgärdade</p>
+          <p className="cms-text-meta mt-1">Markerade som åtgärdade</p>
         </Card>
 
         <Card className="p-4 bg-admin-surface border border-admin-border rounded-xl">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-muted-foreground">Totalt i historik</span>
-            <Hash className="w-4 h-4 text-sky-500" />
+            <Hash className="cms-icon-md text-sky-500" />
           </div>
           <div className="text-2xl font-bold text-foreground mt-2">
             {totalCount}
           </div>
-          <p className="text-[11px] text-muted-foreground mt-1">Max 50 deduplicerade poster</p>
+          <p className="cms-text-meta mt-1">Max 50 deduplicerade poster</p>
         </Card>
       </div>
 
       {/* Filter Mode Selector */}
       <div className="flex items-center gap-2 border-b border-admin-border pb-3">
-        <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        <Filter className="cms-icon-sm text-muted-foreground" />
         <SegmentedControl<"ACTIVE" | "ALL" | "ACKNOWLEDGED">
           size="sm"
           value={filter}
@@ -291,55 +291,55 @@ export function DiscrepanciesView() {
                       <Badge variant={typeInfo.variant}>{typeInfo.label}</Badge>
 
                       {item.acknowledged ? (
-                        <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center gap-1">
-                          <Check className="w-3 h-3" /> Kvitterad
+                        <span className="cms-text-caption px-2 py-0.5 rounded-full font-medium bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center gap-1">
+                          <Check className="cms-icon-xs" /> Kvitterad
                         </span>
                       ) : (
-                        <span className="text-[11px] px-2 py-0.5 rounded-full font-medium bg-rose-500/10 text-rose-500 border border-rose-500/20">
+                        <span className="cms-text-caption px-2 py-0.5 rounded-full font-medium bg-rose-500/10 text-rose-500 border border-rose-500/20">
                           Aktiv
                         </span>
                       )}
 
                       {item.occurrences > 1 && (
-                        <span className="text-[11px] px-2 py-0.5 rounded-full font-semibold bg-slate-200 dark:bg-slate-800 text-foreground">
+                        <span className="cms-text-caption px-2 py-0.5 rounded-full font-semibold bg-slate-200 dark:bg-slate-800 text-foreground">
                           {item.occurrences} förekomster
                         </span>
                       )}
                     </div>
 
-                    <div className="text-xs font-mono font-medium text-foreground mt-1 break-words">
+                    <div className="cms-text-code text-foreground mt-1 break-words">
                       {item.message}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground pt-1">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 cms-text-meta pt-1">
                       {item.objectName && (
                         <span className="flex items-center gap-1">
-                          <Box className="w-3 h-3 text-muted-foreground" />
+                          <Box className="cms-icon-xs text-muted-foreground" />
                           <span>Boende: <strong className="text-foreground">{item.objectName}</strong></span>
                         </span>
                       )}
 
                       {item.objectId && (
                         <span className="flex items-center gap-1">
-                          <Hash className="w-3 h-3 text-muted-foreground" />
-                          <span>ID: <code className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{item.objectId}</code></span>
+                          <Hash className="cms-icon-xs text-muted-foreground" />
+                          <span>ID: <code className="cms-text-code bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{item.objectId}</code></span>
                         </span>
                       )}
 
                       {item.period?.startDate && item.period?.endDate && (
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-muted-foreground" />
+                          <Calendar className="cms-icon-xs text-muted-foreground" />
                           <span>Period: {item.period.startDate} till {item.period.endDate}</span>
                         </span>
                       )}
 
                       <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-muted-foreground" />
+                        <Clock className="cms-icon-xs text-muted-foreground" />
                         <span>Senast: {formatTimestamp(item.lastOccurredAt)}</span>
                       </span>
 
                       {item.acknowledged && item.acknowledgedAt && (
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
+                        <span className="cms-text-meta text-emerald-600 dark:text-emerald-400">
                           Kvitterad {formatTimestamp(item.acknowledgedAt)} av {item.acknowledgedBy || "admin"}
                         </span>
                       )}
@@ -363,7 +363,7 @@ export function DiscrepanciesView() {
                       title="Radera permanent"
                       className="text-muted-foreground hover:text-rose-500"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="cms-icon-sm" />
                     </Button>
                   </div>
                 </div>
