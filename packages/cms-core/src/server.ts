@@ -2,6 +2,7 @@ export * from "@prisma/client";
 export { prisma, default as db } from "./db";
 export * from "./storage";
 export * from "./utils/slug";
+export * from "./utils/url";
 export * from "./auth";
 export * from "./actions/fields";
 export * from "./actions/pages";

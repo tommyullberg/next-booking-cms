@@ -19,6 +19,7 @@ export const DEFAULT_GALLERY_SETTINGS: GallerySettings = {
 export type DefaultTurnoverDay = "SUNDAY" | "SATURDAY";
 export type BookingSettingScope = "GLOBAL" | "PER_OBJECT";
 export type AllowedBookingPeriods = "ALL" | "PERIODS_AND_WEEKS" | "FULL_WEEKS_ONLY";
+export type DefaultLanguageUrlPrefix = "without-prefix" | "with-prefix";
 
 export interface BookingSettings {
   defaultTurnoverDay: DefaultTurnoverDay;
@@ -54,6 +55,8 @@ export interface ObjectBookingSettings {
 
 export interface CmsSettingsData {
   activeLanguages: string[];
+  defaultLanguage?: SupportedLocale;
+  defaultLanguageUrlPrefix?: DefaultLanguageUrlPrefix;
   adminLanguage: AdminLanguage;
   gallerySettings: GallerySettings;
   bookingSettings?: BookingSettings;

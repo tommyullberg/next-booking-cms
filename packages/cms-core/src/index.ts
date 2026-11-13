@@ -2,6 +2,7 @@ export * from "./constants";
 export * from "./types";
 export * from "./state/editor-store";
 export * from "./utils/slug";
+export * from "./utils/url";
 export * from "./utils/cn";
 export * from "./components/ui";
 export * from "./components/confirm";

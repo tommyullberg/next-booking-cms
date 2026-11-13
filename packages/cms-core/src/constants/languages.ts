@@ -36,6 +36,9 @@ export const DEFAULT_ACTIVE_LANGUAGES: readonly SupportedLocale[] = [
   "de",
 ] as const;
 
+export const DEFAULT_SITE_LANGUAGE: SupportedLocale = "sv";
+export const DEFAULT_LANGUAGE_URL_PREFIX = "with-prefix" as const;
+
 export const DEFAULT_ADMIN_LANGUAGE: AdminLanguage = "en";
 
 export const AVAILABLE_LANGUAGES: readonly LanguageDefinition[] = [
@@ -44,8 +47,8 @@ export const AVAILABLE_LANGUAGES: readonly LanguageDefinition[] = [
     code: "SE",
     flag: "🇸🇪",
     name: "Swedish",
-    subtitle: "Primary system & content language (Locked)",
-    locked: true,
+    subtitle: "Primary system & content language",
+    locked: false,
   },
   {
     locale: "en",
