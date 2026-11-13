@@ -21,6 +21,9 @@ enum BookingStatus {
   CANCELLED
   REJECTED
   IMPORTED
+  CONTRACT_SENT
+  DEPOSIT_PAID
+  FULLY_PAID
 }
 
 enum MailTemplateType {
@@ -92,6 +95,8 @@ model Page {
   meta_title        String?    @map("meta_title")
   meta_description  String?    @map("meta_description")
   slug              String     @unique @map("slug")
+  slug_mode         String     @default("separate") @map("slug_mode")
+  active_languages  Json?      @map("active_languages")
   status            PageStatus @default(NEW) @map("status")
   publication_start DateTime?  @map("publication_start")
   publication_end   DateTime?  @map("publication_end")
@@ -116,10 +121,12 @@ model PageTranslation {
   link_description String? @map("link_description")
   meta_title       String? @map("meta_title")
   meta_description String? @map("meta_description")
+  slug             String? @map("slug")
 
   page Page @relation(fields: [page_id], references: [id], onDelete: Cascade)
 
   @@unique([page_id, locale])
+  @@index([locale, slug])
   @@map("page_translations")
 }
 
