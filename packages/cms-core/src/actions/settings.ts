@@ -1,13 +1,19 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@cms/auth/auth-options";
 import { prisma } from "@cms/db";
-import { DEFAULT_ACTIVE_LANGUAGES } from "@cms/constants/languages";
+import {
+  DEFAULT_ACTIVE_LANGUAGES,
+  DEFAULT_SITE_LANGUAGE,
+  DEFAULT_LANGUAGE_URL_PREFIX,
+  SupportedLocale,
+} from "@cms/constants/languages";
 import {
   CmsSettingsData,
   DEFAULT_GALLERY_SETTINGS,
   GallerySettings,
   BookingSettings,
   DEFAULT_BOOKING_SETTINGS,
+  DefaultLanguageUrlPrefix,
 } from "@cms/types/settings";
 
 export type { CmsSettingsData, GallerySettings, BookingSettings };
@@ -19,6 +25,8 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
         setting_key: {
           in: [
             "active_languages",
+            "default_language",
+            "default_language_url_prefix",
             "admin_language",
             "gallery_settings",
             "booking_settings",
@@ -28,9 +36,22 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
     });
 
     const langRow = rows.find((r) => r.setting_key === "active_languages");
+    const defaultLangRow = rows.find((r) => r.setting_key === "default_language");
+    const prefixRow = rows.find((r) => r.setting_key === "default_language_url_prefix");
     const adminLangRow = rows.find((r) => r.setting_key === "admin_language");
     const galleryRow = rows.find((r) => r.setting_key === "gallery_settings");
     const bookingRow = rows.find((r) => r.setting_key === "booking_settings");
+
+    const defaultLanguage: SupportedLocale =
+      (defaultLangRow?.setting_value?.trim().toLowerCase() as SupportedLocale) ||
+      DEFAULT_SITE_LANGUAGE;
+
+    const defaultLanguageUrlPrefix: DefaultLanguageUrlPrefix =
+      prefixRow?.setting_value === "without-prefix"
+        ? "without-prefix"
+        : prefixRow?.setting_value === "with-prefix"
+        ? "with-prefix"
+        : DEFAULT_LANGUAGE_URL_PREFIX;
 
     let activeLanguages: string[] = [...DEFAULT_ACTIVE_LANGUAGES];
     if (langRow?.setting_value) {
@@ -38,12 +59,19 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
         const parsed = JSON.parse(langRow.setting_value);
         if (Array.isArray(parsed) && parsed.length > 0) {
           activeLanguages = Array.from(
-            new Set(["sv", ...parsed.map((s) => String(s).toLowerCase())])
+            new Set(parsed.map((s) => String(s).toLowerCase().trim()).filter(Boolean))
           );
         }
       } catch {
         // Fallback to default
       }
+    }
+
+    if (!activeLanguages.includes(defaultLanguage)) {
+      activeLanguages = [defaultLanguage, ...activeLanguages];
+    }
+    if (activeLanguages.length === 0) {
+      activeLanguages = [defaultLanguage];
     }
 
     const adminLanguage: "en" | "sv" =
@@ -130,6 +158,8 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
 
     return {
       activeLanguages,
+      defaultLanguage,
+      defaultLanguageUrlPrefix,
       adminLanguage,
       gallerySettings,
       bookingSettings,
@@ -137,6 +167,8 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
   } catch {
     return {
       activeLanguages: [...DEFAULT_ACTIVE_LANGUAGES],
+      defaultLanguage: DEFAULT_SITE_LANGUAGE,
+      defaultLanguageUrlPrefix: DEFAULT_LANGUAGE_URL_PREFIX,
       adminLanguage: "en",
       gallerySettings: { ...DEFAULT_GALLERY_SETTINGS },
       bookingSettings: { ...DEFAULT_BOOKING_SETTINGS },
@@ -147,16 +179,56 @@ export async function getCmsSettingsAction(): Promise<CmsSettingsData> {
 export async function saveCmsSettingsAction(
   data: Partial<CmsSettingsData>
 ): Promise<CmsSettingsData> {
+  let effectiveDefaultLang = data.defaultLanguage;
+  if (!effectiveDefaultLang) {
+    const existingDefault = await prisma.setting.findUnique({
+      where: { setting_key: "default_language" },
+    });
+    effectiveDefaultLang =
+      (existingDefault?.setting_value?.trim().toLowerCase() as SupportedLocale) ||
+      DEFAULT_SITE_LANGUAGE;
+  }
+
+  if (data.defaultLanguage) {
+    const langVal = data.defaultLanguage.toLowerCase().trim();
+    await prisma.setting.upsert({
+      where: { setting_key: "default_language" },
+      update: { setting_value: langVal },
+      create: {
+        setting_key: "default_language",
+        setting_value: langVal,
+      },
+    });
+  }
+
+  if (data.defaultLanguageUrlPrefix) {
+    const prefixVal =
+      data.defaultLanguageUrlPrefix === "with-prefix" ? "with-prefix" : "without-prefix";
+    await prisma.setting.upsert({
+      where: { setting_key: "default_language_url_prefix" },
+      update: { setting_value: prefixVal },
+      create: {
+        setting_key: "default_language_url_prefix",
+        setting_value: prefixVal,
+      },
+    });
+  }
+
   if (data.activeLanguages) {
-    const normalized = Array.from(
-      new Set(["sv", ...data.activeLanguages.map((l) => l.toLowerCase())])
-    );
+    const rawList = data.activeLanguages.map((l) => l.toLowerCase().trim()).filter(Boolean);
+    const set = new Set(rawList);
+    if (effectiveDefaultLang) {
+      set.add(effectiveDefaultLang);
+    }
+    const normalized = Array.from(set);
+    const finalList = normalized.length > 0 ? normalized : [DEFAULT_SITE_LANGUAGE];
+
     await prisma.setting.upsert({
       where: { setting_key: "active_languages" },
-      update: { setting_value: JSON.stringify(normalized) },
+      update: { setting_value: JSON.stringify(finalList) },
       create: {
         setting_key: "active_languages",
-        setting_value: JSON.stringify(normalized),
+        setting_value: JSON.stringify(finalList),
       },
     });
   }

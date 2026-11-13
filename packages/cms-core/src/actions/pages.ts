@@ -12,7 +12,14 @@ import {
 import {
   DEFAULT_ACTIVE_LANGUAGES,
   DEFAULT_ADMIN_LANGUAGE,
+  DEFAULT_SITE_LANGUAGE,
+  DEFAULT_LANGUAGE_URL_PREFIX,
 } from "@cms/constants/languages";
+import {
+  getPageUrl,
+  parsePublicRoutePath,
+} from "@cms/utils/url";
+import { DefaultLanguageUrlPrefix } from "@cms/types/settings";
 
 export { HOMEPAGE_ID };
 
@@ -151,7 +158,33 @@ export async function getPageBySlugAction(slug: string) {
   });
 }
 
-export async function getPublicNavigationSectionsAction(isAdmin = false) {
+export interface GetPublicNavigationOptions {
+  isAdmin?: boolean;
+  locale?: string;
+  defaultLanguage?: string;
+  urlPrefixMode?: DefaultLanguageUrlPrefix;
+}
+
+export async function getPublicNavigationSectionsAction(
+  optionsOrAdmin: boolean | GetPublicNavigationOptions = false
+) {
+  const isAdmin =
+    typeof optionsOrAdmin === "boolean"
+      ? optionsOrAdmin
+      : Boolean(optionsOrAdmin?.isAdmin);
+  const locale =
+    typeof optionsOrAdmin === "object" && optionsOrAdmin.locale
+      ? optionsOrAdmin.locale
+      : undefined;
+  const defaultLanguage =
+    typeof optionsOrAdmin === "object" && optionsOrAdmin.defaultLanguage
+      ? optionsOrAdmin.defaultLanguage
+      : DEFAULT_SITE_LANGUAGE;
+  const urlPrefixMode =
+    typeof optionsOrAdmin === "object" && optionsOrAdmin.urlPrefixMode
+      ? optionsOrAdmin.urlPrefixMode
+      : DEFAULT_LANGUAGE_URL_PREFIX;
+
   const { getSectionsAction } = await import("./sections");
   const [sections, allPages] = await Promise.all([
     getSectionsAction().catch(() => []),
@@ -162,6 +195,16 @@ export async function getPublicNavigationSectionsAction(isAdmin = false) {
           page_title: true,
           link_description: true,
           slug: true,
+          slug_mode: true,
+          active_languages: true,
+          translations: {
+            select: {
+              locale: true,
+              slug: true,
+              page_title: true,
+              link_description: true,
+            },
+          },
           status: true,
           sort_order: true,
           section_id: true,
@@ -174,11 +217,6 @@ export async function getPublicNavigationSectionsAction(isAdmin = false) {
   ]);
 
   const pageMap = new Map(allPages.map((p) => [p.id, p]));
-  const toUrl = (p: { id: number; slug: string }) => {
-    if (p.id === HOMEPAGE_ID || p.slug === "/") return "/";
-    const clean = (p.slug || String(p.id)).replace(/^\/+/, "");
-    return `/${clean || p.id}`;
-  };
 
   return sections
     .filter((s) => s.is_visible !== false || s.start_page_id === HOMEPAGE_ID)
@@ -199,18 +237,51 @@ export async function getPublicNavigationSectionsAction(isAdmin = false) {
       const menuItems = (s as any).menu_items;
       if (Array.isArray(menuItems)) {
         sectionItems = menuItems
-          .map((p: any) => {
+          .map((item: any) => {
+            const p = pageMap.get(item.id) || item;
             if (!isAdmin && !isPageVisibleToVisitor(p)) return null;
             if (p.id === s.start_page_id) return null; // never include section start page as sub-item
+
+            let label = p.link_description || p.page_title;
+            if (locale && locale !== defaultLanguage && p.translations) {
+              const trans = p.translations.find(
+                (t: any) => t.locale.toLowerCase() === locale.toLowerCase()
+              );
+              if (trans && (trans.link_description || trans.page_title)) {
+                label = trans.link_description || trans.page_title;
+              }
+            }
+
             return {
               id: p.id,
-              label: p.link_description || p.page_title,
-              url: toUrl(p),
+              label,
+              url: getPageUrl({
+                page: p,
+                locale,
+                defaultLanguage,
+                urlPrefixMode,
+              }),
               status: p.status,
             };
           })
           .filter((item: any): item is NonNullable<typeof item> => item !== null);
       }
+
+      const startPageUrl = isRoot
+        ? getPageUrl({
+            isHomepage: true,
+            locale,
+            defaultLanguage,
+            urlPrefixMode,
+          })
+        : startPageAllowed && startPage
+        ? getPageUrl({
+            page: startPage,
+            locale,
+            defaultLanguage,
+            urlPrefixMode,
+          })
+        : null;
 
       return {
         id: s.id,
@@ -218,11 +289,7 @@ export async function getPublicNavigationSectionsAction(isAdmin = false) {
         translations: s.translations,
         is_root: isRoot,
         start_page_id: s.start_page_id ?? null,
-        start_page_url: isRoot
-          ? "/"
-          : startPageAllowed && startPage
-            ? toUrl(startPage)
-            : null,
+        start_page_url: startPageUrl,
         items: sectionItems,
       };
     });
@@ -239,6 +306,7 @@ export async function resolvePageBySlugOrIdAction(
         gallery_settings?: Awaited<
           ReturnType<typeof import("./settings").getCmsSettingsAction>
         >["gallerySettings"];
+        current_locale?: string;
       })
     | null;
   shouldRedirectToRoot: boolean;
@@ -247,10 +315,24 @@ export async function resolvePageBySlugOrIdAction(
   const session = await getServerSession(authOptions).catch(() => null);
   const isAdmin = Boolean(session?.user);
   const { getCmsSettingsAction } = await import("./settings");
-  const [navigationSections, cmsSettings] = await Promise.all([
-    getPublicNavigationSectionsAction(isAdmin),
-    getCmsSettingsAction().catch(() => null),
-  ]);
+  const cmsSettings = await getCmsSettingsAction().catch(() => null);
+
+  const defaultLanguage = cmsSettings?.defaultLanguage || DEFAULT_SITE_LANGUAGE;
+  const urlPrefixMode = cmsSettings?.defaultLanguageUrlPrefix || DEFAULT_LANGUAGE_URL_PREFIX;
+  const activeLanguages = cmsSettings?.activeLanguages || [...DEFAULT_ACTIVE_LANGUAGES];
+
+  const parsedRoute = parsePublicRoutePath(rawPath, {
+    defaultLanguage,
+    urlPrefixMode,
+    activeLanguages,
+  });
+
+  const navigationSections = await getPublicNavigationSectionsAction({
+    isAdmin,
+    locale: parsedRoute.locale,
+    defaultLanguage,
+    urlPrefixMode,
+  });
 
   const checkAccess = (
     p: Awaited<ReturnType<typeof getPageByIdAction>>,
@@ -263,12 +345,30 @@ export async function resolvePageBySlugOrIdAction(
         isHiddenFromVisitor: false,
       };
     }
+
+    if (!isAdmin && p.active_languages) {
+      const pageActiveLanguages = Array.isArray(p.active_languages)
+        ? (p.active_languages as string[])
+        : [];
+      if (
+        pageActiveLanguages.length > 0 &&
+        !pageActiveLanguages.includes(parsedRoute.locale)
+      ) {
+        return {
+          page: null,
+          shouldRedirectToRoot: false,
+          isHiddenFromVisitor: true,
+        };
+      }
+    }
+
     if (isAdmin || isPageVisibleToVisitor(p)) {
       return {
         page: {
           ...p,
           navigation_sections: navigationSections,
           gallery_settings: cmsSettings?.gallerySettings,
+          current_locale: parsedRoute.locale,
         },
         shouldRedirectToRoot: shouldRedirect,
         isHiddenFromVisitor: false,
@@ -281,42 +381,58 @@ export async function resolvePageBySlugOrIdAction(
     };
   };
 
-  const joined = Array.isArray(rawPath)
-    ? rawPath.join("/").trim()
-    : (rawPath || "").trim();
-  const normalized = joined.replace(/^\/+|\/+$/g, "");
+  if (parsedRoute.shouldRedirectToRoot) {
+    return {
+      page: null,
+      shouldRedirectToRoot: true,
+      isHiddenFromVisitor: false,
+    };
+  }
 
-  // 1. Root "/" or empty -> load Homepage (ID 1001)
-  if (!normalized || normalized === "/") {
+  // 1. Homepage
+  if (parsedRoute.isHomepage) {
     const home =
       (await getPageByIdAction(HOMEPAGE_ID)) ||
       (await getPageBySlugAction("/"));
     return checkAccess(home, false);
   }
 
-  // 2. Visiting "/1001" -> redirect to "/" so homepage is always served at "/"
-  if (normalized === String(HOMEPAGE_ID)) {
-    const home =
-      (await getPageByIdAction(HOMEPAGE_ID)) ||
-      (await getPageBySlugAction("/"));
-    return checkAccess(home, true);
-  }
+  // 2. Subpage lookup:
+  let matchedPage: Awaited<ReturnType<typeof getPageByIdAction>> = null;
 
-  // 3. Match by slug first
-  const bySlug = await getPageBySlugAction(normalized);
-  if (bySlug) {
-    return checkAccess(bySlug, bySlug.id === HOMEPAGE_ID);
-  }
-
-  // 4. Match by numeric page ID (e.g. "/1002")
-  if (/^\d+$/.test(normalized)) {
-    const byId = await getPageByIdAction(Number(normalized));
-    if (byId) {
-      return checkAccess(byId, byId.id === HOMEPAGE_ID);
+  // 2a. If requested in a non-default language, first search PageTranslation by (locale, slug)
+  if (parsedRoute.locale !== defaultLanguage) {
+    const translationMatch = await prisma.pageTranslation.findFirst({
+      where: {
+        locale: parsedRoute.locale,
+        slug: parsedRoute.slug,
+      },
+      select: { page_id: true },
+    });
+    if (translationMatch) {
+      matchedPage = await getPageByIdAction(translationMatch.page_id);
     }
   }
 
-  return { page: null, shouldRedirectToRoot: false, isHiddenFromVisitor: false };
+  // 2b. If not matched, search Page by base slug
+  if (!matchedPage) {
+    matchedPage = await getPageBySlugAction(parsedRoute.slug);
+  }
+
+  // 2c. If not matched and slug is numeric page ID (e.g. "1002")
+  if (!matchedPage && /^\d+$/.test(parsedRoute.slug)) {
+    matchedPage = await getPageByIdAction(Number(parsedRoute.slug));
+  }
+
+  if (matchedPage) {
+    return checkAccess(matchedPage, matchedPage.id === HOMEPAGE_ID);
+  }
+
+  return {
+    page: null,
+    shouldRedirectToRoot: false,
+    isHiddenFromVisitor: false,
+  };
 }
 
 export interface SavePageParams {
@@ -329,6 +445,8 @@ export interface SavePageParams {
   metaTitle?: string | null;
   metaDescription?: string | null;
   slug: string;
+  slugMode?: "same" | "separate" | string;
+  activeLanguages?: string[];
   status?: PageStatus;
   publicationStart?: Date | string | null;
   publicationEnd?: Date | string | null;
@@ -339,10 +457,39 @@ export interface SavePageParams {
     linkDescription?: string | null;
     metaTitle?: string | null;
     metaDescription?: string | null;
+    slug?: string | null;
   }>;
 }
 
 export async function savePageAction(data: SavePageParams) {
+  const { getCmsSettingsAction } = await import("./settings");
+  const cmsSettings = await getCmsSettingsAction().catch(() => null);
+  const defaultLanguage = cmsSettings?.defaultLanguage || DEFAULT_SITE_LANGUAGE;
+
+  const activeLanguages =
+    Array.isArray(data.activeLanguages) && data.activeLanguages.length > 0
+      ? data.activeLanguages
+      : [defaultLanguage];
+
+  // Mandatory Page Title check for ALL active languages
+  if (activeLanguages.includes(defaultLanguage)) {
+    if (!data.pageTitle || !data.pageTitle.trim()) {
+      throw new Error(`Page title is required for active language "${defaultLanguage.toUpperCase()}".`);
+    }
+  }
+
+  for (const loc of activeLanguages) {
+    if (loc.toLowerCase() === defaultLanguage.toLowerCase()) continue;
+    const trans = data.translations?.find(
+      (t) => t.locale.toLowerCase() === loc.toLowerCase()
+    );
+    if (!trans || !trans.pageTitle || !trans.pageTitle.trim()) {
+      throw new Error(`Page title is required for active language "${loc.toUpperCase()}".`);
+    }
+  }
+
+  const slugMode = data.slugMode === "same" ? "same" : "separate";
+
   const numericId =
     data.id !== undefined && data.id !== "" && !isNaN(Number(data.id))
       ? Number(data.id)
@@ -368,6 +515,23 @@ export async function savePageAction(data: SavePageParams) {
       }
     }
 
+    if (slugMode === "separate" && data.translations && data.translations.length > 0) {
+      for (const t of data.translations) {
+        if (t.slug && t.slug.trim()) {
+          const tCleaned = cleanSlugInput(t.slug.trim(), false);
+          if (tCleaned && !isDefaultIdOrRootSlug(tCleaned, numericId)) {
+            const tCheck = validateSlugInput(tCleaned, {
+              currentPageId: numericId,
+              existingPages,
+            });
+            if (!tCheck.isValid) {
+              throw new Error(`[${t.locale.toUpperCase()}] ${tCheck.error}`);
+            }
+          }
+        }
+      }
+    }
+
     const validSlug = isHomepage
       ? "/"
       : isDefaultId
@@ -388,6 +552,8 @@ export async function savePageAction(data: SavePageParams) {
         meta_title: data.metaTitle,
         meta_description: data.metaDescription,
         slug: validSlug,
+        slug_mode: slugMode,
+        active_languages: activeLanguages,
         status: data.status,
         publication_start: data.publicationStart
           ? new Date(data.publicationStart)
@@ -408,6 +574,7 @@ export async function savePageAction(data: SavePageParams) {
     // Update translations if provided
     if (data.translations && data.translations.length > 0) {
       for (const t of data.translations) {
+        const transSlug = t.slug ? cleanSlugInput(t.slug, false) || null : null;
         await prisma.pageTranslation.upsert({
           where: {
             page_id_locale: {
@@ -420,6 +587,7 @@ export async function savePageAction(data: SavePageParams) {
             link_description: t.linkDescription,
             meta_title: t.metaTitle,
             meta_description: t.metaDescription,
+            slug: transSlug,
           },
           create: {
             page_id: page.id,
@@ -428,6 +596,7 @@ export async function savePageAction(data: SavePageParams) {
             link_description: t.linkDescription,
             meta_title: t.metaTitle,
             meta_description: t.metaDescription,
+            slug: transSlug,
           },
         });
       }
@@ -445,6 +614,21 @@ export async function savePageAction(data: SavePageParams) {
       throw new Error(check.error || "Invalid URL slug.");
     }
   }
+
+  if (slugMode === "separate" && data.translations && data.translations.length > 0) {
+    for (const t of data.translations) {
+      if (t.slug && t.slug.trim()) {
+        const tCleaned = cleanSlugInput(t.slug.trim(), false);
+        if (tCleaned && !isDefaultIdOrRootSlug(tCleaned)) {
+          const tCheck = validateSlugInput(tCleaned, { existingPages });
+          if (!tCheck.isValid) {
+            throw new Error(`[${t.locale.toUpperCase()}] ${tCheck.error}`);
+          }
+        }
+      }
+    }
+  }
+
   const initialSlug = sanitizeSlug(data.slug);
   const tempSlug = initialSlug || `temp-${Date.now()}`;
 
@@ -457,6 +641,8 @@ export async function savePageAction(data: SavePageParams) {
       meta_title: data.metaTitle,
       meta_description: data.metaDescription,
       slug: tempSlug,
+      slug_mode: slugMode,
+      active_languages: activeLanguages,
       status: data.status || PageStatus.NEW,
       publication_start: data.publicationStart
         ? new Date(data.publicationStart)
@@ -485,6 +671,7 @@ export async function savePageAction(data: SavePageParams) {
 
   if (data.translations && data.translations.length > 0) {
     for (const t of data.translations) {
+      const transSlug = t.slug ? cleanSlugInput(t.slug, false) || null : null;
       await prisma.pageTranslation.create({
         data: {
           page_id: page.id,
@@ -493,6 +680,7 @@ export async function savePageAction(data: SavePageParams) {
           link_description: t.linkDescription,
           meta_title: t.metaTitle,
           meta_description: t.metaDescription,
+          slug: transSlug,
         },
       });
     }
@@ -571,6 +759,8 @@ export async function loadAdminInitialData() {
       console.error("[cms-core] getCmsSettingsAction failed:", err);
       return {
         activeLanguages: [...DEFAULT_ACTIVE_LANGUAGES],
+        defaultLanguage: DEFAULT_SITE_LANGUAGE,
+        defaultLanguageUrlPrefix: DEFAULT_LANGUAGE_URL_PREFIX,
         adminLanguage: DEFAULT_ADMIN_LANGUAGE,
       };
     }),

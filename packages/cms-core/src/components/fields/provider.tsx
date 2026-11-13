@@ -66,18 +66,18 @@ export function CMSPageProvider({
 
     const getLocalizedContent = (field?: CMSPageField): string | null => {
       if (!field) return null;
-      if (locale === "sv" || !field.translations || field.translations.length === 0) {
+      if (!field.translations || field.translations.length === 0) {
         return field.content ?? null;
       }
-      const translation = field.translations.find((t) => t.locale === locale);
+      const translation = field.translations.find((t) => t.locale.toLowerCase() === locale.toLowerCase());
       return translation?.content || field.content || null;
     };
 
     const getLocalizedPageTitle = (): string => {
-      if (locale === "sv" || !page.translations || page.translations.length === 0) {
+      if (!page.translations || page.translations.length === 0) {
         return page.page_title;
       }
-      const translation = page.translations.find((t) => t.locale === locale);
+      const translation = page.translations.find((t) => t.locale.toLowerCase() === locale.toLowerCase());
       return translation?.page_title || page.page_title;
     };
 
