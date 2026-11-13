@@ -50,7 +50,7 @@ export function SiteHeader({
   return (
     <header className="border-b border-neutral-300 dark:border-border bg-neutral-100/95 dark:bg-background/85 shadow-sm shadow-black/5 dark:shadow-none backdrop-blur sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between relative">
-        <Link href="/" className="flex items-center gap-3 group">
+        <Link href={rootSection?.start_page_url || "/"} className="flex items-center gap-3 group">
           <CmsBrandLogo
             variant="auto"
             heightClassName="h-8 sm:h-9"

@@ -47,7 +47,7 @@ export function SiteHeader({
     <header className="border-b border-neutral-300 dark:border-slate-800 bg-neutral-100/95 dark:bg-slate-950/85 shadow-sm shadow-black/5 dark:shadow-none backdrop-blur sticky top-0 z-40 transition-colors">
       <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between relative">
         <Link
-          href="/"
+          href={rootSection?.start_page_url || "/"}
           className="inline-flex items-center hover:opacity-95 transition-opacity"
         >
           <img

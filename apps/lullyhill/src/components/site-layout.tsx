@@ -37,7 +37,7 @@ export function LullyhillSiteLayout({
 
   return (
     <CMSQueryProvider>
-      <CMSPageProvider page={page} locale="sv">
+      <CMSPageProvider page={page} locale={(page as any).current_locale || "sv"}>
         <div
           data-page-id={page.id}
           data-template={page.template_name}

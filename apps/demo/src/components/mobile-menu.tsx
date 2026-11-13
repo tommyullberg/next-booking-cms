@@ -116,7 +116,7 @@ export function MobileMenu({
     >
       {/* Root Section (Hem) */}
       <Link
-        href="/"
+        href={rootSection?.start_page_url || "/"}
         onClick={onClose}
         className={`group flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-tight transition ${
           isRootActive
