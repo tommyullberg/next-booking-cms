@@ -409,7 +409,7 @@ export function OptionalsView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <tr className="cms-table-header">
                 <th className="py-3.5 px-3 w-10"></th>
                 <th className="py-3.5 px-3 w-16 text-center">{t("colActive")}</th>
                 <th className="py-3.5 px-5">{t("colOptional")}</th>
@@ -491,7 +491,7 @@ export function OptionalsView({
                             {opt.name}
                           </span>
                           {opt.description && (
-                            <p className="text-[11px] text-slate-400 line-clamp-1 max-w-xs">
+                            <p className="cms-text-meta line-clamp-1 max-w-xs">
                               {opt.description}
                             </p>
                           )}
@@ -503,30 +503,30 @@ export function OptionalsView({
                     <td className="py-3.5 px-4">
                       {targetObject ? (
                         <Badge variant="adminAccent" className="gap-1.5 font-medium truncate max-w-[140px]">
-                          <Box className="w-3 h-3 text-sky-400 shrink-0" />
+                          <Box className="cms-icon-xs text-sky-400" />
                           <span className="truncate">{targetObject.name}</span>
                         </Badge>
                       ) : (
-                        <Badge variant="adminMuted" className="text-[10px] font-semibold">
+                        <Badge variant="adminMuted" className="cms-text-caption font-semibold">
                           {t("allObjects")}
                         </Badge>
                       )}
                     </td>
 
                     {/* Pricing Breakdown */}
-                    <td className="py-3.5 px-3 text-right font-mono text-[11px] text-slate-300">
+                    <td className="py-3.5 px-3 text-right cms-text-code text-slate-300">
                       {opt.price_hour ? `${opt.price_hour} kr` : "0"}
                     </td>
-                    <td className="py-3.5 px-3 text-right font-mono text-[11px] text-slate-300">
+                    <td className="py-3.5 px-3 text-right cms-text-code text-slate-300">
                       {opt.price_day ? `${opt.price_day} kr` : "0"}
                     </td>
-                    <td className="py-3.5 px-3 text-right font-mono text-[11px] text-slate-300">
+                    <td className="py-3.5 px-3 text-right cms-text-code text-slate-300">
                       {opt.price_sun_thu ? `${opt.price_sun_thu} kr` : "0"}
                     </td>
-                    <td className="py-3.5 px-3 text-right font-mono text-[11px] text-slate-300">
+                    <td className="py-3.5 px-3 text-right cms-text-code text-slate-300">
                       {opt.price_thu_sun ? `${opt.price_thu_sun} kr` : "0"}
                     </td>
-                    <td className="py-3.5 px-3 text-right font-mono text-[11px] font-semibold text-sky-300">
+                    <td className="py-3.5 px-3 text-right cms-text-code font-semibold text-sky-300">
                       {opt.price_week ? `${opt.price_week} kr` : "0"}
                     </td>
 
@@ -593,13 +593,13 @@ export function OptionalsView({
           <DialogHeader className="border-b border-slate-800 pb-4 mb-0">
             <DialogTitle variant="admin" size="sm" className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="cms-icon-md" />
               </div>
               <div>
                 <span>
                   {editingOptional ? t("modalEditTitle", { name: editingOptional.name }) : t("modalCreateTitle")}
                 </span>
-                <DialogDescription className="text-[11px] text-slate-400 font-normal">
+                <DialogDescription className="cms-text-meta font-normal">
                   {t("modalSubtitle")}
                 </DialogDescription>
               </div>
@@ -682,13 +682,13 @@ export function OptionalsView({
                 <div className="space-y-2 pt-1 border-t border-slate-800/80">
                   <div className="flex items-center justify-between">
                     <Label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+                      <ImageIcon className="cms-icon-sm text-slate-400" />
                       <span>{t("image")}</span>
                     </Label>
                     <button
                       type="button"
                       onClick={() => setShowManualUrl(!showManualUrl)}
-                      className="text-[10px] text-sky-400 hover:text-sky-300 transition underline underline-offset-2"
+                      className="cms-text-caption text-sky-400 hover:text-sky-300 transition underline underline-offset-2"
                     >
                       {showManualUrl ? t("hideManualUrl") : t("enterManualUrl")}
                     </button>
@@ -712,7 +712,7 @@ export function OptionalsView({
                           <span className="text-xs font-medium text-white truncate block">
                             {selectedMediaItem?.file_name || imageUrl.split("/").pop() || imageUrl}
                           </span>
-                          <span className="text-[10px] text-slate-400 truncate block font-mono">
+                          <span className="cms-text-code truncate block">
                             {imageUrl}
                           </span>
                         </div>
@@ -731,7 +731,7 @@ export function OptionalsView({
                     </div>
                   ) : (
                     <div className="p-2.5 rounded-xl border border-dashed border-slate-800 bg-slate-900/40 text-center">
-                      <span className="text-[11px] text-slate-400">
+                      <span className="cms-text-meta">
                         {t("noImageSelected")}
                       </span>
                     </div>
@@ -795,7 +795,7 @@ export function OptionalsView({
                           )}
 
                           {filteredMedia.length === 0 ? (
-                            <div className="p-3 text-center text-[11px] text-slate-400">
+                            <div className="p-3 text-center cms-text-meta">
                               {imageMedia.length === 0
                                 ? t("noImages")
                                 : t("noMatchingImages")}
