@@ -217,7 +217,7 @@ export function AdministratorsView({
                 <span>{t("systemRole")}</span>
               </Badge>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="cms-text-meta">
               {t("superAdminDesc")}
             </p>
           </div>
@@ -225,7 +225,7 @@ export function AdministratorsView({
 
         <div className="rounded-2xl border border-sky-500/25 bg-slate-900/50 p-4 flex items-start gap-3.5">
           <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 shrink-0">
-            <Shield className="w-4 h-4" />
+            <Shield className="cms-icon-md" />
           </div>
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -235,7 +235,7 @@ export function AdministratorsView({
                 <span>{t("assignableRole")}</span>
               </Badge>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="cms-text-meta">
               {t("adminDesc")}
             </p>
           </div>
@@ -246,7 +246,7 @@ export function AdministratorsView({
       <div className="rounded-2xl border border-slate-800/90 bg-slate-900/40 overflow-hidden">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <tr className="cms-table-header">
               <th className="py-3.5 px-5">{t("colAdmin")}</th>
               <th className="py-3.5 px-4">{t("colEmail")}</th>
               <th className="py-3.5 px-4">{t("colMobile")}</th>
@@ -294,7 +294,7 @@ export function AdministratorsView({
                             {fullName}
                           </span>
                           {isSuperAdmin && (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/90 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                            <span className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/90 px-2 py-0.5 cms-text-caption font-medium text-slate-300">
                               <Lock className="w-2.5 h-2.5 text-amber-400" />
                               <span>{t("defaultBadge")}</span>
                             </span>
@@ -305,16 +305,16 @@ export function AdministratorsView({
                   </td>
 
                   <td className="py-3.5 px-4">
-                    <div className="inline-flex items-center gap-1.5 text-slate-300 font-mono text-[11px]">
-                      <Mail className="w-3.5 h-3.5 text-slate-500" />
+                    <div className="inline-flex items-center gap-1.5 cms-text-code text-slate-300">
+                      <Mail className="cms-icon-sm text-slate-500" />
                       <span>{admin.email}</span>
                     </div>
                   </td>
 
                   <td className="py-3.5 px-4 text-slate-400">
                     {admin.mobile ? (
-                      <div className="inline-flex items-center gap-1.5 text-slate-300 text-[11px]">
-                        <Phone className="w-3.5 h-3.5 text-slate-500" />
+                      <div className="inline-flex items-center gap-1.5 cms-text-meta text-slate-300">
+                        <Phone className="cms-icon-sm text-slate-500" />
                         <span>{admin.mobile}</span>
                       </div>
                     ) : (
@@ -338,8 +338,8 @@ export function AdministratorsView({
 
                   <td className="py-3.5 px-5 text-right">
                     {isSuperAdmin ? (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-500 select-none">
-                        <Lock className="w-3.5 h-3.5 text-slate-500" />
+                      <span className="inline-flex items-center gap-1.5 cms-text-meta text-slate-500 select-none">
+                        <Lock className="cms-icon-sm text-slate-500" />
                         <span>{t("locked")}</span>
                       </span>
                     ) : (
@@ -396,10 +396,10 @@ export function AdministratorsView({
               </Label>
               <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2.5 text-xs">
                 <span className="inline-flex items-center gap-2 font-semibold text-sky-400">
-                  <Shield className="w-4 h-4" />
+                  <Shield className="cms-icon-md" />
                   <span>{t("adminTitle")}</span>
                 </span>
-                <span className="text-[11px] text-slate-500">{t("defaultRole")}</span>
+                <span className="cms-text-meta text-slate-500">{t("defaultRole")}</span>
               </div>
             </div>
 
