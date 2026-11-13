@@ -423,10 +423,10 @@ export function BookingObjectsView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <Box className="w-6 h-6 text-sky-400" />
+            <Box className="cms-icon-lg text-sky-400" />
             <span>{t("title")}</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="cms-text-meta mt-1">
             {t("subtitle")}
           </p>
         </div>
@@ -437,7 +437,7 @@ export function BookingObjectsView({
           size="sm"
           onClick={openCreateModal}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="cms-icon-md" />
           <span>{t("createBtn")}</span>
         </Button>
       </div>
@@ -445,7 +445,7 @@ export function BookingObjectsView({
       {/* Filter / Search Bar */}
       <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="cms-icon-md text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <Input
             type="text"
             variant="admin"
@@ -458,7 +458,7 @@ export function BookingObjectsView({
           />
         </div>
 
-        <div className="text-xs text-slate-400">
+        <div className="cms-text-meta">
           {t("showing", {
             count: filteredObjects.length,
             plural: filteredObjects.length === 1 ? t("object") : t("objects"),
@@ -471,7 +471,7 @@ export function BookingObjectsView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <tr className="cms-table-header">
                 <th className="py-3.5 px-3 w-10 text-center" />
                 <th className="py-3.5 px-3 w-16 text-center">{t("colStatus")}</th>
                 <th className="py-3.5 px-5">{t("colObject")}</th>
@@ -518,7 +518,7 @@ export function BookingObjectsView({
                           title="Drag to reorder booking object"
                           aria-label={`Drag to reorder ${obj.name}`}
                         >
-                          <GripVertical className="w-4 h-4" />
+                          <GripVertical className="cms-icon-md" />
                         </span>
                       )}
                     </td>
@@ -532,7 +532,7 @@ export function BookingObjectsView({
                           title="Visible / Active"
                           aria-label="Visible"
                         >
-                          <Eye className="w-3.5 h-3.5" />
+                          <Eye className="cms-icon-sm" />
                         </Badge>
                       ) : (
                         <Badge
@@ -541,7 +541,7 @@ export function BookingObjectsView({
                           title="Hidden / Inactive"
                           aria-label="Hidden"
                         >
-                          <EyeOff className="w-3.5 h-3.5" />
+                          <EyeOff className="cms-icon-sm" />
                         </Badge>
                       )}
                     </td>
@@ -553,7 +553,7 @@ export function BookingObjectsView({
                           {obj.name}
                         </span>
                         {obj.description && (
-                          <p className="text-[11px] text-slate-400 line-clamp-1 max-w-xs">
+                          <p className="cms-text-meta line-clamp-1 max-w-xs">
                             {obj.description.split("\n")[0]}
                           </p>
                         )}
@@ -564,16 +564,16 @@ export function BookingObjectsView({
                     <td className="py-3.5 px-4">
                       {linkedPage ? (
                         <Badge variant="adminAccent" size="xs">
-                          <FileText className="w-3 h-3 text-sky-400" />
+                          <FileText className="cms-icon-xs text-sky-400" />
                           <span className="font-medium truncate max-w-[140px]">
                             {linkedPage.page_title}
                           </span>
-                          <span className="text-[10px] text-sky-400/80 font-mono">
+                          <span className="cms-text-code text-sky-400/80">
                             #{obj.page_id}
                           </span>
                         </Badge>
                       ) : (
-                        <span className="text-slate-600 italic text-[11px]">
+                        <span className="text-slate-600 italic cms-text-meta">
                           {t("notConnected")}
                         </span>
                       )}
@@ -581,14 +581,14 @@ export function BookingObjectsView({
 
                     {/* Type & Capacity */}
                     <td className="py-3.5 px-4 text-slate-300">
-                      <div className="space-y-0.5 text-[11px]">
+                      <div className="space-y-0.5 cms-text-meta">
                         <div className="flex items-center gap-1.5">
                           <span className="font-medium text-white">{formatBookingObjectType(obj.type)}</span>
                           {obj.size_sqm ? (
                             <span className="text-slate-400">· {obj.size_sqm} m²</span>
                           ) : null}
                         </div>
-                        <div className="text-slate-400 text-[10px] flex items-center gap-2 flex-wrap">
+                        <div className="text-slate-400 cms-text-caption flex items-center gap-2 flex-wrap">
                           <span>
                             {obj.room_count ? `${obj.room_count} ${formatBookingRoomTypeShort(obj.room_type)}, ` : ""}
                             {obj.bed_count} {obj.extra_bed_count ? `+ ${obj.extra_bed_count}` : ""} {t("beds")}
@@ -600,7 +600,7 @@ export function BookingObjectsView({
                               size="xs"
                               title={`${obj.amenities.length} active amenities`}
                             >
-                              <Tag className="w-2.5 h-2.5" />
+                              <Tag className="cms-icon-xs" />
                               <span>{obj.amenities.length}</span>
                             </Badge>
                           )}
@@ -610,7 +610,7 @@ export function BookingObjectsView({
                               size="xs"
                               title={`iCal linked: ${obj.ical_url}`}
                             >
-                              <Calendar className="w-2.5 h-2.5" />
+                              <Calendar className="cms-icon-xs" />
                               <span>iCal</span>
                             </Badge>
                           )}
@@ -621,8 +621,8 @@ export function BookingObjectsView({
                     {/* Landlord */}
                     <td className="py-3.5 px-4">
                       {obj.landlord_id ? (
-                        <div className="inline-flex items-center gap-1.5 text-slate-200 text-[11px]">
-                          <UserCheck className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                        <div className="inline-flex items-center gap-1.5 text-slate-200 cms-text-meta">
+                          <UserCheck className="cms-icon-sm text-sky-400 shrink-0" />
                           <span>{landlordName}</span>
                         </div>
                       ) : (
@@ -640,7 +640,7 @@ export function BookingObjectsView({
                         title="Edit booking object"
                         aria-label={`${tCommon("edit")} ${obj.name}`}
                       >
-                        <Edit3 className="w-3 h-3 text-sky-400" />
+                        <Edit3 className="cms-icon-xs text-sky-400" />
                         <span>{tCommon("edit")}</span>
                       </Button>
                     </td>
@@ -677,7 +677,7 @@ export function BookingObjectsView({
                     ? t("modalEditTitle", { name: editingObject.name })
                     : t("modalCreateTitle")}
                 </DialogTitle>
-                <p className="text-[11px] text-slate-400">
+                <p className="cms-text-meta">
                   {t("modalSubtitle")}
                 </p>
               </div>
@@ -695,8 +695,8 @@ export function BookingObjectsView({
             {/* Landlord & Visibility */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor={landlordFieldId} className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                  <UserCheck className="w-3.5 h-3.5 text-sky-400" />
+                <Label htmlFor={landlordFieldId} className="cms-text-meta font-semibold text-slate-300 flex items-center gap-1.5">
+                  <UserCheck className="cms-icon-sm text-sky-400" />
                   <span>{t("activeLandlord")}</span>
                 </Label>
                 <NativeSelect
@@ -716,7 +716,7 @@ export function BookingObjectsView({
               </div>
 
               <div className="space-y-1.5">
-                <span className="text-[11px] font-semibold text-slate-300 block">
+                <span className="cms-text-meta font-semibold text-slate-300 block">
                   {t("visible")}
                 </span>
                 <div
@@ -834,7 +834,7 @@ export function BookingObjectsView({
             {/* Rooms & Bed Counts */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor={roomCountFieldId} className="text-[11px] font-semibold text-slate-300">
+                <Label htmlFor={roomCountFieldId} className="cms-text-meta font-semibold text-slate-300">
                   {t("rooms")}
                 </Label>
                 <div className="grid grid-cols-3 gap-2">
@@ -868,7 +868,7 @@ export function BookingObjectsView({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor={bedCountFieldId} className="text-[11px] font-semibold text-slate-300">
+                <Label htmlFor={bedCountFieldId} className="cms-text-meta font-semibold text-slate-300">
                   {t("bedsAndExtraBeds")}
                 </Label>
                 <div className="flex items-center gap-2">
@@ -884,7 +884,7 @@ export function BookingObjectsView({
                       className="w-full font-mono text-center"
                       aria-label={t("beds")}
                     />
-                    <span className="text-[11px] text-slate-400">{t("beds")}</span>
+                    <span className="cms-text-meta">{t("beds")}</span>
                   </div>
                   <span className="text-slate-500">+</span>
                   <div className="flex-1 flex items-center gap-1.5">
@@ -899,7 +899,7 @@ export function BookingObjectsView({
                       className="w-full font-mono text-center"
                       aria-label={t("extra")}
                     />
-                    <span className="text-[11px] text-slate-400">{t("extra")}</span>
+                    <span className="cms-text-meta">{t("extra")}</span>
                   </div>
                 </div>
               </div>
@@ -908,10 +908,10 @@ export function BookingObjectsView({
             {/* Pets Allowed */}
             <div className="rounded-xl border border-admin-border bg-admin-surface-subtle p-3 flex items-center justify-between">
               <div>
-                <Label htmlFor={petsFieldId} className="text-[11px] font-semibold text-white block cursor-pointer">
+                <Label htmlFor={petsFieldId} className="cms-text-meta font-semibold text-white block cursor-pointer">
                   {t("petsAllowed")}
                 </Label>
-                <span className="text-[10px] text-slate-400">
+                <span className="cms-text-caption text-slate-400">
                   {t("petsAllowedDesc")}
                 </span>
               </div>
@@ -926,11 +926,11 @@ export function BookingObjectsView({
             {/* Active Amenities */}
             <div className="space-y-2 pt-2 border-t border-admin-border">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Tag className="w-3.5 h-3.5 text-sky-400" />
+                <span className="cms-text-meta font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Tag className="cms-icon-sm text-sky-400" />
                   <span>{t("amenities")}</span>
                 </span>
-                <span className="text-[10px] text-slate-400">
+                <span className="cms-text-caption text-slate-400">
                   {t("activeAmenitiesCount", {
                     count: selectedAmenityIds.length,
                     total: amenities.length,
@@ -938,7 +938,7 @@ export function BookingObjectsView({
                 </span>
               </div>
               {amenities.length === 0 ? (
-                <p className="text-[11px] text-slate-500">
+                <p className="cms-text-meta text-slate-500">
                   {t("noAmenities")}
                 </p>
               ) : (
@@ -988,8 +988,8 @@ export function BookingObjectsView({
             <div className="space-y-2 pt-2 border-t border-admin-border">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <Label htmlFor={icalUrlFieldId} className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-sky-400" />
+                  <Label htmlFor={icalUrlFieldId} className="cms-text-meta font-semibold text-slate-300 flex items-center gap-1.5">
+                    <Calendar className="cms-icon-sm text-sky-400" />
                     <span>{t("icalUrl")}</span>
                   </Label>
                   <IconButton
@@ -1002,7 +1002,7 @@ export function BookingObjectsView({
                     aria-label="Click for information about iCal sync"
                     aria-expanded={showIcalHelp}
                   >
-                    <HelpCircle className="w-3 h-3" />
+                    <HelpCircle className="cms-icon-xs" />
                   </IconButton>
                 </div>
                 {icalUrl && (
@@ -1017,16 +1017,16 @@ export function BookingObjectsView({
               {showIcalHelp && (
                 <div className="p-3.5 rounded-xl border border-sky-500/30 bg-sky-950/30 text-sky-200 text-xs space-y-2 animate-in fade-in duration-150">
                   <div className="font-semibold text-sky-100 flex items-center gap-1.5">
-                    <Info className="w-4 h-4 text-sky-400 shrink-0" />
+                    <Info className="cms-icon-md text-sky-400 shrink-0" />
                     <span>{t("icalHelpTitle")}</span>
                   </div>
-                  <p className="text-[11px] leading-relaxed text-slate-300">
+                  <p className="cms-text-meta leading-relaxed text-slate-300">
                     In the Booking.com Extranet, each unit is managed individually. Under 'Prices & Availability' → 'Sync calendars', you will find the 'Export calendar' link for this specific unit.
                   </p>
-                  <p className="text-[11px] leading-relaxed text-slate-300">
+                  <p className="cms-text-meta leading-relaxed text-slate-300">
                     Paste the URL here. The system automatically fetches and caches busy dates (at least every 60 minutes) and blocks those dates in the calendar to prevent double bookings.
                   </p>
-                  <p className="text-[11px] leading-relaxed text-slate-300">
+                  <p className="cms-text-meta leading-relaxed text-slate-300">
                     If Booking.com is temporarily unavailable, previous dates are kept persistent so reservations stay protected. Checkout dates remain available for same-day check-in.
                   </p>
                 </div>
@@ -1040,30 +1040,30 @@ export function BookingObjectsView({
                 value={icalUrl}
                 onChange={(e) => setIcalUrl(e.target.value)}
                 placeholder="https://ical.booking.com/v1/export?t=... or /mock-ical/..."
-                className="font-mono text-xs"
+                className="cms-text-code"
               />
             </div>
 
             {/* Per-Object Booking Settings (Compressed Format) */}
             <div className="space-y-2.5 pt-3 border-t border-admin-border">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                  <Sliders className="w-3.5 h-3.5 text-amber-400" />
+                <span className="cms-text-meta font-semibold text-slate-300 flex items-center gap-1.5">
+                  <Sliders className="cms-icon-sm text-amber-400" />
                   <span>Bokningsinställningar för detta objekt</span>
                 </span>
-                <span className="text-[10px] text-slate-500 font-mono">
+                <span className="cms-text-caption font-mono text-slate-500">
                   {hasAnyCustomizableSettings ? "Objektanpassning möjlig" : "Följer centrala inställningar"}
                 </span>
               </div>
 
               {/* If all groups are locked globally */}
               {!hasAnyCustomizableSettings && (
-                <div className="p-3 rounded-xl border border-admin-border bg-admin-surface-subtle text-[11px] text-slate-400 space-y-1">
+                <div className="p-3 rounded-xl border border-admin-border bg-admin-surface-subtle cms-text-meta space-y-1">
                   <div className="flex items-center gap-1.5 text-slate-300 font-medium">
-                    <Lock className="w-3 h-3 text-slate-400" />
+                    <Lock className="cms-icon-xs text-slate-400" />
                     <span>Alla bokningsinställningar styrs centralt</span>
                   </div>
-                  <div className="text-[10px] text-slate-500 leading-relaxed">
+                  <div className="cms-text-caption text-slate-500 leading-relaxed">
                     Bytesdag: {globalTurnoverLabel} • Tider: In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"} • Enstaka dygn: {globalCustomDaysLabel}. Dessa kan låsas upp under Bokning → Inställningar om de ska tillåtas per objekt.
                   </div>
                 </div>
@@ -1076,8 +1076,8 @@ export function BookingObjectsView({
                   {bookingSettings?.turnoverDayScope === "PER_OBJECT" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center">
                       <div>
-                        <Label htmlFor={turnoverDayFieldId} className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-sky-400" />
+                        <Label htmlFor={turnoverDayFieldId} className="cms-text-caption font-medium text-slate-300 flex items-center gap-1">
+                          <Calendar className="cms-icon-xs text-sky-400" />
                           <span>Default bytesdag</span>
                         </Label>
                         <span className="text-[9px] text-slate-500">Gäller för veckouthyrning</span>
@@ -1095,8 +1095,8 @@ export function BookingObjectsView({
                       </NativeSelect>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between py-1 border-b border-slate-800/50 text-[10px] text-slate-500">
-                      <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Bytesdag (låst centralt):</span>
+                    <div className="flex items-center justify-between py-1 border-b border-slate-800/50 cms-text-caption text-slate-500">
+                      <span className="flex items-center gap-1"><Lock className="cms-icon-xs text-slate-500" /> Bytesdag (låst centralt):</span>
                       <span className="font-medium text-slate-400">{globalTurnoverLabel}</span>
                     </div>
                   )}
@@ -1105,8 +1105,8 @@ export function BookingObjectsView({
                   {bookingSettings?.checkTimesScope === "PER_OBJECT" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center pt-1 border-t border-slate-800/50">
                       <div>
-                        <span className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-emerald-400" />
+                        <span className="cms-text-caption font-medium text-slate-300 flex items-center gap-1">
+                          <Clock className="cms-icon-xs text-emerald-400" />
                           <span>In- / Utcheckningstider</span>
                         </span>
                         <span className="text-[9px] text-slate-500">Globalt: In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"}</span>
@@ -1120,7 +1120,7 @@ export function BookingObjectsView({
                           value={objCheckInTime}
                           onChange={(e) => setObjCheckInTime(e.target.value)}
                           placeholder={bookingSettings?.checkInTime || "15:00"}
-                          className="w-1/2 font-mono"
+                          className="w-1/2 font-mono cms-text-code"
                           title="Incheckningstid (lämna tomt för global standard)"
                           aria-label="Incheckningstid"
                         />
@@ -1133,15 +1133,15 @@ export function BookingObjectsView({
                           value={objCheckOutTime}
                           onChange={(e) => setObjCheckOutTime(e.target.value)}
                           placeholder={bookingSettings?.checkOutTime || "11:00"}
-                          className="w-1/2 font-mono"
+                          className="w-1/2 font-mono cms-text-code"
                           title="Utcheckningstid (lämna tomt för global standard)"
                           aria-label="Utcheckningstid"
                         />
                       </div>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between py-1 border-b border-slate-800/50 text-[10px] text-slate-500">
-                      <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Tider (låst centralt):</span>
+                    <div className="flex items-center justify-between py-1 border-b border-slate-800/50 cms-text-caption text-slate-500">
+                      <span className="flex items-center gap-1"><Lock className="cms-icon-xs text-slate-500" /> Tider (låst centralt):</span>
                       <span className="font-medium text-slate-400">In {bookingSettings?.checkInTime || "15:00"} / Ut {bookingSettings?.checkOutTime || "11:00"}</span>
                     </div>
                   )}
@@ -1150,8 +1150,8 @@ export function BookingObjectsView({
                   {bookingSettings?.customDaysScope === "PER_OBJECT" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center pt-1 border-t border-slate-800/50">
                       <div>
-                        <Label htmlFor={allowedPeriodsFieldId} className="text-[10px] font-medium text-slate-300 flex items-center gap-1">
-                          <CalendarDays className="w-3 h-3 text-purple-400" />
+                        <Label htmlFor={allowedPeriodsFieldId} className="cms-text-caption font-medium text-slate-300 flex items-center gap-1">
+                          <CalendarDays className="cms-icon-xs text-purple-400" />
                           <span>Tillåtna bokningsperioder</span>
                         </Label>
                         <span className="text-[9px] text-slate-500">Valfria dygn, 3/4-delveckor eller endast helveckor</span>
@@ -1170,8 +1170,8 @@ export function BookingObjectsView({
                       </NativeSelect>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-between py-1 text-[10px] text-slate-500">
-                      <span className="flex items-center gap-1"><Lock className="w-2.5 h-2.5 text-slate-500" /> Bokningsperioder (låst centralt):</span>
+                    <div className="flex items-center justify-between py-1 cms-text-caption text-slate-500">
+                      <span className="flex items-center gap-1"><Lock className="cms-icon-xs text-slate-500" /> Bokningsperioder (låst centralt):</span>
                       <span className="font-medium text-slate-400">{globalCustomDaysLabel}</span>
                     </div>
                   )}

@@ -212,10 +212,10 @@ export function AmenitiesView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
-            <Tag className="w-6 h-6 text-sky-400" />
+            <Tag className="cms-icon-lg text-sky-400" />
             <span>{t("title")}</span>
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="cms-text-meta mt-1">
             {t("subtitle")}
           </p>
         </div>
@@ -226,7 +226,7 @@ export function AmenitiesView({
           size="sm"
           onClick={openCreateModal}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="cms-icon-md" />
           <span>{t("newAmenity")}</span>
         </Button>
       </div>
@@ -234,7 +234,7 @@ export function AmenitiesView({
       {/* Filter / Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1 max-w-sm">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="cms-icon-md text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <Input
             variant="admin"
             size="sm"
@@ -247,7 +247,7 @@ export function AmenitiesView({
           />
         </div>
 
-        <div className="text-xs font-medium text-slate-400">
+        <div className="cms-text-meta font-medium">
           {t("showing", { count: filteredAmenities.length, total: amenities.length })}
         </div>
       </div>
@@ -257,7 +257,7 @@ export function AmenitiesView({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-950/60 text-slate-400 font-medium">
+              <tr className="cms-table-header">
                 <th className="py-3 px-3 w-10"></th>
                 <th className="py-3 px-4">{t("colName")}</th>
                 <th className="py-3 px-4">{t("colConnected")}</th>
@@ -300,14 +300,14 @@ export function AmenitiesView({
                             className="cursor-grab active:cursor-grabbing inline-flex p-1 rounded hover:text-slate-300 hover:bg-slate-800/60 transition"
                             title={t("dragToReorder")}
                           >
-                            <GripVertical className="w-4 h-4" />
+                            <GripVertical className="cms-icon-md" />
                           </span>
                         )}
                       </td>
 
                       <td className="py-3 px-4 font-medium text-white">
                         <div className="flex items-center gap-2">
-                          <Tag className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                          <Tag className="cms-icon-sm text-sky-400" />
                           <span>{item.name}</span>
                         </div>
                       </td>
@@ -315,7 +315,7 @@ export function AmenitiesView({
                       <td className="py-3 px-4 text-slate-300">
                         {item.object_count && item.object_count > 0 ? (
                           <Badge variant="adminSuccess" size="sm">
-                            <Box className="w-3 h-3" />
+                            <Box className="cms-icon-xs" />
                             <span>
                               {t("connectedCount", {
                                 count: item.object_count,
@@ -324,7 +324,7 @@ export function AmenitiesView({
                             </span>
                           </Badge>
                         ) : (
-                          <span className="text-slate-500 text-[11px]">
+                          <span className="text-slate-500 cms-text-meta">
                             {t("notActive")}
                           </span>
                         )}
@@ -337,7 +337,7 @@ export function AmenitiesView({
                           size="xs"
                           onClick={() => openEditModal(item)}
                         >
-                          <Edit3 className="w-3.5 h-3.5 text-slate-400" />
+                          <Edit3 className="cms-icon-sm text-slate-400" />
                           <span>{tCommon("edit")}</span>
                         </Button>
                       </td>
@@ -361,7 +361,7 @@ export function AmenitiesView({
         <DialogContent variant="admin" size="sm" className="p-0 overflow-hidden">
           <DialogHeader className="px-6 py-4 border-b border-slate-800 bg-slate-950/50 flex flex-row items-center justify-between space-y-0">
             <DialogTitle variant="admin" size="sm" className="flex items-center gap-2">
-              <Tag className="w-5 h-5 text-sky-400" />
+              <Tag className="cms-icon-lg text-sky-400" />
               <span>{editingAmenity ? t("modalEditTitle") : t("modalCreateTitle")}</span>
             </DialogTitle>
           </DialogHeader>
@@ -397,7 +397,7 @@ export function AmenitiesView({
                       onClick={handleDelete}
                     >
                       {isDeleting && (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="cms-icon-sm animate-spin" />
                       )}
                       <span>{t("yesDelete")}</span>
                     </Button>
@@ -417,7 +417,7 @@ export function AmenitiesView({
                     size="sm"
                     onClick={() => setConfirmDelete(true)}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="cms-icon-sm" />
                     <span>{t("delete")}</span>
                   </Button>
                 )
@@ -441,7 +441,7 @@ export function AmenitiesView({
                   disabled={isSaving}
                 >
                   {isSaving && (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="cms-icon-sm animate-spin" />
                   )}
                   <span>{t("save")}</span>
                 </Button>
