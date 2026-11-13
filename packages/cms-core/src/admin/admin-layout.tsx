@@ -211,7 +211,7 @@ export function AdminLayout({
                     type='button'
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => onTabChange(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-admin-accent ${
                       isActive
                         ? "bg-sky-500/10 text-sky-400 border border-sky-500/30 font-semibold shadow-sm"
                         : "text-slate-400 hover:bg-slate-900 hover:text-slate-200 border border-transparent"
@@ -238,7 +238,7 @@ export function AdminLayout({
                     type='button'
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => onTabChange(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-admin-accent ${
                       isActive
                         ? "bg-sky-500/10 text-sky-400 border border-sky-500/30 font-semibold shadow-sm"
                         : "text-slate-400 hover:bg-slate-900 hover:text-slate-200 border border-transparent"
