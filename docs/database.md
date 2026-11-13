@@ -92,6 +92,8 @@ Site page hierarchy, publication state, and template assignments:
 - `meta_title` (VarChar 255, Nullable)
 - `meta_description` (Text, Nullable)
 - `slug` (VarChar 255, Unique)
+- `slug_mode` (VarChar 50, default "separate")
+- `active_languages` (Json, Nullable, array of enabled language codes for the page)
 - `status` (PageStatus enum: `NEW`, `PUBLISHED`, `ARCHIVED`)
 - `publication_start`, `publication_end` (DateTime, Nullable)
 - `created_date` (DateTime, default now)
@@ -99,16 +101,18 @@ Site page hierarchy, publication state, and template assignments:
 
 ### 5. `page_translations`
 
-Localized page metadata and SEO fields:
+Localized page metadata, slugs, and SEO fields:
 
 - `id` (CUID, PK)
 - `page_id` (Integer, FK to `pages.id`)
 - `locale` (VarChar 10)
+- `slug` (VarChar 255, Nullable)
 - `page_title` (VarChar 255)
 - `link_description` (Text, Nullable)
 - `meta_title` (VarChar 255, Nullable)
 - `meta_description` (Text, Nullable)
 - Unique composite index on `[page_id, locale]`.
+- Index on `[locale, slug]`.
 
 ### 6. `category_types`
 

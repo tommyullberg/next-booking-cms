@@ -204,3 +204,25 @@ Open-source self-hostable translation server fallback.
 
 Tier 3: Hugging Face Inference (Second Fallback)
 Public inference API using models like Helsinki-NLP/opus-mt.
+
+## URL Routing, Slugs & Multilingual Architecture
+
+The platform provides a centralized, deterministic URL generator and route parser:
+
+### 1. Global Settings
+- **Site Default Language**: Configured in CMS Settings (not hardcoded). The default language cannot be deselected unless another language is selected as default.
+- **Default Language URL Prefix**:
+  - `with-prefix` (Recommended default for new installations): All languages, including the default language, include a language prefix in the URL (e.g. `/sv/sommarstugan`, `/en/summer-cottage`).
+  - `without-prefix`: The site default language is served directly without prefix (e.g. `/sommarstugan`, `/en/summer-cottage`).
+
+### 2. Page Editor Configuration
+- **Active Languages per Page**: Admins select which languages a page is published in. Unselected languages are completely hidden in the editor to reduce cognitive load.
+- **Mandatory Page Title**: Page title is validated as required across all active languages.
+- **Slug Mode**:
+  - `separate` (Default for new pages): Each active language has its own localized slug (`/sv/stugor`, `/en/cabins`).
+  - `same`: All languages share a single slug segment, while language prefixes remain distinct (`/sv/stugor`, `/en/stugor`).
+- **Section Selection**: Native HTML select is replaced with an accessible, styled dropdown with `FolderTree` icon, matching the Page Template select.
+
+### 3. Central Routing Modules
+- `getPageUrl(...)`: Generates canonical localized URLs for public routing, navigation menus, internal links, and previews.
+- `parsePublicRoutePath(...)`: Extracts target locale, slug, homepage status, and determines canonical redirect flags for both tenant applications.
