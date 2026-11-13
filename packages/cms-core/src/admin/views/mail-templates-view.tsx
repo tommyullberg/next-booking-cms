@@ -169,9 +169,9 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
           aria-controls="placeholders-box"
           title="Toggle dynamic placeholder tags"
         >
-          <HelpCircle className="w-4 h-4 text-sky-400" />
+          <HelpCircle className="cms-icon-md text-sky-400" />
           <span>{t("placeholdersBtn")}</span>
-          {showHelp ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          {showHelp ? <ChevronUp className="cms-icon-sm" /> : <ChevronDown className="cms-icon-sm" />}
         </Button>
       </div>
 
@@ -184,13 +184,13 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="p-1 rounded bg-sky-500/20 text-sky-400">
-                <HelpCircle className="w-4 h-4" />
+                <HelpCircle className="cms-icon-md" />
               </span>
               <h2 className="text-xs font-bold uppercase tracking-wider text-sky-300">
                 {t("dynamicPlaceholdersTitle")}
               </h2>
             </div>
-            <span className="text-[11px] text-slate-400">
+            <span className="cms-text-meta">
               {t("dynamicPlaceholdersDesc")}
             </span>
           </div>
@@ -210,7 +210,7 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
                   key={p.tag}
                   type="button"
                   onClick={() => handleCopyTag(p.tag)}
-                  className={`group flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-mono transition ${
+                  className={`group flex items-center gap-1.5 rounded-xl border px-3 py-1.5 cms-text-code transition ${
                     isCopied
                       ? "border-emerald-500 bg-emerald-950/40 text-emerald-300"
                       : "border-slate-700 bg-slate-900/80 text-sky-300 hover:border-sky-500 hover:bg-slate-800"
@@ -219,9 +219,9 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
                 >
                   <span>{p.tag}</span>
                   {isCopied ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="cms-icon-sm text-emerald-400" />
                   ) : (
-                    <Copy className="w-3 h-3 text-slate-500 opacity-60 group-hover:opacity-100" />
+                    <Copy className="cms-icon-xs text-slate-500 opacity-60 group-hover:opacity-100" />
                   )}
                 </button>
               );
@@ -248,11 +248,11 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
               <div className="flex items-center justify-between border-b border-admin-border pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 rounded-xl bg-slate-800 text-sky-400">
-                    <Mail className="w-4 h-4" />
+                    <Mail className="cms-icon-md" />
                   </div>
                   <div>
                     <h2 className="text-sm font-semibold text-white">{cfg.title}</h2>
-                    <p className="text-xs text-slate-400">{cfg.description}</p>
+                    <p className="cms-text-meta">{cfg.description}</p>
                   </div>
                 </div>
 
@@ -265,11 +265,11 @@ export function MailTemplatesView({ templates = [], onSaveTemplate }: MailTempla
                   aria-label={`${t("saveTemplate")} - ${cfg.title}`}
                 >
                   {isSaving ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="cms-icon-sm animate-spin" />
                   ) : isSuccess ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-300" />
+                    <Check className="cms-icon-sm text-emerald-300" />
                   ) : (
-                    <Save className="w-3.5 h-3.5" />
+                    <Save className="cms-icon-sm" />
                   )}
                   <span>{isSuccess ? tCommon("saved") : t("saveTemplate")}</span>
                 </Button>

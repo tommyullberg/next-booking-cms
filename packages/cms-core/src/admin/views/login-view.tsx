@@ -120,7 +120,7 @@ function LoginContent({ callbackUrl = "/admin" }: LoginViewProps) {
           <FormField label={t("email")} labelVariant="admin">
             {(control) => (
               <div className="relative">
-                <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                <Mail className="cms-icon-md absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                 <Input
                   {...control}
                   type="email"
@@ -139,7 +139,7 @@ function LoginContent({ callbackUrl = "/admin" }: LoginViewProps) {
           <FormField label={t("password")} labelVariant="admin">
             {(control) => (
               <div className="relative">
-                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                <Lock className="cms-icon-md absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                 <Input
                   {...control}
                   type="password"
@@ -163,7 +163,7 @@ function LoginContent({ callbackUrl = "/admin" }: LoginViewProps) {
             className="w-full mt-2"
           >
             {isLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="cms-icon-md animate-spin" />
             ) : (
               <span>{t("signIn")}</span>
             )}
