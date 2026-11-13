@@ -287,7 +287,7 @@ export function LandlordsView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <tr className="cms-table-header">
                 <th className="py-3.5 px-5">{t("colLandlord")}</th>
                 <th className="py-3.5 px-4">{t("colAddress")}</th>
                 <th className="py-3.5 px-4">{t("colPostalCity")}</th>
@@ -329,7 +329,7 @@ export function LandlordsView({
                     <td className="py-3.5 px-4 text-slate-300">
                       {landlord.address ? (
                         <div className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <MapPin className="cms-icon-sm text-slate-500" />
                           <span>{landlord.address}</span>
                         </div>
                       ) : (
@@ -353,8 +353,8 @@ export function LandlordsView({
                     {/* Email */}
                     <td className="py-3.5 px-4">
                       {landlord.email ? (
-                        <div className="inline-flex items-center gap-1.5 text-slate-300 font-mono text-[11px]">
-                          <Mail className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <div className="inline-flex items-center gap-1.5 cms-text-code text-slate-300">
+                          <Mail className="cms-icon-sm text-slate-500" />
                           <span>{landlord.email}</span>
                         </div>
                       ) : (
@@ -366,15 +366,15 @@ export function LandlordsView({
                     <td className="py-3.5 px-4">
                       <div className="space-y-1">
                         {landlord.phone && (
-                          <div className="inline-flex items-center gap-1.5 text-slate-400 text-[11px]">
-                            <Phone className="w-3 h-3 text-slate-500 shrink-0" />
+                          <div className="inline-flex items-center gap-1.5 cms-text-meta">
+                            <Phone className="cms-icon-xs text-slate-500" />
                             <span>{landlord.phone}</span>
                           </div>
                         )}
                         {landlord.mobile ? (
                           <div className="flex items-center gap-2">
-                            <div className="inline-flex items-center gap-1.5 text-slate-200 text-[11px]">
-                              <Smartphone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <div className="inline-flex items-center gap-1.5 cms-text-meta text-slate-200">
+                              <Smartphone className="cms-icon-sm text-slate-400" />
                               <span>{landlord.mobile}</span>
                             </div>
                             {landlord.has_swish && (
@@ -395,11 +395,11 @@ export function LandlordsView({
                       {landlord.account_number ? (
                         <div className="flex items-center gap-2">
                           {landlord.account_type && (
-                            <span className="inline-flex items-center rounded bg-slate-800 border border-slate-700 px-1.5 py-0.5 text-[10px] font-medium text-slate-300">
+                            <span className="inline-flex items-center rounded bg-slate-800 border border-slate-700 px-1.5 py-0.5 cms-text-caption font-medium text-slate-300">
                               {landlord.account_type}
                             </span>
                           )}
-                          <span className="font-mono text-[11px] text-slate-200">
+                          <span className="cms-text-code text-slate-200">
                             {landlord.account_number}
                           </span>
                         </div>
@@ -446,13 +446,13 @@ export function LandlordsView({
           <DialogHeader className="border-b border-slate-800 pb-4 mb-0">
             <DialogTitle variant="admin" size="sm" className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
-                <Building className="w-4 h-4" />
+                <Building className="cms-icon-md" />
               </div>
               <div>
                 <span>
                   {editingLandlord ? t("modalEditTitle") : t("modalCreateTitle")}
                 </span>
-                <p className="text-[11px] text-slate-400 font-normal">
+                <p className="cms-text-meta font-normal">
                   {t("modalSubtitle")}
                 </p>
               </div>
