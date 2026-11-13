@@ -164,7 +164,7 @@ When an administrator is authenticated, a floating dock appears at the bottom of
 
 ### Editor Modals
 
-Dedicated modal dialogs handle rich interactions and portal directly to the document body via `ModalPortal`:
+Dedicated modal dialogs handle rich interactions using shared Radix UI `Dialog` components, standard `FormField` containers, and `ConfirmProvider`:
 
 - `TextEditModal`: Offers rich text and plain text editing with built-in AI translation buttons.
 - `ImageEditModal`: Provides Media Library folder navigation, image uploads, external URL inputs, and alt text configuration.

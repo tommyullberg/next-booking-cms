@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
-import { prisma } from "../db";
-import { getStorageAdapter } from "../storage";
+import { prisma } from "@cms/db";
+import { getStorageAdapter } from "@cms/storage";
 
 function generateFolderSlug(name: string): string {
   const slug = name

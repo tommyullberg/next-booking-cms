@@ -1,5 +1,5 @@
 import type { PricePeriodItem } from "../../views/prices-availability-view";
-import type { BlockedPeriodItem } from "../../../actions/price-periods";
+import type { BlockedPeriodItem } from "@cms/actions/price-periods";
 
 export interface CalendarDayData {
   day: number;

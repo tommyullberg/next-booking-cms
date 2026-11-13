@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useId } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import {
   Plus,
@@ -14,16 +14,19 @@ import {
   Loader2,
   UserCheck,
 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Badge } from "../../components/ui/badge";
 import {
+  Alert,
+  Badge,
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog";
+  FormField,
+  Input,
+  Label,
+} from "@cms/components/ui";
+import { useConfirm } from "@cms/components/confirm";
 
 export interface AdministratorItem {
   id: string;
@@ -62,9 +65,9 @@ export function AdministratorsView({
   onSaveAdministrator,
   onDeleteAdministrator,
 }: AdministratorsViewProps) {
-  const formId = useId();
   const t = useTranslations("administrators");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [admins, setAdmins] = useState<AdministratorItem[]>(initialAdmins);
 
@@ -156,24 +159,24 @@ export function AdministratorsView({
 
   const handleDelete = async (admin: AdministratorItem) => {
     if (admin.role === "SUPERADMIN") return;
-    if (
-      !confirm(
-        t("deleteConfirm", {
-          name: `${admin.first_name} ${admin.last_name}`,
-          email: admin.email,
-        })
-      )
-    ) {
-      return;
-    }
-
-    setAdmins((prev) => prev.filter((a) => a.id !== admin.id));
-    if (onDeleteAdministrator) {
-      const res = await onDeleteAdministrator(admin.id);
-      if (Array.isArray(res)) {
-        setAdmins(res);
-      }
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("deleteConfirm", {
+        name: `${admin.first_name} ${admin.last_name}`,
+        email: admin.email,
+      }),
+      variant: "destructive",
+      onConfirm: async () => {
+        if (onDeleteAdministrator) {
+          const res = await onDeleteAdministrator(admin.id);
+          if (Array.isArray(res)) {
+            setAdmins(res);
+            return;
+          }
+        }
+        setAdmins((prev) => prev.filter((a) => a.id !== admin.id));
+      },
+    });
   };
 
   return (
@@ -214,7 +217,7 @@ export function AdministratorsView({
                 <span>{t("systemRole")}</span>
               </Badge>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="cms-text-meta">
               {t("superAdminDesc")}
             </p>
           </div>
@@ -222,7 +225,7 @@ export function AdministratorsView({
 
         <div className="rounded-2xl border border-sky-500/25 bg-slate-900/50 p-4 flex items-start gap-3.5">
           <div className="p-2.5 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 shrink-0">
-            <Shield className="w-4 h-4" />
+            <Shield className="cms-icon-md" />
           </div>
           <div className="space-y-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -232,7 +235,7 @@ export function AdministratorsView({
                 <span>{t("assignableRole")}</span>
               </Badge>
             </div>
-            <p className="text-[11px] text-slate-400">
+            <p className="cms-text-meta">
               {t("adminDesc")}
             </p>
           </div>
@@ -243,7 +246,7 @@ export function AdministratorsView({
       <div className="rounded-2xl border border-slate-800/90 bg-slate-900/40 overflow-hidden">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <tr className="cms-table-header">
               <th className="py-3.5 px-5">{t("colAdmin")}</th>
               <th className="py-3.5 px-4">{t("colEmail")}</th>
               <th className="py-3.5 px-4">{t("colMobile")}</th>
@@ -291,7 +294,7 @@ export function AdministratorsView({
                             {fullName}
                           </span>
                           {isSuperAdmin && (
-                            <span className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/90 px-2 py-0.5 text-[10px] font-medium text-slate-300">
+                            <span className="inline-flex items-center gap-1 rounded-md border border-slate-700 bg-slate-800/90 px-2 py-0.5 cms-text-caption font-medium text-slate-300">
                               <Lock className="w-2.5 h-2.5 text-amber-400" />
                               <span>{t("defaultBadge")}</span>
                             </span>
@@ -302,16 +305,16 @@ export function AdministratorsView({
                   </td>
 
                   <td className="py-3.5 px-4">
-                    <div className="inline-flex items-center gap-1.5 text-slate-300 font-mono text-[11px]">
-                      <Mail className="w-3.5 h-3.5 text-slate-500" />
+                    <div className="inline-flex items-center gap-1.5 cms-text-code text-slate-300">
+                      <Mail className="cms-icon-sm text-slate-500" />
                       <span>{admin.email}</span>
                     </div>
                   </td>
 
                   <td className="py-3.5 px-4 text-slate-400">
                     {admin.mobile ? (
-                      <div className="inline-flex items-center gap-1.5 text-slate-300 text-[11px]">
-                        <Phone className="w-3.5 h-3.5 text-slate-500" />
+                      <div className="inline-flex items-center gap-1.5 cms-text-meta text-slate-300">
+                        <Phone className="cms-icon-sm text-slate-500" />
                         <span>{admin.mobile}</span>
                       </div>
                     ) : (
@@ -335,8 +338,8 @@ export function AdministratorsView({
 
                   <td className="py-3.5 px-5 text-right">
                     {isSuperAdmin ? (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-500 select-none">
-                        <Lock className="w-3.5 h-3.5 text-slate-500" />
+                      <span className="inline-flex items-center gap-1.5 cms-text-meta text-slate-500 select-none">
+                        <Lock className="cms-icon-sm text-slate-500" />
                         <span>{t("locked")}</span>
                       </span>
                     ) : (
@@ -380,9 +383,9 @@ export function AdministratorsView({
           </DialogHeader>
 
           {errorMsg && (
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-2.5 text-xs text-rose-300">
+            <Alert variant="destructive" className="mb-4">
               {errorMsg}
-            </div>
+            </Alert>
           )}
 
           <form onSubmit={handleSubmit} autoComplete="off" className="space-y-4">
@@ -393,71 +396,52 @@ export function AdministratorsView({
               </Label>
               <div className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/70 px-3.5 py-2.5 text-xs">
                 <span className="inline-flex items-center gap-2 font-semibold text-sky-400">
-                  <Shield className="w-4 h-4" />
+                  <Shield className="cms-icon-md" />
                   <span>{t("adminTitle")}</span>
                 </span>
-                <span className="text-[11px] text-slate-500">{t("defaultRole")}</span>
+                <span className="cms-text-meta text-slate-500">{t("defaultRole")}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor={`${formId}-first-name`} variant="admin" className="mb-1">
-                  {t("firstName")} <span className="text-rose-400">*</span>
-                </Label>
+              <FormField label={t("firstName")} required labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-first-name`}
                   variant="admin"
                   size="sm"
                   type="text"
-                  required
                   autoComplete="off"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Anna"
                 />
-              </div>
-              <div>
-                <Label htmlFor={`${formId}-last-name`} variant="admin" className="mb-1">
-                  {t("lastName")} <span className="text-rose-400">*</span>
-                </Label>
+              </FormField>
+              <FormField label={t("lastName")} required labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-last-name`}
                   variant="admin"
                   size="sm"
                   type="text"
-                  required
                   autoComplete="off"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Andersson"
                 />
-              </div>
+              </FormField>
             </div>
 
-            <div>
-              <Label htmlFor={`${formId}-email`} variant="admin" className="mb-1">
-                {t("email")} <span className="text-rose-400">*</span>
-              </Label>
+            <FormField label={t("email")} required labelVariant="admin" labelSize="sm">
               <Input
-                id={`${formId}-email`}
                 variant="admin"
                 size="sm"
                 type="email"
-                required
                 autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="anna@example.com"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor={`${formId}-mobile`} variant="admin" className="mb-1">
-                {t("mobile")}
-              </Label>
+            <FormField label={t("mobile")} labelVariant="admin" labelSize="sm">
               <Input
-                id={`${formId}-mobile`}
                 variant="admin"
                 size="sm"
                 type="tel"
@@ -466,24 +450,18 @@ export function AdministratorsView({
                 onChange={(e) => setMobile(e.target.value)}
                 placeholder="+46 70 123 45 67"
               />
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor={`${formId}-password`} variant="admin" className="mb-1">
-                {editingAdmin ? (
-                  t("newPassword")
-                ) : (
-                  <>
-                    {t("password")} <span className="text-rose-400">*</span>
-                  </>
-                )}
-              </Label>
+            <FormField
+              label={editingAdmin ? t("newPassword") : t("password")}
+              required={!editingAdmin}
+              labelVariant="admin"
+              labelSize="sm"
+            >
               <Input
-                id={`${formId}-password`}
                 variant="admin"
                 size="sm"
                 type="password"
-                required={!editingAdmin}
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -491,7 +469,7 @@ export function AdministratorsView({
                   editingAdmin ? "••••••••" : t("passwordMinPlaceholder")
                 }
               />
-            </div>
+            </FormField>
 
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button

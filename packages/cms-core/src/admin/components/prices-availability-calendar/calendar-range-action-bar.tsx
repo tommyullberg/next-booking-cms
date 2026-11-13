@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
 import { MousePointerClick, Plus, Ban, X } from "lucide-react";
-import { Button } from "../../../components/ui/button";
+import { Button } from "@cms/components/ui";
 import type { EffectiveRange } from "./types";
 
 export interface CalendarRangeActionBarProps {

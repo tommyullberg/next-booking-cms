@@ -22,7 +22,7 @@ import {
   saveImageFieldAction,
   deleteImageFieldAction,
   saveGalleryFieldAction,
-} from "../actions/fields";
+} from "@cms/actions/fields";
 import {
   getMediaFilesAction,
   getMediaFoldersAction,
@@ -31,21 +31,21 @@ import {
   uploadMediaAction,
   moveMediaFileAction,
   deleteMediaAction,
-} from "../actions/media";
-import { translateText } from "../ai";
+} from "@cms/actions/media";
+import { translateText } from "@cms/ai";
 import {
   getPageByIdAction,
   savePageAction,
   deletePageAction,
   loadAdminInitialData,
-} from "../actions/pages";
+} from "@cms/actions/pages";
 import {
   saveSectionAction,
   deleteSectionAction,
   reorderSectionsAction,
   updateNavigationMenuItemAction,
   reorderNavigationMenuItemsAction,
-} from "../actions/sections";
+} from "@cms/actions/sections";
 import {
   getCategoryTypesAction,
   saveCategoryTypeAction,
@@ -54,7 +54,7 @@ import {
   saveCategoryAction,
   deleteCategoryAction,
   reorderCategoriesAction,
-} from "../actions/categories";
+} from "@cms/actions/categories";
 import {
   getAdministratorsAction,
   createAdministratorAction,
@@ -62,34 +62,34 @@ import {
   deleteAdministratorAction,
   updateCurrentAdminLocaleAction,
   getCurrentAdminLocaleAction,
-} from "../actions/administrators";
+} from "@cms/actions/administrators";
 import {
   getLandlordsAction,
   createLandlordAction,
   updateLandlordAction,
   deleteLandlordAction,
-} from "../actions/landlords";
+} from "@cms/actions/landlords";
 import {
   getBookingObjectsAction,
   createBookingObjectAction,
   updateBookingObjectAction,
   deleteBookingObjectAction,
   reorderBookingObjectsAction,
-} from "../actions/booking-objects";
+} from "@cms/actions/booking-objects";
 import {
   getBookingOptionalsAction,
   createBookingOptionalAction,
   updateBookingOptionalAction,
   deleteBookingOptionalAction,
   reorderBookingOptionalsAction,
-} from "../actions/optionals";
+} from "@cms/actions/optionals";
 import {
   getAmenitiesAction,
   createAmenityAction,
   updateAmenityAction,
   deleteAmenityAction,
   reorderAmenitiesAction,
-} from "../actions/amenities";
+} from "@cms/actions/amenities";
 import {
   getPricePeriodsAction,
   createPricePeriodAction,
@@ -99,21 +99,48 @@ import {
   getBlockedPeriodsAction,
   createBlockedPeriodAction,
   deleteBlockedPeriodAction,
-} from "../actions/price-periods";
+} from "@cms/actions/price-periods";
 import {
   getCmsSettingsAction,
   saveCmsSettingsAction,
-} from "../actions/settings";
-import { saveMailTemplateAction } from "../mail";
-import { syncICalBackgroundJob, syncAllBookingObjects } from "../ical";
-import { generateICalFeed } from "../ical/generator";
+} from "@cms/actions/settings";
+import { saveMailTemplateAction } from "@cms/mail";
+import { syncICalBackgroundJob, syncAllBookingObjects } from "@cms/ical";
+import { generateICalFeed } from "@cms/ical/generator";
 import {
   getBookingsAction,
   searchAvailabilityAction,
   createBookingRequestAction,
   updateBookingAction,
-} from "../actions/bookings";
-import { prisma } from "../db";
+} from "@cms/actions/bookings";
+import {
+  getBookingDiscrepanciesAction,
+  acknowledgeBookingDiscrepancyAction,
+  clearBookingDiscrepanciesAction,
+} from "@cms/logging/discrepancies";
+import { getToken } from "next-auth/jwt";
+import { prisma } from "@cms/db";
+
+export async function verifyAdminAuth(
+  req: NextRequest
+): Promise<{ authorized: boolean; identity?: string; status?: 401 | 403 }> {
+  try {
+    const token = await getToken({
+      req,
+      secret: process.env.NEXTAUTH_SECRET || "development-secret-change-in-production",
+    });
+    if (!token) {
+      return { authorized: false, status: 401 };
+    }
+    if (!["SUPERADMIN", "ADMIN", "EDITOR"].includes((token as any).role)) {
+      return { authorized: false, status: 403 };
+    }
+    const identity = token.email || (token as any).name || (token as any).id || "admin";
+    return { authorized: true, identity };
+  } catch {
+    return { authorized: false, status: 401 };
+  }
+}
 
 export async function handleSaveTextField(req: NextRequest) {
   try {
@@ -551,6 +578,26 @@ export async function handleCmsApiRoute(
         );
       }
     }
+    if (path === "bookings/discrepancies/acknowledge" || path === "bookings/discrepancies") {
+      const auth = await verifyAdminAuth(req);
+      if (!auth.authorized) {
+        return NextResponse.json(
+          { error: auth.status === 403 ? "Forbidden" : "Unauthorized" },
+          { status: auth.status || 401 }
+        );
+      }
+      try {
+        const body = await req.json().catch(() => ({}));
+        const result = await acknowledgeBookingDiscrepancyAction({
+          id: body.id,
+          acknowledged: body.acknowledged !== false,
+          adminEmail: auth.identity,
+        });
+        return NextResponse.json(result);
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
+    }
     if (path === "settings") {
       const body = await req.json();
       const result = await saveCmsSettingsAction(body);
@@ -739,6 +786,22 @@ export async function handleCmsApiRoute(
           objectId,
         });
         return NextResponse.json(result);
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
+      }
+    }
+
+    if (path === "bookings/discrepancies") {
+      const auth = await verifyAdminAuth(req);
+      if (!auth.authorized) {
+        return NextResponse.json(
+          { error: auth.status === 403 ? "Forbidden" : "Unauthorized" },
+          { status: auth.status || 401 }
+        );
+      }
+      try {
+        const discrepancies = await getBookingDiscrepanciesAction();
+        return NextResponse.json(discrepancies, { headers: NO_CACHE_HEADERS });
       } catch (err: any) {
         return NextResponse.json({ error: err?.message }, { status: 500 });
       }
@@ -951,6 +1014,25 @@ export async function handleCmsApiRoute(
           { error: err?.message || "Failed to delete media" },
           { status: 400 }
         );
+      }
+    }
+
+    if (path === "bookings/discrepancies" || path.startsWith("bookings/discrepancies/")) {
+      const auth = await verifyAdminAuth(req);
+      if (!auth.authorized) {
+        return NextResponse.json(
+          { error: auth.status === 403 ? "Forbidden" : "Unauthorized" },
+          { status: auth.status || 401 }
+        );
+      }
+      try {
+        const id = path.startsWith("bookings/discrepancies/")
+          ? path.replace("bookings/discrepancies/", "")
+          : req.nextUrl.searchParams.get("id") || undefined;
+        const result = await clearBookingDiscrepanciesAction(id);
+        return NextResponse.json(result);
+      } catch (err: any) {
+        return NextResponse.json({ error: err?.message }, { status: 500 });
       }
     }
   }

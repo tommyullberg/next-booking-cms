@@ -77,4 +77,5 @@
   box-shadow: 0 4px 14px 0 rgba(225, 29, 72, 0.25);
 }
 
+@import "./cms-classes.css";
 @import "../cms-core/src/admin/components/prices-availability-calendar/prices-availability-calendar.css";

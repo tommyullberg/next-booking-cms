@@ -3,15 +3,19 @@
 import React, { useState, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Trash2, Pencil, Check, GripVertical, Lock } from "lucide-react";
-import { FlagIcon } from "../../components/ui/flag-icon";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { NativeSelect } from "../../components/ui/select";
-import { Card } from "../../components/ui/card";
-import { cn } from "../../utils/cn";
-import { HOMEPAGE_ID } from "../../utils/slug";
-import { LANGUAGE_META } from "../../constants/languages";
+import {
+  Button,
+  Card,
+  FlagIcon,
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+} from "@cms/components/ui";
+import { useConfirm } from "@cms/components/confirm";
+import { cn } from "@cms/utils/cn";
+import { HOMEPAGE_ID } from "@cms/utils/slug";
+import { LANGUAGE_META } from "@cms/constants/languages";
 
 export interface SectionItem {
   id: string;
@@ -64,6 +68,7 @@ export function SectionsView({
 }: SectionsViewProps) {
   const t = useTranslations("sections");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -256,7 +261,7 @@ export function SectionsView({
           <h1 className="text-2xl font-bold tracking-tight text-white">
             {t("title")}
           </h1>
-          <p className="mt-1 text-xs text-slate-400 max-w-2xl leading-relaxed">
+          <p className="mt-1 cms-text-meta max-w-2xl leading-relaxed">
             {t("subtitle")}
           </p>
         </div>
@@ -267,7 +272,7 @@ export function SectionsView({
           size="sm"
           onClick={handleStartAddSection}
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="cms-icon-md" />
           <span>{t("addSection")}</span>
         </Button>
       </div>
@@ -305,7 +310,7 @@ export function SectionsView({
                           title="Root section (Page #1001) is locked at the top"
                           aria-label="Root section is locked at top"
                         >
-                          <Lock className="w-4 h-4" />
+                          <Lock className="cms-icon-md" />
                         </span>
                       ) : (
                         <span
@@ -313,7 +318,7 @@ export function SectionsView({
                           title="Drag to reorder section"
                           aria-label={`Drag to reorder section ${sec.name}`}
                         >
-                          <GripVertical className="w-5 h-5" />
+                          <GripVertical className="cms-icon-lg" />
                         </span>
                       )}
                       <span className="text-base font-medium text-white truncate">
@@ -327,7 +332,7 @@ export function SectionsView({
                     {/* Column 2: Stacked Multi-language Inputs */}
                     <div className="lg:col-span-3 space-y-2">
                       <div className="flex items-center gap-2.5">
-                        <Label htmlFor={editNameId} className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-300 shrink-0 cursor-pointer">
+                        <Label htmlFor={editNameId} className="inline-flex items-center gap-2 w-12 cms-text-code font-semibold text-slate-300 shrink-0 cursor-pointer">
                           <FlagIcon code="sv" size="sm" />
                           <span>{LANGUAGE_META.sv.code}</span>
                         </Label>
@@ -349,7 +354,7 @@ export function SectionsView({
                         const transFieldId = `${baseFieldId}-${sec.id}-${loc}`;
                         return (
                           <div key={loc} className="flex items-center gap-2.5">
-                            <Label htmlFor={transFieldId} className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-400 shrink-0 cursor-pointer">
+                            <Label htmlFor={transFieldId} className="inline-flex items-center gap-2 w-12 cms-text-code font-semibold text-slate-400 shrink-0 cursor-pointer">
                               <FlagIcon code={loc} size="sm" />
                               <span>{meta.code}</span>
                             </Label>
@@ -374,12 +379,12 @@ export function SectionsView({
 
                     {/* Column 3: Section start page dropdown (Locked for Root Section 1001) */}
                     <div className="lg:col-span-3">
-                      <Label htmlFor={editStartPageSelectId} className="block text-[11px] font-medium text-slate-400 mb-1.5">
+                      <Label htmlFor={editStartPageSelectId} className="block cms-text-meta font-medium mb-1.5">
                         {t("sectionStartPage")}
                       </Label>
                       {isRootSection ? (
                         <div className="flex items-center gap-2 rounded-lg border border-admin-border bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
-                          <Lock className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                          <Lock className="cms-icon-sm text-sky-400 shrink-0" />
                           <span className="truncate">
                             {getStartPageLabel(sec)}
                           </span>
@@ -409,16 +414,21 @@ export function SectionsView({
                           type="button"
                           variant="adminGhost"
                           size="sm"
-                          onClick={() => {
-                            if (confirm(t("deleteConfirm"))) {
-                              onDeleteSection(sec.id);
-                              setEditingId(null);
-                            }
+                          onClick={async () => {
+                            await confirm({
+                              title: tCommon("delete"),
+                              description: t("deleteConfirm"),
+                              variant: "destructive",
+                              onConfirm: async () => {
+                                await onDeleteSection(sec.id);
+                                setEditingId(null);
+                              },
+                            });
                           }}
                           className="text-rose-400 hover:text-rose-300 hover:bg-rose-950/20"
                           aria-label={`${tCommon("delete")} ${sec.name}`}
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="cms-icon-sm" />
                           <span>{tCommon("delete")}</span>
                         </Button>
                       )}
@@ -431,7 +441,7 @@ export function SectionsView({
                           disabled={isSaving || !editNameSv.trim()}
                           onClick={() => handleSave(sec)}
                         >
-                          <Check className="w-3.5 h-3.5" />
+                          <Check className="cms-icon-sm" />
                           <span>{isSaving ? tCommon("loading") : tCommon("save")}</span>
                         </Button>
                         <Button
@@ -474,7 +484,7 @@ export function SectionsView({
                         title="Root section (Page #1001) cannot be reordered or deleted"
                         aria-label="Root section is locked at top"
                       >
-                        <Lock className="w-4 h-4" />
+                        <Lock className="cms-icon-md" />
                       </span>
                     ) : (
                       <span
@@ -482,7 +492,7 @@ export function SectionsView({
                         title="Drag to reorder section"
                         aria-label={`Drag to reorder section ${sec.name}`}
                       >
-                        <GripVertical className="w-5 h-5" />
+                        <GripVertical className="cms-icon-lg" />
                       </span>
                     )}
                     <span className="text-base font-medium text-white truncate">
@@ -493,7 +503,7 @@ export function SectionsView({
                   {/* Column 2: Vertically Stacked Multi-language Values */}
                   <div className="lg:col-span-3 space-y-1.5">
                     <div className="flex items-center gap-2.5 text-xs">
-                      <span className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-400 shrink-0">
+                      <span className="inline-flex items-center gap-2 w-12 cms-text-code font-semibold text-slate-400 shrink-0">
                         <FlagIcon code="sv" size="sm" />
                         <span>{LANGUAGE_META.sv.code}</span>
                       </span>
@@ -509,7 +519,7 @@ export function SectionsView({
                         (sec.translations && sec.translations[loc]) || "—";
                       return (
                         <div key={loc} className="flex items-center gap-2.5 text-xs">
-                          <span className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-400 shrink-0">
+                          <span className="inline-flex items-center gap-2 w-12 cms-text-code font-semibold text-slate-400 shrink-0">
                             <FlagIcon code={loc} size="sm" />
                             <span>{meta.code}</span>
                           </span>
@@ -521,7 +531,7 @@ export function SectionsView({
 
                   {/* Column 3: Start Page */}
                   <div className="lg:col-span-4">
-                    <span className="block text-[11px] font-medium text-slate-400 mb-1">
+                    <span className="block cms-text-meta font-medium mb-1">
                       {t("startPage")}:
                     </span>
                     <span className="text-xs text-slate-200">
@@ -538,7 +548,7 @@ export function SectionsView({
                       onClick={() => startEdit(sec)}
                       aria-label={`${tCommon("edit")} ${sec.name}`}
                     >
-                      <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                      <Pencil className="cms-icon-sm text-slate-400" />
                       <span>{tCommon("edit")}</span>
                     </Button>
                   </div>
@@ -557,7 +567,7 @@ export function SectionsView({
                   className="text-slate-600 cursor-grab"
                   aria-label="New section cannot be reordered until saved"
                 >
-                  <GripVertical className="w-5 h-5" />
+                  <GripVertical className="cms-icon-lg" />
                 </span>
                 <span className="text-base font-medium text-white truncate">
                   {editNameSv.trim()
@@ -568,7 +578,7 @@ export function SectionsView({
 
               <div className="lg:col-span-3 space-y-2">
                 <div className="flex items-center gap-2.5">
-                  <Label htmlFor={`${baseFieldId}-new-name`} className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-300 shrink-0 cursor-pointer">
+                  <Label htmlFor={`${baseFieldId}-new-name`} className="inline-flex items-center gap-2 w-12 cms-text-code font-semibold text-slate-300 shrink-0 cursor-pointer">
                     <FlagIcon code="sv" size="sm" />
                     <span>{LANGUAGE_META.sv.code}</span>
                   </Label>
@@ -591,7 +601,7 @@ export function SectionsView({
                   };
                   return (
                     <div key={loc} className="flex items-center gap-2.5">
-                      <Label htmlFor={`${baseFieldId}-new-${loc}`} className="inline-flex items-center gap-2 w-12 text-[11px] font-semibold text-slate-400 shrink-0 cursor-pointer">
+                      <Label htmlFor={`${baseFieldId}-new-${loc}`} className="inline-flex items-center gap-2 w-12 cms-text-code font-semibold text-slate-400 shrink-0 cursor-pointer">
                         <FlagIcon code={loc} size="sm" />
                         <span>{meta.code}</span>
                       </Label>
@@ -614,12 +624,14 @@ export function SectionsView({
                 })}
               </div>
 
-              <div className="lg:col-span-3">
-                <Label htmlFor={`${baseFieldId}-new-startpage`} className="block text-[11px] font-medium text-slate-400 mb-1.5">
-                  {t("sectionStartPage")}
-                </Label>
+              <FormField
+                label={t("sectionStartPage")}
+                labelVariant="muted"
+                labelSize="sm"
+                labelClassName="font-medium"
+                className="lg:col-span-3"
+              >
                 <NativeSelect
-                  id={`${baseFieldId}-new-startpage`}
                   variant="admin"
                   size="sm"
                   value={editStartPageId}
@@ -632,7 +644,7 @@ export function SectionsView({
                     </option>
                   ))}
                 </NativeSelect>
-              </div>
+              </FormField>
 
               <div className="lg:col-span-3 flex flex-col items-end justify-center gap-2.5">
                 <div className="flex items-center gap-2">
@@ -643,7 +655,7 @@ export function SectionsView({
                     disabled={isSaving || !editNameSv.trim()}
                     onClick={() => handleSave()}
                   >
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="cms-icon-sm" />
                     <span>{isSaving ? tCommon("loading") : tCommon("save")}</span>
                   </Button>
                   <Button

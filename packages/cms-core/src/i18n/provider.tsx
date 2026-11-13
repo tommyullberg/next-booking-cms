@@ -5,7 +5,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { useRouter } from "next/navigation";
 import { AdminLocale, AdminMessages } from "./types";
 import { getAdminMessages } from "./get-messages";
-import { useEditorStore } from "../state/editor-store";
+import { useEditorStore } from "@cms/state/editor-store";
 
 interface AdminIntlContextValue {
   locale: AdminLocale;

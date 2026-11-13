@@ -1,4 +1,4 @@
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 import { ensureLocalMediaFromUrl } from "./media";
 
 export interface SaveTextFieldParams {

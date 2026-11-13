@@ -15,12 +15,15 @@ import {
   CheckSquare,
   Loader2,
 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { SegmentedControl } from "../../components/ui/segmented-control";
-import { cn } from "../../utils/cn";
+import {
+  Badge,
+  Button,
+  Card,
+  IconButton,
+  Input,
+  SegmentedControl,
+} from "@cms/components/ui";
+import { cn } from "@cms/utils/cn";
 
 export interface CategoryItem {
   id: string;
@@ -275,9 +278,9 @@ export function CategoriesView({
       prev.map((t) =>
         t.id === cat.category_type_id
           ? {
-              ...t,
-              categories: (t.categories || []).map((c) => (c.id === cat.id ? { ...c, name: trimmed } : c)),
-            }
+            ...t,
+            categories: (t.categories || []).map((c) => (c.id === cat.id ? { ...c, name: trimmed } : c)),
+          }
           : t,
       ),
     );
@@ -301,9 +304,9 @@ export function CategoriesView({
       prev.map((t) =>
         t.id === cat.category_type_id
           ? {
-              ...t,
-              categories: (t.categories || []).filter((c) => c.id !== cat.id),
-            }
+            ...t,
+            categories: (t.categories || []).filter((c) => c.id !== cat.id),
+          }
           : t,
       ),
     );
@@ -398,19 +401,19 @@ export function CategoriesView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">{t("title")}</h1>
-          <p className="text-xs text-slate-400 mt-1">{t("subtitle")}</p>
+          <p className="cms-text-meta mt-1">{t("subtitle")}</p>
         </div>
       </div>
 
       {/* Create New Category Type Bar */}
       <Card variant="admin" className="p-5 space-y-4">
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-200">
-          <Layers className="w-4 h-4 text-sky-400" />
+          <Layers className="cms-icon-md text-sky-400" />
           <span>{t("addType")}</span>
         </div>
 
-        <form onSubmit={handleCreateCategoryType} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-          <div className="md:col-span-6">
+        <form onSubmit={handleCreateCategoryType} className="flex flex-col lg:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex-1 w-full">
             <Input
               type="text"
               value={newTypeName}
@@ -423,7 +426,7 @@ export function CategoriesView({
           </div>
 
           {/* Selection Mode Toggle: Radio vs Checkbox */}
-          <div className="md:col-span-4 flex items-center">
+          <div className="shrink-0 flex items-center">
             <SegmentedControl
               size="sm"
               aria-label={`${t("addType")}: ${t("singleRadio")} / ${t("multipleCheckbox")}`}
@@ -433,30 +436,28 @@ export function CategoriesView({
                 {
                   value: "single",
                   label: t("singleRadio"),
-                  icon: <CircleDot className="w-3.5 h-3.5" />,
+                  icon: <CircleDot className="cms-icon-sm" />,
                 },
                 {
                   value: "multiple",
                   label: t("multipleCheckbox"),
-                  icon: <CheckSquare className="w-3.5 h-3.5" />,
+                  icon: <CheckSquare className="cms-icon-sm" />,
                 },
               ]}
-              className="w-full justify-between"
+              className="w-full sm:w-auto"
             />
           </div>
 
-          <div className="md:col-span-2">
-            <Button
-              type="submit"
-              variant="adminPrimary"
-              size="sm"
-              disabled={isCreatingType || !newTypeName.trim()}
-              className="w-full"
-            >
-              {isCreatingType ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-              <span>{t("addType")}</span>
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            variant="adminPrimary"
+            size="sm"
+            disabled={isCreatingType || !newTypeName.trim()}
+            className="w-full sm:w-auto shrink-0"
+          >
+            {isCreatingType ? <Loader2 className="cms-icon-md animate-spin" /> : <Plus className="cms-icon-md" />}
+            <span>{t("addType")}</span>
+          </Button>
         </form>
       </Card>
 
@@ -499,18 +500,18 @@ export function CategoriesView({
                       title={t("dragReorderTypeTooltip")}
                       aria-label={t("dragReorderTypeTooltip")}
                     >
-                      <GripVertical className="w-4 h-4" />
+                      <GripVertical className="cms-icon-md" />
                     </span>
 
                     {isEditingThisType ? (
-                      <div className="flex flex-wrap items-center gap-2 flex-1">
+                      <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
                         <Input
                           type="text"
                           value={editTypeName}
                           onChange={(e) => setEditTypeName(e.target.value)}
                           size="sm"
                           variant="admin"
-                          className="w-48"
+                          className="flex-1 min-w-[140px] max-w-xs"
                           aria-label="Category type name"
                           autoFocus
                         />
@@ -520,35 +521,38 @@ export function CategoriesView({
                           value={editTypeIsMultiple ? "multiple" : "single"}
                           onChange={(val) => setEditTypeIsMultiple(val === "multiple")}
                           options={[
-                            { value: "single", label: t("radio"), icon: <CircleDot className="w-3 h-3" /> },
-                            { value: "multiple", label: t("checkbox"), icon: <CheckSquare className="w-3 h-3" /> },
+                            { value: "single", label: t("radio"), icon: <CircleDot className="cms-icon-xs" /> },
+                            { value: "multiple", label: t("checkbox"), icon: <CheckSquare className="cms-icon-xs" /> },
                           ]}
+                          className="shrink-0"
                         />
-                        <Button
-                          type="button"
-                          variant="adminPrimary"
-                          size="iconSm"
-                          onClick={() => handleSaveEditType(typeItem)}
-                          title={tCommon("save")}
-                          aria-label={tCommon("save")}
-                        >
-                          <Check className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="adminSecondary"
-                          size="iconSm"
-                          onClick={() => setEditingTypeId(null)}
-                          title={tCommon("cancel")}
-                          aria-label={tCommon("cancel")}
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </Button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <IconButton
+                            type="button"
+                            variant="adminPrimary"
+                            size="sm"
+                            onClick={() => handleSaveEditType(typeItem)}
+                            title={tCommon("save")}
+                            aria-label={tCommon("save")}
+                          >
+                            <Check className="cms-icon-sm" />
+                          </IconButton>
+                          <IconButton
+                            type="button"
+                            variant="adminSecondary"
+                            size="sm"
+                            onClick={() => setEditingTypeId(null)}
+                            title={tCommon("cancel")}
+                            aria-label={tCommon("cancel")}
+                          >
+                            <X className="cms-icon-sm" />
+                          </IconButton>
+                        </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span className="text-sm font-semibold text-white">{typeItem.name}</span>
-                        <Badge variant="adminMuted" size="sm" className="font-mono">
+                      <div className="flex items-center gap-3 flex-wrap min-w-0">
+                        <span className="text-sm font-semibold text-white truncate">{typeItem.name}</span>
+                        <Badge variant="adminMuted" size="sm" className="cms-text-caption font-mono shrink-0">
                           {categories.length} {categories.length === 1 ? t("categorySingle") : t("categoryPlural")}
                         </Badge>
                       </div>
@@ -557,39 +561,40 @@ export function CategoriesView({
 
                   {/* Quick Mode Selector & Actions */}
                   {!isEditingThisType && (
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
                       <SegmentedControl
                         size="sm"
                         aria-label={`${typeItem.name} ${t("singleRadio")} / ${t("multipleCheckbox")}`}
                         value={typeItem.is_multiple ? "multiple" : "single"}
                         onChange={(val) => handleToggleTypeMode(typeItem, val === "multiple")}
                         options={[
-                          { value: "single", label: t("singleRadio"), icon: <CircleDot className="w-3 h-3" /> },
-                          { value: "multiple", label: t("multipleCheckbox"), icon: <CheckSquare className="w-3 h-3" /> },
+                          { value: "single", label: t("singleRadio"), icon: <CircleDot className="cms-icon-xs" /> },
+                          { value: "multiple", label: t("multipleCheckbox"), icon: <CheckSquare className="cms-icon-xs" /> },
                         ]}
+                        className="shrink-0"
                       />
 
-                      <Button
+                      <IconButton
                         type="button"
                         variant="adminGhost"
-                        size="iconSm"
+                        size="sm"
                         onClick={() => startEditingType(typeItem)}
                         title={t("renameTypeTooltip")}
                         aria-label={`${t("renameTypeTooltip")}: ${typeItem.name}`}
                       >
-                        <Edit2 className="w-3.5 h-3.5" />
-                      </Button>
+                        <Edit2 className="cms-icon-sm" />
+                      </IconButton>
 
-                      <Button
+                      <IconButton
                         type="button"
                         variant="adminGhostDestructive"
-                        size="iconSm"
+                        size="sm"
                         onClick={() => handleDeleteType(typeItem.id)}
                         title={t("deleteTypeTooltip")}
                         aria-label={`${t("deleteTypeTooltip")}: ${typeItem.name}`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                        <Trash2 className="cms-icon-sm" />
+                      </IconButton>
                     </div>
                   )}
                 </div>
@@ -597,7 +602,7 @@ export function CategoriesView({
                 {/* Categories List inside this CategoryType */}
                 <div className="p-4 space-y-3">
                   {categories.length === 0 ? (
-                    <div className="text-xs text-slate-500 italic px-2 py-1">{t("noCategoriesYet")}</div>
+                    <div className="cms-text-meta text-slate-500 italic px-2 py-1">{t("noCategoriesYet")}</div>
                   ) : (
                     <div className="space-y-1.5">
                       {categories.map((cat) => {
@@ -628,13 +633,13 @@ export function CategoriesView({
                                 title={t("dragReorderCategoryTooltip")}
                                 aria-label={t("dragReorderCategoryTooltip")}
                               >
-                                <GripVertical className="w-3.5 h-3.5" />
+                                <GripVertical className="cms-icon-sm" />
                               </span>
 
                               {typeItem.is_multiple ? (
-                                <CheckSquare className="w-3.5 h-3.5 text-sky-400/80 shrink-0" />
+                                <CheckSquare className="cms-icon-sm text-sky-400/80 shrink-0" />
                               ) : (
-                                <CircleDot className="w-3.5 h-3.5 text-sky-400/80 shrink-0" />
+                                <CircleDot className="cms-icon-sm text-sky-400/80 shrink-0" />
                               )}
 
                               {isEditingThisCat ? (
@@ -665,7 +670,7 @@ export function CategoriesView({
                                     title={tCommon("save")}
                                     aria-label={tCommon("save")}
                                   >
-                                    <Check className="w-3.5 h-3.5" />
+                                    <Check className="cms-icon-sm" />
                                   </Button>
                                   <Button
                                     type="button"
@@ -675,7 +680,7 @@ export function CategoriesView({
                                     title={tCommon("cancel")}
                                     aria-label={tCommon("cancel")}
                                   >
-                                    <X className="w-3.5 h-3.5" />
+                                    <X className="cms-icon-sm" />
                                   </Button>
                                 </div>
                               ) : (
@@ -693,7 +698,7 @@ export function CategoriesView({
                                   title={t("renameCategoryTooltip")}
                                   aria-label={`${t("renameCategoryTooltip")}: ${cat.name}`}
                                 >
-                                  <Edit2 className="w-3.5 h-3.5" />
+                                  <Edit2 className="cms-icon-sm" />
                                 </Button>
                                 <Button
                                   type="button"
@@ -703,7 +708,7 @@ export function CategoriesView({
                                   title={t("deleteCategoryTooltip")}
                                   aria-label={`${t("deleteCategoryTooltip")}: ${cat.name}`}
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="cms-icon-sm" />
                                 </Button>
                               </div>
                             )}
@@ -716,7 +721,7 @@ export function CategoriesView({
                   {/* Add Category Input Row */}
                   <form onSubmit={(e) => handleAddCategory(e, typeItem.id)} className="flex items-center gap-2 pt-1">
                     <div className="relative flex-1">
-                      <Tag className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <Tag className="cms-icon-sm text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                       <Input
                         type="text"
                         value={newCategoryNames[typeItem.id] || ""}
@@ -740,9 +745,9 @@ export function CategoriesView({
                       disabled={addingCategoryForType === typeItem.id || !(newCategoryNames[typeItem.id] || "").trim()}
                     >
                       {addingCategoryForType === typeItem.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <Loader2 className="cms-icon-sm animate-spin" />
                       ) : (
-                        <Plus className="w-3.5 h-3.5" />
+                        <Plus className="cms-icon-sm" />
                       )}
                       <span>{t("addItem")}</span>
                     </Button>

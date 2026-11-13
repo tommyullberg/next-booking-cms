@@ -1,6 +1,6 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 
 const textareaVariants = cva(
   "flex w-full transition-all outline-none focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 resize-y",

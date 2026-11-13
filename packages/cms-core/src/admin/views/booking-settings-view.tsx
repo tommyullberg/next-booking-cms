@@ -17,21 +17,26 @@ import {
   ShieldCheck,
   Search,
 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { SelectableCard, SelectableCardGroup } from "../../components/ui/selectable-card";
-import { SegmentedControl } from "../../components/ui/segmented-control";
-import { NativeSelect } from "../../components/ui/select";
+import {
+  Alert,
+  Badge,
+  Button,
+  Card,
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+  SegmentedControl,
+  SelectableCard,
+  SelectableCardGroup,
+} from "@cms/components/ui";
 import {
   BookingSettings,
   DEFAULT_BOOKING_SETTINGS,
   DefaultTurnoverDay,
   BookingSettingScope,
   AllowedBookingPeriods,
-} from "../../types/settings";
+} from "@cms/types/settings";
 
 export interface BookingSettingsViewProps {
   bookingSettings?: BookingSettings;
@@ -50,7 +55,6 @@ export function BookingSettingsView({
 
   const checkInTimeId = useId();
   const checkOutTimeId = useId();
-  const searchPageId = useId();
 
   const [turnoverDay, setTurnoverDay] = useState<DefaultTurnoverDay>(
     bookingSettings?.defaultTurnoverDay || "SUNDAY"
@@ -156,13 +160,13 @@ export function BookingSettingsView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div className="flex items-center gap-3">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-600/10 border border-sky-500/30 text-sky-400">
-            <Sliders className="w-6 h-6" />
+            <Sliders className="cms-icon-lg" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-white tracking-tight">
               {t("title")}
             </h1>
-            <p className="text-xs text-slate-400 mt-0.5">{t("subtitle")}</p>
+            <p className="cms-text-meta mt-0.5">{t("subtitle")}</p>
           </div>
         </div>
 
@@ -174,12 +178,12 @@ export function BookingSettingsView({
         >
           {isSaving ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="cms-icon-md animate-spin" />
               <span>{t("saving")}</span>
             </>
           ) : (
             <>
-              <Save className="w-4 h-4" />
+              <Save className="cms-icon-md" />
               <span>{t("saveBtn")}</span>
             </>
           )}
@@ -188,24 +192,22 @@ export function BookingSettingsView({
 
       {/* Success / Error notification banner */}
       {savedSuccess && (
-        <div className="flex items-center gap-2 p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs animate-in fade-in">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-          <span className="font-medium">{t("saveSuccess")}</span>
-        </div>
+        <Alert variant="success" className="animate-in fade-in">
+          {t("saveSuccess")}
+        </Alert>
       )}
 
       {errorMsg && (
-        <div className="flex items-center gap-2 p-3.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
-          <Info className="w-4 h-4 shrink-0 text-rose-400" />
-          <span>{errorMsg}</span>
-        </div>
+        <Alert variant="destructive">
+          {errorMsg}
+        </Alert>
       )}
 
       {/* Section 1: Default turnover day */}
       <Card variant="admin" className="p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
           <div className="flex items-center gap-2 text-white">
-            <Calendar className="w-4 h-4 text-sky-400" />
+            <Calendar className="cms-icon-md text-sky-400" />
             <h2 className="text-sm font-semibold text-white">
               {t("turnoverDaySectionTitle")}
             </h2>
@@ -221,12 +223,12 @@ export function BookingSettingsView({
               {
                 value: "GLOBAL",
                 label: t("scopeGlobal"),
-                icon: <Globe className="w-3 h-3" />,
+                icon: <Globe className="cms-icon-xs" />,
               },
               {
                 value: "PER_OBJECT",
                 label: t("scopePerObject"),
-                icon: <Layers className="w-3 h-3" />,
+                icon: <Layers className="cms-icon-xs" />,
               },
             ]}
           />
@@ -262,7 +264,7 @@ export function BookingSettingsView({
                 {t("sundayDesc")}
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 text-[11px] text-slate-500 font-mono">
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 cms-text-code text-slate-500">
               <span>Söndag → Söndag</span>
               <span className="text-slate-600">•</span>
               <span>Delvecka: Tors–Sön / Sön–Tors</span>
@@ -288,7 +290,7 @@ export function BookingSettingsView({
                 {t("saturdayDesc")}
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 text-[11px] text-slate-500 font-mono">
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 cms-text-code text-slate-500">
               <span>Lördag → Lördag</span>
               <span className="text-slate-600">•</span>
               <span>Traditionell högsommarmodell</span>
@@ -301,7 +303,7 @@ export function BookingSettingsView({
       <Card variant="admin" className="p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
           <div className="flex items-center gap-2 text-white">
-            <Clock className="w-4 h-4 text-emerald-400" />
+            <Clock className="cms-icon-md text-emerald-400" />
             <h2 className="text-sm font-semibold text-white">
               {t("checkTimesSectionTitle")}
             </h2>
@@ -317,18 +319,18 @@ export function BookingSettingsView({
               {
                 value: "GLOBAL",
                 label: t("scopeGlobal"),
-                icon: <Globe className="w-3 h-3" />,
+                icon: <Globe className="cms-icon-xs" />,
               },
               {
                 value: "PER_OBJECT",
                 label: t("scopePerObject"),
-                icon: <Layers className="w-3 h-3" />,
+                icon: <Layers className="cms-icon-xs" />,
               },
             ]}
           />
         </div>
 
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <p className="cms-text-meta leading-relaxed">
           {t("checkTimesSectionDesc")}
         </p>
 
@@ -344,7 +346,7 @@ export function BookingSettingsView({
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
                 {t("checkInTimeLabel")}
               </Label>
-              <span className="text-[10px] font-mono text-slate-500">
+              <span className="cms-text-caption font-mono text-slate-500">
                 Default: 15:00
               </span>
             </div>
@@ -358,11 +360,11 @@ export function BookingSettingsView({
               className="font-mono text-sm"
               required
             />
-            <p className="text-[11px] text-slate-400 leading-normal">
+            <p className="cms-text-meta leading-normal">
               {t("checkInTimeHelp")}
             </p>
             <div className="flex items-center gap-1.5 pt-1">
-              <span className="text-[10px] text-slate-500">Snabbval:</span>
+              <span className="cms-text-caption text-slate-500">Snabbval:</span>
               {["14:00", "15:00", "16:00"].map((tPreset) => (
                 <Button
                   key={tPreset}
@@ -390,7 +392,7 @@ export function BookingSettingsView({
                 <span className="w-2 h-2 rounded-full bg-rose-400" />
                 {t("checkOutTimeLabel")}
               </Label>
-              <span className="text-[10px] font-mono text-slate-500">
+              <span className="cms-text-caption font-mono text-slate-500">
                 Default: 11:00
               </span>
             </div>
@@ -404,11 +406,11 @@ export function BookingSettingsView({
               className="font-mono text-sm"
               required
             />
-            <p className="text-[11px] text-slate-400 leading-normal">
+            <p className="cms-text-meta leading-normal">
               {t("checkOutTimeHelp")}
             </p>
             <div className="flex items-center gap-1.5 pt-1">
-              <span className="text-[10px] text-slate-500">Snabbval:</span>
+              <span className="cms-text-caption text-slate-500">Snabbval:</span>
               {["10:00", "11:00", "12:00"].map((tPreset) => (
                 <Button
                   key={tPreset}
@@ -431,7 +433,7 @@ export function BookingSettingsView({
       <Card variant="admin" className="p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
           <div className="flex items-center gap-2 text-white">
-            <CalendarDays className="w-4 h-4 text-purple-400" />
+            <CalendarDays className="cms-icon-md text-purple-400" />
             <h2 className="text-sm font-semibold text-white">
               {t("customDaysSectionTitle")}
             </h2>
@@ -447,18 +449,18 @@ export function BookingSettingsView({
               {
                 value: "GLOBAL",
                 label: t("scopeGlobal"),
-                icon: <Globe className="w-3 h-3" />,
+                icon: <Globe className="cms-icon-xs" />,
               },
               {
                 value: "PER_OBJECT",
                 label: t("scopePerObject"),
-                icon: <Layers className="w-3 h-3" />,
+                icon: <Layers className="cms-icon-xs" />,
               },
             ]}
           />
         </div>
 
-        <p className="text-xs text-slate-400 leading-relaxed">
+        <p className="cms-text-meta leading-relaxed">
           {t("customDaysSectionDesc")}
         </p>
 
@@ -480,12 +482,12 @@ export function BookingSettingsView({
                   {t("customDaysAllowedTitle")}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="cms-text-meta leading-relaxed">
                 {t("customDaysAllowedDesc")}
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 text-[11px] text-emerald-400 font-mono">
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 cms-text-code text-emerald-400">
+              <CheckCircle2 className="cms-icon-sm shrink-0" />
               <span>Valfria nätter (1–6 dygn samt helveckor)</span>
             </div>
           </SelectableCard>
@@ -502,12 +504,12 @@ export function BookingSettingsView({
                   {t("customDaysStrictTitle")}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="cms-text-meta leading-relaxed">
                 {t("customDaysStrictDesc")}
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 text-[11px] text-amber-300 font-mono">
-              <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 cms-text-code text-amber-300">
+              <ShieldCheck className="cms-icon-sm shrink-0" />
               <span>Fasta delveckor (3/4d) eller helvecka</span>
             </div>
           </SelectableCard>
@@ -524,12 +526,12 @@ export function BookingSettingsView({
                   {t("customDaysFullWeeksTitle")}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="cms-text-meta leading-relaxed">
                 {t("customDaysFullWeeksDesc")}
               </p>
             </div>
-            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 text-[11px] text-purple-300 font-mono">
-              <Calendar className="w-3.5 h-3.5 shrink-0" />
+            <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 cms-text-code text-purple-300">
+              <Calendar className="cms-icon-sm shrink-0" />
               <span>Enbart hela veckor (7, 14, 21 nätter...)</span>
             </div>
           </SelectableCard>
@@ -540,24 +542,26 @@ export function BookingSettingsView({
       <Card variant="admin" className="p-6 space-y-4">
         <div>
           <h2 className="text-sm font-bold text-white flex items-center gap-2">
-            <Search className="w-4 h-4 text-sky-400" />
+            <Search className="cms-icon-md text-sky-400" />
             {t("searchPageSectionTitle")}
           </h2>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="cms-text-meta mt-1">
             {t("searchPageSectionDesc")}
           </p>
         </div>
 
-        <div className="max-w-md space-y-1.5">
-          <Label
-            htmlFor={searchPageId}
-            variant="admin"
-            className="font-semibold text-slate-200"
-          >
-            {t("searchPageSelectLabel")}
-          </Label>
+        <FormField
+          label={t("searchPageSelectLabel")}
+          labelVariant="admin"
+          labelClassName="font-semibold text-slate-200"
+          className="max-w-md"
+          description={
+            bookingSearchPageSlug
+              ? `Aktiv länk: ${bookingSearchPageSlug.startsWith("/") ? bookingSearchPageSlug : `/${bookingSearchPageSlug}`}`
+              : "Ingen sida vald – sökknapp och länk döljs i kalendern"
+          }
+        >
           <NativeSelect
-            id={searchPageId}
             value={bookingSearchPageSlug}
             onChange={(e) => setBookingSearchPageSlug(e.target.value)}
             size="sm"
@@ -574,17 +578,12 @@ export function BookingSettingsView({
               );
             })}
           </NativeSelect>
-          <p className="text-[11px] text-slate-500">
-            {bookingSearchPageSlug
-              ? `Aktiv länk: ${bookingSearchPageSlug.startsWith("/") ? bookingSearchPageSlug : `/${bookingSearchPageSlug}`}`
-              : "Ingen sida vald – sökknapp och länk döljs i kalendern"}
-          </p>
-        </div>
+        </FormField>
       </Card>
 
       {/* Live Preview Card */}
       <Card variant="adminGlass" className="p-4 flex items-start gap-3">
-        <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+        <Info className="cms-icon-md text-sky-400 shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
           <div className="font-semibold text-sky-200">
             Sammanfattning av gällande regler:
@@ -621,12 +620,12 @@ export function BookingSettingsView({
         >
           {isSaving ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="cms-icon-md animate-spin" />
               <span>{t("saving")}</span>
             </>
           ) : (
             <>
-              <Save className="w-4 h-4" />
+              <Save className="cms-icon-md" />
               <span>{t("saveBtn")}</span>
             </>
           )}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { useEditorStore, EditorMode } from "../../state/editor-store";
+import { useEditorStore, EditorMode } from "@cms/state/editor-store";
 import {
   Eye,
   Type,
@@ -15,6 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { Button, IconButton, Switch } from "@cms/components/ui";
 
 export type PanelOrientation = "horizontal" | "vertical";
 
@@ -57,6 +58,7 @@ const defaultConfig: ToolbarConfig = {
 
 export function FloatingPanel({ className = "" }: FloatingPanelProps) {
   const t = useTranslations("inlineEditor.panel");
+  const tCommon = useTranslations("common");
   const { mode, setMode } = useEditorStore();
   const [config, setConfig] = useState<ToolbarConfig>(defaultConfig);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -384,13 +386,16 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                   {t("popoverTitle")}
                 </span>
               </div>
-              <button
+              <IconButton
                 type="button"
+                size="xs"
+                variant="ghost"
+                aria-label={tCommon("cancel")}
                 onClick={() => setIsSettingsOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+                className="text-slate-400 hover:bg-slate-800 hover:text-white"
               >
                 <X className="w-4 h-4" />
-              </button>
+              </IconButton>
             </div>
 
             {/* Orientation choice */}
@@ -437,23 +442,13 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
                     {t("alwaysExpandedDesc")}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={config.alwaysExpanded}
-                  onClick={() =>
-                    updateConfig({ alwaysExpanded: !config.alwaysExpanded })
+                <Switch
+                  checked={config.alwaysExpanded}
+                  onCheckedChange={(checked) =>
+                    updateConfig({ alwaysExpanded: checked })
                   }
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    config.alwaysExpanded ? "bg-sky-500" : "bg-slate-700"
-                  }`}
-                >
-                  <span
-                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                      config.alwaysExpanded ? "translate-x-4" : "translate-x-0"
-                    }`}
-                  />
-                </button>
+                  aria-label={t("alwaysExpanded")}
+                />
               </div>
             )}
 
@@ -679,14 +674,15 @@ export function FloatingPanel({ className = "" }: FloatingPanelProps) {
 
             <div className="mt-3.5 pt-2.5 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
               <span>{t("savedInBrowser")}</span>
-              <button
+              <Button
                 type="button"
+                size="xs"
+                variant="adminPrimary"
                 onClick={() => setIsSettingsOpen(false)}
-                className="flex items-center gap-1 rounded-lg bg-sky-600 px-2.5 py-1 text-xs font-medium text-white hover:bg-sky-500 shadow"
               >
                 <Check className="w-3.5 h-3.5" />
                 <span>{t("done")}</span>
-              </button>
+              </Button>
             </div>
           </div>
         )}

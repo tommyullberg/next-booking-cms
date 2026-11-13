@@ -19,9 +19,19 @@ import {
   Home,
 } from "lucide-react";
 import { SearchMatchItem } from "./types";
-import { DatePicker } from "../components/ui/date-picker";
-import { ModalPortal } from "../components/ui/modal-portal";
-import { Loader } from "../components/ui/loader";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
+  DatePicker,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  FormField,
+  Loader,
+} from "@cms/components/ui";
 
 /** Minimum time (in ms) to display the search loader animation when triggered */
 export const MIN_SEARCH_LOADER_DURATION_MS = 900;
@@ -326,6 +336,14 @@ export function AvailabilitySearch({
       {/* Results Presentation View */}
       {searchTriggered && (
         <div className="space-y-8">
+          {/* Error Banner */}
+          {!isSearching && data?.error && (
+            <Alert variant="destructive">
+              <AlertTitle>Fel vid sökning</AlertTitle>
+              <AlertDescription>{data.error}</AlertDescription>
+            </Alert>
+          )}
+
           {/* 1. Exact Matches */}
           <div className="space-y-4">
             <div className="flex items-center gap-2.5">
@@ -370,15 +388,23 @@ export function AvailabilitySearch({
                     <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-3">
                       <div>
                         <span className="text-xs text-slate-500 dark:text-slate-400">Totalpris:</span>
-                        <div className="text-base font-bold text-sky-700 dark:text-sky-400 font-mono">
-                          {item.totalPrice.toLocaleString("sv-SE")} SEK
-                        </div>
+                        {item.hasPriceError ? (
+                          <div className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                            {item.priceErrorMessage || "Prisuppgift saknas"}
+                          </div>
+                        ) : (
+                          <div className="text-base font-bold text-sky-700 dark:text-sky-400 font-mono">
+                            {item.totalPrice.toLocaleString("sv-SE")} SEK
+                          </div>
+                        )}
                       </div>
 
                       <button
                         type="button"
                         onClick={() => handleBookItem(item)}
-                        className="flex items-center gap-1.5 rounded-xl bg-sky-700 px-4 py-2 text-xs font-semibold text-white hover:bg-sky-600 transition shadow-md shadow-sky-700/20"
+                        disabled={item.hasPriceError}
+                        title={item.hasPriceError ? (item.priceErrorMessage || "Kan ej bokas utan prissättning") : undefined}
+                        className="flex items-center gap-1.5 rounded-xl bg-sky-700 px-4 py-2 text-xs font-semibold text-white hover:bg-sky-600 transition shadow-md shadow-sky-700/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                       >
                         <span>Boka nu</span>
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -435,15 +461,23 @@ export function AvailabilitySearch({
                       <div className="flex items-center justify-between border-t border-amber-500/20 dark:border-slate-800 pt-3">
                         <div>
                           <span className="text-xs text-slate-500 dark:text-slate-400">Totalpris:</span>
-                          <div className="text-base font-bold text-slate-900 dark:text-white font-mono">
-                            {item.totalPrice.toLocaleString("sv-SE")} SEK
-                          </div>
+                          {item.hasPriceError ? (
+                            <div className="text-xs font-semibold text-rose-600 dark:text-rose-400">
+                              {item.priceErrorMessage || "Prisuppgift saknas"}
+                            </div>
+                          ) : (
+                            <div className="text-base font-bold text-slate-900 dark:text-white font-mono">
+                              {item.totalPrice.toLocaleString("sv-SE")} SEK
+                            </div>
+                          )}
                         </div>
 
                         <button
                           type="button"
                           onClick={() => handleBookItem(item)}
-                          className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-500 transition shadow-md shadow-amber-600/20"
+                          disabled={item.hasPriceError}
+                          title={item.hasPriceError ? (item.priceErrorMessage || "Kan ej väljas utan prissättning") : undefined}
+                          className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-xs font-semibold text-white hover:bg-amber-500 transition shadow-md shadow-amber-600/20 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                         >
                           <span>Välj datum</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -459,14 +493,22 @@ export function AvailabilitySearch({
       )}
 
       {/* Booking Modal */}
-      {bookingModalItem && (
-        <ModalPortal>
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white">
-            <h3 className="text-lg font-bold mb-1">Bekräfta bokningsförfrågan</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+      <Dialog
+        open={Boolean(bookingModalItem)}
+        onOpenChange={(open) => {
+          if (!open) setBookingModalItem(null);
+        }}
+      >
+        {bookingModalItem && (
+          <DialogContent
+            size="sm"
+            hideCloseButton
+            className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white"
+          >
+            <DialogTitle className="text-lg font-bold mb-1">Bekräfta bokningsförfrågan</DialogTitle>
+            <DialogDescription className="text-xs text-slate-500 dark:text-slate-400 mb-4">
               {bookingModalItem.object.name}: {bookingModalItem.startDate} till {bookingModalItem.endDate} ({bookingModalItem.nights} nätter)
-            </p>
+            </DialogDescription>
 
             {bookingSuccess ? (
               <div className="flex flex-col items-center justify-center p-6 text-center text-emerald-600 dark:text-emerald-400 space-y-2">
@@ -478,8 +520,8 @@ export function AvailabilitySearch({
               </div>
             ) : (
               <form onSubmit={handleConfirmBooking} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Namn</label>
+                {/* required={false}: inputs keep their native required attribute but no asterisk is shown, as before */}
+                <FormField label="Namn" required={false} labelVariant="booking">
                   <input
                     type="text"
                     required
@@ -488,10 +530,9 @@ export function AvailabilitySearch({
                     placeholder="För- och efternamn"
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">E-postadress</label>
+                <FormField label="E-postadress" required={false} labelVariant="booking">
                   <input
                     type="email"
                     required
@@ -500,10 +541,9 @@ export function AvailabilitySearch({
                     placeholder="namn@example.com"
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-xs font-medium mb-1 text-slate-700 dark:text-slate-300">Telefon</label>
+                <FormField label="Telefon" labelVariant="booking">
                   <input
                     type="tel"
                     value={customerPhone}
@@ -511,7 +551,7 @@ export function AvailabilitySearch({
                     placeholder="+46 70 123 4567"
                     className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50/60 dark:bg-slate-950/70 p-2.5 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-sky-500"
                   />
-                </div>
+                </FormField>
 
                 <div className="border-t border-slate-200 dark:border-slate-800 pt-3 flex items-center justify-between">
                   <span className="text-xs text-slate-500">Totalt:</span>
@@ -521,28 +561,28 @@ export function AvailabilitySearch({
                 </div>
 
                 <div className="flex items-center justify-end gap-2 pt-2">
-                  <button
+                  <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
                     onClick={() => setBookingModalItem(null)}
-                    className="px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
                   >
                     Avbryt
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="submit"
-                    disabled={createMutation.isPending}
-                    className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg bg-sky-700 text-white hover:bg-sky-600"
+                    variant="default"
+                    size="sm"
+                    loading={createMutation.isPending}
                   >
-                    {createMutation.isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>Skicka förfrågan</span>
-                  </button>
+                  </Button>
                 </div>
               </form>
             )}
-          </div>
-        </div>
-      </ModalPortal>
-    )}
-  </div>
-);
+          </DialogContent>
+        )}
+      </Dialog>
+    </div>
+  );
 }

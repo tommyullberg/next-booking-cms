@@ -7,8 +7,8 @@ export {
   getISOWeekNumber,
   getWeeksInYear,
   formatBookingWeekSpan,
-} from "../utils/weeks";
-export type { ISOWeekInfo } from "../utils/weeks";
+} from "@cms/utils/weeks";
+export type { ISOWeekInfo } from "@cms/utils/weeks";
 
 export const MONTH_NAMES_EN: readonly string[] = [
   "January", "February", "March", "April", "May", "June",

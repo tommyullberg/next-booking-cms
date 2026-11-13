@@ -5,7 +5,7 @@ import { CMSGalleryItem, CMSPageData, CMSPageField } from "./types";
 import {
   DEFAULT_GALLERY_SETTINGS,
   GallerySettings,
-} from "../../types/settings";
+} from "@cms/types/settings";
 
 export interface CMSPageContextValue {
   page: CMSPageData;

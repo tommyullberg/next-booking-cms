@@ -4,8 +4,7 @@ import React from "react";
 import { FileText, FolderTree, Image as ImageIcon, CheckCircle2, ArrowRight } from "lucide-react";
 import { AdminTab } from "../admin-layout";
 import { useTranslations } from "next-intl";
-import { Button } from "../../components/ui/button";
-import { Card } from "../../components/ui/card";
+import { Button, Card } from "@cms/components/ui";
 
 export interface DashboardViewProps {
   totalPages: number;
@@ -30,28 +29,28 @@ export function DashboardView({
       label: t("totalPages"),
       value: totalPages,
       subtext: `${publishedPages} ${tCommon("active")}`,
-      icon: <FileText className="w-5 h-5 text-sky-400" />,
+      icon: <FileText className="cms-icon-lg text-sky-400" />,
       tab: "pages" as AdminTab,
     },
     {
       label: t("totalSections"),
       value: totalSections,
       subtext: t("subtitle"),
-      icon: <FolderTree className="w-5 h-5 text-indigo-400" />,
+      icon: <FolderTree className="cms-icon-lg text-indigo-400" />,
       tab: "sections" as AdminTab,
     },
     {
       label: t("totalMedia"),
       value: totalMedia,
       subtext: t("viewMedia"),
-      icon: <ImageIcon className="w-5 h-5 text-emerald-400" />,
+      icon: <ImageIcon className="cms-icon-lg text-emerald-400" />,
       tab: "media" as AdminTab,
     },
     {
       label: tCommon("status"),
       value: tCommon("active"),
       subtext: "PostgreSQL & Storage OK",
-      icon: <CheckCircle2 className="w-5 h-5 text-green-400" />,
+      icon: <CheckCircle2 className="cms-icon-lg text-green-400" />,
       tab: "dashboard" as AdminTab,
     },
   ];
@@ -87,9 +86,9 @@ export function DashboardView({
               </div>
             </div>
             <div className="text-2xl font-bold text-white mb-1 pointer-events-none">{c.value}</div>
-            <div className="flex items-center justify-between text-xs text-slate-500 pointer-events-none">
+            <div className="flex items-center justify-between cms-text-meta text-slate-500 pointer-events-none">
               <span className="line-clamp-1">{c.subtext}</span>
-              <ArrowRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition text-sky-400" />
+              <ArrowRight className="cms-icon-sm opacity-0 group-hover:opacity-100 transition text-sky-400" />
             </div>
           </Card>
         ))}

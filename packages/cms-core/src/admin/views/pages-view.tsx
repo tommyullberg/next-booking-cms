@@ -3,21 +3,23 @@
 import React, { useState, useMemo, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, Edit3, Trash2, Search, Lock, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import { HOMEPAGE_ID, cleanSlugInput, validateSlugInput } from "../../utils/slug";
-import { CMSTemplateOption, DEFAULT_CMS_TEMPLATES, formatTemplateLabel } from "../../templates/types";
-import { FlagIcon } from "../../components/ui/flag-icon";
-import { LANGUAGE_META } from "../../constants/languages";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { NativeSelect } from "../../components/ui/select";
-import { Badge } from "../../components/ui/badge";
+import { HOMEPAGE_ID, cleanSlugInput, validateSlugInput } from "@cms/utils/slug";
+import { CMSTemplateOption, DEFAULT_CMS_TEMPLATES, formatTemplateLabel } from "@cms/templates/types";
+import { LANGUAGE_META } from "@cms/constants/languages";
 import {
+  Badge,
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog";
+  FlagIcon,
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+} from "@cms/components/ui";
+import { useConfirm } from "@cms/components/confirm";
 
 export interface PageListItem {
   id: number | string;
@@ -63,6 +65,7 @@ export function PagesView({
 }: PagesViewProps) {
   const t = useTranslations("pages");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -74,9 +77,6 @@ export function PagesView({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createTitleId = useId();
-  const createSlugId = useId();
-  const createSectionId = useId();
-  const createTemplateId = useId();
 
   const [sortField, setSortField] = useState<PageSortField>("id");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
@@ -101,12 +101,12 @@ export function PagesView({
 
   const renderSortIcon = (field: PageSortField) => {
     if (sortField !== field) {
-      return <ArrowUpDown className='w-3 h-3 text-slate-500 opacity-60' />;
+      return <ArrowUpDown className='cms-icon-xs text-slate-500 opacity-60' />;
     }
     return sortDirection === "asc" ? (
-      <ArrowUp className='w-3 h-3 text-sky-400 font-bold' />
+      <ArrowUp className='cms-icon-xs text-sky-400 font-bold' />
     ) : (
-      <ArrowDown className='w-3 h-3 text-sky-400 font-bold' />
+      <ArrowDown className='cms-icon-xs text-sky-400 font-bold' />
     );
   };
 
@@ -218,7 +218,7 @@ export function PagesView({
       <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
         <div>
           <h1 className='text-2xl font-bold tracking-tight text-white'>{t("title")}</h1>
-          <p className='mt-1 text-xs text-slate-400'>{t("subtitle")}</p>
+          <p className='mt-1 cms-text-meta'>{t("subtitle")}</p>
         </div>
 
         <Button
@@ -226,14 +226,14 @@ export function PagesView({
           variant='adminPrimary'
           size='sm'
           onClick={() => setIsModalOpen(true)}>
-          <Plus className='w-4 h-4' />
+          <Plus className='cms-icon-md' />
           <span>{t("createPage")}</span>
         </Button>
       </div>
 
       <div className='flex items-center gap-3'>
         <div className='relative flex-1 max-w-md'>
-          <Search className='w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none' />
+          <Search className='cms-icon-md absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none' />
           <Input
             type='text'
             variant='admin'
@@ -250,7 +250,7 @@ export function PagesView({
       {/* Pages Table */}
       <div className='overflow-hidden rounded-2xl border border-slate-800/90 bg-slate-900/40'>
         <table className='w-full text-left text-xs'>
-          <thead className='border-b border-slate-800 bg-slate-900/80 text-slate-400 font-medium'>
+          <thead className='cms-table-header'>
             <tr>
               <th
                 onClick={() => handleToggleSort("id")}
@@ -338,18 +338,18 @@ export function PagesView({
                     key={page.id}
                     onClick={() => onEditPage(page.id)}
                     className='hover:bg-slate-900/70 transition cursor-pointer'>
-                    <td className='py-3 px-4 font-mono text-slate-400'>{page.id}</td>
+                    <td className='py-3 px-4 cms-text-code'>{page.id}</td>
                     <td className='py-3 px-4'>
                       <div className='flex items-center gap-2'>
                         <span className='font-semibold text-white'>{page.page_title}</span>
                         {isHomepage && (
                           <Badge variant='adminAccent' size='xs'>
-                            <Lock className='w-2.5 h-2.5' />
+                            <Lock className='cms-icon-xs' />
                             <span>Startpage</span>
                           </Badge>
                         )}
                       </div>
-                      <div className='text-[11px] text-slate-500 font-mono'>{formatSlugDisplay(page)}</div>
+                      <div className='cms-text-code text-slate-500'>{formatSlugDisplay(page)}</div>
                     </td>
                     <td className='py-3 px-4 text-slate-300'>
                       {page.section?.name || <span className='text-slate-600'>—</span>}
@@ -373,13 +373,13 @@ export function PagesView({
                     </td>
                     <td className='py-3 px-4'>
                       <div className='flex items-center gap-1'>
-                        <span className='rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono text-slate-300 uppercase'>
+                        <span className='rounded bg-slate-800 px-1.5 py-0.5 cms-text-caption font-mono text-slate-300 uppercase'>
                           SE
                         </span>
                         {page.translations?.map((t) => (
                           <span
                             key={t.locale}
-                            className='rounded bg-sky-500/10 border border-sky-500/20 px-1.5 py-0.5 text-[10px] font-mono text-sky-400 uppercase'>
+                            className='rounded bg-sky-500/10 border border-sky-500/20 px-1.5 py-0.5 cms-text-caption font-mono text-sky-400 uppercase'>
                             {t.locale === "en" ? "GB" : t.locale}
                           </span>
                         ))}
@@ -394,7 +394,7 @@ export function PagesView({
                           onClick={() => onEditPage(page.id)}
                           title={tCommon("edit")}
                           aria-label={`${tCommon("edit")} ${page.page_title}`}>
-                          <Edit3 className='w-3.5 h-3.5' />
+                          <Edit3 className='cms-icon-sm' />
                           <span>{tCommon("edit")}</span>
                         </Button>
                         {!isHomepage && (
@@ -402,15 +402,20 @@ export function PagesView({
                             type='button'
                             variant='adminGhost'
                             size='iconSm'
-                            onClick={() => {
-                              if (confirm(t("modal.deleteConfirm", { title: page.page_title }))) {
-                                onDeletePage(page.id);
-                              }
+                            onClick={async () => {
+                              await confirm({
+                                title: tCommon("delete"),
+                                description: t("modal.deleteConfirm", { title: page.page_title }),
+                                variant: "destructive",
+                                onConfirm: async () => {
+                                  await onDeletePage(page.id);
+                                },
+                              });
                             }}
                             className='text-slate-400 hover:text-red-400 hover:bg-slate-800/80'
                             title={tCommon("delete")}
                             aria-label={`${tCommon("delete")} ${page.page_title}`}>
-                            <Trash2 className='w-4 h-4' />
+                            <Trash2 className='cms-icon-md' />
                           </Button>
                         )}
                       </div>
@@ -439,7 +444,7 @@ export function PagesView({
                 <div className='flex items-center rounded-xl border border-admin-border bg-admin-field overflow-hidden focus-within:border-admin-accent transition'>
                   <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-admin-surface-subtle border-r border-admin-border shrink-0 w-20'>
                     <FlagIcon code='sv' size='sm' />
-                    <span className='font-mono text-[11px]'>{LANGUAGE_META.sv?.code || "SE"}</span>
+                    <span className='cms-text-code'>{LANGUAGE_META.sv?.code || "SE"}</span>
                   </span>
                   <input
                     id={createTitleId}
@@ -466,7 +471,7 @@ export function PagesView({
                       className='flex items-center rounded-xl border border-admin-border/80 bg-admin-field/80 overflow-hidden focus-within:border-admin-accent transition'>
                       <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-admin-surface-subtle border-r border-admin-border/80 shrink-0 w-20'>
                         <FlagIcon code={loc} size='sm' />
-                        <span className='font-mono text-[11px]'>{meta.code}</span>
+                        <span className='cms-text-code'>{meta.code}</span>
                       </span>
                       <input
                         id={subTitleId}
@@ -488,40 +493,37 @@ export function PagesView({
               </div>
             </div>
 
-            <div>
-              <Label htmlFor={createSlugId} className='block text-xs font-medium text-slate-300 mb-1'>
-                {t("modal.slugLabel")}
-              </Label>
-              <div
-                className={`flex items-center rounded-xl border bg-admin-field overflow-hidden transition ${
-                  !newSlugValidation.isValid
-                    ? "border-red-500 ring-1 ring-red-500/30"
-                    : "border-admin-border focus-within:border-admin-accent"
-                }`}>
-                <span className='px-3 py-2.5 text-xs font-mono text-slate-500 bg-admin-surface-subtle border-r border-admin-border'>
-                  /
-                </span>
-                <input
-                  id={createSlugId}
-                  type='text'
-                  placeholder={`${nextIdPreview}`}
-                  value={newSlug}
-                  onChange={(e) => setNewSlug(cleanSlugInput(e.target.value, true))}
-                  onBlur={() => setNewSlug((prev) => cleanSlugInput(prev, false))}
-                  className='w-full bg-transparent p-2.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none'
-                />
-              </div>
-              {!newSlugValidation.isValid && newSlugValidation.error && (
-                <p className='mt-1 text-[11px] font-medium text-red-400'>{newSlugValidation.error}</p>
+            <FormField
+              label={t("modal.slugLabel")}
+              labelVariant='admin'
+              error={!newSlugValidation.isValid ? newSlugValidation.error : undefined}>
+              {(control) => (
+                <div
+                  className={`flex items-center rounded-xl border bg-admin-field overflow-hidden transition ${
+                    !newSlugValidation.isValid
+                      ? "border-red-500 ring-1 ring-red-500/30"
+                      : "border-admin-border focus-within:border-admin-accent"
+                  }`}>
+                  <span className='px-3 py-2.5 cms-text-code text-slate-500 bg-admin-surface-subtle border-r border-admin-border'>
+                    /
+                  </span>
+                  <input
+                    {...control}
+                    type='text'
+                    placeholder={`${nextIdPreview}`}
+                    value={newSlug}
+                    onChange={(e) => setNewSlug(cleanSlugInput(e.target.value, true))}
+                    onBlur={() => setNewSlug((prev) => cleanSlugInput(prev, false))}
+                    className='w-full bg-transparent p-2.5 cms-text-code text-white placeholder-slate-500 focus:outline-none'
+                  />
+                </div>
               )}
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor={createSectionId} className='block text-xs font-medium text-slate-300 mb-1'>
-                {t("modal.sectionLabel")}
-              </Label>
+            <FormField
+              label={t("modal.sectionLabel")}
+              labelVariant='admin'>
               <NativeSelect
-                id={createSectionId}
                 variant='admin'
                 size='sm'
                 value={newSectionId}
@@ -535,14 +537,12 @@ export function PagesView({
                     </option>
                   ))}
               </NativeSelect>
-            </div>
+            </FormField>
 
-            <div>
-              <Label htmlFor={createTemplateId} className='block text-xs font-medium text-slate-300 mb-1'>
-                {t("modal.templateLabel")}
-              </Label>
+            <FormField
+              label={t("modal.templateLabel")}
+              labelVariant='admin'>
               <NativeSelect
-                id={createTemplateId}
                 variant='admin'
                 size='sm'
                 value={newTemplate}
@@ -555,7 +555,7 @@ export function PagesView({
                     </option>
                   ))}
               </NativeSelect>
-            </div>
+            </FormField>
 
             <div className='flex items-center justify-end gap-2 pt-2'>
               <Button

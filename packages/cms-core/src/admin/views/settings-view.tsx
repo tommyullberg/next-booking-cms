@@ -3,26 +3,30 @@
 import React, { useState, useEffect, useId } from "react";
 import { useTranslations } from "next-intl";
 import { Globe, Languages, Check, Save, Lock, Images, LayoutGrid } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Label } from "../../components/ui/label";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Checkbox } from "../../components/ui/checkbox";
-import { Switch } from "../../components/ui/switch";
-import { NativeSelect } from "../../components/ui/select";
-import { SelectableCard, SelectableCardGroup } from "../../components/ui/selectable-card";
-import { SegmentedControl } from "../../components/ui/segmented-control";
-import { FlagIcon } from "../../components/ui/flag-icon";
-import { cn } from "../../utils/cn";
+import {
+  Badge,
+  Button,
+  Card,
+  Checkbox,
+  FlagIcon,
+  FormField,
+  Label,
+  NativeSelect,
+  SegmentedControl,
+  SelectableCard,
+  SelectableCardGroup,
+  Switch,
+} from "@cms/components/ui";
+import { cn } from "@cms/utils/cn";
 import {
   AVAILABLE_LANGUAGES,
   ADMIN_LANGUAGES,
   AdminLanguage,
-} from "../../constants/languages";
+} from "@cms/constants/languages";
 import {
   GallerySettings,
   DEFAULT_GALLERY_SETTINGS,
-} from "../../types/settings";
+} from "@cms/types/settings";
 
 export interface SettingsViewProps {
   activeLanguages: string[];
@@ -44,7 +48,6 @@ export function SettingsView({
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
 
-  const captionPositionId = useId();
   const showThumbnailsId = useId();
 
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
@@ -127,12 +130,12 @@ export function SettingsView({
         >
           {savedSuccess ? (
             <>
-              <Check className="w-4 h-4" />
+              <Check className="cms-icon-md" />
               <span>{tCommon("saved")}</span>
             </>
           ) : (
             <>
-              <Save className="w-4 h-4" />
+              <Save className="cms-icon-md" />
               <span>{isSaving ? tCommon("loading") : t("saveSettings")}</span>
             </>
           )}
@@ -143,7 +146,7 @@ export function SettingsView({
       <Card variant="admin" className="p-6">
         <div className="flex items-start gap-3 mb-5 pb-4 border-b border-slate-800/80">
           <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
-            <Globe className="w-4 h-4" />
+            <Globe className="cms-icon-md" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-white">
@@ -187,11 +190,11 @@ export function SettingsView({
                       <span className="text-xs font-semibold text-white">
                         {lang.name}
                       </span>
-                      <Badge variant="adminMuted" size="xs" className="font-mono">
+                      <Badge variant="adminMuted" size="xs" className="cms-text-code">
                         {lang.code}
                       </Badge>
                     </div>
-                    <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                    <p className="cms-text-meta truncate mt-0.5">
                       {lang.subtitle}
                     </p>
                   </div>
@@ -199,7 +202,7 @@ export function SettingsView({
 
                 {lang.locked && (
                   <Badge variant="adminAccent" size="sm">
-                    <Lock className="w-2.5 h-2.5" />
+                    <Lock className="cms-icon-xs" />
                     <span>{t("defaultBadge")}</span>
                   </Badge>
                 )}
@@ -213,7 +216,7 @@ export function SettingsView({
       <Card variant="admin" className="p-6">
         <div className="flex items-start gap-3 mb-5 pb-4 border-b border-slate-800/80">
           <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
-            <Languages className="w-4 h-4" />
+            <Languages className="cms-icon-md" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-white">
@@ -246,11 +249,11 @@ export function SettingsView({
                     <span className="text-xs font-semibold text-white">
                       {lang.name}
                     </span>
-                    <Badge variant="adminMuted" size="xs" className="font-mono">
+                    <Badge variant="adminMuted" size="xs" className="cms-text-code">
                       {lang.code}
                     </Badge>
                   </div>
-                  <p className="text-[11px] text-slate-400 truncate mt-0.5">
+                  <p className="cms-text-meta truncate mt-0.5">
                     {lang.subtitle}
                   </p>
                 </div>
@@ -264,7 +267,7 @@ export function SettingsView({
                 )}
                 {selectedAdminLanguage === lang.locale && (
                   <Badge variant="adminAccent" size="sm">
-                    <Check className="w-2.5 h-2.5" />
+                    <Check className="cms-icon-xs" />
                     <span>{tCommon("active")}</span>
                   </Badge>
                 )}
@@ -278,7 +281,7 @@ export function SettingsView({
       <Card variant="admin" className="p-6">
         <div className="flex items-start gap-3 mb-5 pb-4 border-b border-slate-800/80">
           <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 shrink-0">
-            <Images className="w-4 h-4" />
+            <Images className="cms-icon-md" />
           </div>
           <div>
             <h2 className="text-base font-semibold text-white">
@@ -332,11 +335,11 @@ export function SettingsView({
                 >
                   <div className="flex items-center justify-between w-full mb-1 pr-6">
                     <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-                      <LayoutGrid className="w-3.5 h-3.5 text-sky-400" />
+                      <LayoutGrid className="cms-icon-sm text-sky-400" />
                       {opt.title}
                     </span>
                   </div>
-                  <span className="text-[11px] text-slate-400 leading-snug">
+                  <span className="cms-text-meta leading-snug">
                     {opt.desc}
                   </span>
                 </SelectableCard>
@@ -377,7 +380,7 @@ export function SettingsView({
                     ]}
                     className="w-full justify-between"
                   />
-                  <p className="mt-1.5 text-[11px] text-slate-500">
+                  <p className="mt-1.5 cms-text-meta text-slate-500">
                     {isColumnsDisabled
                       ? t("columnsDisabledHelp")
                       : t("columnsActiveHelp")}
@@ -419,7 +422,7 @@ export function SettingsView({
                     ]}
                     className="w-full justify-between font-mono"
                   />
-                  <p className="mt-1.5 text-[11px] text-slate-500">
+                  <p className="mt-1.5 cms-text-meta text-slate-500">
                     {isAspectRatioDisabled
                       ? t("aspectRatioDisabledHelp")
                       : t("aspectRatioActiveHelp")}
@@ -429,16 +432,13 @@ export function SettingsView({
             })()}
 
             {/* Caption Position */}
-            <div>
-              <Label
-                htmlFor={captionPositionId}
-                variant="admin"
-                className="block mb-2 font-semibold text-slate-300"
-              >
-                {t("captionVisibility")}
-              </Label>
+            <FormField
+              label={t("captionVisibility")}
+              labelVariant="admin"
+              labelClassName="font-semibold"
+              description={t("captionHelp")}
+            >
               <NativeSelect
-                id={captionPositionId}
                 value={selectedGallerySettings.captionPosition}
                 onChange={(e) =>
                   setSelectedGallerySettings((prev) => ({
@@ -456,10 +456,7 @@ export function SettingsView({
                 <option value="lightbox">{t("captionLightbox")}</option>
                 <option value="hidden">{t("captionHidden")}</option>
               </NativeSelect>
-              <p className="mt-1.5 text-[11px] text-slate-500">
-                {t("captionHelp")}
-              </p>
-            </div>
+            </FormField>
           </div>
 
           {/* Lightbox Thumbnail Strip */}
@@ -473,7 +470,7 @@ export function SettingsView({
                 >
                   {t("showThumbnailStrip")}
                 </Label>
-                <div className="text-[11px] text-slate-400 mt-0.5">
+                <div className="cms-text-meta mt-0.5">
                   {t("showThumbnailStripHelp")}
                 </div>
               </div>
@@ -502,12 +499,12 @@ export function SettingsView({
         >
           {savedSuccess ? (
             <>
-              <Check className="w-4 h-4" />
+              <Check className="cms-icon-md" />
               <span>{tCommon("saved")}</span>
             </>
           ) : (
             <>
-              <Save className="w-4 h-4" />
+              <Save className="cms-icon-md" />
               <span>{isSaving ? tCommon("saving") : t("saveSettings")}</span>
             </>
           )}

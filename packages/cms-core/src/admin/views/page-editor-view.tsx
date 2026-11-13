@@ -23,38 +23,42 @@ import {
   UserCheck,
   Globe,
 } from "lucide-react";
-import { CMSPageField } from "../../components/fields/types";
-import { FlagIcon } from "../../components/ui/flag-icon";
-import { DatePicker } from "../../components/ui/date-picker";
+import { CMSPageField } from "@cms/components/fields/types";
+import {
+  Badge,
+  Button,
+  Card,
+  DatePicker,
+  FlagIcon,
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+  Textarea,
+} from "@cms/components/ui";
+import { cn } from "@cms/utils/cn";
 import { CategoryTypeItem } from "./categories-view";
 import {
   BookingObjectDetails,
   formatBookingObjectType,
-} from "../../booking/types";
+} from "@cms/booking/types";
 import {
   cleanSlugInput,
   validateSlugInput,
   isDefaultIdOrRootSlug,
-} from "../../utils/slug";
+} from "@cms/utils/slug";
 import {
   CMSTemplateOption,
   DEFAULT_CMS_TEMPLATES,
   resolveTemplateOption,
-} from "../../templates/types";
+} from "@cms/templates/types";
 import {
   LANGUAGE_META,
   getLanguageMeta,
   AdminLanguage,
-} from "../../constants/languages";
-import { formatDateInput } from "../../constants/dates";
-import { PageStatus } from "../../types/admin";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Textarea } from "../../components/ui/textarea";
-import { Label } from "../../components/ui/label";
-import { NativeSelect } from "../../components/ui/select";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+} from "@cms/constants/languages";
+import { formatDateInput } from "@cms/constants/dates";
+import { PageStatus } from "@cms/types/admin";
 
 export type { PageStatus };
 
@@ -152,12 +156,10 @@ export function PageEditorView({
 
   const svTitleId = useId();
   const svLinkId = useId();
-  const slugId = useId();
-  const slugHelpId = useId();
-  const slugErrorId = useId();
+  const pubStartId = useId();
+  const pubEndId = useId();
   const svMetaTitleId = useId();
   const svMetaDescId = useId();
-  const sectionSelectId = useId();
   const templateLabelId = useId();
   const templateTriggerId = useId();
   const templateListboxId = useId();
@@ -449,13 +451,13 @@ export function PageEditorView({
             onClick={onBack}
             className='h-8 text-xs font-medium gap-1.5'
           >
-            <ArrowLeft className='w-3.5 h-3.5' />
+            <ArrowLeft className='cms-icon-sm' />
             <span>{tCommon("back")}</span>
           </Button>
 
           <Badge
             title='Current saved status'
-            className={`uppercase tracking-wider select-none text-[11px] font-semibold px-2.5 py-1 ${
+            className={`uppercase tracking-wider select-none cms-text-caption font-semibold px-2.5 py-1 ${
               savedStatus === "PUBLISHED"
                 ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
                 : savedStatus === "NEW"
@@ -491,7 +493,7 @@ export function PageEditorView({
               <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
                 <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
                   <FlagIcon code='sv' size='sm' />
-                  <span className='font-mono text-[11px]'>{LANGUAGE_META.sv.code}</span>
+                  <span className='cms-text-code'>{LANGUAGE_META.sv.code}</span>
                 </span>
                 <Input
                   id={svTitleId}
@@ -518,7 +520,7 @@ export function PageEditorView({
                       className='flex items-center rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition'>
                       <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20'>
                         <FlagIcon code={loc} size='sm' />
-                        <span className='font-mono text-[11px]'>{meta.code}</span>
+                        <span className='cms-text-code'>{meta.code}</span>
                       </span>
                       <Input
                         type='text'
@@ -561,7 +563,7 @@ export function PageEditorView({
               <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
                 <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
                   <FlagIcon code='sv' size='sm' />
-                  <span className='font-mono text-[11px]'>{LANGUAGE_META.sv.code}</span>
+                  <span className='cms-text-code'>{LANGUAGE_META.sv.code}</span>
                 </span>
                 <Input
                   id={svLinkId}
@@ -592,7 +594,7 @@ export function PageEditorView({
                       className='flex items-center rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition'>
                       <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20'>
                         <FlagIcon code={loc} size='sm' />
-                        <span className='font-mono text-[11px]'>{meta.code}</span>
+                        <span className='cms-text-code'>{meta.code}</span>
                       </span>
                       <Input
                         type='text'
@@ -626,57 +628,51 @@ export function PageEditorView({
             </div>
 
             {/* 3. URL Slug */}
-            <div className='space-y-1.5'>
-              <Label htmlFor={slugId} className='block text-xs font-medium text-slate-200'>
-                {t("urlSlug")}
-              </Label>
-              <div
-                className={`flex items-center rounded-xl border bg-slate-950/90 overflow-hidden transition ${
-                  !slugValidation.isValid
-                    ? "border-red-500 ring-1 ring-red-500/30"
-                    : "border-slate-800 focus-within:border-sky-500"
-                }`}>
-                <span className='px-3 py-2.5 text-xs font-mono text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
-                  /
-                </span>
-                <Input
-                  id={slugId}
-                  type='text'
-                  value={isHomepage ? "" : slug}
-                  readOnly={isHomepage}
-                  aria-describedby={!slugValidation.isValid && slugValidation.error ? slugErrorId : slugHelpId}
-                  aria-invalid={!slugValidation.isValid}
-                  onChange={(e) => {
-                    if (!isHomepage) {
-                      setSlug(cleanSlugInput(e.target.value, true));
-                    }
-                  }}
-                  onBlur={() => {
-                    if (!isHomepage) {
-                      setSlug((prev) => cleanSlugInput(prev, false));
-                    }
-                  }}
-                  placeholder={isHomepage ? "" : `${page.id}`}
-                  className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
-                />
-              </div>
-              {!slugValidation.isValid && slugValidation.error ? (
-                <p id={slugErrorId} className='text-[11px] font-medium text-red-400'>
-                  {slugValidation.error}
-                </p>
-              ) : (
-                <p id={slugHelpId} className='text-[11px] text-slate-500'>
-                  {isHomepage
-                    ? t("startpageSlugHelp")
-                    : t("slugHelp", { id: String(page.id) })}
-                </p>
+            <FormField
+              label={t("urlSlug")}
+              labelClassName='font-medium text-slate-200'
+              description={
+                isHomepage
+                  ? t("startpageSlugHelp")
+                  : t("slugHelp", { id: String(page.id) })
+              }
+              error={!slugValidation.isValid ? slugValidation.error : undefined}>
+              {(control) => (
+                <div
+                  className={`flex items-center rounded-xl border bg-slate-950/90 overflow-hidden transition ${
+                    !slugValidation.isValid
+                      ? "border-red-500 ring-1 ring-red-500/30"
+                      : "border-slate-800 focus-within:border-sky-500"
+                  }`}>
+                  <span className='px-3 py-2.5 text-xs font-mono text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
+                    /
+                  </span>
+                  <Input
+                    {...control}
+                    type='text'
+                    value={isHomepage ? "" : slug}
+                    readOnly={isHomepage}
+                    onChange={(e) => {
+                      if (!isHomepage) {
+                        setSlug(cleanSlugInput(e.target.value, true));
+                      }
+                    }}
+                    onBlur={() => {
+                      if (!isHomepage) {
+                        setSlug((prev) => cleanSlugInput(prev, false));
+                      }
+                    }}
+                    placeholder={isHomepage ? "" : `${page.id}`}
+                    className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+                  />
+                </div>
               )}
-            </div>
+            </FormField>
 
             {/* 3b. SEO & Social Sharing */}
             <div className='space-y-4 pt-2 border-t border-slate-800/70'>
               <div className='flex items-center gap-2'>
-                <Globe className='w-4 h-4 text-sky-400' />
+                <Globe className='cms-icon-md text-sky-400' />
                 <h3 className='text-xs font-semibold text-slate-200'>
                   {t("seoSettings")}
                 </h3>
@@ -695,7 +691,7 @@ export function PageEditorView({
                 <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
                   <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
                     <FlagIcon code='sv' size='sm' />
-                    <span className='font-mono text-[11px]'>{LANGUAGE_META.sv.code}</span>
+                    <span className='cms-text-code'>{LANGUAGE_META.sv.code}</span>
                   </span>
                   <Input
                     id={svMetaTitleId}
@@ -728,7 +724,7 @@ export function PageEditorView({
                       <div className='flex items-center rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition'>
                         <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20'>
                           <FlagIcon code={loc} size='sm' />
-                          <span className='font-mono text-[11px]'>{meta.code}</span>
+                          <span className='cms-text-code'>{meta.code}</span>
                         </span>
                         <Input
                           type='text'
@@ -761,7 +757,7 @@ export function PageEditorView({
                 <div className='flex items-start rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
                   <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20 self-stretch'>
                     <FlagIcon code='sv' size='sm' />
-                    <span className='font-mono text-[11px]'>{LANGUAGE_META.sv.code}</span>
+                    <span className='cms-text-code'>{LANGUAGE_META.sv.code}</span>
                   </span>
                   <Textarea
                     id={svMetaDescId}
@@ -794,7 +790,7 @@ export function PageEditorView({
                       <div className='flex items-start rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition'>
                         <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20 self-stretch'>
                           <FlagIcon code={loc} size='sm' />
-                          <span className='font-mono text-[11px]'>{meta.code}</span>
+                          <span className='cms-text-code'>{meta.code}</span>
                         </span>
                         <Textarea
                           rows={2}
@@ -851,12 +847,12 @@ export function PageEditorView({
                     : "border-slate-800 hover:border-slate-700"
                 }`}>
                 <span className='flex items-center gap-2.5'>
-                  <SelectedTemplateIcon className='w-4 h-4 text-slate-400' />
+                  <SelectedTemplateIcon className='cms-icon-md text-slate-400' />
                   <span>{getTemplateLabel(currentTemplateOption.id, currentTemplateOption.label)}</span>
                 </span>
                 {!isHomepage && (
                   <ChevronDown
-                    className={`w-4 h-4 text-slate-400 transition-transform ${isTemplateOpen ? "rotate-180" : ""}`}
+                    className={cn("cms-icon-md text-slate-400 transition-transform", isTemplateOpen && "rotate-180")}
                   />
                 )}
               </button>
@@ -923,11 +919,11 @@ export function PageEditorView({
                             ? "bg-sky-500/15 text-sky-300 font-medium"
                             : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
                         }`}>
-                        <Icon className='w-4 h-4 text-slate-400 shrink-0' />
+                        <Icon className='cms-icon-md text-slate-400' />
                         <div className='flex flex-col'>
                           <span className='font-medium'>{getTemplateLabel(opt.id, opt.label)}</span>
                           {opt.description && (
-                            <span className='text-[10px] text-slate-400'>{opt.description}</span>
+                            <span className='cms-text-meta'>{opt.description}</span>
                           )}
                         </div>
                       </button>
@@ -947,9 +943,9 @@ export function PageEditorView({
                 >
                   <div className="flex items-start gap-2.5">
                     {linkedBookingObject ? (
-                      <Box className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <Box className="cms-icon-md text-emerald-400 mt-0.5" />
                     ) : (
-                      <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <AlertTriangle className="cms-icon-md text-amber-400 mt-0.5" />
                     )}
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
@@ -959,12 +955,12 @@ export function PageEditorView({
                             : t("noBookingObjectConnected")}
                         </span>
                         {linkedBookingObject && (
-                          <Badge variant="outline" className="bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-300 border-emerald-500/30">
+                          <Badge variant="outline" className="bg-emerald-500/20 px-1.5 py-0.5 cms-text-code font-bold uppercase text-emerald-300 border-emerald-500/30">
                             {tCommon("active")}
                           </Badge>
                         )}
                       </div>
-                      <p className="text-[11px] opacity-90">
+                      <p className="cms-text-meta opacity-90">
                         {linkedBookingObject
                           ? `${formatBookingObjectType(linkedBookingObject.type)} · ${linkedBookingObject.size_sqm ? `${linkedBookingObject.size_sqm} m² · ` : ""}${linkedBookingObject.bed_count} ${t("beds")} · ${t("landlord")}: ${linkedBookingObject.landlord ? `${linkedBookingObject.landlord.first_name} ${linkedBookingObject.landlord.last_name}` : tCommon("none")}`
                           : t("bookingUnitHelp")}
@@ -976,35 +972,34 @@ export function PageEditorView({
             </div>
 
             {/* 5. Section Assignment */}
-            <div className='space-y-1.5'>
-              <Label htmlFor={sectionSelectId} className='block text-xs font-medium text-slate-200'>
-                {t("section")}
-              </Label>
-              <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
-                <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
-                  <FolderTree className='w-4 h-4' />
-                </span>
-                <NativeSelect
-                  id={sectionSelectId}
-                  value={sectionId}
-                  onChange={(e) => setSectionId(e.target.value)}
-                  className='h-auto border-0 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus-visible:ring-0 focus-visible:ring-offset-0'
-                >
-                  <option value=''>{t("noSection")}</option>
-                  {sections.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </div>
-            </div>
+            <FormField label={t("section")} labelClassName='font-medium text-slate-200'>
+              {(control) => (
+                <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                  <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
+                    <FolderTree className='cms-icon-md' />
+                  </span>
+                  <NativeSelect
+                    {...control}
+                    value={sectionId}
+                    onChange={(e) => setSectionId(e.target.value)}
+                    className='h-auto border-0 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus-visible:ring-0 focus-visible:ring-offset-0'
+                  >
+                    <option value=''>{t("noSection")}</option>
+                    {sections.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </div>
+              )}
+            </FormField>
 
             {/* 6. Categories & Types Assignment (Right before dates at the bottom) */}
             {categoryTypes.length > 0 && (
               <div className='space-y-3 pt-1'>
                 <div className='flex items-center gap-2'>
-                  <Layers className='w-4 h-4 text-sky-400' />
+                  <Layers className='cms-icon-md text-sky-400' />
                   <Label className='block text-xs font-medium text-slate-200'>
                     {t("categoriesAndTypes")}
                   </Label>
@@ -1051,12 +1046,12 @@ export function PageEditorView({
                           <Badge variant="outline" className='text-[10px] font-medium text-slate-400 bg-slate-900 border-slate-800 px-1.5 py-0.5 gap-1'>
                             {isMulti ? (
                               <>
-                                <CheckSquare className='w-2.5 h-2.5 text-sky-400' />
+                                <CheckSquare className='cms-icon-xs text-sky-400' />
                                 <span>{t("multi")}</span>
                               </>
                             ) : (
                               <>
-                                <CircleDot className='w-2.5 h-2.5 text-sky-400' />
+                                <CircleDot className='cms-icon-xs text-sky-400' />
                                 <span>{t("single")}</span>
                               </>
                             )}
@@ -1064,7 +1059,7 @@ export function PageEditorView({
                         </div>
 
                         {cats.length === 0 ? (
-                          <div className='text-[11px] text-slate-500 italic'>
+                          <div className='cms-text-meta text-slate-500 italic'>
                             {t("noCategoriesInGroup")}
                           </div>
                         ) : isMulti ? (
@@ -1147,23 +1142,24 @@ export function PageEditorView({
             {/* 7. Published At (Scheduled Publication Start) */}
             <div className='space-y-1.5'>
               <div className='flex items-center gap-1.5'>
-                <Label className='block text-xs font-medium text-slate-200'>{t("publishedAt")}</Label>
+                <Label htmlFor={pubStartId} className='block text-xs font-medium text-slate-200'>{t("publishedAt")}</Label>
                 <button
                   type='button'
                   onClick={() => setActiveTooltip((prev) => (prev === "pubStart" ? null : "pubStart"))}
                   className='text-slate-400 hover:text-sky-400 transition'
                   title='Publishing schedule info'>
-                  <Info className='w-3.5 h-3.5' />
+                  <Info className='cms-icon-sm' />
                 </button>
               </div>
 
               {activeTooltip === "pubStart" && (
-                <div className='rounded-lg border border-sky-500/20 bg-sky-950/30 px-3 py-2 text-[11px] text-sky-200'>
+                <div className='rounded-lg border border-sky-500/20 bg-sky-950/30 px-3 py-2 cms-text-meta text-sky-200'>
                   {t("pubStartHelp")}
                 </div>
               )}
 
               <DatePicker
+                id={pubStartId}
                 value={publicationStart}
                 onChange={setPublicationStart}
                 locale={adminLanguage}
@@ -1177,18 +1173,18 @@ export function PageEditorView({
             {/* 8. Unpublish Date */}
             <div className='space-y-1.5'>
               <div className='flex items-center gap-1.5'>
-                <Label className='block text-xs font-medium text-slate-200'>{t("unpublishDate")}</Label>
+                <Label htmlFor={pubEndId} className='block text-xs font-medium text-slate-200'>{t("unpublishDate")}</Label>
                 <button
                   type='button'
                   onClick={() => setActiveTooltip((prev) => (prev === "pubEnd" ? null : "pubEnd"))}
                   className='text-slate-400 hover:text-sky-400 transition'
                   title='Unpublish date info'>
-                  <Info className='w-3.5 h-3.5' />
+                  <Info className='cms-icon-sm' />
                 </button>
               </div>
 
               {activeTooltip === "pubEnd" && (
-                <div className='rounded-lg border border-sky-500/20 bg-sky-950/30 px-3 py-2 text-[11px] text-sky-200'>
+                <div className='rounded-lg border border-sky-500/20 bg-sky-950/30 px-3 py-2 cms-text-meta text-sky-200'>
                   {t("pubEndHelp")}
                 </div>
               )}
@@ -1196,6 +1192,7 @@ export function PageEditorView({
               <div className='flex items-center gap-2'>
                 <div className='flex-1'>
                   <DatePicker
+                    id={pubEndId}
                     value={publicationEnd}
                     onChange={setPublicationEnd}
                     locale={adminLanguage}
@@ -1210,7 +1207,7 @@ export function PageEditorView({
                   onClick={() => setActiveTooltip((prev) => (prev === "pubEnd" ? null : "pubEnd"))}
                   className='p-2 text-slate-500 hover:text-slate-300 transition'
                   title='How unpublish dates work'>
-                  <Info className='w-4 h-4' />
+                  <Info className='cms-icon-md' />
                 </button>
               </div>
             </div>
@@ -1262,7 +1259,7 @@ export function PageEditorView({
                   );
                 })}
               </div>
-              <p className='text-[11px] text-slate-500'>
+              <p className='cms-text-meta text-slate-500'>
                 {status === "PUBLISHED"
                   ? t("visiblePublicly")
                   : t("visibleAdminsOnly")}
@@ -1273,7 +1270,7 @@ export function PageEditorView({
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-1'>
                 <div className='text-xs font-medium text-slate-400'>{t("pageId")}</div>
-                <div className='text-xs text-slate-200 font-medium font-mono'>{page.id}</div>
+                <div className='cms-text-code text-slate-200 font-medium'>{page.id}</div>
               </div>
               <div className='space-y-1'>
                 <div className='text-xs font-medium text-slate-400'>{t("pageTemplate")}</div>
@@ -1284,7 +1281,7 @@ export function PageEditorView({
             {/* Linked Booking Object */}
             <div className='space-y-1.5 pt-1 border-t border-slate-800/80'>
               <div className='text-xs font-medium text-slate-400 flex items-center gap-1.5'>
-                <Box className='w-3.5 h-3.5 text-sky-400' />
+                <Box className='cms-icon-sm text-sky-400' />
                 <span>{t("connectedBookingObject")}</span>
               </div>
               {linkedBookingObject ? (
@@ -1295,20 +1292,20 @@ export function PageEditorView({
                       {tCommon("active")}
                     </Badge>
                   </div>
-                  <div className='text-[11px] text-slate-400'>
+                  <div className='cms-text-meta'>
                     {formatBookingObjectType(linkedBookingObject.type)}
                     {linkedBookingObject.size_sqm ? ` · ${linkedBookingObject.size_sqm} m²` : ""}
                     {` · ${linkedBookingObject.bed_count} ${t("beds")}`}
                   </div>
                   {linkedBookingObject.landlord && (
-                    <div className='text-[10px] text-slate-400 flex items-center gap-1 pt-0.5'>
-                      <UserCheck className='w-3 h-3 text-sky-400' />
+                    <div className='cms-text-meta flex items-center gap-1 pt-0.5'>
+                      <UserCheck className='cms-icon-xs text-sky-400' />
                       <span>{linkedBookingObject.landlord.first_name} {linkedBookingObject.landlord.last_name}</span>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className='rounded-xl border border-slate-800/80 bg-slate-950/40 p-2.5 text-[11px] text-slate-500'>
+                <div className='rounded-xl border border-slate-800/80 bg-slate-950/40 p-2.5 cms-text-meta text-slate-500'>
                   {templateName === "booking-unit" ? (
                     <span className='text-amber-400/90 font-medium'>
                       {t("noObjectConnectedHelp")}
@@ -1328,7 +1325,7 @@ export function PageEditorView({
                 target='_blank'
                 rel='noreferrer'
                 className='inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 underline underline-offset-4 break-all'>
-                <ExternalLink className='w-3.5 h-3.5 shrink-0' />
+                <ExternalLink className='cms-icon-sm' />
                 <span>
                   {typeof window !== "undefined"
                     ? `${window.location.origin}${publicUrlPath}`
@@ -1345,7 +1342,7 @@ export function PageEditorView({
                 target='_blank'
                 rel='noreferrer'
                 className='inline-flex items-center gap-1.5 text-xs text-sky-400 hover:text-sky-300 underline underline-offset-4 break-all'>
-                <ExternalLink className='w-3.5 h-3.5 shrink-0' />
+                <ExternalLink className='cms-icon-sm' />
                 <span>
                   {typeof window !== "undefined"
                     ? `${window.location.origin}${systemUrlPath}`
@@ -1373,7 +1370,7 @@ export function PageEditorView({
             </div>
 
             {/* Activity timestamps */}
-            <div className='border-t border-slate-800/80 pt-4 space-y-1 text-[11px] text-slate-500'>
+            <div className='border-t border-slate-800/80 pt-4 space-y-1 cms-text-meta text-slate-500'>
               <div>{t("publishedOnBy", { date: createdDateFormatted, author: "SU" })}</div>
               <div>{t("metadataUpdatedOnBy", { date: todayFormatted, author: "SU" })}</div>
             </div>
@@ -1382,16 +1379,17 @@ export function PageEditorView({
             <div className='pt-2'>
               <Button
                 type='button'
+                variant='adminPrimary'
                 onClick={() => handleSave()}
                 disabled={isSaving || !slugValidation.isValid}
-                className='w-full h-10 font-semibold text-xs shadow-lg shadow-sky-600/20'
+                className='w-full h-10 font-semibold text-xs'
               >
                 {isSaving ? (
-                  <Loader2 className='w-4 h-4 animate-spin' />
+                  <Loader2 className='cms-icon-md animate-spin' />
                 ) : saveSuccess ? (
-                  <Check className='w-4 h-4 text-emerald-300' />
+                  <Check className='cms-icon-md text-emerald-300' />
                 ) : (
-                  <Save className='w-4 h-4' />
+                  <Save className='cms-icon-md' />
                 )}
                 <span>{saveSuccess ? tCommon("saved") : t("saveChanges")}</span>
               </Button>

@@ -1,4 +1,4 @@
-import { prisma } from "../db";
+import { prisma } from "@cms/db";
 import { revalidatePath } from "next/cache";
 import { resolveBookingObjectId } from "./bookings";
 import {
@@ -7,8 +7,8 @@ import {
   getISOWeek,
   getMondayOfISOWeek,
   getSundayOfISOWeek,
-} from "../utils/weeks";
-import { isFutureYearWarningActive } from "../constants/dates";
+} from "@cms/utils/weeks";
+import { isFutureYearWarningActive } from "@cms/constants/dates";
 export { getWeeksInYear };
 
 export interface CreatePricePeriodInput {
@@ -99,7 +99,13 @@ export async function getPricePeriodsAction(params?: {
   year?: number;
 }) {
   try {
-    const resolvedObjectId = await resolveBookingObjectId(params?.objectId);
+    let resolvedObjectId: string | undefined = undefined;
+    if (params?.objectId) {
+      resolvedObjectId = await resolveBookingObjectId(params.objectId);
+      if (!resolvedObjectId) {
+        return [];
+      }
+    }
     const where: any = {};
     if (resolvedObjectId) {
       where.object_id = resolvedObjectId;
@@ -300,7 +306,10 @@ export async function getBlockedPeriodsAction(
   year?: number
 ): Promise<BlockedPeriodItem[]> {
   try {
-    const resolvedObjectId = (await resolveBookingObjectId(objectId)) || objectId;
+    const resolvedObjectId = await resolveBookingObjectId(objectId);
+    if (!resolvedObjectId) {
+      return [];
+    }
     const where: any = {
       object_id: resolvedObjectId,
       status: "APPROVED",
@@ -339,17 +348,34 @@ export async function getBlockedPeriodsAction(
 }
 
 export async function createBlockedPeriodAction(data: {
+  id?: string;
   objectId: string;
   name?: string;
   startDate: string;
   endDate: string;
 }) {
-  const resolvedObjectId = (await resolveBookingObjectId(data.objectId)) || data.objectId;
+  const resolvedObjectId = await resolveBookingObjectId(data.objectId);
+  if (!resolvedObjectId) {
+    throw new Error("Bokningsobjektet kunde inte hittas eller är ogiltigt.");
+  }
   const start = new Date(data.startDate + "T12:00:00Z");
   const end = new Date(data.endDate + "T12:00:00Z");
 
   if (start > end) {
     throw new Error("Start date cannot be later than end date.");
+  }
+
+  if (data.id) {
+    const updated = await prisma.booking.update({
+      where: { id: data.id },
+      data: {
+        object_id: resolvedObjectId,
+        customer_name: data.name?.trim() || "Not for rent",
+        start_date: start,
+        end_date: end,
+      },
+    });
+    return updated;
   }
 
   const created = await prisma.booking.create({

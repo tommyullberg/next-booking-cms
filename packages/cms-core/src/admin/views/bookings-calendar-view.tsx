@@ -16,13 +16,12 @@ import {
   ArrowDown,
   Lock,
 } from "lucide-react";
-import { BookingItem, BookingObjectDetails, BOOKING_STATUSES, BookingStatusType } from "../../booking/types";
-import { BookingDetailsModal } from "../../booking/booking-details-modal";
-import { useBookingSettingsQuery } from "../../booking/hooks";
-import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "../../utils/weeks";
-import { Card } from "../../components/ui/card";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
+import { BookingItem, BookingObjectDetails, BOOKING_STATUSES, BookingStatusType } from "@cms/booking/types";
+import { BookingDetailsModal } from "@cms/booking/booking-details-modal";
+import { useBookingSettingsQuery } from "@cms/booking/hooks";
+import { getISOWeek, getISOWeekNumber, formatBookingWeekSpan } from "@cms/utils/weeks";
+import { Badge, Button, Card, IconButton, Tabs, TabsList, TabsTrigger, TabsContent } from "@cms/components/ui";
+import { cn } from "@cms/utils/cn";
 
 export interface BookingsCalendarViewProps {
   objects?: BookingObjectDetails[];
@@ -530,23 +529,27 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
 
   const renderSortIcon = (field: SortField) => {
     if (sortField !== field) {
-      return <ArrowUpDown className='w-3 h-3 text-slate-500 opacity-60' />;
+      return <ArrowUpDown className='cms-icon-xs text-slate-500 opacity-60' />;
     }
     return sortDirection === "asc" ? (
-      <ArrowUp className='w-3 h-3 text-sky-400 font-bold' />
+      <ArrowUp className='cms-icon-xs text-sky-400 font-bold' />
     ) : (
-      <ArrowDown className='w-3 h-3 text-sky-400 font-bold' />
+      <ArrowDown className='cms-icon-xs text-sky-400 font-bold' />
     );
   };
 
   return (
-    <div className='space-y-6'>
+    <Tabs
+      value={viewMode}
+      onValueChange={(val) => setViewMode(val as "calendar" | "list")}
+      className='space-y-6'
+    >
       {/* Top Header Card */}
       <Card variant="admin" className='p-6 backdrop-blur shadow-xl'>
         <div className='flex flex-col lg:flex-row lg:items-center justify-between gap-4'>
           <div className='flex items-center gap-3'>
             <div className='h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-sky-500/20'>
-              <CalendarIcon className='w-5 h-5' />
+              <CalendarIcon className='cms-icon-lg' />
             </div>
             <div>
               <h1 className='text-xl font-bold text-white tracking-tight'>{t("title")}</h1>
@@ -555,70 +558,20 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
           </div>
 
           {/* View Mode & Date Switchers */}
-          <div className='flex flex-wrap items-center gap-2.5'>
-            {/* View Mode Tabs */}
-            <div
-              role='tablist'
-              aria-label={t("title")}
-              className='inline-flex rounded-xl bg-slate-950/70 p-1 border border-slate-800 text-xs'
-            >
-              <button
-                type='button'
-                role='tab'
-                id='tab-view-calendar'
-                aria-selected={viewMode === "calendar"}
-                aria-controls='view-calendar-panel'
-                tabIndex={viewMode === "calendar" ? 0 : -1}
-                onClick={() => setViewMode("calendar")}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowRight" || e.key === "ArrowDown" || e.key === "End") {
-                    e.preventDefault();
-                    setViewMode("list");
-                    document.getElementById("tab-view-list")?.focus();
-                  }
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-                  viewMode === "calendar" ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-white"
-                }`}>
-                <CalendarIcon className='w-3.5 h-3.5' />
-                <span>{t("calendarView")}</span>
-              </button>
-              <button
-                type='button'
-                role='tab'
-                id='tab-view-list'
-                aria-selected={viewMode === "list"}
-                aria-controls='view-list-panel'
-                tabIndex={viewMode === "list" ? 0 : -1}
-                onClick={() => setViewMode("list")}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowLeft" || e.key === "ArrowUp" || e.key === "Home") {
-                    e.preventDefault();
-                    setViewMode("calendar");
-                    document.getElementById("tab-view-calendar")?.focus();
-                  }
-                }}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-                  viewMode === "list" ? "bg-slate-800 text-white shadow-sm" : "text-slate-400 hover:text-white"
-                }`}>
-                <List className='w-3.5 h-3.5' />
-                <span>{t("listView")}</span>
-              </button>
-            </div>
-
+          <div className='flex items-center gap-2.5 justify-end ml-auto min-h-[42px]'>
             {/* Calendar Month Controls (shown in calendar mode) */}
             {viewMode === "calendar" && (
               <div className='flex items-center gap-1.5 bg-slate-950/70 border border-slate-800 rounded-xl px-2 py-1'>
-                <Button
+                <IconButton
                   type='button'
                   variant='ghost'
-                  size='icon'
+                  size='xs'
                   onClick={handlePrevMonth}
-                  className='h-7 w-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800'
                   aria-label={t("prevMonth")}
-                  title={t("prevMonth")}>
-                  <ChevronLeft className='w-4 h-4' />
-                </Button>
+                  className='rounded-lg text-slate-400 hover:text-white hover:bg-slate-800'
+                >
+                  <ChevronLeft className='cms-icon-md' />
+                </IconButton>
                 <Button
                   type='button'
                   variant='ghost'
@@ -631,18 +584,39 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                 <span className='text-xs font-bold text-white min-w-32 text-center capitalize' aria-live='polite'>
                   {currentMonthName} {year}
                 </span>
-                <Button
+                <IconButton
                   type='button'
                   variant='ghost'
-                  size='icon'
+                  size='xs'
                   onClick={handleNextMonth}
-                  className='h-7 w-7 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800'
                   aria-label={t("nextMonth")}
-                  title={t("nextMonth")}>
-                  <ChevronRight className='w-4 h-4' />
-                </Button>
+                  className='rounded-lg text-slate-400 hover:text-white hover:bg-slate-800'
+                >
+                  <ChevronRight className='cms-icon-md' />
+                </IconButton>
               </div>
             )}
+
+            {/* View Mode Tabs */}
+            <TabsList
+              aria-label={t("title")}
+              className='h-auto p-1 bg-slate-950/70 border-slate-800 rounded-xl shrink-0'
+            >
+              <TabsTrigger
+                value='calendar'
+                className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium cursor-pointer'
+              >
+                <CalendarIcon className='cms-icon-sm' />
+                <span>{t("calendarView")}</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value='list'
+                className='flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium cursor-pointer'
+              >
+                <List className='cms-icon-sm' />
+                <span>{t("listView")}</span>
+              </TabsTrigger>
+            </TabsList>
           </div>
         </div>
 
@@ -650,67 +624,77 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
         <div className='mt-5 pt-4 border-t border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs'>
           {/* Source toggles (Local vs Booking.com) */}
           <div className='flex flex-wrap items-center gap-2'>
-            <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1'>
+            <span className='cms-text-meta font-semibold uppercase tracking-wider mr-1'>
               {t("source")}
             </span>
 
             {/* Local bookings toggle */}
-            <button
+            <Button
               type='button'
+              variant='outline'
+              size='sm'
               aria-pressed={showLocalBookings}
               onClick={() => setShowLocalBookings((prev) => !prev)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+              className={`h-8 gap-1.5 px-3 rounded-xl border text-xs font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                 showLocalBookings
-                  ? "bg-sky-500/15 border-sky-500/40 text-sky-200 shadow-sm"
-                  : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300"
+                  ? "bg-sky-500/15 border-sky-500/40 text-sky-200 shadow-sm hover:bg-sky-500/25 hover:text-white"
+                  : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300 hover:bg-slate-900"
               }`}>
               <span className={`w-2 h-2 rounded-full ${showLocalBookings ? "bg-sky-400" : "bg-slate-600"}`} />
               <span>{t("localBookings")}</span>
-              <span className='ml-1 px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-slate-300'>
+              <span className='ml-1 px-1.5 py-0.5 rounded-full bg-slate-800 cms-text-code text-slate-300'>
                 {localCount}
               </span>
-            </button>
+            </Button>
 
             {/* Booking.com toggle */}
-            <button
+            <Button
               type='button'
+              variant='outline'
+              size='sm'
               aria-pressed={showImportedBookings}
               onClick={() => setShowImportedBookings((prev) => !prev)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+              className={`h-8 gap-1.5 px-3 rounded-xl border text-xs font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
                 showImportedBookings
-                  ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-200 shadow-sm"
-                  : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300"
+                  ? "bg-indigo-500/15 border-indigo-500/40 text-indigo-200 shadow-sm hover:bg-indigo-500/25 hover:text-white"
+                  : "bg-slate-950/50 border-slate-800 text-slate-500 hover:text-slate-300 hover:bg-slate-900"
               }`}>
-              <Globe className={`w-3.5 h-3.5 ${showImportedBookings ? "text-indigo-400" : "text-slate-600"}`} />
+              <Globe className={`cms-icon-sm ${showImportedBookings ? "text-indigo-400" : "text-slate-600"}`} />
               <span>{t("bookingComIcal")}</span>
-              <span className='ml-1 px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-slate-300'>
+              <span className='ml-1 px-1.5 py-0.5 rounded-full bg-slate-800 cms-text-code text-slate-300'>
                 {importedCount}
               </span>
-            </button>
+            </Button>
           </div>
 
           {/* Quick object selection actions */}
           <div className='flex items-center gap-2'>
-            <button
+            <Button
               type='button'
+              variant='link'
+              size='sm'
               onClick={handleSelectAllObjects}
-              className='text-[11px] text-slate-400 hover:text-white underline decoration-slate-600 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded'>
+              className='h-auto p-0 cms-text-meta text-slate-400 hover:text-white underline decoration-slate-600 font-normal'
+            >
               {t("showAllUnits")}
-            </button>
+            </Button>
             <span className='text-slate-700'>•</span>
-            <button
+            <Button
               type='button'
+              variant='link'
+              size='sm'
               onClick={handleDeselectAllObjects}
-              className='text-[11px] text-slate-400 hover:text-white underline decoration-slate-600 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-sky-500 rounded'>
+              className='h-auto p-0 cms-text-meta text-slate-400 hover:text-white underline decoration-slate-600 font-normal'
+            >
               {t("hideAllUnits")}
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Rental Objects Filter Badges */}
         <div className='mt-3 flex flex-wrap items-center gap-2'>
-          <span className='text-[11px] font-semibold text-slate-400 uppercase tracking-wider mr-1 flex items-center gap-1'>
-            <Box className='w-3.5 h-3.5 text-slate-500' />
+          <span className='cms-text-meta font-semibold uppercase tracking-wider mr-1 flex items-center gap-1'>
+            <Box className='cms-icon-sm text-slate-500' />
             <span>{t("units")}</span>
           </span>
 
@@ -735,7 +719,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                   }`}
                 />
                 <span>{obj.name}</span>
-                {isActive && <Check className='w-3 h-3 stroke-[2.5]' />}
+                {isActive && <Check className='cms-icon-xs stroke-[2.5]' />}
               </button>
             );
           })}
@@ -743,15 +727,11 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
       </Card>
 
       {/* Main View: Calendar or List */}
-      {viewMode === "calendar" ? (
-        <div
-          id='view-calendar-panel'
-          role='tabpanel'
-          aria-labelledby='tab-view-calendar'
-          className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-2xl'>
+      <TabsContent value='calendar' className='mt-0 focus-visible:ring-0'>
+        <div className='rounded-2xl border border-slate-800 bg-slate-900/40 overflow-hidden shadow-2xl'>
           {/* Weekday headers with Wk column */}
-          <div className='grid grid-cols-[44px_repeat(7,1fr)] border-b border-slate-800 bg-slate-950/80 text-center text-[11px] font-semibold text-slate-400 uppercase tracking-wider py-2.5'>
-            <span className='text-slate-500 font-mono text-[10px]'>{t("colWk")}</span>
+          <div className='grid grid-cols-[44px_repeat(7,1fr)] border-b border-slate-800 bg-slate-950/80 text-center cms-table-header py-2.5'>
+            <span className='text-slate-500 cms-text-code'>{t("colWk")}</span>
             <span>{t("monday")}</span>
             <span>{t("tuesday")}</span>
             <span>{t("wednesday")}</span>
@@ -772,7 +752,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
               return (
                 <div key={wIdx} className='flex relative group/week' style={{ minHeight: `${rowMinHeight}px` }}>
                   {/* Left Week Number Column */}
-                  <div className='w-[44px] shrink-0 border-r border-slate-800/80 bg-slate-950/60 flex items-center justify-center font-mono text-[11px] text-amber-400/80 font-bold select-none'>
+                  <div className='w-[44px] shrink-0 border-r border-slate-800/80 bg-slate-950/60 flex items-center justify-center cms-text-code text-amber-400/80 font-bold select-none'>
                     {week.weekNumber}
                   </div>
 
@@ -871,9 +851,9 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                             {/* Inner bar content */}
                             <div className='flex items-center gap-1.5 truncate min-w-0 w-full pointer-events-none'>
                               {isBlocked ? (
-                                <Lock className='w-3 h-3 shrink-0 opacity-80 text-purple-300' />
+                                <Lock className='cms-icon-xs opacity-80 text-purple-300' />
                               ) : isImported ? (
-                                <Globe className='w-3 h-3 shrink-0 opacity-80' />
+                                <Globe className='cms-icon-xs opacity-80' />
                               ) : (
                                 <span className='w-1.5 h-1.5 rounded-full bg-white shrink-0' />
                               )}
@@ -892,18 +872,17 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
             })}
           </div>
         </div>
-      ) : (
-        /* List View */
+      </TabsContent>
+
+      {/* List View */}
+      <TabsContent value='list' className='mt-0 focus-visible:ring-0'>
         <Card
-          id='view-list-panel'
-          role='tabpanel'
-          aria-labelledby='tab-view-list'
           variant="admin"
           className='overflow-hidden shadow-xl'
         >
           <div className='p-4 border-b border-slate-800 flex items-center justify-between'>
             <h2 className='text-sm font-semibold text-white flex items-center gap-2'>
-              <List className='w-4 h-4 text-slate-400' />
+              <List className='cms-icon-md text-slate-400' />
               <span>{t("streamTitle")}</span>
             </h2>
             <span className='text-xs text-slate-400'>{t("streamSubtitle", { count: sortedListBookings.length })}</span>
@@ -916,7 +895,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
           ) : (
             <div className='overflow-x-auto'>
               <table className='w-full text-left text-xs'>
-                <thead className='bg-slate-950/70 text-slate-400 font-semibold border-b border-slate-800 uppercase text-[10px] tracking-wider'>
+                <thead className='cms-table-header'>
                   <tr>
                     {/* Unit / Object (sortable) */}
                     <th
@@ -990,24 +969,24 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
 
                         {/* Dates */}
                         <td className='py-3.5 px-3'>
-                          <div className='font-mono text-xs text-white'>
+                          <div className='cms-text-code text-white'>
                             {b.startDate} → {b.endDate}
                           </div>
-                          <div className='text-[10px] text-slate-500 mt-0.5'>
+                          <div className='cms-text-meta mt-0.5'>
                             {t("checkInOutTimes", { checkIn: checkInTime, checkOut: checkOutTime })}
                           </div>
                         </td>
 
                         {/* Week column (between Stay dates and Nights) */}
                         <td className='py-3.5 px-3 font-mono'>
-                          <span className='inline-flex items-center px-2.5 py-0.5 rounded-md bg-slate-800 border border-slate-700/80 text-[11px] font-semibold text-amber-300'>
+                          <span className='inline-flex items-center px-2.5 py-0.5 rounded-md bg-slate-800 border border-slate-700/80 cms-text-code text-amber-300'>
                             w.{weekSpan}
                           </span>
                         </td>
 
                         {/* Nights */}
                         <td className='py-3.5 px-3 text-center'>
-                          <span className='inline-block px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold font-mono'>
+                          <span className='inline-block px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold cms-text-code'>
                             {nights} nights
                           </span>
                         </td>
@@ -1019,11 +998,11 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                           </div>
                           {isImported ? (
                             <span className='inline-flex items-center gap-1 text-[10px] text-indigo-400 mt-0.5'>
-                              <Globe className='w-3 h-3' />
+                              <Globe className='cms-icon-xs' />
                               <span>Booking.com (iCal)</span>
                             </span>
                           ) : (
-                            <div className='text-[10px] text-slate-400 mt-0.5 truncate max-w-xs'>
+                            <div className='cms-text-meta mt-0.5 truncate max-w-xs'>
                               {b.customerEmail || "Direct Reservation"}
                             </div>
                           )}
@@ -1035,7 +1014,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                             <span>{b.guestsCount || 2} pers</span>
                             {(b.petsCount || 0) > 0 && (
                               <span className='inline-flex items-center gap-0.5 text-amber-400 text-[11px]'>
-                                <Dog className='w-3 h-3' />
+                                <Dog className='cms-icon-xs' />
                                 <span>{b.petsCount}</span>
                               </span>
                             )}
@@ -1043,7 +1022,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                         </td>
 
                         {/* Price */}
-                        <td className='py-3.5 px-3 text-right font-mono font-medium text-slate-100'>
+                        <td className='py-3.5 px-3 text-right cms-text-code font-medium text-slate-100'>
                           {b.price ? `${b.price.toLocaleString("sv-SE")} SEK` : "—"}
                         </td>
 
@@ -1061,7 +1040,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
                             return (
                               <Badge
                                 variant='outline'
-                                className={`text-[10px] font-semibold border ${badgeClass}`}>
+                                className={cn("cms-text-caption font-semibold border", badgeClass)}>
                                 {label}
                               </Badge>
                             );
@@ -1090,7 +1069,7 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
             </div>
           )}
         </Card>
-      )}
+      </TabsContent>
 
       {/* Booking Details & Administration Modal Dialog */}
       {selectedBooking && (
@@ -1122,6 +1101,6 @@ export function BookingsCalendarView({ objects = [], initialFilterObjectId = nul
           locale={locale === "en" ? "en" : "sv"}
         />
       )}
-    </div>
+    </Tabs>
   );
 }

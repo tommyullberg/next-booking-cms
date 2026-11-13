@@ -3,13 +3,11 @@
 import React, { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Plus, GripVertical, Trash2 } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { NativeSelect } from "../../components/ui/select";
-import { cn } from "../../utils/cn";
+import { Button, Input, NativeSelect } from "@cms/components/ui";
+import { cn } from "@cms/utils/cn";
 import { SectionItem } from "./sections-view";
 import { PageListItem } from "./pages-view";
-import { HOMEPAGE_ID } from "../../utils/slug";
+import { HOMEPAGE_ID } from "@cms/utils/slug";
 
 export interface NavigationMenusViewProps {
   sections: SectionItem[];
@@ -264,7 +262,7 @@ export function NavigationMenusView({
             size="sm"
             onClick={onNavigateToSections}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="cms-icon-md" />
             <span>{tSections("addSection")}</span>
           </Button>
         )}
@@ -319,7 +317,7 @@ export function NavigationMenusView({
                       aria-label={`${t("addItem")} - ${sec.name}`}
                       onClick={() => handleStartAddItem(sec.id)}
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="cms-icon-xs" />
                       <span>{t("addItem")}</span>
                     </Button>
                   </div>
@@ -346,7 +344,7 @@ export function NavigationMenusView({
                                 title="Drag handle"
                                 aria-label="Drag handle"
                               >
-                                <GripVertical className="w-4 h-4" />
+                                <GripVertical className="cms-icon-md" />
                               </span>
                               <Input
                                 type="text"
@@ -409,7 +407,7 @@ export function NavigationMenusView({
                                 title={tCommon("delete")}
                                 aria-label={tCommon("delete")}
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="cms-icon-md" />
                               </Button>
                             </div>
                           </div>
@@ -446,7 +444,7 @@ export function NavigationMenusView({
                               title="Drag to sort or move to another section"
                               aria-label="Drag to sort or move to another section"
                             >
-                              <GripVertical className="w-4 h-4" />
+                              <GripVertical className="cms-icon-md" />
                             </span>
                             <div className="w-60 rounded-admin-compact border border-admin-border bg-admin-surface-subtle px-3.5 py-1.5 text-xs font-medium text-slate-200 truncate">
                               {menuLabel}
@@ -454,7 +452,7 @@ export function NavigationMenusView({
                           </div>
 
                           <div className="flex items-center justify-between sm:justify-end gap-8 pl-7 sm:pl-0">
-                            <span className="text-xs text-slate-400 font-mono min-w-[180px]">
+                            <span className="cms-text-code text-slate-400 min-w-[180px]">
                               Link: {formatSlugDisplay(item.slug, item.id)}
                             </span>
                             <Button
@@ -482,7 +480,7 @@ export function NavigationMenusView({
                             title="Drag handle"
                             aria-label="Drag handle"
                           >
-                            <GripVertical className="w-4 h-4" />
+                            <GripVertical className="cms-icon-md" />
                           </span>
                           <Input
                             type="text"
@@ -546,7 +544,7 @@ export function NavigationMenusView({
                             title={tCommon("cancel")}
                             aria-label={tCommon("cancel")}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="cms-icon-md" />
                           </Button>
                         </div>
                       </div>

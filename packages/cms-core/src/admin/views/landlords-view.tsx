@@ -15,19 +15,22 @@ import {
   Search,
   Building,
 } from "lucide-react";
-import { LandlordDto } from "../../actions/landlords";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Badge } from "../../components/ui/badge";
-import { Switch } from "../../components/ui/switch";
-import { NativeSelect } from "../../components/ui/select";
+import { LandlordDto } from "@cms/actions/landlords";
 import {
+  Alert,
+  Badge,
+  Button,
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "../../components/ui/dialog";
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+  Switch,
+} from "@cms/components/ui";
+import { useConfirm } from "@cms/components/confirm";
 
 export type LandlordItem = LandlordDto;
 
@@ -68,6 +71,7 @@ export function LandlordsView({
   const formId = useId();
   const t = useTranslations("landlords");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [landlords, setLandlords] = useState<LandlordItem[]>(initialLandlords);
 
@@ -188,18 +192,24 @@ export function LandlordsView({
 
   const handleDelete = async (item: LandlordItem) => {
     const fullName = `${item.first_name} ${item.last_name}`.trim();
-    if (!confirm(t("deleteConfirm", { name: fullName }))) {
-      return;
-    }
-
-    setLandlords((prev) => prev.filter((l) => l.id !== item.id));
-    setIsModalOpen(false);
-    if (onDeleteLandlord) {
-      const res = await onDeleteLandlord(item.id);
-      if (Array.isArray(res)) {
-        setLandlords(res);
-      }
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("deleteConfirm", { name: fullName }),
+      variant: "destructive",
+      onConfirm: async () => {
+        if (onDeleteLandlord) {
+          const res = await onDeleteLandlord(item.id);
+          if (Array.isArray(res)) {
+            setLandlords(res);
+          } else {
+            setLandlords((prev) => prev.filter((l) => l.id !== item.id));
+          }
+        } else {
+          setLandlords((prev) => prev.filter((l) => l.id !== item.id));
+        }
+        setIsModalOpen(false);
+      },
+    });
   };
 
   const filteredLandlords = useMemo(() => {
@@ -277,7 +287,7 @@ export function LandlordsView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <tr className="cms-table-header">
                 <th className="py-3.5 px-5">{t("colLandlord")}</th>
                 <th className="py-3.5 px-4">{t("colAddress")}</th>
                 <th className="py-3.5 px-4">{t("colPostalCity")}</th>
@@ -319,7 +329,7 @@ export function LandlordsView({
                     <td className="py-3.5 px-4 text-slate-300">
                       {landlord.address ? (
                         <div className="flex items-center gap-1.5">
-                          <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <MapPin className="cms-icon-sm text-slate-500" />
                           <span>{landlord.address}</span>
                         </div>
                       ) : (
@@ -343,8 +353,8 @@ export function LandlordsView({
                     {/* Email */}
                     <td className="py-3.5 px-4">
                       {landlord.email ? (
-                        <div className="inline-flex items-center gap-1.5 text-slate-300 font-mono text-[11px]">
-                          <Mail className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <div className="inline-flex items-center gap-1.5 cms-text-code text-slate-300">
+                          <Mail className="cms-icon-sm text-slate-500" />
                           <span>{landlord.email}</span>
                         </div>
                       ) : (
@@ -356,15 +366,15 @@ export function LandlordsView({
                     <td className="py-3.5 px-4">
                       <div className="space-y-1">
                         {landlord.phone && (
-                          <div className="inline-flex items-center gap-1.5 text-slate-400 text-[11px]">
-                            <Phone className="w-3 h-3 text-slate-500 shrink-0" />
+                          <div className="inline-flex items-center gap-1.5 cms-text-meta">
+                            <Phone className="cms-icon-xs text-slate-500" />
                             <span>{landlord.phone}</span>
                           </div>
                         )}
                         {landlord.mobile ? (
                           <div className="flex items-center gap-2">
-                            <div className="inline-flex items-center gap-1.5 text-slate-200 text-[11px]">
-                              <Smartphone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <div className="inline-flex items-center gap-1.5 cms-text-meta text-slate-200">
+                              <Smartphone className="cms-icon-sm text-slate-400" />
                               <span>{landlord.mobile}</span>
                             </div>
                             {landlord.has_swish && (
@@ -385,11 +395,11 @@ export function LandlordsView({
                       {landlord.account_number ? (
                         <div className="flex items-center gap-2">
                           {landlord.account_type && (
-                            <span className="inline-flex items-center rounded bg-slate-800 border border-slate-700 px-1.5 py-0.5 text-[10px] font-medium text-slate-300">
+                            <span className="inline-flex items-center rounded bg-slate-800 border border-slate-700 px-1.5 py-0.5 cms-text-caption font-medium text-slate-300">
                               {landlord.account_type}
                             </span>
                           )}
-                          <span className="font-mono text-[11px] text-slate-200">
+                          <span className="cms-text-code text-slate-200">
                             {landlord.account_number}
                           </span>
                         </div>
@@ -436,13 +446,13 @@ export function LandlordsView({
           <DialogHeader className="border-b border-slate-800 pb-4 mb-0">
             <DialogTitle variant="admin" size="sm" className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
-                <Building className="w-4 h-4" />
+                <Building className="cms-icon-md" />
               </div>
               <div>
                 <span>
                   {editingLandlord ? t("modalEditTitle") : t("modalCreateTitle")}
                 </span>
-                <p className="text-[11px] text-slate-400 font-normal">
+                <p className="cms-text-meta font-normal">
                   {t("modalSubtitle")}
                 </p>
               </div>
@@ -450,56 +460,42 @@ export function LandlordsView({
           </DialogHeader>
 
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+            <Alert variant="destructive" className="mb-4">
               {errorMsg}
-            </div>
+            </Alert>
           )}
 
           {/* Modal Form */}
           <form onSubmit={handleSave} autoComplete="off" className="space-y-4 text-xs">
             {/* Names */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-first-name`} variant="admin" size="sm">
-                  {t("firstName")} <span className="text-rose-400">*</span>
-                </Label>
+              <FormField label={t("firstName")} required labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-first-name`}
                   variant="admin"
                   size="sm"
                   type="text"
-                  required
                   autoComplete="off"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder={t("firstNamePlaceholder")}
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-last-name`} variant="admin" size="sm">
-                  {t("lastName")} <span className="text-rose-400">*</span>
-                </Label>
+              </FormField>
+              <FormField label={t("lastName")} required labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-last-name`}
                   variant="admin"
                   size="sm"
                   type="text"
-                  required
                   autoComplete="off"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder={t("lastNamePlaceholder")}
                 />
-              </div>
+              </FormField>
             </div>
 
             {/* Address */}
-            <div className="space-y-1.5">
-              <Label htmlFor={`${formId}-address`} variant="admin" size="sm">
-                {t("address")}
-              </Label>
+            <FormField label={t("address")} labelVariant="admin" labelSize="sm">
               <Input
-                id={`${formId}-address`}
                 variant="admin"
                 size="sm"
                 type="text"
@@ -508,16 +504,12 @@ export function LandlordsView({
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder={t("addressPlaceholder")}
               />
-            </div>
+            </FormField>
 
             {/* Postal code & City */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-postal-code`} variant="admin" size="sm">
-                  {t("postalCode")}
-                </Label>
+              <FormField label={t("postalCode")} labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-postal-code`}
                   variant="admin"
                   size="sm"
                   type="text"
@@ -526,13 +518,9 @@ export function LandlordsView({
                   onChange={(e) => setPostalCode(e.target.value)}
                   placeholder={t("postalCodePlaceholder")}
                 />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-city`} variant="admin" size="sm">
-                  {t("city")}
-                </Label>
+              </FormField>
+              <FormField label={t("city")} labelVariant="admin" labelSize="sm">
                 <Input
-                  id={`${formId}-city`}
                   variant="admin"
                   size="sm"
                   type="text"
@@ -541,71 +529,68 @@ export function LandlordsView({
                   onChange={(e) => setCity(e.target.value)}
                   placeholder={t("cityPlaceholder")}
                 />
-              </div>
+              </FormField>
             </div>
 
             {/* Email */}
-            <div className="space-y-1.5">
-              <Label htmlFor={`${formId}-email`} variant="admin" size="sm">
-                {t("email")}
-              </Label>
-              <div className="relative">
-                <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <Input
-                  id={`${formId}-email`}
-                  variant="admin"
-                  size="sm"
-                  type="email"
-                  autoComplete="off"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t("emailPlaceholder")}
-                  className="pl-9"
-                />
-              </div>
-            </div>
+            <FormField label={t("email")} labelVariant="admin" labelSize="sm">
+              {(control) => (
+                <div className="relative">
+                  <Mail className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <Input
+                    {...control}
+                    variant="admin"
+                    size="sm"
+                    type="email"
+                    autoComplete="off"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t("emailPlaceholder")}
+                    className="pl-9"
+                  />
+                </div>
+              )}
+            </FormField>
 
             {/* Phone & Mobile */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-phone`} variant="admin" size="sm">
-                  {t("phone")}
-                </Label>
-                <div className="relative">
-                  <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <Input
-                    id={`${formId}-phone`}
-                    variant="admin"
-                    size="sm"
-                    type="tel"
-                    autoComplete="off"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder={t("phonePlaceholder")}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
+              <FormField label={t("phone")} labelVariant="admin" labelSize="sm">
+                {(control) => (
+                  <div className="relative">
+                    <Phone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Input
+                      {...control}
+                      variant="admin"
+                      size="sm"
+                      type="tel"
+                      autoComplete="off"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder={t("phonePlaceholder")}
+                      className="pl-9"
+                    />
+                  </div>
+                )}
+              </FormField>
 
-              <div className="space-y-1.5">
-                <Label htmlFor={`${formId}-mobile`} variant="admin" size="sm">
-                  {t("mobile")}
-                </Label>
-                <div className="relative">
-                  <Smartphone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <Input
-                    id={`${formId}-mobile`}
-                    variant="admin"
-                    size="sm"
-                    type="tel"
-                    autoComplete="off"
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value)}
-                    placeholder={t("mobilePlaceholder")}
-                    className="pl-9"
-                  />
-                </div>
-              </div>
+              <FormField label={t("mobile")} labelVariant="admin" labelSize="sm">
+                {(control) => (
+                  <div className="relative">
+                    <Smartphone className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Input
+                      {...control}
+                      variant="admin"
+                      size="sm"
+                      type="tel"
+                      autoComplete="off"
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value)}
+                      placeholder={t("mobilePlaceholder")}
+                      className="pl-9"
+                    />
+                  </div>
+                )}
+              </FormField>
             </div>
 
             {/* Swish Payment Switch */}
@@ -641,12 +626,8 @@ export function LandlordsView({
             {/* Account Type & Account Number */}
             <div className="space-y-3 pt-1">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor={`${formId}-account-type`} variant="admin" size="sm">
-                    {t("accountType")}
-                  </Label>
+                <FormField label={t("accountType")} labelVariant="admin" labelSize="sm">
                   <NativeSelect
-                    id={`${formId}-account-type`}
                     variant="admin"
                     size="sm"
                     value={selectedAccountType}
@@ -658,15 +639,11 @@ export function LandlordsView({
                       </option>
                     ))}
                   </NativeSelect>
-                </div>
+                </FormField>
 
                 {selectedAccountType === "Other" ? (
-                  <div className="space-y-1.5">
-                    <Label htmlFor={`${formId}-custom-account-type`} variant="admin" size="sm">
-                      {t("specifyAccountType")}
-                    </Label>
+                  <FormField label={t("specifyAccountType")} labelVariant="admin" labelSize="sm">
                     <Input
-                      id={`${formId}-custom-account-type`}
                       variant="admin"
                       size="sm"
                       type="text"
@@ -675,15 +652,16 @@ export function LandlordsView({
                       onChange={(e) => setCustomAccountType(e.target.value)}
                       placeholder={t("bankNamePlaceholder")}
                     />
-                  </div>
+                  </FormField>
                 ) : null}
 
-                <div className={`space-y-1.5 ${selectedAccountType !== "Other" ? "" : "sm:col-span-2"}`}>
-                  <Label htmlFor={`${formId}-account-number`} variant="admin" size="sm">
-                    {t("accountNumber")}
-                  </Label>
+                <FormField
+                  label={t("accountNumber")}
+                  labelVariant="admin"
+                  labelSize="sm"
+                  className={selectedAccountType !== "Other" ? "" : "sm:col-span-2"}
+                >
                   <Input
-                    id={`${formId}-account-number`}
                     variant="admin"
                     size="sm"
                     type="text"
@@ -693,7 +671,7 @@ export function LandlordsView({
                     placeholder={t("accountNumberPlaceholder")}
                     className="font-mono"
                   />
-                </div>
+                </FormField>
               </div>
             </div>
 

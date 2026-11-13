@@ -20,23 +20,27 @@ import {
   Check,
   GripVertical,
 } from "lucide-react";
-import { BookingOptionalItem } from "../../booking/types";
+import { BookingOptionalItem } from "@cms/booking/types";
 import { BookingObjectItem } from "./booking-objects-view";
 import { MediaItem } from "./media-view";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
-import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
-import { NativeSelect } from "../../components/ui/select";
-import { Card } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
 import {
+  Alert,
+  Badge,
+  Button,
+  Card,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
-} from "../../components/ui/dialog";
+  FormField,
+  Input,
+  Label,
+  NativeSelect,
+  Switch,
+  Textarea,
+} from "@cms/components/ui";
+import { useConfirm } from "@cms/components/confirm";
 
 export type OptionalItem = BookingOptionalItem;
 
@@ -72,6 +76,7 @@ export function OptionalsView({
 }: OptionalsViewProps) {
   const t = useTranslations("optionals");
   const tCommon = useTranslations("common");
+  const { confirm } = useConfirm();
 
   const [optionals, setOptionals] = useState<OptionalItem[]>(initialOptionals);
 
@@ -108,16 +113,8 @@ export function OptionalsView({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
-  const nameFieldId = useId();
-  const descFieldId = useId();
-  const objectSelectId = useId();
   const statusSwitchId = useId();
   const manualUrlId = useId();
-  const priceHourId = useId();
-  const priceDayId = useId();
-  const priceSunThuId = useId();
-  const priceThuSunId = useId();
-  const priceWeekId = useId();
 
   // Drag & drop handlers
   const handleDragStart = (e: React.DragEvent, id: string) => {
@@ -277,18 +274,24 @@ export function OptionalsView({
   };
 
   const handleDelete = async (item: OptionalItem) => {
-    if (!confirm(t("deleteConfirm", { name: item.name }))) {
-      return;
-    }
-
-    setOptionals((prev) => prev.filter((o) => o.id !== item.id));
-    setIsModalOpen(false);
-    if (onDeleteOptional) {
-      const res = await onDeleteOptional(item.id);
-      if (Array.isArray(res)) {
-        setOptionals(res);
-      }
-    }
+    await confirm({
+      title: tCommon("delete"),
+      description: t("deleteConfirm", { name: item.name }),
+      variant: "destructive",
+      onConfirm: async () => {
+        if (onDeleteOptional) {
+          const res = await onDeleteOptional(item.id);
+          if (Array.isArray(res)) {
+            setOptionals(res);
+          } else {
+            setOptionals((prev) => prev.filter((o) => o.id !== item.id));
+          }
+        } else {
+          setOptionals((prev) => prev.filter((o) => o.id !== item.id));
+        }
+        setIsModalOpen(false);
+      },
+    });
   };
 
   const handleToggleActive = async (item: OptionalItem) => {
@@ -406,7 +409,7 @@ export function OptionalsView({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-800 bg-slate-900/80 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              <tr className="cms-table-header">
                 <th className="py-3.5 px-3 w-10"></th>
                 <th className="py-3.5 px-3 w-16 text-center">{t("colActive")}</th>
                 <th className="py-3.5 px-5">{t("colOptional")}</th>
@@ -462,23 +465,13 @@ export function OptionalsView({
 
                     {/* Active Switch Toggle */}
                     <td className="py-3.5 px-3 text-center">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={opt.is_active}
+                      <Switch
+                        checked={opt.is_active}
+                        onCheckedChange={() => handleToggleActive(opt)}
+                        variant="success"
                         aria-label={opt.is_active ? t("statusActiveTooltip") : t("statusHiddenTooltip")}
-                        onClick={() => handleToggleActive(opt)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
-                          opt.is_active ? "bg-emerald-500" : "bg-slate-700"
-                        }`}
                         title={opt.is_active ? t("statusActiveTooltip") : t("statusHiddenTooltip")}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                            opt.is_active ? "translate-x-4" : "translate-x-0"
-                          }`}
-                        />
-                      </button>
+                      />
                     </td>
 
                     {/* Optional Name, Description & Image */}
@@ -498,7 +491,7 @@ export function OptionalsView({
                             {opt.name}
                           </span>
                           {opt.description && (
-                            <p className="text-[11px] text-slate-400 line-clamp-1 max-w-xs">
+                            <p className="cms-text-meta line-clamp-1 max-w-xs">
                               {opt.description}
                             </p>
                           )}
@@ -510,30 +503,30 @@ export function OptionalsView({
                     <td className="py-3.5 px-4">
                       {targetObject ? (
                         <Badge variant="adminAccent" className="gap-1.5 font-medium truncate max-w-[140px]">
-                          <Box className="w-3 h-3 text-sky-400 shrink-0" />
+                          <Box className="cms-icon-xs text-sky-400" />
                           <span className="truncate">{targetObject.name}</span>
                         </Badge>
                       ) : (
-                        <Badge variant="adminMuted" className="text-[10px] font-semibold">
+                        <Badge variant="adminMuted" className="cms-text-caption font-semibold">
                           {t("allObjects")}
                         </Badge>
                       )}
                     </td>
 
                     {/* Pricing Breakdown */}
-                    <td className="py-3.5 px-3 text-right font-mono text-[11px] text-slate-300">
+                    <td className="py-3.5 px-3 text-right cms-text-code text-slate-300">
                       {opt.price_hour ? `${opt.price_hour} kr` : "0"}
                     </td>
-                    <td className="py-3.5 px-3 text-right font-mono text-[11px] text-slate-300">
+                    <td className="py-3.5 px-3 text-right cms-text-code text-slate-300">
                       {opt.price_day ? `${opt.price_day} kr` : "0"}
                     </td>
-                    <td className="py-3.5 px-3 text-right font-mono text-[11px] text-slate-300">
+                    <td className="py-3.5 px-3 text-right cms-text-code text-slate-300">
                       {opt.price_sun_thu ? `${opt.price_sun_thu} kr` : "0"}
                     </td>
-                    <td className="py-3.5 px-3 text-right font-mono text-[11px] text-slate-300">
+                    <td className="py-3.5 px-3 text-right cms-text-code text-slate-300">
                       {opt.price_thu_sun ? `${opt.price_thu_sun} kr` : "0"}
                     </td>
-                    <td className="py-3.5 px-3 text-right font-mono text-[11px] font-semibold text-sky-300">
+                    <td className="py-3.5 px-3 text-right cms-text-code font-semibold text-sky-300">
                       {opt.price_week ? `${opt.price_week} kr` : "0"}
                     </td>
 
@@ -600,13 +593,13 @@ export function OptionalsView({
           <DialogHeader className="border-b border-slate-800 pb-4 mb-0">
             <DialogTitle variant="admin" size="sm" className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center">
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="cms-icon-md" />
               </div>
               <div>
                 <span>
                   {editingOptional ? t("modalEditTitle", { name: editingOptional.name }) : t("modalCreateTitle")}
                 </span>
-                <DialogDescription className="text-[11px] text-slate-400 font-normal">
+                <DialogDescription className="cms-text-meta font-normal">
                   {t("modalSubtitle")}
                 </DialogDescription>
               </div>
@@ -614,56 +607,43 @@ export function OptionalsView({
           </DialogHeader>
 
           {errorMsg && (
-            <div role="alert" className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+            <Alert variant="destructive" className="mb-4">
               {errorMsg}
-            </div>
+            </Alert>
           )}
 
               {/* Form */}
               <form onSubmit={handleSave} className="space-y-4 text-xs">
                 {/* Name & Active Switch */}
                 <div className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor={nameFieldId} className="text-[11px] font-semibold text-slate-300">
-                      {t("name")} <span className="text-rose-400">*</span>
-                    </Label>
+                  <FormField label={t("name")} required labelVariant="admin" labelSize="sm" labelClassName="font-semibold">
                     <Input
-                      id={nameFieldId}
                       type="text"
                       variant="admin"
                       size="sm"
-                      required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder={t("namePlaceholder")}
                     />
-                  </div>
+                  </FormField>
 
                   {/* Description */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor={descFieldId} className="text-[11px] font-semibold text-slate-300">
-                      {t("description")}
-                    </Label>
+                  <FormField label={t("description")} labelVariant="admin" labelSize="sm" labelClassName="font-semibold">
                     <Textarea
-                      id={descFieldId}
                       variant="admin"
                       rows={3}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder={t("descriptionPlaceholder")}
                     />
-                  </div>
+                  </FormField>
                 </div>
 
                 {/* Locked to Object & Active Switch */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Locked to Object */}
-                  <div className="space-y-1.5">
-                    <Label htmlFor={objectSelectId} className="text-[11px] font-semibold text-slate-300">
-                      {t("colLocked")}
-                    </Label>
+                  <FormField label={t("colLocked")} labelVariant="admin" labelSize="sm" labelClassName="font-semibold">
                     <NativeSelect
-                      id={objectSelectId}
                       variant="admin"
                       size="sm"
                       value={objectId}
@@ -676,34 +656,24 @@ export function OptionalsView({
                         </option>
                       ))}
                     </NativeSelect>
-                  </div>
+                  </FormField>
 
                   {/* Active / Hidden Switch */}
                   <div className="space-y-1.5">
-                    <Label htmlFor={statusSwitchId} className="text-[11px] font-semibold text-slate-300">
+                    <Label htmlFor={statusSwitchId} variant="admin" size="sm" className="font-semibold">
                       {t("status")}
                     </Label>
                     <div className="rounded-admin-button border border-admin-border bg-admin-field px-3 py-1.5 flex items-center justify-between h-[38px]">
-                      <span className="text-[11px] text-slate-300">
+                      <span className="text-[0.6875rem] text-slate-300">
                         {isActive ? t("statusActive") : t("statusHidden")}
                       </span>
-                      <button
+                      <Switch
                         id={statusSwitchId}
-                        type="button"
-                        role="switch"
-                        aria-checked={isActive}
+                        checked={isActive}
+                        onCheckedChange={setIsActive}
+                        variant="success"
                         aria-label={t("status")}
-                        onClick={() => setIsActive(!isActive)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 ${
-                          isActive ? "bg-emerald-500" : "bg-slate-700"
-                        }`}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                            isActive ? "translate-x-4" : "translate-x-0"
-                          }`}
-                        />
-                      </button>
+                      />
                     </div>
                   </div>
                 </div>
@@ -712,13 +682,13 @@ export function OptionalsView({
                 <div className="space-y-2 pt-1 border-t border-slate-800/80">
                   <div className="flex items-center justify-between">
                     <Label className="text-[11px] font-semibold text-slate-300 flex items-center gap-1.5">
-                      <ImageIcon className="w-3.5 h-3.5 text-slate-400" />
+                      <ImageIcon className="cms-icon-sm text-slate-400" />
                       <span>{t("image")}</span>
                     </Label>
                     <button
                       type="button"
                       onClick={() => setShowManualUrl(!showManualUrl)}
-                      className="text-[10px] text-sky-400 hover:text-sky-300 transition underline underline-offset-2"
+                      className="cms-text-caption text-sky-400 hover:text-sky-300 transition underline underline-offset-2"
                     >
                       {showManualUrl ? t("hideManualUrl") : t("enterManualUrl")}
                     </button>
@@ -742,7 +712,7 @@ export function OptionalsView({
                           <span className="text-xs font-medium text-white truncate block">
                             {selectedMediaItem?.file_name || imageUrl.split("/").pop() || imageUrl}
                           </span>
-                          <span className="text-[10px] text-slate-400 truncate block font-mono">
+                          <span className="cms-text-code truncate block">
                             {imageUrl}
                           </span>
                         </div>
@@ -761,7 +731,7 @@ export function OptionalsView({
                     </div>
                   ) : (
                     <div className="p-2.5 rounded-xl border border-dashed border-slate-800 bg-slate-900/40 text-center">
-                      <span className="text-[11px] text-slate-400">
+                      <span className="cms-text-meta">
                         {t("noImageSelected")}
                       </span>
                     </div>
@@ -825,7 +795,7 @@ export function OptionalsView({
                           )}
 
                           {filteredMedia.length === 0 ? (
-                            <div className="p-3 text-center text-[11px] text-slate-400">
+                            <div className="p-3 text-center cms-text-meta">
                               {imageMedia.length === 0
                                 ? t("noImages")
                                 : t("noMatchingImages")}
@@ -894,16 +864,12 @@ export function OptionalsView({
 
                 {/* Pricing Breakdown */}
                 <div className="space-y-2 pt-2 border-t border-slate-800">
-                  <Label className="text-[11px] font-semibold text-slate-300 block">
+                  <Label variant="admin" size="sm" className="font-semibold block">
                     {t("pricingTitle")}
                   </Label>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                    <div className="space-y-1">
-                      <Label htmlFor={priceHourId} className="text-[10px] text-slate-400 font-normal">
-                        {t("hourlyRate")}
-                      </Label>
+                    <FormField label={t("hourlyRate")} labelVariant="muted" labelSize="xs">
                       <Input
-                        id={priceHourId}
                         type="number"
                         variant="admin"
                         size="sm"
@@ -912,14 +878,10 @@ export function OptionalsView({
                         onChange={(e) => setPriceHour(Number(e.target.value))}
                         className="text-center font-mono"
                       />
-                    </div>
+                    </FormField>
 
-                    <div className="space-y-1">
-                      <Label htmlFor={priceDayId} className="text-[10px] text-slate-400 font-normal">
-                        {t("dailyRate")}
-                      </Label>
+                    <FormField label={t("dailyRate")} labelVariant="muted" labelSize="xs">
                       <Input
-                        id={priceDayId}
                         type="number"
                         variant="admin"
                         size="sm"
@@ -928,14 +890,10 @@ export function OptionalsView({
                         onChange={(e) => setPriceDay(Number(e.target.value))}
                         className="text-center font-mono"
                       />
-                    </div>
+                    </FormField>
 
-                    <div className="space-y-1">
-                      <Label htmlFor={priceSunThuId} className="text-[10px] text-slate-400 font-normal">
-                        {t("sunThuRate")}
-                      </Label>
+                    <FormField label={t("sunThuRate")} labelVariant="muted" labelSize="xs">
                       <Input
-                        id={priceSunThuId}
                         type="number"
                         variant="admin"
                         size="sm"
@@ -944,14 +902,10 @@ export function OptionalsView({
                         onChange={(e) => setPriceSunThu(Number(e.target.value))}
                         className="text-center font-mono"
                       />
-                    </div>
+                    </FormField>
 
-                    <div className="space-y-1">
-                      <Label htmlFor={priceThuSunId} className="text-[10px] text-slate-400 font-normal">
-                        {t("thuSunRate")}
-                      </Label>
+                    <FormField label={t("thuSunRate")} labelVariant="muted" labelSize="xs">
                       <Input
-                        id={priceThuSunId}
                         type="number"
                         variant="admin"
                         size="sm"
@@ -960,14 +914,16 @@ export function OptionalsView({
                         onChange={(e) => setPriceThuSun(Number(e.target.value))}
                         className="text-center font-mono"
                       />
-                    </div>
+                    </FormField>
 
-                    <div className="space-y-1 sm:col-span-1 col-span-2">
-                      <Label htmlFor={priceWeekId} className="text-[10px] text-sky-400 font-semibold">
-                        {t("weeklyRate")}
-                      </Label>
+                    <FormField
+                      label={t("weeklyRate")}
+                      labelVariant="muted"
+                      labelSize="xs"
+                      labelClassName="text-sky-400 font-semibold"
+                      className="sm:col-span-1 col-span-2"
+                    >
                       <Input
-                        id={priceWeekId}
                         type="number"
                         variant="admin"
                         size="sm"
@@ -976,7 +932,7 @@ export function OptionalsView({
                         onChange={(e) => setPriceWeek(Number(e.target.value))}
                         className="text-center font-mono font-bold border-sky-500/40"
                       />
-                    </div>
+                    </FormField>
                   </div>
                 </div>
 

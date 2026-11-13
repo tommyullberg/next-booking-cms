@@ -1,50 +1,32 @@
+# Dependencies
 node_modules
 .pnp
 .pnp.js
 
+# Build outputs
 .turbo
 .next/
 out/
 build/
 dist/
+*.tsbuildinfo
 
+# Environment and secrets
 .env
 .env*.local
+*.pem
 
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# System and temporary
 .DS_Store
-*.pem
-*.tsbuildinfo
+.temp/
 
+# Storage and persistent data
 postgres_data/
 minio_data/
 uploads/
-.temp/
-project-spec.md
-*.pdf
-
-# Local / Private seed data
-scripts/local-seeds/
-scripts/setup-mock-ical.js
-apps/lullyhill/seeds/
-apps/*/seeds/
-seed_booking.ts
-seed-booking.ts
-*.local-seed.*
-mock-ical/*.ics
-public/mock-ical/
-apps/*/public/mock-ical/
-
-.postman/
-postman/
-GEMINI.md
-
-# Local design system baseline and playground
-.visual-baseline/
-ui-playground/
-**/ui-playground/
-apps/*/src/app/dev/

@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useTranslations } from "next-intl";
 import { Calendar } from "lucide-react";
-import { Card } from "../../../components/ui/card";
+import { Card } from "@cms/components/ui";
 import { CalendarLegend } from "./calendar-legend";
 import { CalendarRangeActionBar } from "./calendar-range-action-bar";
 import { MonthCalendar } from "./month-calendar";

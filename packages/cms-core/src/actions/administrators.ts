@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/auth-options";
-import { prisma } from "../db";
-import { hashPassword } from "../auth/password";
+import { authOptions } from "@cms/auth/auth-options";
+import { prisma } from "@cms/db";
+import { hashPassword } from "@cms/auth/password";
 import { AdminRole } from "@prisma/client";
 
 export interface AdministratorDto {

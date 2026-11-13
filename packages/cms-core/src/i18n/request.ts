@@ -1,5 +1,5 @@
 import { getRequestConfig } from "next-intl/server";
-import { getCurrentAdminLocaleAction } from "../actions/administrators";
+import { getCurrentAdminLocaleAction } from "@cms/actions/administrators";
 import { getAdminMessages } from "./get-messages";
 
 export default getRequestConfig(async () => {

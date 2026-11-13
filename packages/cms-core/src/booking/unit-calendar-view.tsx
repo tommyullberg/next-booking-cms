@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useBookingsQuery, usePricePeriodsQuery, useBookingSettingsQuery } from "./hooks";
 import { BookingDetailsModal } from "./booking-details-modal";
 import { BookingItem } from "./types";
-import { getISOWeekNumber, getMondayOfISOWeek, getSundayOfISOWeek } from "../utils/weeks";
+import { getISOWeekNumber, getMondayOfISOWeek, getSundayOfISOWeek } from "@cms/utils/weeks";
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Search,
 } from "lucide-react";
+import { IconButton } from "@cms/components/ui";
 
 export interface UnitCalendarViewProps {
   objectId: string;
@@ -254,21 +255,29 @@ export function UnitCalendarView({
         </div>
 
         <div className='flex items-center gap-2'>
-          <button
+          <IconButton
+            type='button'
+            size='sm'
+            variant='outline'
             onClick={handlePrevMonth}
-            className='p-2 rounded-lg border border-neutral-200 dark:border-slate-800 hover:bg-neutral-100 dark:hover:bg-slate-800 transition text-neutral-600 dark:text-slate-400 cursor-pointer'
+            aria-label='Föregående månad'
+            className='border-neutral-200 dark:border-slate-800 hover:bg-neutral-100 dark:hover:bg-slate-800 text-neutral-600 dark:text-slate-400'
           >
             <ChevronLeft className='w-4 h-4' />
-          </button>
+          </IconButton>
           <span className='font-semibold text-sm w-28 text-center text-neutral-800 dark:text-slate-200'>
             {monthNames[month]} {year}
           </span>
-          <button
+          <IconButton
+            type='button'
+            size='sm'
+            variant='outline'
             onClick={handleNextMonth}
-            className='p-2 rounded-lg border border-neutral-200 dark:border-slate-800 hover:bg-neutral-100 dark:hover:bg-slate-800 transition text-neutral-600 dark:text-slate-400 cursor-pointer'
+            aria-label='Nästa månad'
+            className='border-neutral-200 dark:border-slate-800 hover:bg-neutral-100 dark:hover:bg-slate-800 text-neutral-600 dark:text-slate-400'
           >
             <ChevronRight className='w-4 h-4' />
-          </button>
+          </IconButton>
         </div>
       </div>
 

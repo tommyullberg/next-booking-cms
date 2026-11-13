@@ -25,14 +25,14 @@ import {
   Sparkles,
   Coins,
   Sliders,
+  AlertTriangle,
 } from "lucide-react";
 
-import { AdminTab } from "../types/admin";
-import { AdminLanguage, DEFAULT_ADMIN_LANGUAGE } from "../constants/languages";
-import { CmsBrandLogo } from "../components/ui/cms-brand-logo";
-import { FlagIcon } from "../components/ui/flag-icon";
+import { AdminTab } from "@cms/types/admin";
+import { AdminLanguage, DEFAULT_ADMIN_LANGUAGE } from "@cms/constants/languages";
+import { CmsBrandLogo, FlagIcon, Button, IconButton, SegmentedControl } from "@cms/components/ui";
 import { useTranslations } from "next-intl";
-import { useAdminIntl } from "../i18n";
+import { useAdminIntl, AdminLocale } from "@cms/i18n";
 
 export type { AdminTab };
 
@@ -85,6 +85,7 @@ export function AdminLayout({
     { id: "amenities", label: tNav("amenities"), icon: <Tag className='w-4 h-4' /> },
     { id: "mail-templates", label: tNav("mailTemplates"), icon: <Mail className='w-4 h-4' /> },
     { id: "booking-settings", label: tNav("bookingSettings"), icon: <Sliders className='w-4 h-4' /> },
+    { id: "discrepancies", label: "Avvikelser", icon: <AlertTriangle className='w-4 h-4 text-amber-500' /> },
   ];
 
   const initials =
@@ -122,54 +123,51 @@ export function AdminLayout({
         </div>
 
         <div className='flex items-center gap-3'>
-          <button
+          <Button
             type='button'
+            variant='adminOutline'
+            size='xs'
             onClick={handleReturnToPage}
             aria-label={locale === "sv" ? "Dölj admin / Tillbaka till sidan" : "Hide Admin / Return to Page"}
-            className='flex items-center gap-2 text-xs font-medium text-slate-200 hover:text-white px-3.5 py-1.5 rounded-lg border border-slate-800 bg-slate-900/70 hover:bg-slate-800/80 hover:border-slate-700 transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500'>
+          >
             <span>{locale === "sv" ? "Dölj admin / Tillbaka till sidan" : "Hide Admin / Return to Page"}</span>
             <ExternalLink className='w-3.5 h-3.5 text-slate-400' />
-          </button>
+          </Button>
 
           {/* Admin Language Switcher */}
-          <div role='group' aria-label={locale === "sv" ? "Välj språk" : "Choose language"} className='flex items-center gap-0.5 rounded-xl border border-slate-800 bg-slate-900/80 p-0.5 text-xs'>
-            <button
-              type='button'
-              disabled={isPending}
-              aria-pressed={locale === "en"}
-              onClick={() => setLocale("en")}
-              title='Switch to English'
-              aria-label='English'
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-                locale === "en" ? "bg-sky-600 text-white shadow-sm font-semibold" : "text-slate-400 hover:text-white"
-              }`}>
-              <FlagIcon code='en' size='xs' />
-              <span>English</span>
-            </button>
-            <button
-              type='button'
-              disabled={isPending}
-              aria-pressed={locale === "sv"}
-              onClick={() => setLocale("sv")}
-              title='Växla till svenska'
-              aria-label='Svenska'
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
-                locale === "sv" ? "bg-sky-600 text-white shadow-sm font-semibold" : "text-slate-400 hover:text-white"
-              }`}>
-              <FlagIcon code='sv' size='xs' />
-              <span>Svenska</span>
-            </button>
-          </div>
+          <SegmentedControl<AdminLocale>
+            size="sm"
+            aria-label={locale === "sv" ? "Välj språk" : "Choose language"}
+            value={locale}
+            disabled={isPending}
+            onChange={(val) => setLocale(val)}
+            className="shrink-0"
+            options={[
+              {
+                value: "en",
+                label: "English",
+                icon: <FlagIcon code="en" size="xs" />,
+              },
+              {
+                value: "sv",
+                label: "Svenska",
+                icon: <FlagIcon code="sv" size="xs" />,
+              },
+            ]}
+          />
 
-          <button
+          <IconButton
             type='button'
+            size='xs'
+            variant='ghost'
             onClick={toggleTheme}
             disabled={isThemeLocked}
-            className='p-2 rounded-lg text-amber-400/90 hover:text-amber-300 hover:bg-slate-900 transition disabled:opacity-80 disabled:cursor-default outline-none focus-visible:ring-2 focus-visible:ring-sky-500'
+            className='text-amber-400/90 hover:text-amber-300 hover:bg-slate-900'
             aria-label={isThemeLocked ? "Dark Mode locked" : theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-            title={isThemeLocked ? "Dark Mode locked" : "Toggle theme"}>
+            tooltip={isThemeLocked ? "Dark Mode locked" : "Toggle theme"}
+          >
             {theme === "dark" ? <Sun className='w-4 h-4' /> : <Moon className='w-4 h-4' />}
-          </button>
+          </IconButton>
 
           <div className='h-5 w-px bg-slate-800' />
 
@@ -181,14 +179,16 @@ export function AdminLayout({
           </div>
 
           {onLogout && (
-            <button
+            <IconButton
               type='button'
+              size='xs'
+              variant='adminGhostDestructive'
               onClick={onLogout}
-              className='p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800/80 transition outline-none focus-visible:ring-2 focus-visible:ring-red-500'
               aria-label={tCommon("signOut")}
-              title={tCommon("signOut")}>
+              tooltip={tCommon("signOut")}
+            >
               <LogOut className='w-4 h-4' />
-            </button>
+            </IconButton>
           )}
         </div>
       </header>
@@ -211,7 +211,7 @@ export function AdminLayout({
                     type='button'
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => onTabChange(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-admin-accent ${
                       isActive
                         ? "bg-sky-500/10 text-sky-400 border border-sky-500/30 font-semibold shadow-sm"
                         : "text-slate-400 hover:bg-slate-900 hover:text-slate-200 border border-transparent"
@@ -238,7 +238,7 @@ export function AdminLayout({
                     type='button'
                     aria-current={isActive ? "page" : undefined}
                     onClick={() => onTabChange(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-sky-500 ${
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-xs font-medium rounded-xl transition outline-none focus-visible:ring-2 focus-visible:ring-admin-accent ${
                       isActive
                         ? "bg-sky-500/10 text-sky-400 border border-sky-500/30 font-semibold shadow-sm"
                         : "text-slate-400 hover:bg-slate-900 hover:text-slate-200 border border-transparent"

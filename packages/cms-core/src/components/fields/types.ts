@@ -1,4 +1,4 @@
-import { GallerySettings } from "../../types/settings";
+import { GallerySettings } from "@cms/types/settings";
 
 export interface CMSNavigationLink {
   id: string;

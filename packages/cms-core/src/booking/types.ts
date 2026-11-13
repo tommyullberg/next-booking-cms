@@ -249,12 +249,15 @@ export interface SearchMatchItem {
   endDate: string;
   nights: number;
   totalPrice: number;
+  hasPriceError?: boolean;
+  priceErrorMessage?: string;
   offsetDays?: number;
 }
 
 export interface AvailabilitySearchResult {
   exactMatches: SearchMatchItem[];
   alternatives: SearchMatchItem[];
+  error?: string;
 }
 
 export interface CreateBookingRequest {

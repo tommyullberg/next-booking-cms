@@ -11,7 +11,7 @@ import {
 } from "./hooks";
 import { BookingDetailsModal } from "./booking-details-modal";
 import { BookingItem } from "./types";
-import { getISOWeekNumber, getMondayOfISOWeek, getSundayOfISOWeek } from "../utils/weeks";
+import { getISOWeekNumber, getMondayOfISOWeek, getSundayOfISOWeek } from "@cms/utils/weeks";
 import {
   ChevronLeft,
   ChevronRight,
@@ -30,7 +30,18 @@ import {
   Clock,
   Lock,
 } from "lucide-react";
-import { ModalPortal } from "../components/ui/modal-portal";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+  Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  FormField,
+  IconButton,
+} from "@cms/components/ui";
 
 export interface UnitCalendarInteractProps {
   objectId: string;
@@ -464,21 +475,29 @@ export function UnitCalendarInteract({
         </div>
 
         <div className='flex items-center gap-2'>
-          <button
+          <IconButton
             type='button'
+            size='sm'
+            variant='outline'
             onClick={handlePrevMonth}
-            className='p-2 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-200/70 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-800 text-neutral-800 dark:text-slate-300 transition shadow-xs cursor-pointer'>
+            aria-label='Föregående månad'
+            className='rounded-xl border-neutral-300 bg-white hover:bg-neutral-200/70 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-800 text-neutral-800 dark:text-slate-300 shadow-xs'
+          >
             <ChevronLeft className='w-4 h-4' />
-          </button>
+          </IconButton>
           <span className='text-xs font-bold text-neutral-900 dark:text-slate-200 min-w-28 text-center'>
             {monthNames[month]} {year}
           </span>
-          <button
+          <IconButton
             type='button'
+            size='sm'
+            variant='outline'
             onClick={handleNextMonth}
-            className='p-2 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-200/70 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-800 text-neutral-800 dark:text-slate-300 transition shadow-xs cursor-pointer'>
+            aria-label='Nästa månad'
+            className='rounded-xl border-neutral-300 bg-white hover:bg-neutral-200/70 dark:border-slate-800 dark:bg-transparent dark:hover:bg-slate-800 text-neutral-800 dark:text-slate-300 shadow-xs'
+          >
             <ChevronRight className='w-4 h-4' />
-          </button>
+          </IconButton>
         </div>
       </div>
 
@@ -904,18 +923,20 @@ export function UnitCalendarInteract({
       )}
 
       {/* Booking Modal */}
-      {isFormOpen && (
-        <ModalPortal>
-          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-150'>
-            <div className='w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white my-8 max-h-[90vh] overflow-y-auto'>
-              <div className='flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-4'>
-                <div>
-                  <h3 className='text-lg font-bold'>Slutför bokningsförfrågan</h3>
-                  <p className='text-xs text-slate-500 dark:text-slate-400 mt-0.5'>
-                    {objectName}: <span className='font-semibold text-slate-900 dark:text-white'>{startDate}</span> till{" "}
-                    <span className='font-semibold text-slate-900 dark:text-white'>{endDate}</span> ({nights} nätter)
-                  </p>
-                </div>
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent
+          size="xl"
+          hideCloseButton
+          className='w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 sm:p-7 shadow-2xl dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-white max-h-[90vh] overflow-y-auto'
+        >
+          <div className='flex items-start justify-between border-b border-slate-200 dark:border-slate-800 pb-4 mb-4'>
+            <div>
+              <DialogTitle className='text-lg font-bold'>Slutför bokningsförfrågan</DialogTitle>
+              <DialogDescription className='text-xs text-slate-500 dark:text-slate-400 mt-0.5'>
+                {objectName}: <span className='font-semibold text-slate-900 dark:text-white'>{startDate}</span> till{" "}
+                <span className='font-semibold text-slate-900 dark:text-white'>{endDate}</span> ({nights} nätter)
+              </DialogDescription>
+            </div>
                 <button
                   type='button'
                   onClick={() => setIsFormOpen(false)}
@@ -936,22 +957,18 @@ export function UnitCalendarInteract({
               ) : (
                 <form onSubmit={handleSubmitBooking} className='space-y-5'>
                   {bookingError && (
-                    <div className='flex items-center gap-2 rounded-xl bg-rose-50 p-3 text-xs text-rose-600 dark:bg-rose-950/20 dark:text-rose-400'>
-                      <AlertCircle className='w-4 h-4 shrink-0' />
-                      <span>{bookingError}</span>
-                    </div>
+                    <Alert variant="destructive">
+                      {bookingError}
+                    </Alert>
                   )}
 
                   {/* Informational Disclaimer regarding Booking.com sync */}
-                  <div className='flex items-start gap-3 p-3.5 rounded-2xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/40 text-xs text-sky-900 dark:text-sky-200'>
-                    <Info className='w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5' />
-                    <div className='space-y-1'>
-                      <span className='font-semibold block'>Manuell avstämning mot externa bokningskanaler</span>
-                      <p className='text-[11px] leading-relaxed text-sky-800/90 dark:text-sky-300/80'>
-                        Boendet hyrs även ut via externa kanaler såsom Booking.com. Alla bokningar granskas och bekräftas manuellt av hyresvärden innan bindande avtal och betalningsinstruktioner utfärdas, för att säkerställa att inga dubbelbokningar sker.
-                      </p>
-                    </div>
-                  </div>
+                  <Alert variant="info">
+                    <AlertTitle>Manuell avstämning mot externa bokningskanaler</AlertTitle>
+                    <AlertDescription className="text-[0.6875rem] leading-relaxed text-sky-800/90 dark:text-sky-300/80">
+                      Boendet hyrs även ut via externa kanaler såsom Booking.com. Alla bokningar granskas och bekräftas manuellt av hyresvärden innan bindande avtal och betalningsinstruktioner utfärdas, för att säkerställa att inga dubbelbokningar sker.
+                    </AlertDescription>
+                  </Alert>
 
                   {/* Booking Flow Choice: Preliminary Reservation vs General Inquiry */}
                   <div className='space-y-2'>
@@ -1016,10 +1033,7 @@ export function UnitCalendarInteract({
                     </label>
 
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-3'>
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          För- och efternamn *
-                        </label>
+                      <FormField label='För- och efternamn' required labelVariant="booking">
                         <input
                           type='text'
                           required
@@ -1028,12 +1042,9 @@ export function UnitCalendarInteract({
                           placeholder='Anna Andersson'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          E-postadress *
-                        </label>
+                      <FormField label='E-postadress' required labelVariant="booking">
                         <input
                           type='email'
                           required
@@ -1042,12 +1053,9 @@ export function UnitCalendarInteract({
                           placeholder='anna@example.com'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Mobilnummer
-                        </label>
+                      <FormField label='Mobilnummer' labelVariant="booking">
                         <input
                           type='tel'
                           value={customerMobile}
@@ -1055,12 +1063,9 @@ export function UnitCalendarInteract({
                           placeholder='+46 70 123 4567'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Fast telefon (valfritt)
-                        </label>
+                      <FormField label='Fast telefon (valfritt)' labelVariant="booking">
                         <input
                           type='tel'
                           value={customerPhone}
@@ -1068,12 +1073,12 @@ export function UnitCalendarInteract({
                           placeholder='+46 8 123 456'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div className='sm:col-span-2'>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Gatuadress (Adressrad 1)
-                        </label>
+                      <FormField
+                        label='Gatuadress (Adressrad 1)'
+                        labelVariant="booking"
+                        className='sm:col-span-2'>
                         <input
                           type='text'
                           value={addressLine1}
@@ -1081,12 +1086,9 @@ export function UnitCalendarInteract({
                           placeholder='Storgatan 12'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Postnummer
-                        </label>
+                      <FormField label='Postnummer' labelVariant="booking">
                         <input
                           type='text'
                           value={postalCode}
@@ -1094,12 +1096,9 @@ export function UnitCalendarInteract({
                           placeholder='123 45'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Ort
-                        </label>
+                      <FormField label='Ort' labelVariant="booking">
                         <input
                           type='text'
                           value={city}
@@ -1107,12 +1106,9 @@ export function UnitCalendarInteract({
                           placeholder='Stockholm'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div className='sm:col-span-2'>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Land
-                        </label>
+                      <FormField label='Land' labelVariant="booking" className='sm:col-span-2'>
                         <input
                           type='text'
                           value={country}
@@ -1120,7 +1116,7 @@ export function UnitCalendarInteract({
                           placeholder='Sverige'
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
                     </div>
                   </div>
 
@@ -1131,10 +1127,7 @@ export function UnitCalendarInteract({
                     </label>
 
                     <div className='grid grid-cols-3 gap-3'>
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Antal vuxna
-                        </label>
+                      <FormField label='Antal vuxna' labelVariant="booking">
                         <input
                           type='number'
                           min={1}
@@ -1143,12 +1136,9 @@ export function UnitCalendarInteract({
                           onChange={(e) => setAdultsCount(Number(e.target.value))}
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Antal barn
-                        </label>
+                      <FormField label='Antal barn' labelVariant="booking">
                         <input
                           type='number'
                           min={0}
@@ -1157,12 +1147,9 @@ export function UnitCalendarInteract({
                           onChange={(e) => setChildrenCount(Number(e.target.value))}
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
 
-                      <div>
-                        <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                          Husdjur
-                        </label>
+                      <FormField label='Husdjur' labelVariant="booking">
                         <input
                           type='number'
                           min={0}
@@ -1171,15 +1158,14 @@ export function UnitCalendarInteract({
                           onChange={(e) => setPetsCount(Number(e.target.value))}
                           className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none'
                         />
-                      </div>
+                      </FormField>
                     </div>
                   </div>
 
                   {/* Guest message / special requests */}
-                  <div>
-                    <label className='block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1'>
-                      Meddelande eller särskilda önskemål till hyresvärden
-                    </label>
+                  <FormField
+                    label='Meddelande eller särskilda önskemål till hyresvärden'
+                    labelVariant="booking">
                     <textarea
                       rows={3}
                       value={customerNotes}
@@ -1187,7 +1173,7 @@ export function UnitCalendarInteract({
                       placeholder='T.ex. ankomsttid, frågor om barnsäng, sänglinne eller specifika önskemål...'
                       className='w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent p-2.5 text-xs text-slate-900 dark:text-white focus:border-sky-500 focus:outline-none resize-none'
                     />
-                  </div>
+                  </FormField>
 
                   {/* Summary & Price */}
                   <div className='border-t border-slate-200 dark:border-slate-800 pt-3 flex items-center justify-between'>
@@ -1204,26 +1190,27 @@ export function UnitCalendarInteract({
 
                   {/* Actions */}
                   <div className='flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800'>
-                    <button
+                    <Button
                       type='button'
+                      variant='secondary'
+                      size='sm'
                       onClick={() => setIsFormOpen(false)}
-                      className='px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition'>
+                    >
                       Avbryt
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type='submit'
-                      disabled={createMutation.isPending}
-                      className='flex items-center gap-1.5 px-5 py-2.5 text-xs font-semibold rounded-xl bg-sky-600 text-white hover:bg-sky-500 shadow-lg shadow-sky-600/25 transition'>
-                      {createMutation.isPending && <Loader2 className='w-3.5 h-3.5 animate-spin' />}
+                      variant='default'
+                      size='default'
+                      loading={createMutation.isPending}
+                    >
                       <span>{isPreliminary ? "Skicka preliminär reservation" : "Skicka bokningsförfrågan"}</span>
-                    </button>
+                    </Button>
                   </div>
                 </form>
               )}
-            </div>
-          </div>
-        </ModalPortal>
-      )}
+        </DialogContent>
+      </Dialog>
       {/* Admin Booking Details Modal */}
       {isAdmin && selectedAdminBooking && (
         <BookingDetailsModal

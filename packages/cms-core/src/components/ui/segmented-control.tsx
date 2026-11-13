@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { cn } from "../../utils/cn";
+import { cn } from "@cms/utils/cn";
 
 export interface SegmentedControlOption<T extends string | number = string | number> {
   value: T;
@@ -140,7 +140,7 @@ export function SegmentedControl<T extends string | number = string | number>({
             onClick={() => handleSelect(option.value, idx)}
             onKeyDown={(e) => handleKeyDown(e, idx)}
             className={cn(
-              "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-admin-compact font-medium transition-all outline-none focus-visible:ring-2 focus-visible:ring-admin-accent",
+              "inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-admin-compact font-medium transition-all outline-none focus-visible:ring-2 focus-visible:ring-admin-accent",
               size === "sm"
                 ? "px-2.5 py-1 text-xs"
                 : "px-3.5 py-1.5 text-xs font-semibold",

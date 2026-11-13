@@ -7,7 +7,8 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "next lint",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "seed": "tsx src/seed/seed-app.ts"
   },
   "dependencies": {
     "@next-booking/cms-core": "*",

@@ -17,7 +17,8 @@ export type AdminTab =
   | "optionals"
   | "amenities"
   | "mail-templates"
-  | "booking-settings";
+  | "booking-settings"
+  | "discrepancies";
 
 export type PageStatus = "NEW" | "PUBLISHED" | "ARCHIVED";
 
