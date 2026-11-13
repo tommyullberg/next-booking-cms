@@ -28,12 +28,13 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   DatePicker,
   FlagIcon,
   FormField,
   Input,
   Label,
-  NativeSelect,
+  SegmentedControl,
   Textarea,
 } from "@cms/components/ui";
 import { cn } from "@cms/utils/cn";
@@ -47,6 +48,7 @@ import {
   validateSlugInput,
   isDefaultIdOrRootSlug,
 } from "@cms/utils/slug";
+import { getPageUrl } from "@cms/utils/url";
 import {
   CMSTemplateOption,
   DEFAULT_CMS_TEMPLATES,
@@ -56,7 +58,12 @@ import {
   LANGUAGE_META,
   getLanguageMeta,
   AdminLanguage,
+  DEFAULT_ACTIVE_LANGUAGES,
+  DEFAULT_SITE_LANGUAGE,
+  DEFAULT_LANGUAGE_URL_PREFIX,
+  SupportedLocale,
 } from "@cms/constants/languages";
+import { DefaultLanguageUrlPrefix } from "@cms/types/settings";
 import { formatDateInput } from "@cms/constants/dates";
 import { PageStatus } from "@cms/types/admin";
 
@@ -72,6 +79,8 @@ export interface PageEditorData {
   meta_title?: string | null;
   meta_description?: string | null;
   slug: string;
+  slug_mode?: "same" | "separate" | string;
+  active_languages?: string[] | null | unknown;
   status: PageStatus;
   publication_start?: string | Date | null;
   publication_end?: string | Date | null;
@@ -81,8 +90,12 @@ export interface PageEditorData {
     locale: string;
     page_title: string;
     link_description?: string | null;
+    linkDescription?: string | null;
     meta_title?: string | null;
+    metaTitle?: string | null;
     meta_description?: string | null;
+    metaDescription?: string | null;
+    slug?: string | null;
   }>;
 }
 
@@ -99,6 +112,8 @@ export interface PageEditorViewProps {
   bookingObjects?: BookingObjectDetails[];
   activeLanguages?: string[];
   activeLocales?: string[];
+  defaultLanguage?: SupportedLocale;
+  defaultLanguageUrlPrefix?: DefaultLanguageUrlPrefix;
   adminLanguage?: AdminLanguage;
   onBack: () => void;
   onSave: (data: any) => Promise<void>;
@@ -147,6 +162,8 @@ export function PageEditorView({
   bookingObjects = [],
   activeLanguages,
   activeLocales = ["sv", "en", "de"],
+  defaultLanguage: propDefaultLanguage = DEFAULT_SITE_LANGUAGE,
+  defaultLanguageUrlPrefix: propDefaultLanguageUrlPrefix = DEFAULT_LANGUAGE_URL_PREFIX,
   adminLanguage = "en",
   onBack,
   onSave,
@@ -154,19 +171,51 @@ export function PageEditorView({
   const t = useTranslations("pageEditor");
   const tCommon = useTranslations("common");
 
-  const svTitleId = useId();
-  const svLinkId = useId();
+  const defaultLanguage: SupportedLocale = propDefaultLanguage;
+  const defaultLanguageUrlPrefix: DefaultLanguageUrlPrefix = propDefaultLanguageUrlPrefix;
+
+  const siteLanguages = React.useMemo(() => {
+    const list = Array.isArray(activeLanguages) && activeLanguages.length > 0
+      ? activeLanguages
+      : Array.isArray(activeLocales) && activeLocales.length > 0
+      ? activeLocales
+      : [...DEFAULT_ACTIVE_LANGUAGES];
+    return Array.from(new Set([defaultLanguage, ...list.map((l) => l.toLowerCase())]));
+  }, [activeLanguages, activeLocales, defaultLanguage]);
+
+  const [pageActiveLanguages, setPageActiveLanguages] = useState<string[]>(() => {
+    if (Array.isArray(page.active_languages) && page.active_languages.length > 0) {
+      const parsed = (page.active_languages as string[])
+        .map((l) => String(l).toLowerCase().trim())
+        .filter(Boolean);
+      if (parsed.length > 0) return Array.from(new Set(parsed));
+    }
+    return [defaultLanguage];
+  });
+
+  const togglePageLanguage = (locale: string) => {
+    setPageActiveLanguages((prev) => {
+      if (prev.includes(locale)) {
+        if (prev.length <= 1) return prev; // At least one language must remain active
+        return prev.filter((l) => l !== locale);
+      }
+      return [...prev, locale];
+    });
+  };
+
+  const primaryInputId = useId();
+  const primaryLinkId = useId();
   const pubStartId = useId();
   const pubEndId = useId();
-  const svMetaTitleId = useId();
-  const svMetaDescId = useId();
+  const primaryMetaTitleId = useId();
+  const primaryMetaDescId = useId();
   const templateLabelId = useId();
   const templateTriggerId = useId();
   const templateListboxId = useId();
+  const sectionLabelId = useId();
+  const sectionTriggerId = useId();
+  const sectionListboxId = useId();
   const statusLabelId = useId();
-
-  const effectiveLocales = activeLanguages || activeLocales;
-  const secondaryLocales = effectiveLocales.filter((loc) => loc !== "sv");
 
   const isHomepage = Number(page.id) === 1001;
   const initialResolved = resolveTemplateOption(page.template_name, availableTemplates);
@@ -177,6 +226,7 @@ export function PageEditorView({
       bookingObjects.find((o) => Number(o.page_id) === Number(page.id)) || null
     );
   }, [bookingObjects, page.id]);
+
   const [savedStatus, setSavedStatus] = useState<"NEW" | "PUBLISHED" | "ARCHIVED">(page.status || "NEW");
   const [status, setStatus] = useState<"NEW" | "PUBLISHED" | "ARCHIVED">(page.status || "NEW");
   const [templateName, setTemplateName] = useState<string>(
@@ -202,6 +252,10 @@ export function PageEditorView({
       }, 0);
     }
   }, [isTemplateOpen, selectableTemplates, templateName]);
+
+  const [isSectionOpen, setIsSectionOpen] = useState(false);
+  const sectionTriggerRef = React.useRef<HTMLButtonElement | null>(null);
+  const sectionOptionsRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
 
   const statusOptions: Array<"NEW" | "PUBLISHED" | "ARCHIVED"> = ["NEW", "PUBLISHED", "ARCHIVED"];
   const handleStatusKeyDown = (
@@ -230,16 +284,61 @@ export function PageEditorView({
       statusButtonRefs.current[targetIndex]?.focus();
     }
   };
+
   const [sectionId, setSectionId] = useState<string>(page.section_id || "");
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(() =>
     Array.isArray(page.categories) ? page.categories.map((c) => c.id) : []
   );
+
+  // Slug Mode: "same" vs "separate" (defaults to "separate" for new pages)
+  const [slugMode, setSlugMode] = useState<"same" | "separate">(() =>
+    page.slug_mode === "same" ? "same" : "separate"
+  );
+
   const [slug, setSlug] = useState<string>(() => {
     if (isHomepage || isDefaultIdOrRootSlug(page.slug, page.id)) {
       return "";
     }
     return page.slug.replace(/^\/+/, "");
   });
+
+  const [separateSlugs, setSeparateSlugs] = useState<Record<string, string>>(() => {
+    const map: Record<string, string> = {};
+    map[defaultLanguage] =
+      !isHomepage && !isDefaultIdOrRootSlug(page.slug, page.id)
+        ? page.slug.replace(/^\/+/, "")
+        : "";
+    for (const loc of siteLanguages) {
+      if (loc === defaultLanguage) continue;
+      const existing = page.translations?.find((t) => t.locale.toLowerCase() === loc.toLowerCase());
+      if (existing?.slug && !isDefaultIdOrRootSlug(existing.slug, page.id)) {
+        map[loc] = existing.slug.replace(/^\/+/, "");
+      } else {
+        map[loc] = "";
+      }
+    }
+    return map;
+  });
+
+  const handleSlugModeChange = (newMode: "same" | "separate") => {
+    if (newMode === slugMode) return;
+    if (newMode === "same") {
+      const commonVal = separateSlugs[defaultLanguage] || slug;
+      setSlug(commonVal);
+      setSlugMode("same");
+    } else {
+      setSeparateSlugs((prev) => {
+        const next = { ...prev };
+        for (const loc of siteLanguages) {
+          if (!next[loc] || !next[loc].trim()) {
+            next[loc] = slug;
+          }
+        }
+        return next;
+      });
+      setSlugMode("separate");
+    }
+  };
 
   const slugValidation = isHomepage
     ? { isValid: true, error: null }
@@ -248,18 +347,18 @@ export function PageEditorView({
         existingPages,
       });
 
-  // Primary Swedish values
-  const [svTitle, setSvTitle] = useState(page.page_title || "");
-  const [svLinkTitle, setSvLinkTitle] = useState(() => {
+  // Primary language values
+  const [primaryTitle, setPrimaryTitle] = useState(page.page_title || "");
+  const [primaryLinkTitle, setPrimaryLinkTitle] = useState(() => {
     if (page.link_description && page.link_description.trim() !== (page.page_title || "").trim()) {
       return page.link_description;
     }
     return "";
   });
-  const [svMetaTitle, setSvMetaTitle] = useState(page.meta_title || "");
-  const [svMetaDesc, setSvMetaDesc] = useState(page.meta_description || "");
+  const [primaryMetaTitle, setPrimaryMetaTitle] = useState(page.meta_title || "");
+  const [primaryMetaDesc, setPrimaryMetaDesc] = useState(page.meta_description || "");
 
-  // Secondary language translations map
+  // Translations map for secondary site languages
   const [translations, setTranslations] = useState<
     Record<
       string,
@@ -280,10 +379,11 @@ export function PageEditorView({
         metaDescription: string;
       }
     > = {};
-    for (const loc of secondaryLocales) {
-      const existing = page.translations?.find((t) => t.locale === loc);
+    for (const loc of siteLanguages) {
+      if (loc === defaultLanguage) continue;
+      const existing = page.translations?.find((t) => t.locale.toLowerCase() === loc.toLowerCase());
       const existingTitle = existing?.page_title || "";
-      const existingLink = existing?.link_description || "";
+      const existingLink = existing?.link_description || (existing as any)?.linkDescription || "";
       const customLink =
         existingLink && existingLink.trim() !== existingTitle.trim()
           ? existingLink
@@ -291,16 +391,19 @@ export function PageEditorView({
       map[loc] = {
         pageTitle: existingTitle,
         linkDescription: customLink,
-        metaTitle: existing?.meta_title || "",
-        metaDescription: existing?.meta_description || "",
+        metaTitle: existing?.meta_title || (existing as any)?.metaTitle || "",
+        metaDescription: existing?.meta_description || (existing as any)?.metaDescription || "",
       };
     }
     return map;
   });
 
-  // Toggle states for hiding translations
   const [useSamePageTitle, setUseSamePageTitle] = useState(false);
   const [useSameLinkTitle, setUseSameLinkTitle] = useState(false);
+
+  // Validation errors
+  const [titleErrors, setTitleErrors] = useState<Record<string, string>>({});
+  const [slugErrors, setSlugErrors] = useState<Record<string, string>>({});
 
   // Date fields
   const [publicationStart, setPublicationStart] = useState<string>(formatDateInput(page.publication_start));
@@ -354,58 +457,132 @@ export function PageEditorView({
         [field]: value,
       },
     }));
+    if (field === "pageTitle" && value.trim()) {
+      setTitleErrors((prev) => {
+        const next = { ...prev };
+        delete next[locale];
+        return next;
+      });
+    }
   };
+
+  const secondaryActiveLocales = React.useMemo(
+    () => pageActiveLanguages.filter((l) => l !== defaultLanguage),
+    [pageActiveLanguages, defaultLanguage]
+  );
 
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const finalCleanSlug = isHomepage ? "" : cleanSlugInput(slug, false);
-    const check = isHomepage
-      ? { isValid: true, error: null }
-      : validateSlugInput(finalCleanSlug, {
+
+    // 1. Validate mandatory page titles for ALL active languages
+    const newTitleErrors: Record<string, string> = {};
+    if (pageActiveLanguages.includes(defaultLanguage)) {
+      if (!primaryTitle || !primaryTitle.trim()) {
+        newTitleErrors[defaultLanguage] =
+          adminLanguage === "sv"
+            ? "Sidtitel är obligatorisk."
+            : "Page title is required.";
+      }
+    }
+    for (const loc of secondaryActiveLocales) {
+      const locTitle = translations[loc]?.pageTitle;
+      if (!locTitle || !locTitle.trim()) {
+        newTitleErrors[loc] =
+          adminLanguage === "sv"
+            ? "Sidtitel är obligatorisk."
+            : "Page title is required.";
+      }
+    }
+
+    if (Object.keys(newTitleErrors).length > 0) {
+      setTitleErrors(newTitleErrors);
+      return;
+    }
+    setTitleErrors({});
+
+    // 2. Validate slugs
+    const newSlugErrors: Record<string, string> = {};
+    if (!isHomepage) {
+      if (slugMode === "same") {
+        const finalCleanSlug = cleanSlugInput(slug, false);
+        const check = validateSlugInput(finalCleanSlug, {
           currentPageId: page.id,
           existingPages,
         });
-    if (!check.isValid) {
-      return;
+        if (!check.isValid) {
+          newSlugErrors["common"] = check.error || "Invalid URL slug.";
+        }
+      } else {
+        for (const loc of pageActiveLanguages) {
+          const locSlug = cleanSlugInput(separateSlugs[loc] || "", false);
+          if (locSlug) {
+            const check = validateSlugInput(locSlug, {
+              currentPageId: page.id,
+              existingPages,
+            });
+            if (!check.isValid) {
+              newSlugErrors[loc] = check.error || "Invalid URL slug.";
+            }
+          }
+        }
+      }
     }
 
-    setSlug(finalCleanSlug);
+    if (Object.keys(newSlugErrors).length > 0) {
+      setSlugErrors(newSlugErrors);
+      return;
+    }
+    setSlugErrors({});
+
     setIsSaving(true);
     setSaveSuccess(false);
 
     try {
-      const translationPayload = secondaryLocales.map((loc) => {
-        const current = translations[loc] || {
-          pageTitle: "",
-          linkDescription: "",
-          metaTitle: "",
-          metaDescription: "",
-        };
-        const effPageTitle = useSamePageTitle ? svTitle : current.pageTitle || svTitle;
-        const rawLink = useSameLinkTitle ? svLinkTitle : current.linkDescription;
-        const effLink = rawLink && rawLink.trim() ? rawLink.trim() : null;
+      const translationPayload = siteLanguages
+        .filter((loc) => loc !== defaultLanguage)
+        .map((loc) => {
+          const current = translations[loc] || {
+            pageTitle: "",
+            linkDescription: "",
+            metaTitle: "",
+            metaDescription: "",
+          };
+          const effPageTitle = useSamePageTitle ? primaryTitle : current.pageTitle || primaryTitle;
+          const rawLink = useSameLinkTitle ? primaryLinkTitle : current.linkDescription;
+          const effLink = rawLink && rawLink.trim() ? rawLink.trim() : null;
+          const locSlug =
+            slugMode === "separate"
+              ? (separateSlugs[loc] ? cleanSlugInput(separateSlugs[loc], false) : null)
+              : null;
 
-        return {
-          locale: loc,
-          pageTitle: effPageTitle,
-          linkDescription: effLink,
-          metaTitle: current.metaTitle ? current.metaTitle : null,
-          metaDescription: current.metaDescription ? current.metaDescription : null,
-        };
-      });
+          return {
+            locale: loc,
+            pageTitle: effPageTitle,
+            linkDescription: effLink,
+            metaTitle: current.metaTitle ? current.metaTitle : null,
+            metaDescription: current.metaDescription ? current.metaDescription : null,
+            slug: locSlug,
+          };
+        });
+
+      const finalDefaultSlug = isHomepage
+        ? "/"
+        : slugMode === "separate"
+        ? cleanSlugInput(separateSlugs[defaultLanguage] || "", false) || String(page.id)
+        : cleanSlugInput(slug, false) || String(page.id);
 
       await onSave({
         id: page.id,
         templateName: isHomepage ? "startpage" : templateName,
         sectionId: sectionId || null,
         categoryIds: selectedCategoryIds,
-        pageTitle: svTitle,
-        linkDescription: svLinkTitle.trim() || null,
-        metaTitle: svMetaTitle ? svMetaTitle : null,
-        metaDescription: svMetaDesc ? svMetaDesc : null,
-        slug: isHomepage
-          ? "/"
-          : finalCleanSlug || String(page.id),
+        pageTitle: primaryTitle,
+        linkDescription: primaryLinkTitle.trim() || null,
+        metaTitle: primaryMetaTitle ? primaryMetaTitle : null,
+        metaDescription: primaryMetaDesc ? primaryMetaDesc : null,
+        slug: finalDefaultSlug,
+        slugMode,
+        activeLanguages: pageActiveLanguages,
         status,
         publicationStart: publicationStart ? new Date(publicationStart).toISOString() : null,
         publicationEnd: publicationEnd ? new Date(publicationEnd).toISOString() : null,
@@ -440,7 +617,7 @@ export function PageEditorView({
       {/* Top Bar */}
       <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-4'>
         <h1 className='text-2xl font-bold tracking-tight text-white'>
-          {t("editPageTitle", { title: translations.en?.pageTitle || svTitle || "Untitled" })}
+          {t("editPageTitle", { title: primaryTitle || "Untitled" })}
         </h1>
 
         <div className='flex items-center gap-2.5'>
@@ -483,52 +660,136 @@ export function PageEditorView({
 
           <Card variant="admin" className='p-6'>
             <form onSubmit={handleSave} className='space-y-6'>
+            {/* 0. Active Languages for Page */}
+            <div className='space-y-2 pb-3 border-b border-slate-800/80'>
+              <div className='flex items-center justify-between'>
+                <Label className='block text-xs font-semibold text-slate-200'>
+                  {t("activeLanguagesForPage")}
+                </Label>
+                <span className='text-[11px] text-slate-400 font-mono'>
+                  {pageActiveLanguages.length} {adminLanguage === "sv" ? "aktiva" : "active"}
+                </span>
+              </div>
+              <p className='text-[11px] text-slate-400'>
+                {t("activeLanguagesForPageHelp")}
+              </p>
+              <div className='flex flex-wrap gap-2 pt-1'>
+                {siteLanguages.map((loc) => {
+                  const meta = LANGUAGE_META[loc] || getLanguageMeta(loc);
+                  const isChecked = pageActiveLanguages.includes(loc);
+                  const isLastActive = isChecked && pageActiveLanguages.length === 1;
+                  const isSiteDefault = loc === defaultLanguage;
+                  return (
+                    <button
+                      key={loc}
+                      type='button'
+                      aria-pressed={isChecked}
+                      disabled={isLastActive}
+                      onClick={() => togglePageLanguage(loc)}
+                      className={cn(
+                        "inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-medium transition select-none",
+                        isChecked
+                          ? "border-sky-500/60 bg-sky-950/40 text-sky-200 ring-1 ring-sky-500/30"
+                          : "border-slate-800 bg-slate-900/60 text-slate-400 hover:border-slate-700 hover:text-slate-300",
+                        isLastActive && "opacity-80 cursor-not-allowed"
+                      )}
+                    >
+                      <FlagIcon code={loc} size='sm' />
+                      <span>{meta.label}</span>
+                      <Badge variant='adminMuted' size='xs' className='cms-text-code'>
+                        {meta.code}
+                      </Badge>
+                      {isChecked && (
+                        <Check className='w-3.5 h-3.5 text-sky-400 shrink-0 stroke-[2.5]' aria-hidden='true' />
+                      )}
+                      {isSiteDefault && (
+                        <span className='text-[10px] text-sky-400 font-mono' title='Standardspråk'>★</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* 1. Page Title (Multi-language stacked) */}
             <div className='space-y-2.5'>
-              <Label htmlFor={svTitleId} className='block text-xs font-medium text-slate-200'>
-                {t("pageTitle")}
-              </Label>
-
-              {/* Primary Language (SE) */}
-              <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
-                <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
-                  <FlagIcon code='sv' size='sm' />
-                  <span className='cms-text-code'>{LANGUAGE_META.sv.code}</span>
+              <div className='flex items-center justify-between'>
+                <Label htmlFor={primaryInputId} className='block text-xs font-medium text-slate-200'>
+                  {t("pageTitle")} <span className='text-red-400'>*</span>
+                </Label>
+                <span className='text-[11px] text-slate-400'>
+                  {t("titleRequired")}
                 </span>
-                <Input
-                  id={svTitleId}
-                  type='text'
-                  required
-                  value={svTitle}
-                  onChange={(e) => setSvTitle(e.target.value)}
-                  placeholder={t("svTitlePlaceholder")}
-                  className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
-                />
               </div>
+
+              {/* Primary Language */}
+              {pageActiveLanguages.includes(defaultLanguage) && (
+                <div className='space-y-1'>
+                  <div className={cn(
+                    "flex items-center rounded-xl border bg-slate-950/90 overflow-hidden transition",
+                    titleErrors[defaultLanguage]
+                      ? "border-red-500 ring-1 ring-red-500/30"
+                      : "border-slate-800 focus-within:border-sky-500"
+                  )}>
+                    <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
+                      <FlagIcon code={defaultLanguage} size='sm' />
+                      <span className='cms-text-code'>{(LANGUAGE_META[defaultLanguage] || getLanguageMeta(defaultLanguage)).code}</span>
+                    </span>
+                    <Input
+                      id={primaryInputId}
+                      type='text'
+                      required
+                      value={primaryTitle}
+                      onChange={(e) => {
+                        setPrimaryTitle(e.target.value);
+                        if (e.target.value.trim()) {
+                          setTitleErrors((prev) => {
+                            const next = { ...prev };
+                            delete next[defaultLanguage];
+                            return next;
+                          });
+                        }
+                      }}
+                      placeholder={t("svTitlePlaceholder")}
+                      className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+                    />
+                  </div>
+                  {titleErrors[defaultLanguage] && (
+                    <p className='text-[11px] text-red-400 pl-1'>{titleErrors[defaultLanguage]}</p>
+                  )}
+                </div>
+              )}
 
               {/* Secondary Active Languages (Tightly stacked underneath, one per row) */}
               {!useSamePageTitle &&
-                secondaryLocales.map((loc) => {
-                  const meta = LANGUAGE_META[loc] || {
-                    code: loc.toUpperCase(),
-                    flag: "",
-                    label: loc,
-                  };
+                secondaryActiveLocales.map((loc) => {
+                  const meta = LANGUAGE_META[loc] || getLanguageMeta(loc);
+                  const err = titleErrors[loc];
                   return (
-                    <div
-                      key={loc}
-                      className='flex items-center rounded-xl border border-slate-800/80 bg-slate-950/60 overflow-hidden focus-within:border-sky-500 transition'>
-                      <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20'>
-                        <FlagIcon code={loc} size='sm' />
-                        <span className='cms-text-code'>{meta.code}</span>
-                      </span>
-                      <Input
-                        type='text'
-                        value={translations[loc]?.pageTitle || ""}
-                        onChange={(e) => updateTranslation(loc, "pageTitle", e.target.value)}
-                        placeholder={t("translationsTitlePlaceholder", { language: meta.label })}
-                        className='h-auto border-0 bg-transparent px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
-                      />
+                    <div key={loc} className='space-y-1'>
+                      <div
+                        className={cn(
+                          "flex items-center rounded-xl border bg-slate-950/60 overflow-hidden transition",
+                          err
+                            ? "border-red-500 ring-1 ring-red-500/30"
+                            : "border-slate-800/80 focus-within:border-sky-500"
+                        )}
+                      >
+                        <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/50 border-r border-slate-800/80 shrink-0 w-20'>
+                          <FlagIcon code={loc} size='sm' />
+                          <span className='cms-text-code'>{meta.code}</span>
+                        </span>
+                        <Input
+                          type='text'
+                          value={translations[loc]?.pageTitle || ""}
+                          onChange={(e) => updateTranslation(loc, "pageTitle", e.target.value)}
+                          placeholder={t("translationsTitlePlaceholder", { language: meta.label })}
+                          className='h-auto border-0 bg-transparent px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+                        />
+                      </div>
+                      {err && (
+                        <p className='text-[11px] text-red-400 pl-1'>{err}</p>
+                      )}
                     </div>
                   );
                 })}
@@ -555,37 +816,35 @@ export function PageEditorView({
 
             {/* 2. Link text (if other) */}
             <div className='space-y-2.5'>
-              <Label htmlFor={svLinkId} className='block text-xs font-medium text-slate-200'>
+              <Label htmlFor={primaryLinkId} className='block text-xs font-medium text-slate-200'>
                 {t("linkText")}
               </Label>
 
-              {/* Primary Language (SE) */}
-              <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
-                <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
-                  <FlagIcon code='sv' size='sm' />
-                  <span className='cms-text-code'>{LANGUAGE_META.sv.code}</span>
-                </span>
-                <Input
-                  id={svLinkId}
-                  type='text'
-                  value={svLinkTitle}
-                  onChange={(e) => setSvLinkTitle(e.target.value)}
-                  placeholder={svTitle.trim() || t("svLinkPlaceholder")}
-                  className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
-                />
-              </div>
+              {/* Primary Language */}
+              {pageActiveLanguages.includes(defaultLanguage) && (
+                <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                  <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
+                    <FlagIcon code={defaultLanguage} size='sm' />
+                    <span className='cms-text-code'>{(LANGUAGE_META[defaultLanguage] || getLanguageMeta(defaultLanguage)).code}</span>
+                  </span>
+                  <Input
+                    id={primaryLinkId}
+                    type='text'
+                    value={primaryLinkTitle}
+                    onChange={(e) => setPrimaryLinkTitle(e.target.value)}
+                    placeholder={primaryTitle.trim() || t("svLinkPlaceholder")}
+                    className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+                  />
+                </div>
+              )}
 
               {/* Secondary Active Languages (Tightly stacked underneath, one per row) */}
               {!useSameLinkTitle &&
-                secondaryLocales.map((loc) => {
-                  const meta = LANGUAGE_META[loc] || {
-                    code: loc.toUpperCase(),
-                    flag: "",
-                    label: loc,
-                  };
+                secondaryActiveLocales.map((loc) => {
+                  const meta = LANGUAGE_META[loc] || getLanguageMeta(loc);
                   const locPageTitle =
                     translations[loc]?.pageTitle?.trim() ||
-                    (useSamePageTitle ? svTitle.trim() : "");
+                    (useSamePageTitle ? primaryTitle.trim() : "");
                   const locPlaceholder = locPageTitle || t("translationsLinkPlaceholder", { language: meta.label });
 
                   return (
@@ -627,47 +886,131 @@ export function PageEditorView({
               </div>
             </div>
 
-            {/* 3. URL Slug */}
-            <FormField
-              label={t("urlSlug")}
-              labelClassName='font-medium text-slate-200'
-              description={
-                isHomepage
-                  ? t("startpageSlugHelp")
-                  : t("slugHelp", { id: String(page.id) })
-              }
-              error={!slugValidation.isValid ? slugValidation.error : undefined}>
-              {(control) => (
-                <div
-                  className={`flex items-center rounded-xl border bg-slate-950/90 overflow-hidden transition ${
-                    !slugValidation.isValid
-                      ? "border-red-500 ring-1 ring-red-500/30"
-                      : "border-slate-800 focus-within:border-sky-500"
-                  }`}>
-                  <span className='px-3 py-2.5 text-xs font-mono text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
-                    /
-                  </span>
-                  <Input
-                    {...control}
-                    type='text'
-                    value={isHomepage ? "" : slug}
-                    readOnly={isHomepage}
-                    onChange={(e) => {
-                      if (!isHomepage) {
-                        setSlug(cleanSlugInput(e.target.value, true));
-                      }
-                    }}
-                    onBlur={() => {
-                      if (!isHomepage) {
-                        setSlug((prev) => cleanSlugInput(prev, false));
-                      }
-                    }}
-                    placeholder={isHomepage ? "" : `${page.id}`}
-                    className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+            {/* 3. Slughantering / Slug Mode */}
+            <div className='space-y-3 pt-2 border-t border-slate-800/80'>
+              <div className='flex flex-col sm:flex-row sm:items-center justify-between gap-2'>
+                <div>
+                  <Label className='block text-xs font-semibold text-slate-200'>
+                    {t("slugMode")}
+                  </Label>
+                  <p className='text-[11px] text-slate-400'>
+                    {isHomepage
+                      ? t("startpageSlugNotice")
+                      : t("slugHelp", { id: String(page.id) })}
+                  </p>
+                </div>
+
+                {!isHomepage && (
+                  <SegmentedControl<"same" | "separate">
+                    value={slugMode}
+                    onChange={handleSlugModeChange}
+                    size='sm'
+                    options={[
+                      { value: "same", label: t("slugModeSame") },
+                      { value: "separate", label: t("slugModeSeparate") },
+                    ]}
                   />
+                )}
+              </div>
+
+              {isHomepage ? (
+                <div className='flex items-center gap-2 rounded-xl border border-slate-800/80 bg-slate-950/40 px-3.5 py-2.5 text-xs text-slate-400 font-mono'>
+                  <span className='text-sky-400 font-semibold'>/</span>
+                  <span className='text-[11px] text-slate-500 font-sans'>
+                    ({t("startpageSlugHelp")})
+                  </span>
+                </div>
+              ) : slugMode === "same" ? (
+                <div className='space-y-1.5'>
+                  <FormField
+                    label={t("urlSlug")}
+                    labelClassName='font-medium text-slate-200'
+                    error={slugErrors["common"] || (!slugValidation.isValid ? slugValidation.error : undefined)}
+                  >
+                    {(control) => (
+                      <div
+                        className={cn(
+                          "flex items-center rounded-xl border bg-slate-950/90 overflow-hidden transition",
+                          slugErrors["common"] || !slugValidation.isValid
+                            ? "border-red-500 ring-1 ring-red-500/30"
+                            : "border-slate-800 focus-within:border-sky-500"
+                        )}
+                      >
+                        <span className='flex items-center justify-center px-2 py-2.5 text-xs font-mono text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-16'>
+                          {defaultLanguageUrlPrefix === "with-prefix" ? `/${defaultLanguage}/` : "/"}
+                        </span>
+                        <Input
+                          {...control}
+                          type='text'
+                          value={slug}
+                          onChange={(e) => setSlug(cleanSlugInput(e.target.value, true))}
+                          onBlur={() => setSlug((prev) => cleanSlugInput(prev, false))}
+                          placeholder={String(page.id)}
+                          className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white font-mono placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+                        />
+                      </div>
+                    )}
+                  </FormField>
+                  <p className='text-[11px] text-slate-400 pl-1'>
+                    {t("slugModeSameHelp")}
+                  </p>
+                </div>
+              ) : (
+                <div className='space-y-2.5'>
+                  {pageActiveLanguages.map((loc) => {
+                    const meta = LANGUAGE_META[loc] || getLanguageMeta(loc);
+                    const prefix =
+                      loc === defaultLanguage
+                        ? defaultLanguageUrlPrefix === "with-prefix"
+                          ? `/${defaultLanguage}/`
+                          : "/"
+                        : `/${loc}/`;
+                    const currentVal = separateSlugs[loc] || "";
+                    const err = slugErrors[loc];
+
+                    return (
+                      <div key={loc} className='space-y-1'>
+                        <div
+                          className={cn(
+                            "flex items-center rounded-xl border bg-slate-950/90 overflow-hidden transition",
+                            err
+                              ? "border-red-500 ring-1 ring-red-500/30"
+                              : "border-slate-800 focus-within:border-sky-500"
+                          )}
+                        >
+                          <span className='flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
+                            <FlagIcon code={loc} size='sm' />
+                            <span className='cms-text-code'>{meta.code}</span>
+                          </span>
+                          <span className='flex items-center justify-center px-2 py-2 text-xs font-mono text-slate-400 bg-slate-900/40 border-r border-slate-800/80 shrink-0 w-16'>
+                            {prefix}
+                          </span>
+                          <Input
+                            type='text'
+                            value={currentVal}
+                            onChange={(e) => {
+                              const val = cleanSlugInput(e.target.value, true);
+                              setSeparateSlugs((prev) => ({ ...prev, [loc]: val }));
+                            }}
+                            onBlur={() => {
+                              setSeparateSlugs((prev) => ({
+                                ...prev,
+                                [loc]: cleanSlugInput(prev[loc] || "", false),
+                              }));
+                            }}
+                            placeholder={String(page.id)}
+                            className='h-auto border-0 bg-transparent px-3.5 py-2 text-xs text-white font-mono placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+                          />
+                        </div>
+                        {err && (
+                          <p className='text-[11px] text-red-400 pl-1'>{err}</p>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
-            </FormField>
+            </div>
 
             {/* 3b. SEO & Social Sharing */}
             <div className='space-y-4 pt-2 border-t border-slate-800/70'>
@@ -681,40 +1024,38 @@ export function PageEditorView({
               {/* Meta-titel */}
               <div className='space-y-2.5'>
                 <div className='flex items-center justify-between'>
-                  <Label htmlFor={svMetaTitleId} className='block text-xs font-medium text-slate-300'>
+                  <Label htmlFor={primaryMetaTitleId} className='block text-xs font-medium text-slate-300'>
                     {adminLanguage === "sv" ? "Meta-titel" : "Meta Title"}
                   </Label>
-                  <CharacterCounter current={svMetaTitle.length} limit={60} />
+                  <CharacterCounter current={primaryMetaTitle.length} limit={60} />
                 </div>
 
-                {/* Primary Swedish Meta Title */}
-                <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
-                  <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
-                    <FlagIcon code='sv' size='sm' />
-                    <span className='cms-text-code'>{LANGUAGE_META.sv.code}</span>
-                  </span>
-                  <Input
-                    id={svMetaTitleId}
-                    type='text'
-                    value={svMetaTitle}
-                    aria-label={`${adminLanguage === "sv" ? "Meta-titel" : "Meta Title"} – ${LANGUAGE_META.sv.label}`}
-                    onChange={(e) => setSvMetaTitle(e.target.value)}
-                    placeholder={
-                      adminLanguage === "sv"
-                        ? "Titel för sökmotorer och delning på svenska..."
-                        : "Search engine title in Swedish..."
-                    }
-                    className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
-                  />
-                </div>
+                {/* Primary Meta Title */}
+                {pageActiveLanguages.includes(defaultLanguage) && (
+                  <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                    <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20'>
+                      <FlagIcon code={defaultLanguage} size='sm' />
+                      <span className='cms-text-code'>{(LANGUAGE_META[defaultLanguage] || getLanguageMeta(defaultLanguage)).code}</span>
+                    </span>
+                    <Input
+                      id={primaryMetaTitleId}
+                      type='text'
+                      value={primaryMetaTitle}
+                      aria-label={`${adminLanguage === "sv" ? "Meta-titel" : "Meta Title"} – ${(LANGUAGE_META[defaultLanguage] || getLanguageMeta(defaultLanguage)).label}`}
+                      onChange={(e) => setPrimaryMetaTitle(e.target.value)}
+                      placeholder={
+                        adminLanguage === "sv"
+                          ? "Titel för sökmotorer och delning..."
+                          : "Search engine title..."
+                      }
+                      className='h-auto border-0 bg-transparent px-3.5 py-2.5 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0'
+                    />
+                  </div>
+                )}
 
                 {/* Secondary Active Languages Meta Title */}
-                {secondaryLocales.map((loc) => {
-                  const meta = LANGUAGE_META[loc] || {
-                    code: loc.toUpperCase(),
-                    flag: "",
-                    label: loc,
-                  };
+                {secondaryActiveLocales.map((loc) => {
+                  const meta = LANGUAGE_META[loc] || getLanguageMeta(loc);
                   const val = translations[loc]?.metaTitle || "";
                   return (
                     <div key={loc} className='space-y-1'>
@@ -747,40 +1088,38 @@ export function PageEditorView({
               {/* Meta-beskrivning */}
               <div className='space-y-2.5 pt-2'>
                 <div className='flex items-center justify-between'>
-                  <Label htmlFor={svMetaDescId} className='block text-xs font-medium text-slate-300'>
+                  <Label htmlFor={primaryMetaDescId} className='block text-xs font-medium text-slate-300'>
                     {adminLanguage === "sv" ? "Meta-beskrivning" : "Meta Description"}
                   </Label>
-                  <CharacterCounter current={svMetaDesc.length} limit={160} />
+                  <CharacterCounter current={primaryMetaDesc.length} limit={160} />
                 </div>
 
-                {/* Primary Swedish Meta Description */}
-                <div className='flex items-start rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
-                  <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20 self-stretch'>
-                    <FlagIcon code='sv' size='sm' />
-                    <span className='cms-text-code'>{LANGUAGE_META.sv.code}</span>
-                  </span>
-                  <Textarea
-                    id={svMetaDescId}
-                    rows={2}
-                    value={svMetaDesc}
-                    aria-label={`${adminLanguage === "sv" ? "Meta-beskrivning" : "Meta Description"} – ${LANGUAGE_META.sv.label}`}
-                    onChange={(e) => setSvMetaDesc(e.target.value)}
-                    placeholder={
-                      adminLanguage === "sv"
-                        ? "Kort sammanfattning för sökmotorer och delning på svenska..."
-                        : "Short summary for search engines and social sharing in Swedish..."
-                    }
-                    className='min-h-[56px] border-0 bg-transparent px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 resize-y'
-                  />
-                </div>
+                {/* Primary Meta Description */}
+                {pageActiveLanguages.includes(defaultLanguage) && (
+                  <div className='flex items-start rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
+                    <span className='flex items-center gap-2 px-3 py-2.5 text-xs font-medium text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0 w-20 self-stretch'>
+                      <FlagIcon code={defaultLanguage} size='sm' />
+                      <span className='cms-text-code'>{(LANGUAGE_META[defaultLanguage] || getLanguageMeta(defaultLanguage)).code}</span>
+                    </span>
+                    <Textarea
+                      id={primaryMetaDescId}
+                      rows={2}
+                      value={primaryMetaDesc}
+                      aria-label={`${adminLanguage === "sv" ? "Meta-beskrivning" : "Meta Description"} – ${(LANGUAGE_META[defaultLanguage] || getLanguageMeta(defaultLanguage)).label}`}
+                      onChange={(e) => setPrimaryMetaDesc(e.target.value)}
+                      placeholder={
+                        adminLanguage === "sv"
+                          ? "Kort sammanfattning för sökmotorer och delning..."
+                          : "Short summary for search engines and social sharing..."
+                      }
+                      className='min-h-[56px] border-0 bg-transparent px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 resize-y'
+                    />
+                  </div>
+                )}
 
                 {/* Secondary Active Languages Meta Description */}
-                {secondaryLocales.map((loc) => {
-                  const meta = LANGUAGE_META[loc] || {
-                    code: loc.toUpperCase(),
-                    flag: "",
-                    label: loc,
-                  };
+                {secondaryActiveLocales.map((loc) => {
+                  const meta = LANGUAGE_META[loc] || getLanguageMeta(loc);
                   const val = translations[loc]?.metaDescription || "";
                   return (
                     <div key={loc} className='space-y-1'>
@@ -971,29 +1310,123 @@ export function PageEditorView({
               )}
             </div>
 
-            {/* 5. Section Assignment */}
-            <FormField label={t("section")} labelClassName='font-medium text-slate-200'>
-              {(control) => (
-                <div className='flex items-center rounded-xl border border-slate-800 bg-slate-950/90 overflow-hidden focus-within:border-sky-500 transition'>
-                  <span className='px-3 py-2.5 text-slate-400 bg-slate-900/70 border-r border-slate-800 shrink-0'>
-                    <FolderTree className='cms-icon-md' />
+            {/* 5. Section Assignment (Styled Select Dropdown matching Page Template) */}
+            <div className='space-y-1.5 relative'>
+              <Label id={sectionLabelId} className='block text-xs font-medium text-slate-200'>
+                {t("section")}
+              </Label>
+
+              <button
+                ref={sectionTriggerRef}
+                id={sectionTriggerId}
+                type='button'
+                aria-haspopup='listbox'
+                aria-expanded={isSectionOpen}
+                aria-controls={sectionListboxId}
+                aria-labelledby={sectionLabelId}
+                onClick={() => setIsSectionOpen((prev) => !prev)}
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "ArrowDown" ||
+                    e.key === "ArrowUp" ||
+                    e.key === "Enter" ||
+                    e.key === " "
+                  ) {
+                    e.preventDefault();
+                    setIsSectionOpen(true);
+                  } else if (e.key === "Escape") {
+                    setIsSectionOpen(false);
+                  }
+                }}
+                className={cn(
+                  "w-full flex items-center justify-between rounded-xl border px-3.5 py-2.5 text-xs text-white bg-slate-950/90 transition",
+                  isSectionOpen
+                    ? "border-sky-500 ring-1 ring-sky-500/30"
+                    : "border-slate-800 hover:border-slate-700"
+                )}
+              >
+                <span className='flex items-center gap-2.5'>
+                  <FolderTree className='cms-icon-md text-slate-400' />
+                  <span>
+                    {sections.find((s) => s.id === sectionId)?.name || t("noSection")}
                   </span>
-                  <NativeSelect
-                    {...control}
-                    value={sectionId}
-                    onChange={(e) => setSectionId(e.target.value)}
-                    className='h-auto border-0 bg-slate-950 px-3.5 py-2.5 text-xs text-white focus-visible:ring-0 focus-visible:ring-offset-0'
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "cms-icon-md text-slate-400 transition-transform",
+                    isSectionOpen && "rotate-180"
+                  )}
+                />
+              </button>
+
+              {isSectionOpen && (
+                <div
+                  id={sectionListboxId}
+                  role='listbox'
+                  aria-labelledby={sectionTriggerId}
+                  className='mt-1 w-full rounded-xl border border-slate-800 bg-slate-900/95 shadow-xl overflow-hidden divide-y divide-slate-800/60 z-30 max-h-60 overflow-y-auto'
+                >
+                  {/* Option: No section */}
+                  <button
+                    type='button'
+                    role='option'
+                    aria-selected={!sectionId}
+                    tabIndex={!sectionId ? 0 : -1}
+                    onClick={() => {
+                      setSectionId("");
+                      setIsSectionOpen(false);
+                      sectionTriggerRef.current?.focus();
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left transition",
+                      !sectionId
+                        ? "bg-sky-500/15 text-sky-300 font-medium"
+                        : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                    )}
                   >
-                    <option value=''>{t("noSection")}</option>
-                    {sections.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </NativeSelect>
+                    <span className='flex items-center gap-2.5'>
+                      <FolderTree className='cms-icon-md text-slate-400' />
+                      <span>{t("noSection")}</span>
+                    </span>
+                    {!sectionId && <Check className='cms-icon-sm text-sky-400' />}
+                  </button>
+
+                  {/* Option: Available sections */}
+                  {sections.map((s, idx) => {
+                    const isSelected = s.id === sectionId;
+                    return (
+                      <button
+                        key={s.id}
+                        ref={(el) => {
+                          sectionOptionsRefs.current[idx] = el;
+                        }}
+                        type='button'
+                        role='option'
+                        aria-selected={isSelected}
+                        tabIndex={isSelected ? 0 : -1}
+                        onClick={() => {
+                          setSectionId(s.id);
+                          setIsSectionOpen(false);
+                          sectionTriggerRef.current?.focus();
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between px-3.5 py-2.5 text-xs text-left transition",
+                          isSelected
+                            ? "bg-sky-500/15 text-sky-300 font-medium"
+                            : "text-slate-300 hover:bg-slate-800/80 hover:text-white"
+                        )}
+                      >
+                        <span className='flex items-center gap-2.5'>
+                          <FolderTree className='cms-icon-md text-slate-400' />
+                          <span>{s.name}</span>
+                        </span>
+                        {isSelected && <Check className='cms-icon-sm text-sky-400' />}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
-            </FormField>
+            </div>
 
             {/* 6. Categories & Types Assignment (Right before dates at the bottom) */}
             {categoryTypes.length > 0 && (

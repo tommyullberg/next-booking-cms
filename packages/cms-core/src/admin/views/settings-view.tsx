@@ -22,18 +22,27 @@ import {
   AVAILABLE_LANGUAGES,
   ADMIN_LANGUAGES,
   AdminLanguage,
+  DEFAULT_ACTIVE_LANGUAGES,
+  DEFAULT_SITE_LANGUAGE,
+  DEFAULT_LANGUAGE_URL_PREFIX,
+  SupportedLocale,
 } from "@cms/constants/languages";
 import {
   GallerySettings,
   DEFAULT_GALLERY_SETTINGS,
+  DefaultLanguageUrlPrefix,
 } from "@cms/types/settings";
 
 export interface SettingsViewProps {
   activeLanguages: string[];
+  defaultLanguage?: SupportedLocale;
+  defaultLanguageUrlPrefix?: DefaultLanguageUrlPrefix;
   adminLanguage?: AdminLanguage;
   gallerySettings?: GallerySettings;
   onSaveSettings: (data: {
     activeLanguages: string[];
+    defaultLanguage?: SupportedLocale;
+    defaultLanguageUrlPrefix?: DefaultLanguageUrlPrefix;
     adminLanguage: AdminLanguage;
     gallerySettings: GallerySettings;
   }) => Promise<void>;
@@ -41,6 +50,8 @@ export interface SettingsViewProps {
 
 export function SettingsView({
   activeLanguages,
+  defaultLanguage = DEFAULT_SITE_LANGUAGE,
+  defaultLanguageUrlPrefix = DEFAULT_LANGUAGE_URL_PREFIX,
   adminLanguage = "en",
   gallerySettings = DEFAULT_GALLERY_SETTINGS,
   onSaveSettings,
@@ -50,9 +61,19 @@ export function SettingsView({
 
   const showThumbnailsId = useId();
 
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(
-    Array.from(new Set(["sv", ...activeLanguages]))
+  const [selectedDefaultLanguage, setSelectedDefaultLanguage] = useState<SupportedLocale>(
+    defaultLanguage || DEFAULT_SITE_LANGUAGE
   );
+  const [selectedUrlPrefix, setSelectedUrlPrefix] = useState<DefaultLanguageUrlPrefix>(
+    defaultLanguageUrlPrefix || DEFAULT_LANGUAGE_URL_PREFIX
+  );
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>(() => {
+    const list = Array.isArray(activeLanguages) && activeLanguages.length > 0
+      ? activeLanguages
+      : [...DEFAULT_ACTIVE_LANGUAGES];
+    const def = defaultLanguage || DEFAULT_SITE_LANGUAGE;
+    return Array.from(new Set([def, ...list]));
+  });
   const [selectedAdminLanguage, setSelectedAdminLanguage] = useState<"en" | "sv">(
     adminLanguage || "en"
   );
@@ -65,8 +86,24 @@ export function SettingsView({
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   useEffect(() => {
-    setSelectedLanguages(Array.from(new Set(["sv", ...activeLanguages])));
-  }, [activeLanguages]);
+    if (defaultLanguage) {
+      setSelectedDefaultLanguage(defaultLanguage);
+    }
+  }, [defaultLanguage]);
+
+  useEffect(() => {
+    if (defaultLanguageUrlPrefix) {
+      setSelectedUrlPrefix(defaultLanguageUrlPrefix);
+    }
+  }, [defaultLanguageUrlPrefix]);
+
+  useEffect(() => {
+    const def = selectedDefaultLanguage;
+    const list = Array.isArray(activeLanguages) && activeLanguages.length > 0
+      ? activeLanguages
+      : [...DEFAULT_ACTIVE_LANGUAGES];
+    setSelectedLanguages(Array.from(new Set([def, ...list])));
+  }, [activeLanguages, selectedDefaultLanguage]);
 
   useEffect(() => {
     if (adminLanguage) {
@@ -83,12 +120,21 @@ export function SettingsView({
     }
   }, [gallerySettings]);
 
-  const toggleLanguage = (locale: string, locked: boolean) => {
-    if (locked) return;
+  const toggleLanguage = (locale: SupportedLocale) => {
+    if (locale === selectedDefaultLanguage) return;
+    setSelectedLanguages((prev) => {
+      if (prev.includes(locale)) {
+        if (prev.length <= 1) return prev;
+        return prev.filter((l) => l !== locale);
+      }
+      return [...prev, locale];
+    });
+  };
+
+  const setAsDefault = (locale: SupportedLocale) => {
+    setSelectedDefaultLanguage(locale);
     setSelectedLanguages((prev) =>
-      prev.includes(locale)
-        ? prev.filter((l) => l !== locale)
-        : [...prev, locale]
+      prev.includes(locale) ? prev : [...prev, locale]
     );
   };
 
@@ -98,7 +144,11 @@ export function SettingsView({
     setSavedSuccess(false);
     try {
       await onSaveSettings({
-        activeLanguages: Array.from(new Set(["sv", ...selectedLanguages])),
+        activeLanguages: Array.from(
+          new Set([selectedDefaultLanguage, ...selectedLanguages])
+        ),
+        defaultLanguage: selectedDefaultLanguage,
+        defaultLanguageUrlPrefix: selectedUrlPrefix,
         adminLanguage: selectedAdminLanguage,
         gallerySettings: selectedGallerySettings,
       });
@@ -108,6 +158,10 @@ export function SettingsView({
       setIsSaving(false);
     }
   };
+
+  const otherExampleLocale =
+    selectedLanguages.find((l) => l !== selectedDefaultLanguage) ||
+    (selectedDefaultLanguage === "sv" ? "en" : "sv");
 
   return (
     <form onSubmit={handleSave} className="space-y-6 max-w-4xl pb-12">
@@ -158,57 +212,180 @@ export function SettingsView({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {AVAILABLE_LANGUAGES.map((lang) => {
-            const isChecked = selectedLanguages.includes(lang.locale);
-            const inputId = `site-lang-${lang.locale}`;
-            return (
-              <label
-                key={lang.locale}
-                htmlFor={inputId}
-                className={cn(
-                  "flex items-center justify-between gap-3 rounded-admin-card border p-3.5 transition select-none",
-                  lang.locked
-                    ? "border-sky-500/40 bg-sky-950/20 cursor-default"
-                    : isChecked
-                    ? "border-admin-accent bg-admin-surface cursor-pointer ring-1 ring-admin-accent/20"
-                    : "border-admin-border bg-admin-surface-subtle cursor-pointer hover:border-admin-border-hover hover:bg-admin-surface"
-                )}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <Checkbox
-                    id={inputId}
-                    checked={isChecked}
-                    disabled={lang.locked}
-                    onCheckedChange={() => toggleLanguage(lang.locale, lang.locked)}
-                  />
+        <div className="space-y-6">
+          <div>
+            <span className="block text-xs font-semibold text-slate-300 mb-1">
+              {t("activeLanguages")}
+            </span>
+            <p className="text-xs text-slate-400 mb-3">
+              {t("siteDefaultLanguageDesc")}
+            </p>
 
-                  <FlagIcon code={lang.locale} size="md" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {AVAILABLE_LANGUAGES.map((lang) => {
+                const isChecked = selectedLanguages.includes(lang.locale);
+                const isDefault = selectedDefaultLanguage === lang.locale;
+                const inputId = `site-lang-${lang.locale}`;
+                return (
+                  <div
+                    key={lang.locale}
+                    className={cn(
+                      "flex items-center justify-between gap-3 rounded-admin-card border p-3.5 transition select-none",
+                      isDefault
+                        ? "border-sky-500/50 bg-sky-950/20 ring-1 ring-sky-500/30"
+                        : isChecked
+                        ? "border-admin-accent bg-admin-surface"
+                        : "border-admin-border bg-admin-surface-subtle hover:border-admin-border-hover hover:bg-admin-surface"
+                    )}
+                  >
+                    <label
+                      htmlFor={inputId}
+                      className="flex items-center gap-3 min-w-0 cursor-pointer flex-1"
+                    >
+                      <Checkbox
+                        id={inputId}
+                        checked={isChecked}
+                        disabled={isDefault}
+                        onCheckedChange={() => toggleLanguage(lang.locale)}
+                      />
 
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-white">
-                        {lang.name}
-                      </span>
-                      <Badge variant="adminMuted" size="xs" className="cms-text-code">
-                        {lang.code}
-                      </Badge>
+                      <FlagIcon code={lang.locale} size="md" />
+
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-white">
+                            {lang.name}
+                          </span>
+                          <Badge variant="adminMuted" size="xs" className="cms-text-code">
+                            {lang.code}
+                          </Badge>
+                        </div>
+                        <p className="cms-text-meta truncate mt-0.5">
+                          {lang.subtitle}
+                        </p>
+                      </div>
+                    </label>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isDefault ? (
+                        <Badge variant="adminAccent" size="sm">
+                          <Lock className="cms-icon-xs" />
+                          <span>{t("isDefaultLanguage")}</span>
+                        </Badge>
+                      ) : isChecked ? (
+                        <Button
+                          type="button"
+                          variant="adminOutline"
+                          size="sm"
+                          className="text-[11px] h-7 px-2"
+                          onClick={() => setAsDefault(lang.locale)}
+                        >
+                          {t("setAsDefault")}
+                        </Button>
+                      ) : null}
                     </div>
-                    <p className="cms-text-meta truncate mt-0.5">
-                      {lang.subtitle}
-                    </p>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Default Language URL Prefix */}
+          <div className="pt-4 border-t border-slate-800/80">
+            <span className="block text-xs font-semibold text-white mb-1">
+              {t("defaultLanguageUrlPrefixTitle")}
+            </span>
+            <p className="text-xs text-slate-400 mb-3">
+              {t("defaultLanguageUrlPrefixDesc")}
+            </p>
+
+            <SelectableCardGroup<DefaultLanguageUrlPrefix>
+              value={selectedUrlPrefix}
+              onChange={setSelectedUrlPrefix}
+              aria-label={t("defaultLanguageUrlPrefixTitle")}
+              className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+            >
+              <SelectableCard
+                value="without-prefix"
+                indicator="radio"
+                className="p-4 flex-col items-start gap-3 justify-between"
+              >
+                <div className="w-full">
+                  <span className="text-xs font-semibold text-white block">
+                    {t("withoutPrefix")}
+                  </span>
+                  <p className="cms-text-meta mt-1">
+                    {t("withoutPrefixDesc")}
+                  </p>
                 </div>
 
-                {lang.locked && (
-                  <Badge variant="adminAccent" size="sm">
-                    <Lock className="cms-icon-xs" />
-                    <span>{t("defaultBadge")}</span>
-                  </Badge>
-                )}
-              </label>
-            );
-          })}
+                <div className="w-full rounded-lg bg-slate-950/80 border border-slate-800/80 p-2.5 space-y-1.5 font-mono text-[11px] text-slate-400">
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-500 w-36 shrink-0">{t("urlExampleStartpage")}:</span>
+                    <span className="text-sky-400 font-semibold">/</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-500 w-36 shrink-0">
+                      {t("urlExampleSubpage")} ({selectedDefaultLanguage}):
+                    </span>
+                    <span className="text-sky-400 font-semibold">/om-oss</span>
+                  </div>
+                  {otherExampleLocale && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-slate-500 w-36 shrink-0">
+                        {t("urlExampleSubpage")} ({otherExampleLocale}):
+                      </span>
+                      <span className="text-sky-300">
+                        /{otherExampleLocale}/about-us
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </SelectableCard>
+
+              <SelectableCard
+                value="with-prefix"
+                indicator="radio"
+                className="p-4 flex-col items-start gap-3 justify-between"
+              >
+                <div className="w-full">
+                  <span className="text-xs font-semibold text-white block">
+                    {t("withPrefix")}
+                  </span>
+                  <p className="cms-text-meta mt-1">
+                    {t("withPrefixDesc")}
+                  </p>
+                </div>
+
+                <div className="w-full rounded-lg bg-slate-950/80 border border-slate-800/80 p-2.5 space-y-1.5 font-mono text-[11px] text-slate-400">
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-500 w-36 shrink-0">{t("urlExampleStartpage")}:</span>
+                    <span className="text-sky-400 font-semibold">
+                      /{selectedDefaultLanguage}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-500 w-36 shrink-0">
+                      {t("urlExampleSubpage")} ({selectedDefaultLanguage}):
+                    </span>
+                    <span className="text-sky-400 font-semibold">
+                      /{selectedDefaultLanguage}/om-oss
+                    </span>
+                  </div>
+                  {otherExampleLocale && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-slate-500 w-36 shrink-0">
+                        {t("urlExampleSubpage")} ({otherExampleLocale}):
+                      </span>
+                      <span className="text-sky-300">
+                        /{otherExampleLocale}/about-us
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </SelectableCard>
+            </SelectableCardGroup>
+          </div>
         </div>
       </Card>
 

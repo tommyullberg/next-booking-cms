@@ -32,8 +32,16 @@ import {
   GallerySettings,
   BookingSettings,
   DEFAULT_BOOKING_SETTINGS,
+  DefaultLanguageUrlPrefix,
 } from "@cms/types/settings";
-import { AdminLanguage, DEFAULT_ACTIVE_LANGUAGES, DEFAULT_ADMIN_LANGUAGE } from "@cms/constants/languages";
+import {
+  AdminLanguage,
+  DEFAULT_ACTIVE_LANGUAGES,
+  DEFAULT_ADMIN_LANGUAGE,
+  DEFAULT_SITE_LANGUAGE,
+  DEFAULT_LANGUAGE_URL_PREFIX,
+  SupportedLocale,
+} from "@cms/constants/languages";
 import { AdminIntlProvider } from "@cms/i18n";
 import { useEditorStore } from "@cms/state/editor-store";
 import { CMSQueryProvider } from "@cms/booking/query-provider";
@@ -130,6 +138,12 @@ export function AdminApp({
   const [activeLanguages, setActiveLanguages] = useState<string[]>(
     initialSettings?.activeLanguages || [...DEFAULT_ACTIVE_LANGUAGES]
   );
+  const [defaultLanguage, setDefaultLanguage] = useState<SupportedLocale>(
+    initialSettings?.defaultLanguage || DEFAULT_SITE_LANGUAGE
+  );
+  const [defaultLanguageUrlPrefix, setDefaultLanguageUrlPrefix] = useState<DefaultLanguageUrlPrefix>(
+    initialSettings?.defaultLanguageUrlPrefix || DEFAULT_LANGUAGE_URL_PREFIX
+  );
   const [adminLanguage, setAdminLanguage] = useState<AdminLanguage>(() => {
     if (initialAdminLanguage === "sv" || initialAdminLanguage === "en") {
       return initialAdminLanguage;
@@ -193,6 +207,12 @@ export function AdminApp({
               if (Array.isArray(data.settings.activeLanguages)) {
                 setActiveLanguages(data.settings.activeLanguages);
               }
+              if (data.settings.defaultLanguage) {
+                setDefaultLanguage(data.settings.defaultLanguage);
+              }
+              if (data.settings.defaultLanguageUrlPrefix) {
+                setDefaultLanguageUrlPrefix(data.settings.defaultLanguageUrlPrefix);
+              }
               if (data.adminLocale === "sv" || data.adminLocale === "en") {
                 setAdminLanguage(data.adminLocale);
                 useEditorStore.getState().setAdminLanguage(data.adminLocale);
@@ -219,6 +239,12 @@ export function AdminApp({
           if (data) {
             if (Array.isArray(data.activeLanguages)) {
               setActiveLanguages(data.activeLanguages);
+            }
+            if (data.defaultLanguage) {
+              setDefaultLanguage(data.defaultLanguage);
+            }
+            if (data.defaultLanguageUrlPrefix) {
+              setDefaultLanguageUrlPrefix(data.defaultLanguageUrlPrefix);
             }
             if (data.adminLanguage === "sv" || data.adminLanguage === "en") {
               setAdminLanguage(data.adminLanguage);
@@ -846,6 +872,8 @@ export function AdminApp({
             categoryTypes={categoryTypes}
             bookingObjects={bookingObjects}
             activeLanguages={activeLanguages}
+            defaultLanguage={defaultLanguage}
+            defaultLanguageUrlPrefix={defaultLanguageUrlPrefix}
             adminLanguage={adminLanguage}
             availableTemplates={availableTemplates}
             onBack={() => setCurrentTab("pages")}
@@ -1015,10 +1043,18 @@ export function AdminApp({
         {currentTab === "settings" && (
           <SettingsView
             activeLanguages={activeLanguages}
+            defaultLanguage={defaultLanguage}
+            defaultLanguageUrlPrefix={defaultLanguageUrlPrefix}
             adminLanguage={adminLanguage}
             gallerySettings={gallerySettings}
             onSaveSettings={async (newSettings) => {
               setActiveLanguages(newSettings.activeLanguages);
+              if (newSettings.defaultLanguage) {
+                setDefaultLanguage(newSettings.defaultLanguage);
+              }
+              if (newSettings.defaultLanguageUrlPrefix) {
+                setDefaultLanguageUrlPrefix(newSettings.defaultLanguageUrlPrefix);
+              }
               if (newSettings.adminLanguage) {
                 setAdminLanguage(newSettings.adminLanguage);
                 useEditorStore.getState().setAdminLanguage(newSettings.adminLanguage);
@@ -1040,6 +1076,12 @@ export function AdminApp({
                   const saved = await res.json();
                   if (Array.isArray(saved.activeLanguages)) {
                     setActiveLanguages(saved.activeLanguages);
+                  }
+                  if (saved.defaultLanguage) {
+                    setDefaultLanguage(saved.defaultLanguage);
+                  }
+                  if (saved.defaultLanguageUrlPrefix) {
+                    setDefaultLanguageUrlPrefix(saved.defaultLanguageUrlPrefix);
                   }
                   if (saved.adminLanguage === "sv" || saved.adminLanguage === "en") {
                     setAdminLanguage(saved.adminLanguage);
