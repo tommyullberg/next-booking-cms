@@ -31,19 +31,23 @@ Provides shared `tsconfig.json` configurations for strict type safety:
 
 ### 2. `@next-booking/config-tailwind`
 
-Provides shared Tailwind CSS presets and themes:
+Provides shared Tailwind CSS v4 styling, design tokens, and semantic utility classes:
 
-- Extends default palettes with customizable design tokens (`navy`, `accent`, `sand`, `slate`, neutral grayscale light-mode tokens).
-- Configures dark mode using CSS class strategy (`darkMode: 'class'`).
-- Bundles official Tailwind plugins for forms, typography, and container queries.
+- Modern Tailwind v4 configuration via `@import "tailwindcss";`, `@theme`, and `@utility` rules in `packages/config-tailwind/theme.css`.
+- Centralized semantic CMS utility classes in `packages/config-tailwind/cms-classes.css` (`cms-table-header`, `cms-text-meta`, `cms-text-caption`, `cms-text-code`, and icon classes `cms-icon-xs`, `cms-icon-sm`, `cms-icon-md`, `cms-icon-lg`).
+- Administrative design system tokens (`--color-admin-*`, `--color-admin-accent`, `--color-admin-surface`, `--color-admin-border`, `--color-admin-field`, `--radius-admin-*`).
+- Dark mode theme tokens and accessible contrast ratios.
 
 ### 3. `@next-booking/cms-core`
 
-The central package encapsulating all CMS capabilities. To guarantee clean separation between client-side bundles and server-only runtime logic, the package provides three distinct entry points:
+The central package encapsulating all CMS capabilities, accessible UI components, and business logic. To guarantee clean separation between client-side bundles and server-only runtime logic, the package provides modular entry points and subpath exports:
 
-- `@next-booking/cms-core`: Universal client and template components including `CMSField` compound components (`Text`, `Image`, `Gallery`, `Group`, `Navigation`), `CMSPageProvider` in-memory React context, `CmsBrandLogo`, animated `Loader` (`matrix`, `radar`, `cards`), floating inline editing toolbar, modal dialogs via `ModalPortal`, `AdminApp`, and TanStack Query booking calendar.
+- `@next-booking/cms-core`: Universal client and template components including `CMSField` compound components (`Text`, `Image`, `Gallery`, `Group`, `Navigation`), `CMSPageProvider` in-memory React context, `CmsBrandLogo`, animated `Loader` (`matrix`, `radar`, `cards`), floating inline editing toolbar, accessible Radix UI dialogs, `<AdminApp />`, and TanStack Query booking calendar.
+- `@next-booking/cms-core/ui`: Centralized component library exporting 21 standardized, accessible UI components built with Radix UI, Class Variance Authority (CVA), and `cn()` utility (`Alert`, `Badge`, `Button`, `Card`, `Checkbox`, `CmsBrandLogo`, `DatePicker`, `Dialog`, `FlagIcon`, `FormField`, `IconButton`, `Input`, `Label`, `Loader`, `SegmentedControl`, `Select`, `SelectableCard`, `Switch`, `Tabs`, `Textarea`, `Tooltip`).
 - `@next-booking/cms-core/server`: Server-only infrastructure and actions including Prisma ORM singleton with Prisma 7 pg adapter (`@prisma/adapter-pg`), Storage Adapters (`LocalStorageAdapter`, `S3StorageAdapter`), NextAuth Credentials authentication handler, Server Actions for inline edits and AI translations, RFC 5545 iCal synchronization workers, and transactional email dispatchers (`Resend`, `SendGrid`, `Console`).
 - `@next-booking/cms-core/middleware`: Centralized NextAuth route protection middleware imported by tenant applications.
+- Promise-based Confirmation System: `ConfirmProvider` and `useConfirm` (`confirm()` and `inform()`) providing queue-managed, accessible Radix Dialog modals with auto-focus safety, replacing native browser alerts and confirms across all administrative workflows.
+- Internal path alias: `@cms/*` mapped to `packages/cms-core/src/*` for structured internal imports.
 
 ### 4. `apps/demo` and `apps/lullyhill`
 
